@@ -8,6 +8,12 @@
 #ifndef intro_h
 #define intro_h
 
-#include <stdio.h>
+bool intro_load_media(SDL_Renderer *renderer);
+
+void intro_process_input(void);
+
+void intro_update(void);
+
+void intro_render(SDL_Renderer *renderer);
 
 #endif /* intro_h */
