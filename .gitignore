@@ -1,0 +1,8 @@
+## User settings
+xcuserdata/
+.DS_Store
+
+## SDL2 libraries
+SDL2.framework
+SDL2_image.framework
+SDL2_mixer.framework
