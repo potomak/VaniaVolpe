@@ -1,9 +1,11 @@
-#include "./constants.h"
 #include <SDL2/SDL.h>
 #include <SDL2_image/SDL_image.h>
 #include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
 #include <stdio.h>
+
+#include "./constants.h"
+#include "./image.h"
 
 // Global variables
 int game_is_running = false;
@@ -31,50 +33,6 @@ Mix_Chunk *gLow = NULL;
 
 // Mouse position
 SDL_Point mPosition;
-
-// Free texture if it exists
-void freeImageTexture(void) {
-  if (mTexture != NULL) {
-    SDL_DestroyTexture(mTexture);
-    mTexture = NULL;
-    mWidth = 0;
-    mHeight = 0;
-  }
-}
-
-bool loadFromFile(const char *path) {
-  // Free texture if it exists
-  freeImageTexture();
-
-  // Load image at specified path
-  SDL_Surface *loadedSurface = IMG_Load(path);
-  if (loadedSurface == NULL) {
-    fprintf(stderr, "Unable to load image %s! SDL_image Error: %s\n", path,
-            IMG_GetError());
-    return false;
-  }
-
-  // Color key image
-  SDL_SetColorKey(loadedSurface, SDL_TRUE,
-                  SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
-
-  // Create texture from surface pixels
-  mTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
-  if (mTexture == NULL) {
-    fprintf(stderr, "Unable to create texture from %s! SDL Error: %s\n", path,
-            SDL_GetError());
-    return false;
-  }
-  // Get image dimensions
-  mWidth = loadedSurface->w;
-  mHeight = loadedSurface->h;
-
-  // Get rid of old loaded surface
-  SDL_FreeSurface(loadedSurface);
-
-  // Return success
-  return true;
-}
 
 // Declare two game objects for the ball and the paddle
 struct game_object {
@@ -135,7 +93,7 @@ int initialize_window(void) {
 
 bool loadMedia() {
   // Load sprite sheet texture
-  if (!loadFromFile("foo.png")) {
+  if (!load_from_file("foo.png", renderer, &mTexture, &mWidth, &mHeight)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
     return false;
   }
@@ -260,17 +218,17 @@ void process_input(void) {
       }
       break;
 
-    //If mouse event happened
-  case SDL_MOUSEMOTION:
-        //Get mouse position
-        SDL_GetMouseState( &mPosition.x, &mPosition.y );
-        break;
-  case SDL_MOUSEBUTTONDOWN:
-        Mix_PlayChannel(-1, gScratch, 0);
-        break;
-  case SDL_MOUSEBUTTONUP:
-        Mix_PlayChannel(-1, gLow, 0);
-        break;
+      // If mouse event happened
+    case SDL_MOUSEMOTION:
+      // Get mouse position
+      SDL_GetMouseState(&mPosition.x, &mPosition.y);
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      Mix_PlayChannel(-1, gScratch, 0);
+      break;
+    case SDL_MOUSEBUTTONUP:
+      Mix_PlayChannel(-1, gLow, 0);
+      break;
     }
   }
 }
@@ -356,7 +314,7 @@ void render(void) {
 
   // Draw a rectangle for the paddle object
   SDL_Rect paddle_rect = {(int)paddle.x, (int)paddle.y, (int)paddle.width,
-                        (int)paddle.height};
+                          (int)paddle.height};
   SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0xCC, 0xFF);
   SDL_RenderFillRect(renderer, &paddle_rect);
 
@@ -385,7 +343,7 @@ void destroy_window(void) {
 }
 
 void destroy_image(void) {
-  freeImageTexture();
+  free_image_texture(&mTexture, &mWidth, &mHeight);
   IMG_Quit();
 }
 
