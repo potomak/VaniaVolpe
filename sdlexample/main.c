@@ -4,8 +4,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "./constants.h"
-#include "./image.h"
+#include "constants.h"
+#include "image.h"
+
+// Scenes
+#include "intro.h"
 
 // Global variables
 int game_is_running = false;
@@ -91,7 +94,7 @@ int initialize_window(void) {
   return true;
 }
 
-bool loadMedia() {
+bool loadMedia(void) {
   // Load sprite sheet texture
   if (!load_from_file("foo.png", renderer, &mTexture, &mWidth, &mHeight)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
@@ -231,6 +234,9 @@ void process_input(void) {
       break;
     }
   }
+
+  // Process input for scenes
+  intro_process_input();
 }
 
 // Setup function that runs once at the beginning of our program
@@ -285,6 +291,9 @@ void update(void) {
   // Set paddle position based on mouse position
   paddle.x = mPosition.x;
   paddle.y = mPosition.y;
+
+  // Update scenes
+  intro_update();
 }
 
 void renderImage(int x, int y, SDL_Rect *clip) {
@@ -305,6 +314,9 @@ void renderImage(int x, int y, SDL_Rect *clip) {
 void render(void) {
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   SDL_RenderClear(renderer);
+
+  // Render scenes
+  intro_render(renderer);
 
   // Draw a rectangle for the ball object
   SDL_Rect ball_rect = {(int)ball.x, (int)ball.y, (int)ball.width,
@@ -379,6 +391,13 @@ int main(int argc, char *args[]) {
   }
   if (!game_is_running) {
     fprintf(stderr, "Failed to initialize image!\n");
+  }
+
+  if (game_is_running) {
+    game_is_running = intro_load_media(renderer);
+  }
+  if (!game_is_running) {
+    fprintf(stderr, "Failed to initialize intro!\n");
   }
 
   while (game_is_running) {

@@ -19,6 +19,7 @@
 		841C6A762D36A7AB00C6F2DE /* SDL2_mixer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		841C6A7B2D3850DA00C6F2DE /* intro.c in Sources */ = {isa = PBXBuildFile; fileRef = 841C6A7A2D3850DA00C6F2DE /* intro.c */; };
 		841C6A7E2D38533E00C6F2DE /* image.c in Sources */ = {isa = PBXBuildFile; fileRef = 841C6A7D2D38533E00C6F2DE /* image.c */; };
+		841C6A912D38699B00C6F2DE /* intro in Resources */ = {isa = PBXBuildFile; fileRef = 841C6A902D38699B00C6F2DE /* intro */; };
 		843CFC872D3200900099E674 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 843CFC862D3200900099E674 /* Assets.xcassets */; };
 		843CFC9B2D3202B10099E674 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; };
 		843CFC9C2D3202B10099E674 /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -54,6 +55,7 @@
 		841C6A7A2D3850DA00C6F2DE /* intro.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = intro.c; sourceTree = "<group>"; };
 		841C6A7C2D38533E00C6F2DE /* image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = image.h; sourceTree = "<group>"; };
 		841C6A7D2D38533E00C6F2DE /* image.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = image.c; sourceTree = "<group>"; };
+		841C6A902D38699B00C6F2DE /* intro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = intro; sourceTree = SOURCE_ROOT; };
 		843CFC802D3200860099E674 /* sdlexample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sdlexample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		843CFC862D3200900099E674 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		843CFC8B2D3200900099E674 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 		843CFC822D3200860099E674 /* sdlexample */ = {
 			isa = PBXGroup;
 			children = (
+				841C6A902D38699B00C6F2DE /* intro */,
 				843CFC9F2D3550A70099E674 /* constants.h */,
 				843CFC9E2D3550A70099E674 /* main.c */,
 				841C6A792D3850DA00C6F2DE /* intro.h */,
@@ -184,6 +187,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				841C6A702D36A79300C6F2DE /* high.wav in Resources */,
+				841C6A912D38699B00C6F2DE /* intro in Resources */,
 				841C6A722D36A79300C6F2DE /* scratch.wav in Resources */,
 				841C6A712D36A79300C6F2DE /* low.wav in Resources */,
 				841C6A732D36A79300C6F2DE /* beat.wav in Resources */,

@@ -8,8 +8,6 @@
 #ifndef image_h
 #define image_h
 
-#include <stdio.h>
-
 void free_image_texture(SDL_Texture **texture, int *width, int *height);
 
 bool load_from_file(const char *path, SDL_Renderer *renderer,
