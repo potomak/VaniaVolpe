@@ -431,6 +431,7 @@ int main(int argc, char *args[]) {
 
   destroy_window();
   destroy_image();
+  destroy_sound();
 
   return 0;
 }
