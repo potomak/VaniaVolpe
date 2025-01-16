@@ -12,14 +12,19 @@
 #include "intro.h"
 #include "playground_entrance.h"
 
+// Features for debugging the game
+#include "debug.h"
+
 #include "game.h"
 
 Game game = {
+    .is_running = false,
+    .is_debugging = false,
     .current_scene = INTRO,
 };
 
-static Scene current_scene() {
-  switch (game.current_scene) {
+static Scene scene_instance(GameScene scene) {
+  switch (scene) {
   case INTRO:
     return intro_scene;
   case PLAYGROUND_ENTRANCE:
@@ -31,6 +36,15 @@ static Scene current_scene() {
     break;
   }
 }
+
+// Sets a new scene as the current scene
+void set_active_scene(GameScene scene) {
+  scene_instance(game.current_scene).on_scene_inactive();
+  scene_instance(scene).on_scene_active();
+  game.current_scene = scene;
+}
+
+void exit_game(void) { game.is_running = false; }
 
 void game_init(void) {
   example_scene.init();
@@ -53,12 +67,35 @@ bool game_load_media(SDL_Renderer *renderer) {
 
 // Process input for scenes
 void game_process_input(SDL_Event *event) {
-  current_scene().process_input(event);
+  switch (event->type) {
+  case SDL_KEYDOWN:
+    switch (event->key.keysym.sym) {
+    // Toggle debugging features
+    case SDLK_d:
+      game.is_debugging = !game.is_debugging;
+      break;
+    }
+    break;
+  }
+
+  if (game.is_debugging) {
+    debug_process_input(event);
+  }
+
+  scene_instance(game.current_scene).process_input(event);
 }
 
-void game_update(float delta_time) { current_scene().update(delta_time); }
+void game_update(float delta_time) {
+  scene_instance(game.current_scene).update(delta_time);
+}
 
-void game_render(SDL_Renderer *renderer) { current_scene().render(renderer); }
+void game_render(SDL_Renderer *renderer) {
+  scene_instance(game.current_scene).render(renderer);
+
+  if (game.is_debugging) {
+    debug_render(renderer);
+  }
+}
 
 void game_deinit(void) {
   intro_scene.deinit();

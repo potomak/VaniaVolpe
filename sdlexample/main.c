@@ -9,7 +9,6 @@
 #include "image.h"
 
 // Global variables
-int game_is_running = false;
 int last_frame_time = 0;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -69,13 +68,13 @@ void process_input(void) {
 
     switch (event.type) {
     case SDL_QUIT:
-      game_is_running = false;
+      game.is_running = false;
       break;
     case SDL_KEYDOWN:
       switch (event.key.keysym.sym) {
       // Exit the game
       case SDLK_ESCAPE:
-        game_is_running = false;
+        game.is_running = false;
         break;
       }
     }
@@ -117,21 +116,21 @@ void destroy_sound(void) { Mix_Quit(); }
 
 // Main function
 int main(int argc, char *args[]) {
-  game_is_running = init_window();
-  if (!game_is_running) {
+  game.is_running = init_window();
+  if (!game.is_running) {
     fprintf(stderr, "Failed to initialize window!\n");
   }
 
   game_init();
 
-  if (game_is_running) {
-    game_is_running = game_load_media(renderer);
+  if (game.is_running) {
+    game.is_running = game_load_media(renderer);
   }
-  if (!game_is_running) {
+  if (!game.is_running) {
     fprintf(stderr, "Failed to load media!\n");
   }
 
-  while (game_is_running) {
+  while (game.is_running) {
     process_input();
     update();
     render();

@@ -18,6 +18,11 @@ typedef struct scene {
   void (*update)(float delta_time);
   void (*render)(SDL_Renderer *renderer);
   void (*deinit)(void);
+
+  // Called before the scene is set as the current scene
+  void (*on_scene_active)(void);
+  // Called before the scene is unset as the current scene
+  void (*on_scene_inactive)(void);
 } Scene;
 
 #endif /* scene_h */
