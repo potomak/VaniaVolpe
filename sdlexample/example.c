@@ -16,22 +16,22 @@
 #include "example.h"
 
 // Walking animation
-AnimationData *walking;
+static AnimationData *walking;
 
 // The music that will be played
-Mix_Music *gMusic = NULL;
+static Mix_Music *gMusic = NULL;
 
 // The sound effects that will be used
-Mix_Chunk *gScratch = NULL;
-Mix_Chunk *gHigh = NULL;
-Mix_Chunk *gMedium = NULL;
-Mix_Chunk *gLow = NULL;
+static Mix_Chunk *gScratch = NULL;
+static Mix_Chunk *gHigh = NULL;
+static Mix_Chunk *gMedium = NULL;
+static Mix_Chunk *gLow = NULL;
 
 // Mouse position
-SDL_Point mPosition;
+static SDL_Point mPosition;
 
 // Game objects
-GameObject ball, paddle;
+static GameObject ball, paddle;
 
 // Runs once at the beginning of our program
 static void init(void) {
@@ -178,7 +178,7 @@ static void process_input(SDL_Event *event) {
     break;
   case SDL_MOUSEBUTTONDOWN:
     Mix_PlayChannel(-1, gScratch, 0);
-    game.current_scene = INTRO;
+    set_active_scene(INTRO);
     break;
   case SDL_MOUSEBUTTONUP:
     Mix_PlayChannel(-1, gLow, 0);
@@ -252,6 +252,17 @@ static void deinit(void) {
   gMusic = NULL;
 }
 
+static void on_scene_active(void) {}
+
+static void on_scene_inactive(void) {}
+
 Scene example_scene = {
-    init, load_media, process_input, update, render, deinit,
+    .init = init,
+    .load_media = load_media,
+    .process_input = process_input,
+    .update = update,
+    .render = render,
+    .deinit = deinit,
+    .on_scene_active = on_scene_active,
+    .on_scene_inactive = on_scene_inactive,
 };

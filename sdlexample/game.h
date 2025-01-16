@@ -11,10 +11,16 @@
 typedef enum game_scene { INTRO, PLAYGROUND_ENTRANCE, EXAMPLE } GameScene;
 
 typedef struct game {
+  bool is_running;
+  bool is_debugging;
   GameScene current_scene;
 } Game;
 
 extern Game game;
+
+void set_active_scene(GameScene scene);
+
+void exit_game(void);
 
 void game_init(void);
 

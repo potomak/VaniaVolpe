@@ -24,6 +24,7 @@
 		842BA1042D395C4900EEBF46 /* game.c in Sources */ = {isa = PBXBuildFile; fileRef = 842BA1032D395C4900EEBF46 /* game.c */; };
 		842BA1072D39817B00EEBF46 /* playground_entrance.c in Sources */ = {isa = PBXBuildFile; fileRef = 842BA1062D39817B00EEBF46 /* playground_entrance.c */; };
 		842BA1092D39885500EEBF46 /* playground_entrance in Resources */ = {isa = PBXBuildFile; fileRef = 842BA1082D39885500EEBF46 /* playground_entrance */; };
+		842BA10C2D3992AA00EEBF46 /* debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 842BA10B2D3992AA00EEBF46 /* debug.c */; };
 		843CFC872D3200900099E674 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 843CFC862D3200900099E674 /* Assets.xcassets */; };
 		843CFC9B2D3202B10099E674 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; };
 		843CFC9C2D3202B10099E674 /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -68,6 +69,8 @@
 		842BA1052D39817B00EEBF46 /* playground_entrance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = playground_entrance.h; sourceTree = "<group>"; };
 		842BA1062D39817B00EEBF46 /* playground_entrance.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = playground_entrance.c; sourceTree = "<group>"; };
 		842BA1082D39885500EEBF46 /* playground_entrance */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playground_entrance; sourceTree = SOURCE_ROOT; };
+		842BA10A2D3992AA00EEBF46 /* debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = debug.h; sourceTree = "<group>"; };
+		842BA10B2D3992AA00EEBF46 /* debug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = debug.c; sourceTree = "<group>"; };
 		843CFC802D3200860099E674 /* sdlexample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sdlexample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		843CFC862D3200900099E674 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		843CFC8B2D3200900099E674 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -135,6 +138,8 @@
 				842BA1032D395C4900EEBF46 /* game.c */,
 				842BA1052D39817B00EEBF46 /* playground_entrance.h */,
 				842BA1062D39817B00EEBF46 /* playground_entrance.c */,
+				842BA10A2D3992AA00EEBF46 /* debug.h */,
+				842BA10B2D3992AA00EEBF46 /* debug.c */,
 			);
 			path = sdlexample;
 			sourceTree = "<group>";
@@ -228,6 +233,7 @@
 				841C6A7E2D38533E00C6F2DE /* image.c in Sources */,
 				842BA1072D39817B00EEBF46 /* playground_entrance.c in Sources */,
 				841C6A7B2D3850DA00C6F2DE /* intro.c in Sources */,
+				842BA10C2D3992AA00EEBF46 /* debug.c in Sources */,
 				842BA1042D395C4900EEBF46 /* game.c in Sources */,
 				842BA0FE2D38B65D00EEBF46 /* example.c in Sources */,
 				843CFCA02D3550A70099E674 /* main.c in Sources */,

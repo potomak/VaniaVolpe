@@ -50,7 +50,7 @@ static bool load_media(SDL_Renderer *renderer) {
 static void process_input(SDL_Event *event) {
   switch (event->type) {
   case SDL_MOUSEBUTTONDOWN:
-    game.current_scene = EXAMPLE;
+    set_active_scene(EXAMPLE);
     break;
   }
 }
@@ -68,6 +68,17 @@ static void deinit(void) {
   music = NULL;
 }
 
+static void on_scene_active(void) {}
+
+static void on_scene_inactive(void) {}
+
 Scene playground_entrance_scene = {
-    init, load_media, process_input, update, render, deinit,
+    .init = init,
+    .load_media = load_media,
+    .process_input = process_input,
+    .update = update,
+    .render = render,
+    .deinit = deinit,
+    .on_scene_active = on_scene_active,
+    .on_scene_inactive = on_scene_inactive,
 };

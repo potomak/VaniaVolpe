@@ -29,6 +29,9 @@ static Mix_Music *music = NULL;
 static Mix_Chunk *play_button_click_sound = NULL;
 static Mix_Chunk *exit_button_click_sound = NULL;
 
+// Mouse position
+static SDL_Point m_pos;
+
 static void init(void) {
   play_button = make_animation_data(3);
   exit_button = make_animation_data(3);
@@ -108,8 +111,12 @@ static bool load_media(SDL_Renderer *renderer) {
 
 static void process_input(SDL_Event *event) {
   switch (event->type) {
+  case SDL_MOUSEMOTION:
+    // Get mouse position
+    SDL_GetMouseState(&m_pos.x, &m_pos.y);
+    break;
   case SDL_MOUSEBUTTONDOWN:
-    game.current_scene = EXAMPLE;
+    // set_active_scene(EXAMPLE);
     break;
   }
 }
@@ -136,6 +143,17 @@ static void deinit(void) {
   music = NULL;
 }
 
+static void on_scene_active(void) {}
+
+static void on_scene_inactive(void) {}
+
 Scene intro_scene = {
-    init, load_media, process_input, update, render, deinit,
+    .init = init,
+    .load_media = load_media,
+    .process_input = process_input,
+    .update = update,
+    .render = render,
+    .deinit = deinit,
+    .on_scene_active = on_scene_active,
+    .on_scene_inactive = on_scene_inactive,
 };
