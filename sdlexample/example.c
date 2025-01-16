@@ -15,11 +15,7 @@
 #include "example.h"
 
 // Walking animation
-const int WALKING_ANIMATION_FRAMES = 4;
-SDL_Rect gSpriteClips[WALKING_ANIMATION_FRAMES];
-// The texture
-ImageData animation = {NULL, 0, 0};
-int frame = 0;
+AnimationData *walking;
 
 // The music that will be played
 Mix_Music *gMusic = NULL;
@@ -53,35 +49,37 @@ static void init(void) {
   paddle.height = 20;
   paddle.vel_x = 0;
   paddle.vel_y = 0;
+
+  walking = make_animation_data(4);
 }
 
 static bool load_media(SDL_Renderer *renderer) {
   // Load sprite sheet texture
-  if (!load_from_file("foo.png", renderer, &animation)) {
+  if (!load_from_file("foo.png", renderer, &walking->image)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
     return false;
   }
 
   // Set sprite clips
-  gSpriteClips[0].x = 0;
-  gSpriteClips[0].y = 0;
-  gSpriteClips[0].w = 64;
-  gSpriteClips[0].h = 205;
+  walking->sprite_clips[0].x = 0;
+  walking->sprite_clips[0].y = 0;
+  walking->sprite_clips[0].w = 64;
+  walking->sprite_clips[0].h = 205;
 
-  gSpriteClips[1].x = 64;
-  gSpriteClips[1].y = 0;
-  gSpriteClips[1].w = 64;
-  gSpriteClips[1].h = 205;
+  walking->sprite_clips[1].x = 64;
+  walking->sprite_clips[1].y = 0;
+  walking->sprite_clips[1].w = 64;
+  walking->sprite_clips[1].h = 205;
 
-  gSpriteClips[2].x = 128;
-  gSpriteClips[2].y = 0;
-  gSpriteClips[2].w = 64;
-  gSpriteClips[2].h = 205;
+  walking->sprite_clips[2].x = 128;
+  walking->sprite_clips[2].y = 0;
+  walking->sprite_clips[2].w = 64;
+  walking->sprite_clips[2].h = 205;
 
-  gSpriteClips[3].x = 192;
-  gSpriteClips[3].y = 0;
-  gSpriteClips[3].w = 64;
-  gSpriteClips[3].h = 205;
+  walking->sprite_clips[3].x = 192;
+  walking->sprite_clips[3].y = 0;
+  walking->sprite_clips[3].w = 64;
+  walking->sprite_clips[3].h = 205;
 
   // Load music
   gMusic = Mix_LoadMUS("beat.wav");
@@ -214,20 +212,6 @@ static void update(float delta_time) {
   paddle.y = mPosition.y;
 }
 
-static void renderImage(SDL_Renderer *renderer, int x, int y, SDL_Rect *clip) {
-  // Set rendering space and render to screen
-  SDL_Rect renderQuad = {x, y, animation.width, animation.height};
-
-  // Set clip rendering dimensions
-  if (clip != NULL) {
-    renderQuad.w = clip->w;
-    renderQuad.h = clip->h;
-  }
-
-  // Render to screen
-  SDL_RenderCopy(renderer, animation.texture, clip, &renderQuad);
-}
-
 static void render(SDL_Renderer *renderer) {
   // Draw a rectangle for the ball object
   SDL_Rect ball_rect = {(int)ball.x, (int)ball.y, (int)ball.width,
@@ -241,22 +225,15 @@ static void render(SDL_Renderer *renderer) {
   SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0xCC, 0xFF);
   SDL_RenderFillRect(renderer, &paddle_rect);
 
-  // Render current frame
-  SDL_Rect *currentClip = &gSpriteClips[frame / 4];
-  renderImage(renderer, (WINDOW_WIDTH - currentClip->w) / 2,
-              (WINDOW_HEIGHT - currentClip->h) / 2, currentClip);
-
-  // Go to next frame
-  ++frame;
-
-  // Cycle animation
-  if (frame / 4 >= WALKING_ANIMATION_FRAMES) {
-    frame = 0;
-  }
+  // Render walking animation, assumes a constant frame image size
+  render_animation(
+      renderer, walking,
+      (SDL_Point){(WINDOW_WIDTH - walking->sprite_clips[0].w) / 2,
+                  (WINDOW_HEIGHT - walking->sprite_clips[0].h) / 2});
 }
 
 static void deinit(void) {
-  free_image_texture(&animation);
+  free_animation(walking);
 
   // Free the sound effects
   Mix_FreeChunk(gScratch);

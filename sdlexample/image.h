@@ -14,8 +14,24 @@ typedef struct image_data {
   int height;
 } ImageData;
 
+typedef struct animation_data {
+  int frames;
+  int current_frame;
+  SDL_Rect *sprite_clips;
+  ImageData image;
+} AnimationData;
+
+AnimationData *make_animation_data(int frames);
+
 void free_image_texture(ImageData *image);
 
+void free_animation(AnimationData *animation);
+
 bool load_from_file(const char *path, SDL_Renderer *renderer, ImageData *image);
+
+void render_animation(SDL_Renderer *renderer, AnimationData *animation,
+                      SDL_Point point);
+
+void render_image(SDL_Renderer *renderer, ImageData *image, SDL_Point point);
 
 #endif /* image_h */
