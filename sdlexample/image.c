@@ -76,16 +76,11 @@ bool load_from_file(const char *path, SDL_Renderer *renderer,
 
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point) {
-  // Set rendering space and render to screen
-  SDL_Rect render_quad = {point.x, point.y, animation->image.width,
-                          animation->image.height};
-
-  // Render current frame
+  // Get current frame clip
   SDL_Rect *clip = &animation->sprite_clips[animation->current_frame / 4];
 
-  // Set clip rendering dimensions
-  render_quad.w = clip->w;
-  render_quad.h = clip->h;
+  // Set rendering space and render to screen
+  SDL_Rect render_quad = {point.x, point.y, clip->w, clip->h};
 
   // Render to screen
   SDL_RenderCopy(renderer, animation->image.texture, clip, &render_quad);
