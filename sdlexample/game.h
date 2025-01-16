@@ -8,7 +8,7 @@
 #ifndef game_h
 #define game_h
 
-typedef enum game_scene { INTRO, EXAMPLE } GameScene;
+typedef enum game_scene { INTRO, PLAYGROUND_ENTRANCE, EXAMPLE } GameScene;
 
 typedef struct game {
   GameScene current_scene;

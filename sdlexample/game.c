@@ -10,6 +10,7 @@
 
 // Scenes
 #include "intro.h"
+#include "playground_entrance.h"
 
 #include "game.h"
 
@@ -21,10 +22,10 @@ static Scene current_scene() {
   switch (game.current_scene) {
   case INTRO:
     return intro_scene;
-
+  case PLAYGROUND_ENTRANCE:
+    return playground_entrance_scene;
   case EXAMPLE:
     return example_scene;
-
   default:
     fprintf(stderr, "Warning: scene not defined!\n");
     break;

@@ -16,18 +16,18 @@
 #include "intro.h"
 
 // Background image
-ImageData background_image = {NULL, 0, 0};
+static ImageData background = {NULL, 0, 0};
 
 // Animations
-AnimationData *play_button;
-AnimationData *exit_button;
+static AnimationData *play_button;
+static AnimationData *exit_button;
 
 // Music
-Mix_Music *music = NULL;
+static Mix_Music *music = NULL;
 
 // Sound effects
-Mix_Chunk *play_button_click_sound = NULL;
-Mix_Chunk *exit_button_click_sound = NULL;
+static Mix_Chunk *play_button_click_sound = NULL;
+static Mix_Chunk *exit_button_click_sound = NULL;
 
 static void init(void) {
   play_button = make_animation_data(3);
@@ -35,7 +35,7 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_from_file("intro/background.png", renderer, &background_image)) {
+  if (!load_from_file("intro/background.png", renderer, &background)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
@@ -117,13 +117,13 @@ static void process_input(SDL_Event *event) {
 static void update(float delta_time) {}
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, &background_image, (SDL_Point){0, 0});
+  render_image(renderer, &background, (SDL_Point){0, 0});
   render_animation(renderer, play_button, (SDL_Point){260, 140});
   render_animation(renderer, exit_button, (SDL_Point){220, 300});
 }
 
 static void deinit(void) {
-  free_image_texture(&background_image);
+  free_image_texture(&background);
   free_animation(play_button);
   free_animation(exit_button);
 
