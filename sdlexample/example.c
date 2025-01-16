@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include "constants.h"
+#include "game.h"
 #include "image.h"
 
 #include "example.h"
@@ -177,6 +178,7 @@ static void process_input(SDL_Event *event) {
     break;
   case SDL_MOUSEBUTTONDOWN:
     Mix_PlayChannel(-1, gScratch, 0);
+    game.current_scene = INTRO;
     break;
   case SDL_MOUSEBUTTONUP:
     Mix_PlayChannel(-1, gLow, 0);

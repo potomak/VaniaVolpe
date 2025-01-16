@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include "constants.h"
+#include "game.h"
 #include "image.h"
 
 #include "intro.h"
@@ -105,7 +106,13 @@ static bool load_media(SDL_Renderer *renderer) {
   return true;
 }
 
-static void process_input(SDL_Event *event) {}
+static void process_input(SDL_Event *event) {
+  switch (event->type) {
+  case SDL_MOUSEBUTTONDOWN:
+    game.current_scene = EXAMPLE;
+    break;
+  }
+}
 
 static void update(float delta_time) {}
 
