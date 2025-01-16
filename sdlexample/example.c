@@ -34,7 +34,7 @@ Mix_Chunk *gLow = NULL;
 SDL_Point mPosition;
 
 // Game objects
-struct game_object ball, paddle;
+GameObject ball, paddle;
 
 // Runs once at the beginning of our program
 static void init(void) {
