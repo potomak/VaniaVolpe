@@ -8,9 +8,14 @@
 #ifndef image_h
 #define image_h
 
-void free_image_texture(SDL_Texture **texture, int *width, int *height);
+typedef struct image_data {
+  SDL_Texture *texture;
+  int width;
+  int height;
+} ImageData;
 
-bool load_from_file(const char *path, SDL_Renderer *renderer,
-                    SDL_Texture **texture, int *width, int *height);
+void free_image_texture(ImageData *image);
+
+bool load_from_file(const char *path, SDL_Renderer *renderer, ImageData *image);
 
 #endif /* image_h */

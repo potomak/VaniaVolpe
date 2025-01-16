@@ -20,9 +20,7 @@ SDL_Renderer *renderer = NULL;
 const int WALKING_ANIMATION_FRAMES = 4;
 SDL_Rect gSpriteClips[WALKING_ANIMATION_FRAMES];
 // The texture
-SDL_Texture *mTexture = NULL;
-int mWidth;
-int mHeight;
+ImageData animation = {NULL, 0, 0};
 int frame = 0;
 
 // The music that will be played
@@ -96,7 +94,7 @@ int initialize_window(void) {
 
 bool loadMedia(void) {
   // Load sprite sheet texture
-  if (!load_from_file("foo.png", renderer, &mTexture, &mWidth, &mHeight)) {
+  if (!load_from_file("foo.png", renderer, &animation)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
     return false;
   }
@@ -298,7 +296,7 @@ void update(void) {
 
 void renderImage(int x, int y, SDL_Rect *clip) {
   // Set rendering space and render to screen
-  SDL_Rect renderQuad = {x, y, mWidth, mHeight};
+  SDL_Rect renderQuad = {x, y, animation.width, animation.height};
 
   // Set clip rendering dimensions
   if (clip != NULL) {
@@ -307,7 +305,7 @@ void renderImage(int x, int y, SDL_Rect *clip) {
   }
 
   // Render to screen
-  SDL_RenderCopy(renderer, mTexture, clip, &renderQuad);
+  SDL_RenderCopy(renderer, animation.texture, clip, &renderQuad);
 }
 
 // Render function to draw game objects in the SDL window
@@ -355,7 +353,7 @@ void destroy_window(void) {
 }
 
 void destroy_image(void) {
-  free_image_texture(&mTexture, &mWidth, &mHeight);
+  free_image_texture(&animation);
   IMG_Quit();
 }
 

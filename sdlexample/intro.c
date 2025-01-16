@@ -14,25 +14,19 @@
 #include "intro.h"
 
 // Background image
-SDL_Texture *background_texture = NULL;
-int background_width;
-int background_height;
+ImageData background_image = {NULL, 0, 0};
 
 // Play button animation
 const int PLAY_BUTTON_FRAMES = 3;
 SDL_Rect play_button_sprite_clips[PLAY_BUTTON_FRAMES];
 int play_button_frame = 0;
-SDL_Texture *play_button_texture = NULL;
-int play_button_width;
-int play_button_height;
+ImageData play_button_image = {NULL, 0, 0};
 
 // Exit button animation
 const int EXIT_BUTTON_FRAMES = 3;
 SDL_Rect exit_button_sprite_clips[EXIT_BUTTON_FRAMES];
 int exit_button_frame = 0;
-SDL_Texture *exit_button_texture = NULL;
-int exit_button_width;
-int exit_button_height;
+ImageData exit_button_image = {NULL, 0, 0};
 
 // Music
 Mix_Music *music = NULL;
@@ -42,14 +36,12 @@ Mix_Chunk *play_button_click_sound = NULL;
 Mix_Chunk *exit_button_click_sound = NULL;
 
 bool intro_load_media(SDL_Renderer *renderer) {
-  if (!load_from_file("intro/background.png", renderer, &background_texture,
-                      &background_width, &background_height)) {
+  if (!load_from_file("intro/background.png", renderer, &background_image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
 
-  if (!load_from_file("intro/play_button.png", renderer, &play_button_texture,
-                      &play_button_width, &play_button_height)) {
+  if (!load_from_file("intro/play_button.png", renderer, &play_button_image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
@@ -69,8 +61,7 @@ bool intro_load_media(SDL_Renderer *renderer) {
   play_button_sprite_clips[2].w = 800;
   play_button_sprite_clips[2].h = 600;
 
-  if (!load_from_file("intro/exit_button.png", renderer, &exit_button_texture,
-                      &exit_button_width, &exit_button_height)) {
+  if (!load_from_file("intro/exit_button.png", renderer, &exit_button_image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
@@ -122,15 +113,17 @@ void intro_update(void) {}
 
 void render_background(SDL_Renderer *renderer, int x, int y) {
   // Set rendering space and render to screen
-  SDL_Rect render_quad = {x, y, background_width, background_height};
+  SDL_Rect render_quad = {x, y, background_image.width,
+                          background_image.height};
 
   // Render to screen
-  SDL_RenderCopy(renderer, background_texture, NULL, &render_quad);
+  SDL_RenderCopy(renderer, background_image.texture, NULL, &render_quad);
 }
 
 void render_play_button(SDL_Renderer *renderer, int x, int y) {
   // Set rendering space and render to screen
-  SDL_Rect render_quad = {x, y, play_button_width, play_button_height};
+  SDL_Rect render_quad = {x, y, play_button_image.width,
+                          play_button_image.height};
 
   // Render current frame
   SDL_Rect *clip = &play_button_sprite_clips[play_button_frame / 4];
@@ -140,7 +133,7 @@ void render_play_button(SDL_Renderer *renderer, int x, int y) {
   render_quad.h = clip->h;
 
   // Render to screen
-  SDL_RenderCopy(renderer, play_button_texture, clip, &render_quad);
+  SDL_RenderCopy(renderer, play_button_image.texture, clip, &render_quad);
 
   // Go to next frame
   ++play_button_frame;
@@ -153,7 +146,8 @@ void render_play_button(SDL_Renderer *renderer, int x, int y) {
 
 void render_exit_button(SDL_Renderer *renderer, int x, int y) {
   // Set rendering space and render to screen
-  SDL_Rect render_quad = {x, y, exit_button_width, exit_button_height};
+  SDL_Rect render_quad = {x, y, exit_button_image.width,
+                          exit_button_image.height};
 
   // Render current frame
   SDL_Rect *clip = &exit_button_sprite_clips[exit_button_frame / 4];
@@ -163,7 +157,7 @@ void render_exit_button(SDL_Renderer *renderer, int x, int y) {
   render_quad.h = clip->h;
 
   // Render to screen
-  SDL_RenderCopy(renderer, exit_button_texture, clip, &render_quad);
+  SDL_RenderCopy(renderer, exit_button_image.texture, clip, &render_quad);
 
   // Go to next frame
   ++exit_button_frame;
