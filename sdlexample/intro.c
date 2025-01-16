@@ -36,11 +36,11 @@ Mix_Music *music = NULL;
 Mix_Chunk *play_button_click_sound = NULL;
 Mix_Chunk *exit_button_click_sound = NULL;
 
-void intro_init(void) {
+static void init(void) {
   // Initialize screen state
 }
 
-bool intro_load_media(SDL_Renderer *renderer) {
+static bool load_media(SDL_Renderer *renderer) {
   if (!load_from_file("intro/background.png", renderer, &background_image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
@@ -112,11 +112,11 @@ bool intro_load_media(SDL_Renderer *renderer) {
   return true;
 }
 
-void intro_process_input(SDL_Event *event) {}
+static void process_input(SDL_Event *event) {}
 
-void intro_update(float delta_time) {}
+static void update(float delta_time) {}
 
-void render_background(SDL_Renderer *renderer, int x, int y) {
+static void render_background(SDL_Renderer *renderer, int x, int y) {
   // Set rendering space and render to screen
   SDL_Rect render_quad = {x, y, background_image.width,
                           background_image.height};
@@ -125,7 +125,7 @@ void render_background(SDL_Renderer *renderer, int x, int y) {
   SDL_RenderCopy(renderer, background_image.texture, NULL, &render_quad);
 }
 
-void render_play_button(SDL_Renderer *renderer, int x, int y) {
+static void render_play_button(SDL_Renderer *renderer, int x, int y) {
   // Set rendering space and render to screen
   SDL_Rect render_quad = {x, y, play_button_image.width,
                           play_button_image.height};
@@ -149,7 +149,7 @@ void render_play_button(SDL_Renderer *renderer, int x, int y) {
   }
 }
 
-void render_exit_button(SDL_Renderer *renderer, int x, int y) {
+static void render_exit_button(SDL_Renderer *renderer, int x, int y) {
   // Set rendering space and render to screen
   SDL_Rect render_quad = {x, y, exit_button_image.width,
                           exit_button_image.height};
@@ -173,13 +173,13 @@ void render_exit_button(SDL_Renderer *renderer, int x, int y) {
   }
 }
 
-void intro_render(SDL_Renderer *renderer) {
+static void render(SDL_Renderer *renderer) {
   render_background(renderer, 0, 0);
   render_play_button(renderer, 260, 140);
   render_exit_button(renderer, 220, 300);
 }
 
-void intro_deinit(void) {
+static void deinit(void) {
   free_image_texture(&background_image);
   free_image_texture(&play_button_image);
   free_image_texture(&exit_button_image);
@@ -194,6 +194,5 @@ void intro_deinit(void) {
 }
 
 Scene intro_scene = {
-    intro_init,   intro_load_media, intro_process_input,
-    intro_update, intro_render,     intro_deinit,
+    init, load_media, process_input, update, render, deinit,
 };

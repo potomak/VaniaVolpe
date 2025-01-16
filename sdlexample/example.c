@@ -37,7 +37,7 @@ SDL_Point mPosition;
 struct game_object ball, paddle;
 
 // Runs once at the beginning of our program
-void example_init(void) {
+static void init(void) {
   // Initialize the ball object moving down at a constant velocity
   ball.x = 10;
   ball.y = 20;
@@ -55,7 +55,7 @@ void example_init(void) {
   paddle.vel_y = 0;
 }
 
-bool example_load_media(SDL_Renderer *renderer) {
+static bool load_media(SDL_Renderer *renderer) {
   // Load sprite sheet texture
   if (!load_from_file("foo.png", renderer, &animation)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
@@ -124,7 +124,7 @@ bool example_load_media(SDL_Renderer *renderer) {
   return true;
 }
 
-void example_process_input(SDL_Event *event) {
+static void process_input(SDL_Event *event) {
   switch (event->type) {
   case SDL_KEYDOWN:
     switch (event->key.keysym.sym) {
@@ -186,7 +186,7 @@ void example_process_input(SDL_Event *event) {
   }
 }
 
-void example_update(float delta_time) {
+static void update(float delta_time) {
   // Move ball as a function of delta time
   ball.x += ball.vel_x * delta_time;
   ball.y += ball.vel_y * delta_time;
@@ -214,7 +214,7 @@ void example_update(float delta_time) {
   paddle.y = mPosition.y;
 }
 
-void renderImage(SDL_Renderer *renderer, int x, int y, SDL_Rect *clip) {
+static void renderImage(SDL_Renderer *renderer, int x, int y, SDL_Rect *clip) {
   // Set rendering space and render to screen
   SDL_Rect renderQuad = {x, y, animation.width, animation.height};
 
@@ -228,7 +228,7 @@ void renderImage(SDL_Renderer *renderer, int x, int y, SDL_Rect *clip) {
   SDL_RenderCopy(renderer, animation.texture, clip, &renderQuad);
 }
 
-void example_render(SDL_Renderer *renderer) {
+static void render(SDL_Renderer *renderer) {
   // Draw a rectangle for the ball object
   SDL_Rect ball_rect = {(int)ball.x, (int)ball.y, (int)ball.width,
                         (int)ball.height};
@@ -255,7 +255,7 @@ void example_render(SDL_Renderer *renderer) {
   }
 }
 
-void example_deinit(void) {
+static void deinit(void) {
   free_image_texture(&animation);
 
   // Free the sound effects
@@ -274,6 +274,5 @@ void example_deinit(void) {
 }
 
 Scene example_scene = {
-    example_init,   example_load_media, example_process_input,
-    example_update, example_render,     example_deinit,
+    init, load_media, process_input, update, render, deinit,
 };
