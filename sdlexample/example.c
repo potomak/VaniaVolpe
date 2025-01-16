@@ -10,8 +10,9 @@
 #include <stdbool.h>
 
 #include "constants.h"
-#include "example.h"
 #include "image.h"
+
+#include "example.h"
 
 // Walking animation
 const int WALKING_ANIMATION_FRAMES = 4;
@@ -271,3 +272,8 @@ void example_deinit(void) {
   Mix_FreeMusic(gMusic);
   gMusic = NULL;
 }
+
+Scene example_scene = {
+    example_init,   example_load_media, example_process_input,
+    example_update, example_render,     example_deinit,
+};

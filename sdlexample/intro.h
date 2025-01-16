@@ -8,16 +8,8 @@
 #ifndef intro_h
 #define intro_h
 
-void intro_init(void);
+#import "scene.h"
 
-bool intro_load_media(SDL_Renderer *renderer);
-
-void intro_process_input(SDL_Event *event);
-
-void intro_update(float delta_time);
-
-void intro_render(SDL_Renderer *renderer);
-
-void intro_deinit(void);
+extern Scene intro_scene;
 
 #endif /* intro_h */

@@ -67,17 +67,17 @@ int init_window(void) {
 }
 
 void init(void) {
-  example_init();
-  intro_init();
+  example_scene.init();
+  intro_scene.init();
 }
 
 bool load_media(void) {
-  if (!example_load_media(renderer)) {
+  if (!example_scene.load_media(renderer)) {
     fprintf(stderr, "Failed to initialize example!\n");
     return false;
   }
 
-  if (!intro_load_media(renderer)) {
+  if (!intro_scene.load_media(renderer)) {
     fprintf(stderr, "Failed to initialize intro!\n");
     return false;
   }
@@ -90,8 +90,8 @@ void process_input(void) {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     // Process input for scenes
-    example_process_input(&event);
-    intro_process_input(&event);
+    example_scene.process_input(&event);
+    intro_scene.process_input(&event);
 
     switch (event.type) {
     case SDL_QUIT:
@@ -117,8 +117,8 @@ void update(void) {
   last_frame_time = SDL_GetTicks();
 
   // Update scenes
-  example_update(delta_time);
-  intro_update(delta_time);
+  example_scene.update(delta_time);
+  intro_scene.update(delta_time);
 }
 
 // Render function to draw game objects in the SDL window
@@ -127,16 +127,16 @@ void render(void) {
   SDL_RenderClear(renderer);
 
   // Render scenes
-  intro_render(renderer);
-  example_render(renderer);
+  intro_scene.render(renderer);
+  example_scene.render(renderer);
 
   // Update screen
   SDL_RenderPresent(renderer);
 }
 
 void deinit(void) {
-  intro_deinit();
-  example_deinit();
+  intro_scene.deinit();
+  example_scene.deinit();
 }
 
 // Function to destroy SDL window and renderer
