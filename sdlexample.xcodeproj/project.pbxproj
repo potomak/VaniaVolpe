@@ -21,8 +21,9 @@
 		841C6A7E2D38533E00C6F2DE /* image.c in Sources */ = {isa = PBXBuildFile; fileRef = 841C6A7D2D38533E00C6F2DE /* image.c */; };
 		841C6A912D38699B00C6F2DE /* intro in Resources */ = {isa = PBXBuildFile; fileRef = 841C6A902D38699B00C6F2DE /* intro */; };
 		842BA0FE2D38B65D00EEBF46 /* example.c in Sources */ = {isa = PBXBuildFile; fileRef = 842BA0FD2D38B65D00EEBF46 /* example.c */; };
-		842BA1012D393E8D00EEBF46 /* scene.c in Sources */ = {isa = PBXBuildFile; fileRef = 842BA1002D393E8D00EEBF46 /* scene.c */; };
 		842BA1042D395C4900EEBF46 /* game.c in Sources */ = {isa = PBXBuildFile; fileRef = 842BA1032D395C4900EEBF46 /* game.c */; };
+		842BA1072D39817B00EEBF46 /* playground_entrance.c in Sources */ = {isa = PBXBuildFile; fileRef = 842BA1062D39817B00EEBF46 /* playground_entrance.c */; };
+		842BA1092D39885500EEBF46 /* playground_entrance in Resources */ = {isa = PBXBuildFile; fileRef = 842BA1082D39885500EEBF46 /* playground_entrance */; };
 		843CFC872D3200900099E674 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 843CFC862D3200900099E674 /* Assets.xcassets */; };
 		843CFC9B2D3202B10099E674 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; };
 		843CFC9C2D3202B10099E674 /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -62,9 +63,11 @@
 		842BA0FC2D38B65D00EEBF46 /* example.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = example.h; sourceTree = "<group>"; };
 		842BA0FD2D38B65D00EEBF46 /* example.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = example.c; sourceTree = "<group>"; };
 		842BA0FF2D393E8D00EEBF46 /* scene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scene.h; sourceTree = "<group>"; };
-		842BA1002D393E8D00EEBF46 /* scene.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = scene.c; sourceTree = "<group>"; };
 		842BA1022D395C4900EEBF46 /* game.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = game.h; sourceTree = "<group>"; };
 		842BA1032D395C4900EEBF46 /* game.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = game.c; sourceTree = "<group>"; };
+		842BA1052D39817B00EEBF46 /* playground_entrance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = playground_entrance.h; sourceTree = "<group>"; };
+		842BA1062D39817B00EEBF46 /* playground_entrance.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = playground_entrance.c; sourceTree = "<group>"; };
+		842BA1082D39885500EEBF46 /* playground_entrance */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playground_entrance; sourceTree = SOURCE_ROOT; };
 		843CFC802D3200860099E674 /* sdlexample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sdlexample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		843CFC862D3200900099E674 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		843CFC8B2D3200900099E674 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -108,6 +111,7 @@
 		843CFC822D3200860099E674 /* sdlexample */ = {
 			isa = PBXGroup;
 			children = (
+				842BA1082D39885500EEBF46 /* playground_entrance */,
 				841C6A902D38699B00C6F2DE /* intro */,
 				843CFC9F2D3550A70099E674 /* constants.h */,
 				843CFC9E2D3550A70099E674 /* main.c */,
@@ -127,9 +131,10 @@
 				842BA0FC2D38B65D00EEBF46 /* example.h */,
 				842BA0FD2D38B65D00EEBF46 /* example.c */,
 				842BA0FF2D393E8D00EEBF46 /* scene.h */,
-				842BA1002D393E8D00EEBF46 /* scene.c */,
 				842BA1022D395C4900EEBF46 /* game.h */,
 				842BA1032D395C4900EEBF46 /* game.c */,
+				842BA1052D39817B00EEBF46 /* playground_entrance.h */,
+				842BA1062D39817B00EEBF46 /* playground_entrance.c */,
 			);
 			path = sdlexample;
 			sourceTree = "<group>";
@@ -201,6 +206,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				842BA1092D39885500EEBF46 /* playground_entrance in Resources */,
 				841C6A702D36A79300C6F2DE /* high.wav in Resources */,
 				841C6A912D38699B00C6F2DE /* intro in Resources */,
 				841C6A722D36A79300C6F2DE /* scratch.wav in Resources */,
@@ -220,7 +226,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				841C6A7E2D38533E00C6F2DE /* image.c in Sources */,
-				842BA1012D393E8D00EEBF46 /* scene.c in Sources */,
+				842BA1072D39817B00EEBF46 /* playground_entrance.c in Sources */,
 				841C6A7B2D3850DA00C6F2DE /* intro.c in Sources */,
 				842BA1042D395C4900EEBF46 /* game.c in Sources */,
 				842BA0FE2D38B65D00EEBF46 /* example.c in Sources */,
