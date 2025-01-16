@@ -35,6 +35,10 @@ Mix_Music *music = NULL;
 Mix_Chunk *play_button_click_sound = NULL;
 Mix_Chunk *exit_button_click_sound = NULL;
 
+void intro_init(void) {
+  // Initialize screen state
+}
+
 bool intro_load_media(SDL_Renderer *renderer) {
   if (!load_from_file("intro/background.png", renderer, &background_image)) {
     fprintf(stderr, "Failed to texture!\n");
@@ -172,4 +176,18 @@ void intro_render(SDL_Renderer *renderer) {
   render_background(renderer, 0, 0);
   render_play_button(renderer, 260, 140);
   render_exit_button(renderer, 220, 300);
+}
+
+void intro_deinit(void) {
+  free_image_texture(&background_image);
+  free_image_texture(&play_button_image);
+  free_image_texture(&exit_button_image);
+
+  Mix_FreeChunk(play_button_click_sound);
+  play_button_click_sound = NULL;
+  Mix_FreeChunk(exit_button_click_sound);
+  exit_button_click_sound = NULL;
+
+  Mix_FreeMusic(music);
+  music = NULL;
 }

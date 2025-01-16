@@ -46,7 +46,7 @@ struct game_object {
 } ball, paddle;
 
 // Function to initialize our SDL window
-int initialize_window(void) {
+int init_window(void) {
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
     fprintf(stderr, "Error initializing SDL.\n");
     return false;
@@ -238,7 +238,7 @@ void process_input(void) {
 }
 
 // Setup function that runs once at the beginning of our program
-void setup(void) {
+void init(void) {
   // Initialize the ball object moving down at a constant velocity
   ball.x = 10;
   ball.y = 20;
@@ -377,12 +377,13 @@ void destroy_sound(void) {
 
 // Main function
 int main(int argc, char *args[]) {
-  game_is_running = initialize_window();
+  game_is_running = init_window();
   if (!game_is_running) {
     fprintf(stderr, "Failed to initialize window!\n");
   }
 
-  setup();
+  init();
+  intro_init();
 
   if (game_is_running) {
     game_is_running = loadMedia();
@@ -403,6 +404,8 @@ int main(int argc, char *args[]) {
     update();
     render();
   }
+
+  intro_deinit();
 
   destroy_window();
   destroy_image();
