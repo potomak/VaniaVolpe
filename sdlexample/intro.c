@@ -17,17 +17,9 @@
 // Background image
 ImageData background_image = {NULL, 0, 0};
 
-// Play button animation
-const int PLAY_BUTTON_FRAMES = 3;
-SDL_Rect play_button_sprite_clips[PLAY_BUTTON_FRAMES];
-int play_button_frame = 0;
-ImageData play_button_image = {NULL, 0, 0};
-
-// Exit button animation
-const int EXIT_BUTTON_FRAMES = 3;
-SDL_Rect exit_button_sprite_clips[EXIT_BUTTON_FRAMES];
-int exit_button_frame = 0;
-ImageData exit_button_image = {NULL, 0, 0};
+// Animations
+AnimationData *play_button;
+AnimationData *exit_button;
 
 // Music
 Mix_Music *music = NULL;
@@ -37,7 +29,8 @@ Mix_Chunk *play_button_click_sound = NULL;
 Mix_Chunk *exit_button_click_sound = NULL;
 
 static void init(void) {
-  // Initialize screen state
+  play_button = make_animation_data(3);
+  exit_button = make_animation_data(3);
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -46,45 +39,45 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  if (!load_from_file("intro/play_button.png", renderer, &play_button_image)) {
+  if (!load_from_file("intro/play_button.png", renderer, &play_button->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
 
-  play_button_sprite_clips[0].x = 0;
-  play_button_sprite_clips[0].y = 0;
-  play_button_sprite_clips[0].w = 800;
-  play_button_sprite_clips[0].h = 600;
+  play_button->sprite_clips[0].x = 0;
+  play_button->sprite_clips[0].y = 0;
+  play_button->sprite_clips[0].w = 800;
+  play_button->sprite_clips[0].h = 600;
 
-  play_button_sprite_clips[1].x = 0;
-  play_button_sprite_clips[1].y = 600;
-  play_button_sprite_clips[1].w = 800;
-  play_button_sprite_clips[1].h = 600;
+  play_button->sprite_clips[1].x = 0;
+  play_button->sprite_clips[1].y = 600;
+  play_button->sprite_clips[1].w = 800;
+  play_button->sprite_clips[1].h = 600;
 
-  play_button_sprite_clips[2].x = 0;
-  play_button_sprite_clips[2].y = 1200;
-  play_button_sprite_clips[2].w = 800;
-  play_button_sprite_clips[2].h = 600;
+  play_button->sprite_clips[2].x = 0;
+  play_button->sprite_clips[2].y = 1200;
+  play_button->sprite_clips[2].w = 800;
+  play_button->sprite_clips[2].h = 600;
 
-  if (!load_from_file("intro/exit_button.png", renderer, &exit_button_image)) {
+  if (!load_from_file("intro/exit_button.png", renderer, &exit_button->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
 
-  exit_button_sprite_clips[0].x = 0;
-  exit_button_sprite_clips[0].y = 0;
-  exit_button_sprite_clips[0].w = 800;
-  exit_button_sprite_clips[0].h = 600;
+  exit_button->sprite_clips[0].x = 0;
+  exit_button->sprite_clips[0].y = 0;
+  exit_button->sprite_clips[0].w = 800;
+  exit_button->sprite_clips[0].h = 600;
 
-  exit_button_sprite_clips[1].x = 0;
-  exit_button_sprite_clips[1].y = 600;
-  exit_button_sprite_clips[1].w = 800;
-  exit_button_sprite_clips[1].h = 600;
+  exit_button->sprite_clips[1].x = 0;
+  exit_button->sprite_clips[1].y = 600;
+  exit_button->sprite_clips[1].w = 800;
+  exit_button->sprite_clips[1].h = 600;
 
-  exit_button_sprite_clips[2].x = 0;
-  exit_button_sprite_clips[2].y = 1200;
-  exit_button_sprite_clips[2].w = 800;
-  exit_button_sprite_clips[2].h = 600;
+  exit_button->sprite_clips[2].x = 0;
+  exit_button->sprite_clips[2].y = 1200;
+  exit_button->sprite_clips[2].w = 800;
+  exit_button->sprite_clips[2].h = 600;
 
   // Load music
   music = Mix_LoadMUS("intro/music.wav");
@@ -116,73 +109,16 @@ static void process_input(SDL_Event *event) {}
 
 static void update(float delta_time) {}
 
-static void render_background(SDL_Renderer *renderer, int x, int y) {
-  // Set rendering space and render to screen
-  SDL_Rect render_quad = {x, y, background_image.width,
-                          background_image.height};
-
-  // Render to screen
-  SDL_RenderCopy(renderer, background_image.texture, NULL, &render_quad);
-}
-
-static void render_play_button(SDL_Renderer *renderer, int x, int y) {
-  // Set rendering space and render to screen
-  SDL_Rect render_quad = {x, y, play_button_image.width,
-                          play_button_image.height};
-
-  // Render current frame
-  SDL_Rect *clip = &play_button_sprite_clips[play_button_frame / 4];
-
-  // Set clip rendering dimensions
-  render_quad.w = clip->w;
-  render_quad.h = clip->h;
-
-  // Render to screen
-  SDL_RenderCopy(renderer, play_button_image.texture, clip, &render_quad);
-
-  // Go to next frame
-  ++play_button_frame;
-
-  // Cycle animation
-  if (play_button_frame / 4 >= PLAY_BUTTON_FRAMES) {
-    play_button_frame = 0;
-  }
-}
-
-static void render_exit_button(SDL_Renderer *renderer, int x, int y) {
-  // Set rendering space and render to screen
-  SDL_Rect render_quad = {x, y, exit_button_image.width,
-                          exit_button_image.height};
-
-  // Render current frame
-  SDL_Rect *clip = &exit_button_sprite_clips[exit_button_frame / 4];
-
-  // Set clip rendering dimensions
-  render_quad.w = clip->w;
-  render_quad.h = clip->h;
-
-  // Render to screen
-  SDL_RenderCopy(renderer, exit_button_image.texture, clip, &render_quad);
-
-  // Go to next frame
-  ++exit_button_frame;
-
-  // Cycle animation
-  if (exit_button_frame / 4 >= EXIT_BUTTON_FRAMES) {
-    exit_button_frame = 0;
-  }
-}
-
 static void render(SDL_Renderer *renderer) {
-  render_background(renderer, 0, 0);
-  render_play_button(renderer, 260, 140);
-  render_exit_button(renderer, 220, 300);
+  render_image(renderer, &background_image, (SDL_Point){0, 0});
+  render_animation(renderer, play_button, (SDL_Point){260, 140});
+  render_animation(renderer, exit_button, (SDL_Point){220, 300});
 }
 
 static void deinit(void) {
   free_image_texture(&background_image);
-  free_image_texture(&play_button_image);
-  free_image_texture(&exit_button_image);
+  free_animation(play_button);
+  free_animation(exit_button);
 
   Mix_FreeChunk(play_button_click_sound);
   play_button_click_sound = NULL;

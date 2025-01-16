@@ -11,6 +11,16 @@
 
 #include "image.h"
 
+AnimationData *make_animation_data(int frames) {
+  AnimationData *animation = malloc(sizeof(AnimationData));
+  SDL_Rect *sprite_clips = (SDL_Rect *)malloc(sizeof(SDL_Rect) * frames);
+  animation->current_frame = 0;
+  animation->frames = frames;
+  animation->sprite_clips = sprite_clips;
+  animation->image = (ImageData){NULL, 0, 0};
+  return animation;
+}
+
 // Free texture if it exists
 void free_image_texture(ImageData *image) {
   if (image->texture == NULL) {
@@ -21,6 +31,12 @@ void free_image_texture(ImageData *image) {
   image->texture = NULL;
   image->width = 0;
   image->height = 0;
+}
+
+void free_animation(AnimationData *animation) {
+  free_image_texture(&animation->image);
+  free(animation->sprite_clips);
+  free(animation);
 }
 
 bool load_from_file(const char *path, SDL_Renderer *renderer,
@@ -56,4 +72,37 @@ bool load_from_file(const char *path, SDL_Renderer *renderer,
 
   // Return success
   return true;
+}
+
+void render_animation(SDL_Renderer *renderer, AnimationData *animation,
+                      SDL_Point point) {
+  // Set rendering space and render to screen
+  SDL_Rect render_quad = {point.x, point.y, animation->image.width,
+                          animation->image.height};
+
+  // Render current frame
+  SDL_Rect *clip = &animation->sprite_clips[animation->current_frame / 4];
+
+  // Set clip rendering dimensions
+  render_quad.w = clip->w;
+  render_quad.h = clip->h;
+
+  // Render to screen
+  SDL_RenderCopy(renderer, animation->image.texture, clip, &render_quad);
+
+  // Go to next frame
+  ++animation->current_frame;
+
+  // Cycle animation
+  if (animation->current_frame / 4 >= animation->frames) {
+    animation->current_frame = 0;
+  }
+}
+
+void render_image(SDL_Renderer *renderer, ImageData *image, SDL_Point point) {
+  // Set rendering space and render to screen
+  SDL_Rect render_quad = {point.x, point.y, image->width, image->height};
+
+  // Render to screen
+  SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
 }
