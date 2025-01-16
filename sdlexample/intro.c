@@ -111,9 +111,9 @@ bool intro_load_media(SDL_Renderer *renderer) {
   return true;
 }
 
-void intro_process_input(void) {}
+void intro_process_input(SDL_Event *event) {}
 
-void intro_update(void) {}
+void intro_update(float delta_time) {}
 
 void render_background(SDL_Renderer *renderer, int x, int y) {
   // Set rendering space and render to screen
