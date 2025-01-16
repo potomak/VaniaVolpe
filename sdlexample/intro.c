@@ -11,6 +11,7 @@
 
 #include "constants.h"
 #include "image.h"
+
 #include "intro.h"
 
 // Background image
@@ -191,3 +192,8 @@ void intro_deinit(void) {
   Mix_FreeMusic(music);
   music = NULL;
 }
+
+Scene intro_scene = {
+    intro_init,   intro_load_media, intro_process_input,
+    intro_update, intro_render,     intro_deinit,
+};

@@ -8,6 +8,8 @@
 #ifndef example_h
 #define example_h
 
+#import "scene.h"
+
 // Declare two game objects for the ball and the paddle
 struct game_object {
   float x;
@@ -18,16 +20,6 @@ struct game_object {
   float vel_y;
 };
 
-void example_init(void);
-
-bool example_load_media(SDL_Renderer *renderer);
-
-void example_process_input(SDL_Event *event);
-
-void example_update(float delta_time);
-
-void example_render(SDL_Renderer *renderer);
-
-void example_deinit(void);
+extern Scene example_scene;
 
 #endif /* example_h */
