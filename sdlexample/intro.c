@@ -32,6 +32,12 @@ static Mix_Chunk *exit_button_click_sound = NULL;
 // Mouse position
 static SDL_Point m_pos;
 
+// Hotspots
+static const SDL_Point PLAY_BUTTON_TOP_LEFT = {443, 295};
+static const SDL_Point PLAY_BUTTON_BOTTOM_RIGHT = {711, 413};
+static const SDL_Point EXIT_BUTTON_TOP_LEFT = {426, 440};
+static const SDL_Point EXIT_BUTTON_BOTTOM_RIGHT = {703, 543};
+
 static void init(void) {
   play_button = make_animation_data(3);
   exit_button = make_animation_data(3);
@@ -116,7 +122,16 @@ static void process_input(SDL_Event *event) {
     SDL_GetMouseState(&m_pos.x, &m_pos.y);
     break;
   case SDL_MOUSEBUTTONDOWN:
-    // set_active_scene(EXAMPLE);
+    if (m_pos.x > PLAY_BUTTON_TOP_LEFT.x && m_pos.y > PLAY_BUTTON_TOP_LEFT.y &&
+        m_pos.x < PLAY_BUTTON_BOTTOM_RIGHT.x &&
+        m_pos.y < PLAY_BUTTON_BOTTOM_RIGHT.y) {
+      set_active_scene(EXAMPLE);
+    }
+    if (m_pos.x > EXIT_BUTTON_TOP_LEFT.x && m_pos.y > EXIT_BUTTON_TOP_LEFT.y &&
+        m_pos.x < EXIT_BUTTON_BOTTOM_RIGHT.x &&
+        m_pos.y < EXIT_BUTTON_BOTTOM_RIGHT.y) {
+      exit_game();
+    }
     break;
   }
 }
