@@ -8,6 +8,9 @@
 #ifndef scene_h
 #define scene_h
 
+#include <SDL2/SDL.h>
+#include <stdbool.h>
+
 typedef struct scene {
   void (*init)(void);
   bool (*load_media)(SDL_Renderer *renderer);

@@ -5,13 +5,8 @@
 #include <stdio.h>
 
 #include "constants.h"
+#include "game.h"
 #include "image.h"
-
-// Special scene used as a playground
-#include "example.h"
-
-// Scenes
-#include "intro.h"
 
 // Global variables
 int game_is_running = false;
@@ -66,32 +61,11 @@ int init_window(void) {
   return true;
 }
 
-void init(void) {
-  example_scene.init();
-  intro_scene.init();
-}
-
-bool load_media(void) {
-  if (!example_scene.load_media(renderer)) {
-    fprintf(stderr, "Failed to initialize example!\n");
-    return false;
-  }
-
-  if (!intro_scene.load_media(renderer)) {
-    fprintf(stderr, "Failed to initialize intro!\n");
-    return false;
-  }
-
-  return true;
-}
-
 // Function to poll SDL events and process keyboard input
 void process_input(void) {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
-    // Process input for scenes
-    example_scene.process_input(&event);
-    intro_scene.process_input(&event);
+    game_process_input(&event);
 
     switch (event.type) {
     case SDL_QUIT:
@@ -116,9 +90,7 @@ void update(void) {
   // Store the milliseconds of the current frame to be used in the next one
   last_frame_time = SDL_GetTicks();
 
-  // Update scenes
-  example_scene.update(delta_time);
-  intro_scene.update(delta_time);
+  game_update(delta_time);
 }
 
 // Render function to draw game objects in the SDL window
@@ -126,17 +98,10 @@ void render(void) {
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   SDL_RenderClear(renderer);
 
-  // Render scenes
-  intro_scene.render(renderer);
-  example_scene.render(renderer);
+  game_render(renderer);
 
   // Update screen
   SDL_RenderPresent(renderer);
-}
-
-void deinit(void) {
-  intro_scene.deinit();
-  example_scene.deinit();
 }
 
 // Function to destroy SDL window and renderer
@@ -157,10 +122,10 @@ int main(int argc, char *args[]) {
     fprintf(stderr, "Failed to initialize window!\n");
   }
 
-  init();
+  game_init();
 
   if (game_is_running) {
-    game_is_running = load_media();
+    game_is_running = game_load_media(renderer);
   }
   if (!game_is_running) {
     fprintf(stderr, "Failed to load media!\n");
@@ -172,7 +137,7 @@ int main(int argc, char *args[]) {
     render();
   }
 
-  deinit();
+  game_deinit();
 
   destroy_window();
   destroy_image();
