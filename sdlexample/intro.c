@@ -133,7 +133,7 @@ void render_play_button(SDL_Renderer *renderer, int x, int y) {
   SDL_Rect render_quad = {x, y, play_button_width, play_button_height};
 
   // Render current frame
-  SDL_Rect *clip = &play_button_sprite_clips[play_button_frame / 3];
+  SDL_Rect *clip = &play_button_sprite_clips[play_button_frame / 4];
 
   // Set clip rendering dimensions
   render_quad.w = clip->w;
@@ -146,7 +146,7 @@ void render_play_button(SDL_Renderer *renderer, int x, int y) {
   ++play_button_frame;
 
   // Cycle animation
-  if (play_button_frame / 3 >= PLAY_BUTTON_FRAMES) {
+  if (play_button_frame / 4 >= PLAY_BUTTON_FRAMES) {
     play_button_frame = 0;
   }
 }
@@ -156,7 +156,7 @@ void render_exit_button(SDL_Renderer *renderer, int x, int y) {
   SDL_Rect render_quad = {x, y, exit_button_width, exit_button_height};
 
   // Render current frame
-  SDL_Rect *clip = &exit_button_sprite_clips[exit_button_frame / 3];
+  SDL_Rect *clip = &exit_button_sprite_clips[exit_button_frame / 4];
 
   // Set clip rendering dimensions
   render_quad.w = clip->w;
@@ -169,7 +169,7 @@ void render_exit_button(SDL_Renderer *renderer, int x, int y) {
   ++exit_button_frame;
 
   // Cycle animation
-  if (exit_button_frame / 3 >= EXIT_BUTTON_FRAMES) {
+  if (exit_button_frame / 4 >= EXIT_BUTTON_FRAMES) {
     exit_button_frame = 0;
   }
 }
