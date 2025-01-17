@@ -8,6 +8,9 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
+#include "game.h"
+#include "scene.h"
+
 #include "debug.h"
 
 // Is mouse button down
@@ -53,4 +56,11 @@ void debug_render(SDL_Renderer *renderer) {
                                             .y = m_pos_down.y,
                                             .w = m_pos_up.x - m_pos_down.x,
                                             .h = m_pos_up.y - m_pos_down.y}));
+
+  Scene current_scene = scene_instance(game.current_scene);
+  for (int i = 0; i < current_scene.hotspots_length; i++) {
+    SDL_SetRenderDrawColor(renderer, 0xCC, 0xFF, 0x00, 0xFF);
+    SDL_RenderDrawRect(renderer,
+                       &scene_instance(game.current_scene).hotspots[i]);
+  }
 }

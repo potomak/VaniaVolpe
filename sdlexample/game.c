@@ -23,7 +23,7 @@ Game game = {
     .current_scene = INTRO,
 };
 
-static Scene scene_instance(GameScene scene) {
+Scene scene_instance(GameScene scene) {
   switch (scene) {
   case INTRO:
     return intro_scene;
@@ -33,7 +33,7 @@ static Scene scene_instance(GameScene scene) {
     return example_scene;
   default:
     fprintf(stderr, "Warning: scene not defined!\n");
-    break;
+    return (Scene){};
   }
 }
 
@@ -47,19 +47,17 @@ void set_active_scene(GameScene scene) {
 void exit_game(void) { game.is_running = false; }
 
 void game_init(void) {
-  example_scene.init();
-  intro_scene.init();
+  for (int i = 0; i < SCENES_LENGTH; i++) {
+    scene_instance(i).init();
+  }
 }
 
 bool game_load_media(SDL_Renderer *renderer) {
-  if (!example_scene.load_media(renderer)) {
-    fprintf(stderr, "Failed to initialize example!\n");
-    return false;
-  }
-
-  if (!intro_scene.load_media(renderer)) {
-    fprintf(stderr, "Failed to initialize intro!\n");
-    return false;
+  for (int i = 0; i < SCENES_LENGTH; i++) {
+    if (!scene_instance(i).load_media(renderer)) {
+      fprintf(stderr, "Failed to initialize scene!\n");
+      return false;
+    }
   }
 
   return true;
@@ -98,6 +96,7 @@ void game_render(SDL_Renderer *renderer) {
 }
 
 void game_deinit(void) {
-  intro_scene.deinit();
-  example_scene.deinit();
+  for (int i = 0; i < SCENES_LENGTH; i++) {
+    scene_instance(i).deinit();
+  }
 }

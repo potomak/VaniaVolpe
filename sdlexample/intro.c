@@ -33,14 +33,15 @@ static Mix_Chunk *exit_button_click_sound = NULL;
 static SDL_Point m_pos;
 
 // Hotspots
-static const SDL_Point PLAY_BUTTON_TOP_LEFT = {443, 295};
-static const SDL_Point PLAY_BUTTON_BOTTOM_RIGHT = {711, 413};
-static const SDL_Point EXIT_BUTTON_TOP_LEFT = {426, 440};
-static const SDL_Point EXIT_BUTTON_BOTTOM_RIGHT = {703, 543};
+static const SDL_Rect PLAY_BUTTON_HOTSPOT = {443, 285, 268, 118};
+static const SDL_Rect EXIT_BUTTON_HOTSPOT = {436, 430, 277, 103};
+static SDL_Rect hotspots[2];
 
 static void init(void) {
   play_button = make_animation_data(3);
   exit_button = make_animation_data(3);
+  hotspots[0] = PLAY_BUTTON_HOTSPOT;
+  hotspots[1] = EXIT_BUTTON_HOTSPOT;
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -56,18 +57,18 @@ static bool load_media(SDL_Renderer *renderer) {
 
   play_button->sprite_clips[0].x = 0;
   play_button->sprite_clips[0].y = 0;
-  play_button->sprite_clips[0].w = 800;
-  play_button->sprite_clips[0].h = 600;
+  play_button->sprite_clips[0].w = 280;
+  play_button->sprite_clips[0].h = 162;
 
   play_button->sprite_clips[1].x = 0;
-  play_button->sprite_clips[1].y = 600;
-  play_button->sprite_clips[1].w = 800;
-  play_button->sprite_clips[1].h = 600;
+  play_button->sprite_clips[1].y = 162;
+  play_button->sprite_clips[1].w = 280;
+  play_button->sprite_clips[1].h = 162;
 
   play_button->sprite_clips[2].x = 0;
-  play_button->sprite_clips[2].y = 1200;
-  play_button->sprite_clips[2].w = 800;
-  play_button->sprite_clips[2].h = 600;
+  play_button->sprite_clips[2].y = 324;
+  play_button->sprite_clips[2].w = 280;
+  play_button->sprite_clips[2].h = 162;
 
   if (!load_from_file("intro/exit_button.png", renderer, &exit_button->image)) {
     fprintf(stderr, "Failed to texture!\n");
@@ -76,18 +77,18 @@ static bool load_media(SDL_Renderer *renderer) {
 
   exit_button->sprite_clips[0].x = 0;
   exit_button->sprite_clips[0].y = 0;
-  exit_button->sprite_clips[0].w = 800;
-  exit_button->sprite_clips[0].h = 600;
+  exit_button->sprite_clips[0].w = 265;
+  exit_button->sprite_clips[0].h = 81;
 
   exit_button->sprite_clips[1].x = 0;
-  exit_button->sprite_clips[1].y = 600;
-  exit_button->sprite_clips[1].w = 800;
-  exit_button->sprite_clips[1].h = 600;
+  exit_button->sprite_clips[1].y = 81;
+  exit_button->sprite_clips[1].w = 265;
+  exit_button->sprite_clips[1].h = 81;
 
   exit_button->sprite_clips[2].x = 0;
-  exit_button->sprite_clips[2].y = 1200;
-  exit_button->sprite_clips[2].w = 800;
-  exit_button->sprite_clips[2].h = 600;
+  exit_button->sprite_clips[2].y = 162;
+  exit_button->sprite_clips[2].w = 265;
+  exit_button->sprite_clips[2].h = 81;
 
   // Load music
   music = Mix_LoadMUS("intro/music.wav");
@@ -122,14 +123,10 @@ static void process_input(SDL_Event *event) {
     SDL_GetMouseState(&m_pos.x, &m_pos.y);
     break;
   case SDL_MOUSEBUTTONDOWN:
-    if (m_pos.x > PLAY_BUTTON_TOP_LEFT.x && m_pos.y > PLAY_BUTTON_TOP_LEFT.y &&
-        m_pos.x < PLAY_BUTTON_BOTTOM_RIGHT.x &&
-        m_pos.y < PLAY_BUTTON_BOTTOM_RIGHT.y) {
-      set_active_scene(EXAMPLE);
+    if (SDL_PointInRect(&m_pos, &PLAY_BUTTON_HOTSPOT)) {
+      set_active_scene(PLAYGROUND_ENTRANCE);
     }
-    if (m_pos.x > EXIT_BUTTON_TOP_LEFT.x && m_pos.y > EXIT_BUTTON_TOP_LEFT.y &&
-        m_pos.x < EXIT_BUTTON_BOTTOM_RIGHT.x &&
-        m_pos.y < EXIT_BUTTON_BOTTOM_RIGHT.y) {
+    if (SDL_PointInRect(&m_pos, &EXIT_BUTTON_HOTSPOT)) {
       exit_game();
     }
     break;
@@ -140,8 +137,8 @@ static void update(float delta_time) {}
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
-  render_animation(renderer, play_button, (SDL_Point){260, 140});
-  render_animation(renderer, exit_button, (SDL_Point){220, 300});
+  render_animation(renderer, play_button, (SDL_Point){410, 260});
+  render_animation(renderer, exit_button, (SDL_Point){440, 450});
 }
 
 static void deinit(void) {
@@ -171,4 +168,6 @@ Scene intro_scene = {
     .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
+    .hotspots = hotspots,
+    .hotspots_length = 2,
 };
