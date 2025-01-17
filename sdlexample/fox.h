@@ -15,14 +15,14 @@
 
 typedef struct fox {
   AnimationData *animation;
-  SDL_Point position;
-  SDL_Point target_position;
+  SDL_FPoint current_position;
+  SDL_FPoint target_position;
   SDL_Point direction;
   bool is_walking;
   bool has_key;
 } Fox;
 
-Fox *make_fox(SDL_Point initial_position);
+Fox *make_fox(SDL_FPoint initial_position);
 
 bool fox_load_media(Fox *fox, SDL_Renderer *renderer);
 
@@ -32,6 +32,6 @@ void fox_render(Fox *fox, SDL_Renderer *renderer);
 
 void fox_free(Fox *fox);
 
-void fox_walk_to(Fox *fox, SDL_Point position);
+void fox_walk_to(Fox *fox, SDL_FPoint position);
 
 #endif /* fox_h */
