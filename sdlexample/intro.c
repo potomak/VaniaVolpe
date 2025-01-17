@@ -137,6 +137,7 @@ static void update(float delta_time) {}
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
+
   render_animation(renderer, play_button, (SDL_Point){410, 260});
   render_animation(renderer, exit_button, (SDL_Point){440, 450});
 }
