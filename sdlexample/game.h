@@ -8,7 +8,16 @@
 #ifndef game_h
 #define game_h
 
-typedef enum game_scene { INTRO, PLAYGROUND_ENTRANCE, EXAMPLE } GameScene;
+#import "scene.h"
+
+typedef enum game_scene {
+  INTRO,
+  PLAYGROUND_ENTRANCE,
+  EXAMPLE,
+  // This should always be the last value in the enum
+  // It is a hack to iterate over all the scenes
+  SCENES_LENGTH,
+} GameScene;
 
 typedef struct game {
   bool is_running;
@@ -17,6 +26,8 @@ typedef struct game {
 } Game;
 
 extern Game game;
+
+Scene scene_instance(GameScene scene);
 
 void set_active_scene(GameScene scene);
 

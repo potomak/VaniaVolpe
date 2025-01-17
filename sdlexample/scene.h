@@ -23,6 +23,10 @@ typedef struct scene {
   void (*on_scene_active)(void);
   // Called before the scene is unset as the current scene
   void (*on_scene_inactive)(void);
+
+  // Hotspots in the scene
+  SDL_Rect *hotspots;
+  int hotspots_length;
 } Scene;
 
 #endif /* scene_h */
