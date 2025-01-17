@@ -45,7 +45,7 @@ static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
   gate = make_animation_data(7, ONE_SHOT);
   shovel = make_animation_data(5, LOOP);
-  fox = make_fox((SDL_Point){580, 457});
+  fox = make_fox((SDL_FPoint){580, 457});
 
   hotspots[0] = GATE_HOTSPOT;
   hotspots[1] = EXCAVATOR_HOTSPOT;
@@ -199,7 +199,7 @@ static void process_input(SDL_Event *event) {
     }
     if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT)) {
       // Walk to current position
-      fox_walk_to(fox, m_pos);
+      fox_walk_to(fox, (SDL_FPoint){m_pos.x, m_pos.y});
     }
     break;
   }

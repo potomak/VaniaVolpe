@@ -6,17 +6,16 @@
 //
 
 #include <SDL2/SDL.h>
-#include <SDL2_image/SDL_image.h>
 #include <stdbool.h>
 
 #include "image.h"
 
 #include "fox.h"
 
-Fox *make_fox(SDL_Point initial_position) {
+Fox *make_fox(SDL_FPoint initial_position) {
   Fox *fox = malloc(sizeof(Fox));
   fox->animation = make_animation_data(4, LOOP);
-  fox->position = initial_position;
+  fox->current_position = initial_position;
   fox->target_position = initial_position;
   fox->direction = (SDL_Point){0, 0};
   fox->is_walking = false;
@@ -63,8 +62,8 @@ void fox_update(Fox *fox, float delta_time) {
 
 void fox_render(Fox *fox, SDL_Renderer *renderer) {
   SDL_Point position =
-      (SDL_Point){.x = fox->position.x - fox->animation->sprite_clips[0].w / 2,
-                  .y = fox->position.y - fox->animation->sprite_clips[0].h / 2};
+      (SDL_Point){.x = fox->current_position.x - fox->animation->sprite_clips[0].w / 2,
+                  .y = fox->current_position.y - fox->animation->sprite_clips[0].h / 2};
   render_animation(renderer, fox->animation, position);
 }
 
@@ -73,9 +72,9 @@ void fox_free(Fox *fox) {
   free(fox);
 }
 
-void fox_walk_to(Fox *fox, SDL_Point target_position) {
+void fox_walk_to(Fox *fox, SDL_FPoint target_position) {
   fox->target_position = target_position;
   // TODO: Hack
-  fox->position = target_position;
+  fox->current_position = target_position;
   fox->is_walking = true;
 }
