@@ -64,8 +64,8 @@ void fox_update(Fox *fox, float delta_time) {
 
     // Stop walking after reaching the target position
     if (fabsf(dx) <= 2 && fabsf(dy) <= 2) {
+      stop_animation(fox->animation);
       fox->is_walking = false;
-      fox->animation->is_playing = false;
       fox->direction = (SDL_FPoint){0, 0};
       fox->current_position = fox->target_position;
       return;
@@ -91,8 +91,8 @@ void fox_free(Fox *fox) {
 }
 
 void fox_walk_to(Fox *fox, SDL_FPoint target_position) {
+  play_animation(fox->animation);
   fox->is_walking = true;
-  fox->animation->is_playing = true;
   fox->target_position = target_position;
 
   float dx = fox->target_position.x - fox->current_position.x;
