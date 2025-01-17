@@ -38,8 +38,9 @@ static const SDL_Rect EXIT_BUTTON_HOTSPOT = {436, 430, 277, 103};
 static SDL_Rect hotspots[2];
 
 static void init(void) {
-  play_button = make_animation_data(3);
-  exit_button = make_animation_data(3);
+  play_button = make_animation_data(3, LOOP);
+  exit_button = make_animation_data(3, LOOP);
+
   hotspots[0] = PLAY_BUTTON_HOTSPOT;
   hotspots[1] = EXIT_BUTTON_HOTSPOT;
 }

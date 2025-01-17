@@ -11,11 +11,14 @@
 
 #include "image.h"
 
-AnimationData *make_animation_data(int frames) {
+AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   AnimationData *animation = malloc(sizeof(AnimationData));
   SDL_Rect *sprite_clips = (SDL_Rect *)malloc(sizeof(SDL_Rect) * frames);
   animation->current_frame = 0;
   animation->frames = frames;
+  animation->is_playing = false;
+  animation->style = style;
+  animation->loop_count = 0;
   animation->sprite_clips = sprite_clips;
   animation->image = (ImageData){NULL, 0, 0};
   return animation;
@@ -85,12 +88,19 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
   // Render to screen
   SDL_RenderCopy(renderer, animation->image.texture, clip, &render_quad);
 
-  // Go to next frame
-  ++animation->current_frame;
+  if (animation->is_playing) {
+    // Go to next frame
+    ++animation->current_frame;
+  }
 
   // Cycle animation
   if (animation->current_frame / 4 >= animation->frames) {
     animation->current_frame = 0;
+    animation->loop_count++;
+
+    if (animation->style == ONE_SHOT) {
+      animation->is_playing = false;
+    }
   }
 }
 
