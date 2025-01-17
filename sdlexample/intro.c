@@ -184,5 +184,5 @@ Scene intro_scene = {
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,
-    .hotspots_length = 2,
+    .hotspots_length = LEN(hotspots),
 };
