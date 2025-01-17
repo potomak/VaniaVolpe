@@ -21,6 +21,9 @@ AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   animation->loop_count = 0;
   animation->sprite_clips = sprite_clips;
   animation->image = (ImageData){NULL, 0, 0};
+  // Default multiplier used to slow down animations
+  animation->speed_multiplier = 1. / 4;
+  animation->flip = SDL_FLIP_NONE;
   return animation;
 }
 
@@ -80,13 +83,15 @@ bool load_from_file(const char *path, SDL_Renderer *renderer,
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point) {
   // Get current frame clip
-  SDL_Rect *clip = &animation->sprite_clips[animation->current_frame / 4];
+  int clip_index = animation->current_frame * animation->speed_multiplier;
+  SDL_Rect *clip = &animation->sprite_clips[clip_index];
 
   // Set rendering space and render to screen
   SDL_Rect render_quad = {point.x, point.y, clip->w, clip->h};
 
   // Render to screen
-  SDL_RenderCopy(renderer, animation->image.texture, clip, &render_quad);
+  SDL_RenderCopyEx(renderer, animation->image.texture, clip, &render_quad, 0,
+                   NULL, animation->flip);
 
   if (animation->is_playing) {
     // Go to next frame
@@ -94,7 +99,8 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
   }
 
   // Cycle animation
-  if (animation->current_frame / 4 >= animation->frames) {
+  if (animation->current_frame * animation->speed_multiplier >=
+      animation->frames) {
     animation->current_frame = 0;
     animation->loop_count++;
 

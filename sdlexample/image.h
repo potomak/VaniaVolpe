@@ -28,6 +28,8 @@ typedef struct animation_data {
   int loop_count;
   SDL_Rect *sprite_clips;
   ImageData image;
+  float speed_multiplier;
+  SDL_RendererFlip flip;
 } AnimationData;
 
 AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style);

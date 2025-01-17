@@ -13,11 +13,17 @@
 
 #import "image.h"
 
+typedef enum horizontal_orientation {
+  WEST = -1,
+  EAST = 1,
+} HorizontalOrientation;
+
 typedef struct fox {
   AnimationData *animation;
   SDL_FPoint current_position;
   SDL_FPoint target_position;
-  SDL_Point direction;
+  SDL_FPoint direction;
+  HorizontalOrientation horizontal_orientation;
   bool is_walking;
   bool has_key;
 } Fox;
