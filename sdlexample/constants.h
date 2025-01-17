@@ -9,4 +9,6 @@
 
 #define AUDIO_CHUNK_SIZE 2048
 
+#define LEN(x) (sizeof(x) / sizeof((x)[0]))
+
 #endif

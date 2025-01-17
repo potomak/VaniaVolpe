@@ -57,9 +57,18 @@ void debug_render(SDL_Renderer *renderer) {
                                             .h = m_pos_up.y - m_pos_down.y}));
 
   Scene current_scene = scene_instance(game.current_scene);
+  // Draw hotspots
   for (int i = 0; i < current_scene.hotspots_length; i++) {
     SDL_SetRenderDrawColor(renderer, 0xCC, 0xFF, 0x00, 0xFF);
-    SDL_RenderDrawRect(renderer,
-                       &scene_instance(game.current_scene).hotspots[i]);
+    SDL_RenderDrawRect(renderer, &current_scene.hotspots[i]);
+  }
+
+  // Draw points of interest
+  for (int i = 0; i < current_scene.pois_length; i++) {
+    SDL_SetRenderDrawColor(renderer, 0xCC, 0x00, 0xFF, 0xFF);
+    SDL_RenderFillRect(renderer, &((SDL_Rect){.x = current_scene.pois[i].x - 2,
+                                              .y = current_scene.pois[i].y - 2,
+                                              .w = 4,
+                                              .h = 4}));
   }
 }

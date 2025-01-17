@@ -39,7 +39,13 @@ static const SDL_Rect GATE_HOTSPOT = {471, 144, 217, 184};
 static const SDL_Rect EXCAVATOR_HOTSPOT = {197, 338, 108, 72};
 static const SDL_Rect SHOVEL_HOTSPOT = {128, 385, 77, 65};
 static const SDL_Rect WALKABLE_HOTSPOT = {1, 312, 795, 286};
-static SDL_Rect hotspots[4];
+static const SDL_Rect NON_WALKABLE_HOTSPOT = {80, 341, 250, 179};
+static SDL_Rect hotspots[5];
+
+// Points of interest
+static const SDL_Point GATE_POI = {554, 344};
+static const SDL_Point SHOVEL_POI = {258, 507};
+static SDL_Point pois[2];
 
 static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
@@ -51,6 +57,10 @@ static void init(void) {
   hotspots[1] = EXCAVATOR_HOTSPOT;
   hotspots[2] = SHOVEL_HOTSPOT;
   hotspots[3] = WALKABLE_HOTSPOT;
+  hotspots[4] = NON_WALKABLE_HOTSPOT;
+
+  pois[0] = GATE_POI;
+  pois[1] = SHOVEL_POI;
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -184,20 +194,26 @@ static void process_input(SDL_Event *event) {
     break;
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &GATE_HOTSPOT)) {
+      // Walk to gate
+      fox_walk_to(fox, (SDL_FPoint){GATE_POI.x, GATE_POI.y});
       // If key is in inventory open gate then go to PLAYGROUND scene
       // Else give hint about where to find the key
-      set_active_scene(EXAMPLE);
+      break;
     }
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
       // Play excavator animation
       excavator->is_playing = true;
+      break;
     }
     if (SDL_PointInRect(&m_pos, &SHOVEL_HOTSPOT)) {
       // Walk to shovel
+      fox_walk_to(fox, (SDL_FPoint){SHOVEL_POI.x, SHOVEL_POI.y});
       // Play shovel animation
       // Add key to inventory
+      break;
     }
-    if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT)) {
+    if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT) &&
+        !SDL_PointInRect(&m_pos, &NON_WALKABLE_HOTSPOT)) {
       // Walk to current position
       fox_walk_to(fox, (SDL_FPoint){m_pos.x, m_pos.y});
     }
@@ -241,5 +257,7 @@ Scene playground_entrance_scene = {
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,
-    .hotspots_length = 4,
+    .hotspots_length = LEN(hotspots),
+    .pois = pois,
+    .pois_length = LEN(pois),
 };

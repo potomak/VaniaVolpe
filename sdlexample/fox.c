@@ -61,9 +61,9 @@ void fox_update(Fox *fox, float delta_time) {
 }
 
 void fox_render(Fox *fox, SDL_Renderer *renderer) {
-  SDL_Point position =
-      (SDL_Point){.x = fox->current_position.x - fox->animation->sprite_clips[0].w / 2,
-                  .y = fox->current_position.y - fox->animation->sprite_clips[0].h / 2};
+  SDL_Point position = (SDL_Point){
+      .x = fox->current_position.x - fox->animation->sprite_clips[0].w / 2,
+      .y = fox->current_position.y - fox->animation->sprite_clips[0].h / 2};
   render_animation(renderer, fox->animation, position);
 }
 

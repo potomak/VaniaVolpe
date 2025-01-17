@@ -27,6 +27,10 @@ typedef struct scene {
   // Hotspots in the scene
   SDL_Rect *hotspots;
   int hotspots_length;
+
+  // Points of interest in the scene
+  SDL_Point *pois;
+  int pois_length;
 } Scene;
 
 #endif /* scene_h */
