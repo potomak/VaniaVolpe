@@ -49,6 +49,8 @@ static SDL_Point pois[2];
 
 static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
+  // Loop the animation 3 times before stopping
+  excavator->max_loop_count = 3;
   gate = make_animation_data(7, ONE_SHOT);
   shovel = make_animation_data(5, LOOP);
   fox = make_fox((SDL_FPoint){580, 457});
@@ -202,7 +204,7 @@ static void process_input(SDL_Event *event) {
     }
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
       // Play excavator animation
-      excavator->is_playing = true;
+      play_animation(excavator);
       break;
     }
     if (SDL_PointInRect(&m_pos, &SHOVEL_HOTSPOT)) {

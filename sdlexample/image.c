@@ -19,6 +19,7 @@ AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   animation->is_playing = false;
   animation->style = style;
   animation->loop_count = 0;
+  animation->max_loop_count = 0;
   animation->sprite_clips = sprite_clips;
   animation->image = (ImageData){NULL, 0, 0};
   // Default multiplier used to slow down animations
@@ -80,6 +81,16 @@ bool load_from_file(const char *path, SDL_Renderer *renderer,
   return true;
 }
 
+void play_animation(AnimationData *animation) {
+  animation->loop_count = 0;
+  animation->is_playing = true;
+}
+
+void stop_animation(AnimationData *animation) {
+  animation->is_playing = false;
+  animation->current_frame = 0;
+}
+
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point) {
   // Get current frame clip
@@ -104,8 +115,9 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
     animation->current_frame = 0;
     animation->loop_count++;
 
-    if (animation->style == ONE_SHOT) {
-      animation->is_playing = false;
+    if (animation->style == ONE_SHOT &&
+        animation->loop_count > animation->max_loop_count) {
+      stop_animation(animation);
     }
   }
 }
