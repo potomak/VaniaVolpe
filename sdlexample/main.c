@@ -131,6 +131,9 @@ int main(int argc, char *args[]) {
     fprintf(stderr, "Failed to load media!\n");
   }
 
+  // Hack to execute lifecycle callbacks for the first scene
+  set_active_scene(INTRO);
+
   while (game.is_running) {
     process_input();
     update();
