@@ -122,6 +122,16 @@ static void process_input(SDL_Event *event) {
   case SDL_MOUSEMOTION:
     // Get mouse position
     SDL_GetMouseState(&m_pos.x, &m_pos.y);
+    if (SDL_PointInRect(&m_pos, &PLAY_BUTTON_HOTSPOT)) {
+      play_button->is_playing = true;
+    } else {
+      play_button->is_playing = false;
+    }
+    if (SDL_PointInRect(&m_pos, &EXIT_BUTTON_HOTSPOT)) {
+      exit_button->is_playing = true;
+    } else {
+      exit_button->is_playing = false;
+    }
     break;
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &PLAY_BUTTON_HOTSPOT)) {
@@ -157,7 +167,10 @@ static void deinit(void) {
   music = NULL;
 }
 
-static void on_scene_active(void) {}
+static void on_scene_active(void) {
+  exit_button->is_playing = false;
+  play_button->is_playing = false;
+}
 
 static void on_scene_inactive(void) {}
 

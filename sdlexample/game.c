@@ -20,7 +20,7 @@
 Game game = {
     .is_running = false,
     .is_debugging = false,
-    .current_scene = PLAYGROUND_ENTRANCE,
+    .current_scene = INTRO,
 };
 
 Scene scene_instance(GameScene scene) {
