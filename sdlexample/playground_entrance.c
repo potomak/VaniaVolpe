@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include "constants.h"
+#include "fox.h"
 #include "game.h"
 #include "image.h"
 
@@ -22,7 +23,7 @@ static ImageData background = {NULL, 0, 0};
 static AnimationData *excavator;
 static AnimationData *gate;
 static AnimationData *shovel;
-static AnimationData *fox;
+static Fox *fox;
 
 // Music
 static Mix_Music *music = NULL;
@@ -44,7 +45,7 @@ static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
   gate = make_animation_data(7, ONE_SHOT);
   shovel = make_animation_data(5, LOOP);
-  fox = make_animation_data(4, LOOP);
+  fox = make_fox((SDL_Point){580, 457});
 
   hotspots[0] = GATE_HOTSPOT;
   hotspots[1] = EXCAVATOR_HOTSPOT;
@@ -156,30 +157,10 @@ static bool load_media(SDL_Renderer *renderer) {
   shovel->sprite_clips[4].w = 88;
   shovel->sprite_clips[4].h = 67;
 
-  if (!load_from_file("playground_entrance/fox.png", renderer, &fox->image)) {
+  if (!fox_load_media(fox, renderer)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
-
-  fox->sprite_clips[0].x = 0;
-  fox->sprite_clips[0].y = 0;
-  fox->sprite_clips[0].w = 211;
-  fox->sprite_clips[0].h = 163;
-
-  fox->sprite_clips[1].x = 0;
-  fox->sprite_clips[1].y = 163;
-  fox->sprite_clips[1].w = 211;
-  fox->sprite_clips[1].h = 163;
-
-  fox->sprite_clips[2].x = 0;
-  fox->sprite_clips[2].y = 326;
-  fox->sprite_clips[2].w = 211;
-  fox->sprite_clips[2].h = 163;
-
-  fox->sprite_clips[3].x = 0;
-  fox->sprite_clips[3].y = 489;
-  fox->sprite_clips[3].w = 211;
-  fox->sprite_clips[3].h = 163;
 
   // Load music
   music = Mix_LoadMUS("playground_entrance/music.wav");
@@ -218,12 +199,13 @@ static void process_input(SDL_Event *event) {
     }
     if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT)) {
       // Walk to current position
+      fox_walk_to(fox, m_pos);
     }
     break;
   }
 }
 
-static void update(float delta_time) {}
+static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
@@ -231,7 +213,7 @@ static void render(SDL_Renderer *renderer) {
   render_animation(renderer, excavator, (SDL_Point){180, 350});
   render_animation(renderer, gate, (SDL_Point){491, 162});
   render_animation(renderer, shovel, (SDL_Point){112, 380});
-  render_animation(renderer, fox, (SDL_Point){474, 376});
+  fox_render(fox, renderer);
 }
 
 static void deinit(void) {
@@ -239,7 +221,7 @@ static void deinit(void) {
   free_animation(excavator);
   free_animation(gate);
   free_animation(shovel);
-  free_animation(fox);
+  fox_free(fox);
 
   Mix_FreeMusic(music);
   music = NULL;
