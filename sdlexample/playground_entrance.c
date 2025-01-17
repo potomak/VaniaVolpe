@@ -28,12 +28,28 @@ static AnimationData *fox;
 static Mix_Music *music = NULL;
 
 // Sound effects
+// TODO
+
+// Mouse position
+static SDL_Point m_pos;
+
+// Hotspots
+static const SDL_Rect GATE_HOTSPOT = {471, 144, 217, 184};
+static const SDL_Rect EXCAVATOR_HOTSPOT = {197, 338, 108, 72};
+static const SDL_Rect SHOVEL_HOTSPOT = {128, 385, 77, 65};
+static const SDL_Rect WALKABLE_HOTSPOT = {1, 312, 795, 286};
+static SDL_Rect hotspots[4];
 
 static void init(void) {
-  excavator = make_animation_data(4);
-  gate = make_animation_data(7);
-  shovel = make_animation_data(5);
-  fox = make_animation_data(4);
+  excavator = make_animation_data(4, ONE_SHOT);
+  gate = make_animation_data(7, ONE_SHOT);
+  shovel = make_animation_data(5, LOOP);
+  fox = make_animation_data(4, LOOP);
+
+  hotspots[0] = GATE_HOTSPOT;
+  hotspots[1] = EXCAVATOR_HOTSPOT;
+  hotspots[2] = SHOVEL_HOTSPOT;
+  hotspots[3] = WALKABLE_HOTSPOT;
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -181,8 +197,28 @@ static bool load_media(SDL_Renderer *renderer) {
 
 static void process_input(SDL_Event *event) {
   switch (event->type) {
+  case SDL_MOUSEMOTION:
+    // Get mouse position
+    SDL_GetMouseState(&m_pos.x, &m_pos.y);
+    break;
   case SDL_MOUSEBUTTONDOWN:
-    //    set_active_scene(EXAMPLE);
+    if (SDL_PointInRect(&m_pos, &GATE_HOTSPOT)) {
+      // If key is in inventory open gate then go to PLAYGROUND scene
+      // Else give hint about where to find the key
+      set_active_scene(EXAMPLE);
+    }
+    if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
+      // Play excavator animation
+      excavator->is_playing = true;
+    }
+    if (SDL_PointInRect(&m_pos, &SHOVEL_HOTSPOT)) {
+      // Walk to shovel
+      // Play shovel animation
+      // Add key to inventory
+    }
+    if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT)) {
+      // Walk to current position
+    }
     break;
   }
 }
@@ -194,7 +230,7 @@ static void render(SDL_Renderer *renderer) {
 
   render_animation(renderer, excavator, (SDL_Point){180, 350});
   render_animation(renderer, gate, (SDL_Point){491, 162});
-  render_animation(renderer, shovel, (SDL_Point){122, 380});
+  render_animation(renderer, shovel, (SDL_Point){112, 380});
   render_animation(renderer, fox, (SDL_Point){474, 376});
 }
 
@@ -222,4 +258,6 @@ Scene playground_entrance_scene = {
     .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
+    .hotspots = hotspots,
+    .hotspots_length = 4,
 };

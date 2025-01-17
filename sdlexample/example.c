@@ -51,7 +51,7 @@ static void init(void) {
   paddle.vel_x = 0;
   paddle.vel_y = 0;
 
-  walking = make_animation_data(4);
+  walking = make_animation_data(4, LOOP);
 }
 
 static bool load_media(SDL_Renderer *renderer) {

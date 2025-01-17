@@ -14,14 +14,23 @@ typedef struct image_data {
   int height;
 } ImageData;
 
+typedef enum animation_playback_style {
+  LOOP,
+  PING_PONG, // TODO: Not supported yet
+  ONE_SHOT,
+} AnimationPlaybackStyle;
+
 typedef struct animation_data {
   int frames;
   int current_frame;
+  bool is_playing;
+  AnimationPlaybackStyle style;
+  int loop_count;
   SDL_Rect *sprite_clips;
   ImageData image;
 } AnimationData;
 
-AnimationData *make_animation_data(int frames);
+AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style);
 
 void free_image_texture(ImageData *image);
 
