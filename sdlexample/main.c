@@ -51,7 +51,8 @@ int init_window(void) {
   }
 
   // Initialize SDL_mixer
-  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+  if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT,
+                    MIX_DEFAULT_CHANNELS, AUDIO_CHUNK_SIZE) < 0) {
     fprintf(stderr, "SDL_mixer could not initialize! SDL_mixer Error: %s\n",
             Mix_GetError());
     return false;
