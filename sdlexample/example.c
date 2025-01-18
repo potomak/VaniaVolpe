@@ -56,34 +56,17 @@ static void init(void) {
 
 static bool load_media(SDL_Renderer *renderer) {
   // Load sprite sheet texture
-  if (!load_image("foo.png", renderer, &walking->image)) {
+  if (!load_image("example/foo.png", renderer, &walking->image)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
     return false;
   }
 
-  // Set sprite clips
-  walking->sprite_clips[0].x = 0;
-  walking->sprite_clips[0].y = 0;
-  walking->sprite_clips[0].w = 64;
-  walking->sprite_clips[0].h = 205;
-
-  walking->sprite_clips[1].x = 64;
-  walking->sprite_clips[1].y = 0;
-  walking->sprite_clips[1].w = 64;
-  walking->sprite_clips[1].h = 205;
-
-  walking->sprite_clips[2].x = 128;
-  walking->sprite_clips[2].y = 0;
-  walking->sprite_clips[2].w = 64;
-  walking->sprite_clips[2].h = 205;
-
-  walking->sprite_clips[3].x = 192;
-  walking->sprite_clips[3].y = 0;
-  walking->sprite_clips[3].w = 64;
-  walking->sprite_clips[3].h = 205;
+  if (!load_animation_data(walking, "example/foo.anim")) {
+    return false;
+  }
 
   // Load music
-  gMusic = Mix_LoadMUS("beat.wav");
+  gMusic = Mix_LoadMUS("example/beat.wav");
   if (gMusic == NULL) {
     fprintf(stderr, "Failed to load beat music! SDL_mixer Error: %s\n",
             Mix_GetError());
@@ -91,7 +74,7 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load sound effects
-  gScratch = Mix_LoadWAV("scratch.wav");
+  gScratch = Mix_LoadWAV("example/scratch.wav");
   if (gScratch == NULL) {
     fprintf(stderr,
             "Failed to load scratch sound effect! SDL_mixer Error: %s\n",
@@ -99,21 +82,21 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  gHigh = Mix_LoadWAV("high.wav");
+  gHigh = Mix_LoadWAV("example/high.wav");
   if (gHigh == NULL) {
     fprintf(stderr, "Failed to load high sound effect! SDL_mixer Error: %s\n",
             Mix_GetError());
     return false;
   }
 
-  gMedium = Mix_LoadWAV("medium.wav");
+  gMedium = Mix_LoadWAV("example/medium.wav");
   if (gMedium == NULL) {
     fprintf(stderr, "Failed to load medium sound effect! SDL_mixer Error: %s\n",
             Mix_GetError());
     return false;
   }
 
-  gLow = Mix_LoadWAV("low.wav");
+  gLow = Mix_LoadWAV("example/low.wav");
   if (gLow == NULL) {
     fprintf(stderr, "Failed to load low sound effect! SDL_mixer Error: %s\n",
             Mix_GetError());
@@ -252,7 +235,9 @@ static void deinit(void) {
   gMusic = NULL;
 }
 
-static void on_scene_active(void) {}
+static void on_scene_active(void) {
+  play_animation(walking);
+}
 
 static void on_scene_inactive(void) {}
 

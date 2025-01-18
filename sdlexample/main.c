@@ -132,7 +132,7 @@ int main(int argc, char *args[]) {
   }
 
   // Hack to execute lifecycle callbacks for the first scene
-  set_active_scene(INTRO);
+  set_active_scene(EXAMPLE);
 
   while (game.is_running) {
     process_input();
