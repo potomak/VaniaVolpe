@@ -56,7 +56,7 @@ static void init(void) {
 
 static bool load_media(SDL_Renderer *renderer) {
   // Load sprite sheet texture
-  if (!load_from_file("foo.png", renderer, &walking->image)) {
+  if (!load_image("foo.png", renderer, &walking->image)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
     return false;
   }

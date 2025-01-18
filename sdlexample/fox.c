@@ -28,8 +28,8 @@ Fox *make_fox(SDL_FPoint initial_position) {
 
 bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
   // TODO: Move asset to a different directory
-  if (!load_from_file("playground_entrance/fox.png", renderer,
-                      &fox->animation->image)) {
+  if (!load_image("playground_entrance/fox.png", renderer,
+                  &fox->animation->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
