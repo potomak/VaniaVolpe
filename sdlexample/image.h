@@ -39,7 +39,10 @@ void free_image_texture(ImageData *image);
 
 void free_animation(AnimationData *animation);
 
-bool load_image(const char *path, SDL_Renderer *renderer, ImageData *image);
+bool load_image(SDL_Renderer *renderer, ImageData *image, const char *path);
+
+bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
+                    const char *sprite_path, const char *data_path);
 
 void play_animation(AnimationData *animation);
 
@@ -49,7 +52,5 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point);
 
 void render_image(SDL_Renderer *renderer, ImageData *image, SDL_Point point);
-
-bool load_animation_data(AnimationData *animation, const char *path);
 
 #endif /* image_h */
