@@ -67,14 +67,14 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_from_file("playground_entrance/background.png", renderer,
-                      &background)) {
+  if (!load_image("playground_entrance/background.png", renderer,
+                  &background)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
 
-  if (!load_from_file("playground_entrance/excavator.png", renderer,
-                      &excavator->image)) {
+  if (!load_image("playground_entrance/excavator.png", renderer,
+                  &excavator->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
@@ -83,7 +83,7 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  if (!load_from_file("playground_entrance/gate.png", renderer, &gate->image)) {
+  if (!load_image("playground_entrance/gate.png", renderer, &gate->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
@@ -92,8 +92,7 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  if (!load_from_file("playground_entrance/shovel.png", renderer,
-                      &shovel->image)) {
+  if (!load_image("playground_entrance/shovel.png", renderer, &shovel->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }

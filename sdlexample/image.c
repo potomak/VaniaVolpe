@@ -40,14 +40,15 @@ void free_image_texture(ImageData *image) {
   image->height = 0;
 }
 
+// Free animation created with make_animation_data
 void free_animation(AnimationData *animation) {
   free_image_texture(&animation->image);
   free(animation->sprite_clips);
   free(animation);
 }
 
-bool load_from_file(const char *path, SDL_Renderer *renderer,
-                    ImageData *image) {
+// Load image from file and create texture in image
+bool load_image(const char *path, SDL_Renderer *renderer, ImageData *image) {
   // Free texture if it exists
   free_image_texture(image);
 
@@ -130,6 +131,12 @@ void render_image(SDL_Renderer *renderer, ImageData *image, SDL_Point point) {
   SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
 }
 
+// Load animation sprite clips
+//
+// Data format:
+// * One sprite clip per row
+// * Rows are delimited by '\n'
+// * Sprite clip components are delimited by ','
 bool load_animation_data(AnimationData *animation, const char *path) {
   size_t size;
   char *data = SDL_LoadFile(path, &size);

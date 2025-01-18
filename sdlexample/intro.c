@@ -46,12 +46,12 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_from_file("intro/background.png", renderer, &background)) {
+  if (!load_image("intro/background.png", renderer, &background)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
 
-  if (!load_from_file("intro/play_button.png", renderer, &play_button->image)) {
+  if (!load_image("intro/play_button.png", renderer, &play_button->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
@@ -60,7 +60,7 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  if (!load_from_file("intro/exit_button.png", renderer, &exit_button->image)) {
+  if (!load_image("intro/exit_button.png", renderer, &exit_button->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
