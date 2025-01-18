@@ -34,25 +34,9 @@ bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
     return false;
   }
 
-  fox->animation->sprite_clips[0].x = 0;
-  fox->animation->sprite_clips[0].y = 0;
-  fox->animation->sprite_clips[0].w = 144;
-  fox->animation->sprite_clips[0].h = 117;
-
-  fox->animation->sprite_clips[1].x = 0;
-  fox->animation->sprite_clips[1].y = 117;
-  fox->animation->sprite_clips[1].w = 144;
-  fox->animation->sprite_clips[1].h = 117;
-
-  fox->animation->sprite_clips[2].x = 0;
-  fox->animation->sprite_clips[2].y = 234;
-  fox->animation->sprite_clips[2].w = 144;
-  fox->animation->sprite_clips[2].h = 117;
-
-  fox->animation->sprite_clips[3].x = 0;
-  fox->animation->sprite_clips[3].y = 351;
-  fox->animation->sprite_clips[3].w = 144;
-  fox->animation->sprite_clips[3].h = 117;
+  if (!load_animation_data(fox->animation, "playground_entrance/fox.anim")) {
+    return false;
+  }
 
   return true;
 }

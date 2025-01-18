@@ -56,40 +56,18 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  play_button->sprite_clips[0].x = 0;
-  play_button->sprite_clips[0].y = 0;
-  play_button->sprite_clips[0].w = 280;
-  play_button->sprite_clips[0].h = 162;
-
-  play_button->sprite_clips[1].x = 0;
-  play_button->sprite_clips[1].y = 162;
-  play_button->sprite_clips[1].w = 280;
-  play_button->sprite_clips[1].h = 162;
-
-  play_button->sprite_clips[2].x = 0;
-  play_button->sprite_clips[2].y = 324;
-  play_button->sprite_clips[2].w = 280;
-  play_button->sprite_clips[2].h = 162;
+  if (!load_animation_data(play_button, "intro/play_button.anim")) {
+    return false;
+  }
 
   if (!load_from_file("intro/exit_button.png", renderer, &exit_button->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
 
-  exit_button->sprite_clips[0].x = 0;
-  exit_button->sprite_clips[0].y = 0;
-  exit_button->sprite_clips[0].w = 265;
-  exit_button->sprite_clips[0].h = 81;
-
-  exit_button->sprite_clips[1].x = 0;
-  exit_button->sprite_clips[1].y = 81;
-  exit_button->sprite_clips[1].w = 265;
-  exit_button->sprite_clips[1].h = 81;
-
-  exit_button->sprite_clips[2].x = 0;
-  exit_button->sprite_clips[2].y = 162;
-  exit_button->sprite_clips[2].w = 265;
-  exit_button->sprite_clips[2].h = 81;
+  if (!load_animation_data(exit_button, "intro/exit_button.anim")) {
+    return false;
+  }
 
   // Load music
   music = Mix_LoadMUS("intro/music.wav");

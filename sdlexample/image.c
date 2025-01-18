@@ -129,3 +129,37 @@ void render_image(SDL_Renderer *renderer, ImageData *image, SDL_Point point) {
   // Render to screen
   SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
 }
+
+bool load_animation_data(AnimationData *animation, const char *path) {
+  size_t size;
+  char *data = SDL_LoadFile(path, &size);
+  if (data == NULL) {
+    fprintf(stderr, "Failed to load data!\n");
+    return false;
+  }
+
+  // Support coordinates up to 99999
+  char num[6];
+  int rect[4], row = 0, num_i = 0, rect_i = 0;
+  for (int i = 0; i < size; i++) {
+    if (data[i] == ',') {
+      num[num_i] = '\0';
+      rect[rect_i++] = atoi(num);
+      num_i = 0;
+    } else if (data[i] == '\n') {
+      num[num_i] = '\0';
+      rect[rect_i] = atoi(num);
+      animation->sprite_clips[row] =
+          (SDL_Rect){.x = rect[0], .y = rect[1], .w = rect[2], .h = rect[3]};
+      rect_i = 0;
+      num_i = 0;
+      row++;
+    } else {
+      num[num_i++] = data[i];
+    }
+  }
+
+  SDL_free(data);
+
+  return true;
+}
