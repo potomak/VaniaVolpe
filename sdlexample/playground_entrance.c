@@ -79,65 +79,18 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  excavator->sprite_clips[0].x = 0;
-  excavator->sprite_clips[0].y = 0;
-  excavator->sprite_clips[0].w = 119;
-  excavator->sprite_clips[0].h = 56;
-
-  excavator->sprite_clips[1].x = 0;
-  excavator->sprite_clips[1].y = 56;
-  excavator->sprite_clips[1].w = 119;
-  excavator->sprite_clips[1].h = 56;
-
-  excavator->sprite_clips[2].x = 0;
-  excavator->sprite_clips[2].y = 112;
-  excavator->sprite_clips[2].w = 119;
-  excavator->sprite_clips[2].h = 56;
-
-  excavator->sprite_clips[3].x = 0;
-  excavator->sprite_clips[3].y = 168;
-  excavator->sprite_clips[3].w = 119;
-  excavator->sprite_clips[3].h = 56;
+  if (!load_animation_data(excavator, "playground_entrance/excavator.anim")) {
+    return false;
+  }
 
   if (!load_from_file("playground_entrance/gate.png", renderer, &gate->image)) {
     fprintf(stderr, "Failed to texture!\n");
     return false;
   }
 
-  gate->sprite_clips[0].x = 0;
-  gate->sprite_clips[0].y = 0;
-  gate->sprite_clips[0].w = 182;
-  gate->sprite_clips[0].h = 208;
-
-  gate->sprite_clips[1].x = 182;
-  gate->sprite_clips[1].y = 0;
-  gate->sprite_clips[1].w = 182;
-  gate->sprite_clips[1].h = 208;
-
-  gate->sprite_clips[2].x = 0;
-  gate->sprite_clips[2].y = 208;
-  gate->sprite_clips[2].w = 182;
-  gate->sprite_clips[2].h = 208;
-
-  gate->sprite_clips[3].x = 182;
-  gate->sprite_clips[3].y = 208;
-  gate->sprite_clips[3].w = 182;
-  gate->sprite_clips[3].h = 208;
-
-  gate->sprite_clips[4].x = 0;
-  gate->sprite_clips[4].y = 416;
-  gate->sprite_clips[4].w = 182;
-  gate->sprite_clips[4].h = 208;
-
-  gate->sprite_clips[5].x = 182;
-  gate->sprite_clips[5].y = 416;
-  gate->sprite_clips[5].w = 182;
-  gate->sprite_clips[5].h = 208;
-
-  gate->sprite_clips[6].x = 0;
-  gate->sprite_clips[6].y = 624;
-  gate->sprite_clips[6].w = 182;
-  gate->sprite_clips[6].h = 208;
+  if (!load_animation_data(gate, "playground_entrance/gate.anim")) {
+    return false;
+  }
 
   if (!load_from_file("playground_entrance/shovel.png", renderer,
                       &shovel->image)) {
@@ -145,30 +98,9 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  shovel->sprite_clips[0].x = 0;
-  shovel->sprite_clips[0].y = 0;
-  shovel->sprite_clips[0].w = 88;
-  shovel->sprite_clips[0].h = 67;
-
-  shovel->sprite_clips[1].x = 88;
-  shovel->sprite_clips[1].y = 0;
-  shovel->sprite_clips[1].w = 88;
-  shovel->sprite_clips[1].h = 67;
-
-  shovel->sprite_clips[2].x = 0;
-  shovel->sprite_clips[2].y = 67;
-  shovel->sprite_clips[2].w = 88;
-  shovel->sprite_clips[2].h = 67;
-
-  shovel->sprite_clips[3].x = 88;
-  shovel->sprite_clips[3].y = 67;
-  shovel->sprite_clips[3].w = 88;
-  shovel->sprite_clips[3].h = 67;
-
-  shovel->sprite_clips[4].x = 0;
-  shovel->sprite_clips[4].y = 134;
-  shovel->sprite_clips[4].w = 88;
-  shovel->sprite_clips[4].h = 67;
+  if (!load_animation_data(shovel, "playground_entrance/shovel.anim")) {
+    return false;
+  }
 
   if (!fox_load_media(fox, renderer)) {
     fprintf(stderr, "Failed to texture!\n");
