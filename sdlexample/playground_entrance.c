@@ -67,42 +67,32 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_image("playground_entrance/background.png", renderer,
-                  &background)) {
-    fprintf(stderr, "Failed to texture!\n");
+  if (!load_image(renderer, &background,
+                  "playground_entrance/background.png")) {
+    fprintf(stderr, "Failed to load background!\n");
     return false;
   }
 
-  if (!load_image("playground_entrance/excavator.png", renderer,
-                  &excavator->image)) {
-    fprintf(stderr, "Failed to texture!\n");
+  if (!load_animation(renderer, excavator, "playground_entrance/excavator.png",
+                      "playground_entrance/excavator.anim")) {
+    fprintf(stderr, "Failed to load excavator!\n");
     return false;
   }
 
-  if (!load_animation_data(excavator, "playground_entrance/excavator.anim")) {
+  if (!load_animation(renderer, gate, "playground_entrance/gate.png",
+                      "playground_entrance/gate.anim")) {
+    fprintf(stderr, "Failed to load gate!\n");
     return false;
   }
 
-  if (!load_image("playground_entrance/gate.png", renderer, &gate->image)) {
-    fprintf(stderr, "Failed to texture!\n");
-    return false;
-  }
-
-  if (!load_animation_data(gate, "playground_entrance/gate.anim")) {
-    return false;
-  }
-
-  if (!load_image("playground_entrance/shovel.png", renderer, &shovel->image)) {
-    fprintf(stderr, "Failed to texture!\n");
-    return false;
-  }
-
-  if (!load_animation_data(shovel, "playground_entrance/shovel.anim")) {
+  if (!load_animation(renderer, shovel, "playground_entrance/shovel.png",
+                      "playground_entrance/shovel.anim")) {
+    fprintf(stderr, "Failed to load shovel!\n");
     return false;
   }
 
   if (!fox_load_media(fox, renderer)) {
-    fprintf(stderr, "Failed to texture!\n");
+    fprintf(stderr, "Failed to load fox!\n");
     return false;
   }
 

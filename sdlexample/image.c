@@ -48,7 +48,7 @@ void free_animation(AnimationData *animation) {
 }
 
 // Load image from file and create texture in image
-bool load_image(const char *path, SDL_Renderer *renderer, ImageData *image) {
+bool load_image(SDL_Renderer *renderer, ImageData *image, const char *path) {
   // Free texture if it exists
   free_image_texture(image);
 
@@ -79,6 +79,60 @@ bool load_image(const char *path, SDL_Renderer *renderer, ImageData *image) {
   SDL_FreeSurface(loaded_surface);
 
   // Return success
+  return true;
+}
+
+// Load animation sprite clips
+//
+// Data format:
+// * One sprite clip per row
+// * Rows are delimited by '\n'
+// * Sprite clip components are delimited by ','
+bool load_animation_data(AnimationData *animation, const char *path) {
+  size_t size;
+  char *data = SDL_LoadFile(path, &size);
+  if (data == NULL) {
+    fprintf(stderr, "Failed to load data!\n");
+    return false;
+  }
+
+  // Support coordinates up to 99999
+  char num[6];
+  int rect[4], row = 0, num_i = 0, rect_i = 0;
+  for (int i = 0; i < size; i++) {
+    if (data[i] == ',') {
+      num[num_i] = '\0';
+      rect[rect_i++] = atoi(num);
+      num_i = 0;
+    } else if (data[i] == '\n') {
+      num[num_i] = '\0';
+      rect[rect_i] = atoi(num);
+      animation->sprite_clips[row] =
+          (SDL_Rect){.x = rect[0], .y = rect[1], .w = rect[2], .h = rect[3]};
+      rect_i = 0;
+      num_i = 0;
+      row++;
+    } else {
+      num[num_i++] = data[i];
+    }
+  }
+
+  SDL_free(data);
+
+  return true;
+}
+
+bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
+                    const char *sprite_path, const char *data_path) {
+  if (!load_image(renderer, &animation->image, sprite_path)) {
+    fprintf(stderr, "Failed to load walking animation texture!\n");
+    return false;
+  }
+
+  if (!load_animation_data(animation, data_path)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -129,44 +183,4 @@ void render_image(SDL_Renderer *renderer, ImageData *image, SDL_Point point) {
 
   // Render to screen
   SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
-}
-
-// Load animation sprite clips
-//
-// Data format:
-// * One sprite clip per row
-// * Rows are delimited by '\n'
-// * Sprite clip components are delimited by ','
-bool load_animation_data(AnimationData *animation, const char *path) {
-  size_t size;
-  char *data = SDL_LoadFile(path, &size);
-  if (data == NULL) {
-    fprintf(stderr, "Failed to load data!\n");
-    return false;
-  }
-
-  // Support coordinates up to 99999
-  char num[6];
-  int rect[4], row = 0, num_i = 0, rect_i = 0;
-  for (int i = 0; i < size; i++) {
-    if (data[i] == ',') {
-      num[num_i] = '\0';
-      rect[rect_i++] = atoi(num);
-      num_i = 0;
-    } else if (data[i] == '\n') {
-      num[num_i] = '\0';
-      rect[rect_i] = atoi(num);
-      animation->sprite_clips[row] =
-          (SDL_Rect){.x = rect[0], .y = rect[1], .w = rect[2], .h = rect[3]};
-      rect_i = 0;
-      num_i = 0;
-      row++;
-    } else {
-      num[num_i++] = data[i];
-    }
-  }
-
-  SDL_free(data);
-
-  return true;
 }

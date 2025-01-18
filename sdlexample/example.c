@@ -56,12 +56,9 @@ static void init(void) {
 
 static bool load_media(SDL_Renderer *renderer) {
   // Load sprite sheet texture
-  if (!load_image("example/foo.png", renderer, &walking->image)) {
-    fprintf(stderr, "Failed to load walking animation texture!\n");
-    return false;
-  }
-
-  if (!load_animation_data(walking, "example/foo.anim")) {
+  if (!load_animation(renderer, walking, "example/foo.png",
+                      "example/foo.anim")) {
+    fprintf(stderr, "Failed to load walking animation!\n");
     return false;
   }
 
@@ -235,9 +232,7 @@ static void deinit(void) {
   gMusic = NULL;
 }
 
-static void on_scene_active(void) {
-  play_animation(walking);
-}
+static void on_scene_active(void) { play_animation(walking); }
 
 static void on_scene_inactive(void) {}
 
