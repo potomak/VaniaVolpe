@@ -47,7 +47,7 @@ void fox_render(Fox *fox, SDL_Renderer *renderer);
 
 void fox_free(Fox *fox);
 
-void fox_walk_to(Fox *fox, SDL_FPoint position);
+void fox_walk_to(Fox *fox, SDL_FPoint position, void (*on_end)(void));
 
 void fox_talk_for(Fox *fox, Uint32 talking_duration);
 

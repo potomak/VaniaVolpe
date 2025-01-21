@@ -112,7 +112,7 @@ static void process_input(SDL_Event *event) {
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &SLIDE_HOTSPOT)) {
       // Walk to slide
-      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y});
+      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, NULL);
       // If peg is in inventory fix slide
       // Else if slide is working use: win the game
       // Else give hint to fix the slide
@@ -120,7 +120,7 @@ static void process_input(SDL_Event *event) {
     }
     if (SDL_PointInRect(&m_pos, &SQUIRREL_HOTSPOT)) {
       // Walk to squirrel
-      fox_walk_to(fox, (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y});
+      fox_walk_to(fox, (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y}, NULL);
       // If peg is in inventory give hint to fix the slide
       // Else if acorns are in inventory exchange peg for acorns
       // Else give hint to find acorns
@@ -128,7 +128,7 @@ static void process_input(SDL_Event *event) {
     }
     if (SDL_PointInRect(&m_pos, &ACORNS_HOTSPOT)) {
       // Walk to acorns
-      fox_walk_to(fox, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y});
+      fox_walk_to(fox, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y}, NULL);
       // Add acorns to inventory
       break;
     }
@@ -137,7 +137,7 @@ static void process_input(SDL_Event *event) {
          SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT_3)) &&
         !SDL_PointInRect(&m_pos, &NON_WALKABLE_HOTSPOT)) {
       // Walk to current position
-      fox_walk_to(fox, (SDL_FPoint){m_pos.x, m_pos.y});
+      fox_walk_to(fox, (SDL_FPoint){m_pos.x, m_pos.y}, NULL);
     }
     break;
   }
