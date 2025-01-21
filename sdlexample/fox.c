@@ -12,6 +12,8 @@
 
 #include "fox.h"
 
+static void (*on_end_walking)(void);
+
 Fox *make_fox(SDL_FPoint initial_position) {
   Fox *fox = malloc(sizeof(Fox));
   fox->walking = make_animation_data(4, LOOP);
@@ -72,6 +74,9 @@ void fox_update(Fox *fox, float delta_time) {
       fox->state = IDLE;
       fox->direction = (SDL_FPoint){0, 0};
       fox->current_position = fox->target_position;
+      if (on_end_walking != NULL) {
+        on_end_walking();
+      }
       return;
     }
 
@@ -111,10 +116,12 @@ void fox_free(Fox *fox) {
   free(fox);
 }
 
-void fox_walk_to(Fox *fox, SDL_FPoint target_position) {
+void fox_walk_to(Fox *fox, SDL_FPoint target_position, void (*on_end)(void)) {
   if (fox->state == TALKING) {
     return;
   }
+
+  on_end_walking = on_end;
 
   play_animation(fox->walking);
   fox->state = WALKING;
