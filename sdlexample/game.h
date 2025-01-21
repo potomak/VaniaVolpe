@@ -13,6 +13,7 @@
 typedef enum game_scene {
   INTRO,
   PLAYGROUND_ENTRANCE,
+  PLAYGROUND,
   EXAMPLE,
   // This should always be the last value in the enum
   // It is a hack to iterate over all the scenes

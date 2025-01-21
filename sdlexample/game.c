@@ -10,6 +10,7 @@
 
 // Scenes
 #include "intro.h"
+#include "playground.h"
 #include "playground_entrance.h"
 
 // Features for debugging the game
@@ -28,6 +29,8 @@ Scene scene_instance(GameScene scene) {
     return intro_scene;
   case PLAYGROUND_ENTRANCE:
     return playground_entrance_scene;
+  case PLAYGROUND:
+    return playground_scene;
   case EXAMPLE:
     return example_scene;
   default:
