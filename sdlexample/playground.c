@@ -147,9 +147,9 @@ static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
-  render_image(renderer, &squirrel, (SDL_Point){95, 166});
-  render_image(renderer, &peg, (SDL_Point){113, 175});
-  render_image(renderer, &acorns, (SDL_Point){698, 235});
+  render_image(renderer, &squirrel, (SDL_Point){85, 160});
+  render_image(renderer, &peg, (SDL_Point){127, 175});
+  render_image(renderer, &acorns, (SDL_Point){698, 225});
 
   fox_render(fox, renderer);
 }
