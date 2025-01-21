@@ -57,7 +57,9 @@ static void init(void) {
   excavator->max_loop_count = 3;
   excavator->speed_multiplier = 1. / 5;
   gate = make_animation_data(7, ONE_SHOT);
-  shovel = make_animation_data(5, LOOP);
+  shovel = make_animation_data(5, ONE_SHOT);
+  // Loop the animation 3 times before stopping
+  shovel->max_loop_count = 3;
 
   fox = make_fox((SDL_FPoint){580, 457});
 
@@ -122,14 +124,27 @@ static bool load_media(SDL_Renderer *renderer) {
   return true;
 }
 
-void on_fox_walked_to_gate(void) {
+static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
+
+static void on_fox_walked_to_gate(void) {
   // If key is in inventory open gate then go to PLAYGROUND scene
   if (fox->has_key) {
-    //      set_active_scene(PLAYGROUND);
-    play_animation(gate);
-  } else { // Else give hint about where to find the key
-    fox_talk_for(fox, 2000);
+    play_animation(gate, go_to_playground);
+    return;
   }
+  // Else give hint about where to find the key
+  fox_talk_for(fox, 2000);
+}
+
+static void add_key_to_inventory(void) { fox->has_key = true; }
+
+static void on_fox_walked_to_shovel(void) {
+  // If key is in inventory don't do anything
+  if (fox->has_key) {
+    return;
+  }
+  // Play shovel animation and add key to inventory
+  play_animation(shovel, add_key_to_inventory);
 }
 
 static void process_input(SDL_Event *event) {
@@ -147,14 +162,13 @@ static void process_input(SDL_Event *event) {
     }
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
       // Play excavator animation
-      play_animation(excavator);
+      play_animation(excavator, NULL);
       break;
     }
     if (SDL_PointInRect(&m_pos, &SHOVEL_HOTSPOT)) {
       // Walk to shovel
-      fox_walk_to(fox, (SDL_FPoint){SHOVEL_POI.x, SHOVEL_POI.y}, NULL);
-      // Play shovel animation
-      // Add key to inventory
+      fox_walk_to(fox, (SDL_FPoint){SHOVEL_POI.x, SHOVEL_POI.y},
+                  on_fox_walked_to_shovel);
       break;
     }
     if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT) &&

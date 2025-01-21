@@ -95,12 +95,12 @@ static void process_input(SDL_Event *event) {
     // Get mouse position
     SDL_GetMouseState(&m_pos.x, &m_pos.y);
     if (SDL_PointInRect(&m_pos, &PLAY_BUTTON_HOTSPOT)) {
-      play_animation(play_button);
+      play_animation(play_button, NULL);
     } else {
       stop_animation(play_button);
     }
     if (SDL_PointInRect(&m_pos, &EXIT_BUTTON_HOTSPOT)) {
-      play_animation(exit_button);
+      play_animation(exit_button, NULL);
     } else {
       stop_animation(exit_button);
     }

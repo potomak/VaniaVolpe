@@ -44,7 +44,7 @@ bool load_image(SDL_Renderer *renderer, ImageData *image, const char *path);
 bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
                     const char *sprite_path, const char *data_path);
 
-void play_animation(AnimationData *animation);
+void play_animation(AnimationData *animation, void (*on_end)(void));
 
 void stop_animation(AnimationData *animation);
 

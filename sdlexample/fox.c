@@ -123,7 +123,7 @@ void fox_walk_to(Fox *fox, SDL_FPoint target_position, void (*on_end)(void)) {
 
   on_end_walking = on_end;
 
-  play_animation(fox->walking);
+  play_animation(fox->walking, NULL);
   fox->state = WALKING;
   fox->target_position = target_position;
 
@@ -145,7 +145,7 @@ void fox_talk_for(Fox *fox, Uint32 talking_duration) {
     return;
   }
 
-  play_animation(fox->talking);
+  play_animation(fox->talking, NULL);
   fox->state = TALKING;
   fox->talking_duration = talking_duration;
   fox->started_talking_at = SDL_GetTicks();

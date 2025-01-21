@@ -232,7 +232,7 @@ static void deinit(void) {
   gMusic = NULL;
 }
 
-static void on_scene_active(void) { play_animation(walking); }
+static void on_scene_active(void) { play_animation(walking, NULL); }
 
 static void on_scene_inactive(void) {}
 
