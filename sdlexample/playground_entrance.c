@@ -18,11 +18,13 @@
 
 // Background image
 static ImageData background = {NULL, 0, 0};
+static ImageData key = {NULL, 0, 0};
 
 // Animations
 static AnimationData *excavator;
 static AnimationData *gate;
 static AnimationData *shovel;
+
 static Fox *fox;
 
 // Music
@@ -38,14 +40,16 @@ static SDL_Point m_pos;
 static const SDL_Rect GATE_HOTSPOT = {471, 144, 217, 184};
 static const SDL_Rect EXCAVATOR_HOTSPOT = {197, 338, 108, 72};
 static const SDL_Rect SHOVEL_HOTSPOT = {128, 385, 77, 65};
+static const SDL_Rect KEY_HOTSPOT = {128, 385, 77, 65};
 static const SDL_Rect WALKABLE_HOTSPOT = {1, 312, 795, 286};
 static const SDL_Rect NON_WALKABLE_HOTSPOT = {80, 341, 250, 179};
-static SDL_Rect hotspots[5];
+static SDL_Rect hotspots[6];
 
 // Points of interest
 static const SDL_Point GATE_POI = {554, 344};
 static const SDL_Point SHOVEL_POI = {258, 507};
-static SDL_Point pois[2];
+static const SDL_Point KEY_POI = {258, 507};
+static SDL_Point pois[3];
 
 static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
@@ -54,22 +58,30 @@ static void init(void) {
   excavator->speed_multiplier = 1. / 5;
   gate = make_animation_data(7, ONE_SHOT);
   shovel = make_animation_data(5, LOOP);
+
   fox = make_fox((SDL_FPoint){580, 457});
 
   hotspots[0] = GATE_HOTSPOT;
   hotspots[1] = EXCAVATOR_HOTSPOT;
   hotspots[2] = SHOVEL_HOTSPOT;
-  hotspots[3] = WALKABLE_HOTSPOT;
-  hotspots[4] = NON_WALKABLE_HOTSPOT;
+  hotspots[3] = KEY_HOTSPOT;
+  hotspots[4] = WALKABLE_HOTSPOT;
+  hotspots[5] = NON_WALKABLE_HOTSPOT;
 
   pois[0] = GATE_POI;
   pois[1] = SHOVEL_POI;
+  pois[2] = KEY_POI;
 }
 
 static bool load_media(SDL_Renderer *renderer) {
   if (!load_image(renderer, &background,
                   "playground_entrance/background.png")) {
     fprintf(stderr, "Failed to load background!\n");
+    return false;
+  }
+
+  if (!load_image(renderer, &key, "playground_entrance/key.png")) {
+    fprintf(stderr, "Failed to load key!\n");
     return false;
   }
 
@@ -122,6 +134,7 @@ static void process_input(SDL_Event *event) {
       fox_walk_to(fox, (SDL_FPoint){GATE_POI.x, GATE_POI.y});
       // If key is in inventory open gate then go to PLAYGROUND scene
       // Else give hint about where to find the key
+      set_active_scene(PLAYGROUND);
       break;
     }
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
@@ -149,18 +162,23 @@ static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
+  render_image(renderer, &key, (SDL_Point){0, 0});
 
   render_animation(renderer, excavator, (SDL_Point){180, 350});
   render_animation(renderer, gate, (SDL_Point){491, 162});
   render_animation(renderer, shovel, (SDL_Point){112, 380});
+
   fox_render(fox, renderer);
 }
 
 static void deinit(void) {
   free_image_texture(&background);
+  free_image_texture(&key);
+
   free_animation(excavator);
   free_animation(gate);
   free_animation(shovel);
+
   fox_free(fox);
 
   Mix_FreeMusic(music);
