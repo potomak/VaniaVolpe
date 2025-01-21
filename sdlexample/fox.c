@@ -14,23 +14,31 @@
 
 Fox *make_fox(SDL_FPoint initial_position) {
   Fox *fox = malloc(sizeof(Fox));
-  fox->animation = make_animation_data(4, LOOP);
+  fox->walking = make_animation_data(4, LOOP);
   // Change default speed multiplier to make the animation slower
-  fox->animation->speed_multiplier = 1. / 6;
+  fox->walking->speed_multiplier = 1. / 6;
+  fox->talking = make_animation_data(3, LOOP);
   fox->current_position = initial_position;
   fox->target_position = initial_position;
   fox->direction = (SDL_FPoint){0, 0};
   fox->horizontal_orientation = WEST;
-  fox->is_walking = false;
+  fox->state = IDLE;
+  fox->started_talking_at = 0;
+  fox->talking_duration = 0;
   fox->has_key = false;
   return fox;
 }
 
 bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
-  // TODO: Move asset to a different directory
-  if (!load_animation(renderer, fox->animation, "playground_entrance/fox.png",
-                      "playground_entrance/fox.anim")) {
-    fprintf(stderr, "Failed to load fox!\n");
+  if (!load_animation(renderer, fox->walking, "fox/walking.png",
+                      "fox/walking.anim")) {
+    fprintf(stderr, "Failed to load fox walking!\n");
+    return false;
+  }
+
+  if (!load_animation(renderer, fox->talking, "fox/talking.png",
+                      "fox/talking.anim")) {
+    fprintf(stderr, "Failed to load fox talking!\n");
     return false;
   }
 
@@ -38,41 +46,78 @@ bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
 }
 
 void fox_update(Fox *fox, float delta_time) {
-  if (fox->is_walking) {
-    float dx = fox->target_position.x - fox->current_position.x;
-    float dy = fox->target_position.y - fox->current_position.y;
+  float dx = fox->target_position.x - fox->current_position.x;
+  float dy = fox->target_position.y - fox->current_position.y;
+  float vel = 2.2;
+  float ticks = SDL_GetTicks();
 
+  switch (fox->horizontal_orientation) {
+  case EAST:
+    fox->walking->flip = SDL_FLIP_HORIZONTAL;
+    fox->talking->flip = SDL_FLIP_HORIZONTAL;
+    break;
+  case WEST:
+    fox->walking->flip = SDL_FLIP_NONE;
+    fox->talking->flip = SDL_FLIP_NONE;
+    break;
+  }
+
+  switch (fox->state) {
+  case IDLE:
+    break;
+  case WALKING:
     // Stop walking after reaching the target position
     if (fabsf(dx) <= 2 && fabsf(dy) <= 2) {
-      stop_animation(fox->animation);
-      fox->is_walking = false;
+      stop_animation(fox->walking);
+      fox->state = IDLE;
       fox->direction = (SDL_FPoint){0, 0};
       fox->current_position = fox->target_position;
       return;
     }
 
-    float vel = 2.2;
     fox->current_position =
         (SDL_FPoint){.x = fox->current_position.x + fox->direction.x * vel,
                      .y = fox->current_position.y + fox->direction.y * vel};
+    break;
+  case TALKING:
+    if (ticks - fox->started_talking_at >= fox->talking_duration) {
+      stop_animation(fox->talking);
+      fox->state = IDLE;
+    }
+    break;
   }
 }
 
 void fox_render(Fox *fox, SDL_Renderer *renderer) {
+  // Assumes that all animation frames have the same size
   SDL_Point position = (SDL_Point){
-      .x = fox->current_position.x - fox->animation->sprite_clips[0].w / 2,
-      .y = fox->current_position.y - fox->animation->sprite_clips[0].h / 2};
-  render_animation(renderer, fox->animation, position);
+      .x = fox->current_position.x - fox->walking->sprite_clips[0].w / 2,
+      .y = fox->current_position.y - fox->walking->sprite_clips[0].h / 2};
+
+  switch (fox->state) {
+  case IDLE:
+  case WALKING:
+    render_animation(renderer, fox->walking, position);
+    break;
+  case TALKING:
+    render_animation(renderer, fox->talking, position);
+    break;
+  }
 }
 
 void fox_free(Fox *fox) {
-  free_animation(fox->animation);
+  free_animation(fox->walking);
+  free_animation(fox->talking);
   free(fox);
 }
 
 void fox_walk_to(Fox *fox, SDL_FPoint target_position) {
-  play_animation(fox->animation);
-  fox->is_walking = true;
+  if (fox->state == TALKING) {
+    return;
+  }
+
+  play_animation(fox->walking);
+  fox->state = WALKING;
   fox->target_position = target_position;
 
   float dx = fox->target_position.x - fox->current_position.x;
@@ -80,12 +125,21 @@ void fox_walk_to(Fox *fox, SDL_FPoint target_position) {
 
   if (dx > 0) {
     fox->horizontal_orientation = EAST;
-    fox->animation->flip = SDL_FLIP_HORIZONTAL;
   } else {
     fox->horizontal_orientation = WEST;
-    fox->animation->flip = SDL_FLIP_NONE;
   }
 
   float dist = sqrtf(powf(dx, 2) + powf(dy, 2));
   fox->direction = (SDL_FPoint){dx / dist, dy / dist};
+}
+
+void fox_talk_for(Fox *fox, Uint32 talking_duration) {
+  if (fox->state == WALKING) {
+    return;
+  }
+
+  play_animation(fox->talking);
+  fox->state = TALKING;
+  fox->talking_duration = talking_duration;
+  fox->started_talking_at = SDL_GetTicks();
 }

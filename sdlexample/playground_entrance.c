@@ -130,11 +130,13 @@ static void process_input(SDL_Event *event) {
     break;
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &GATE_HOTSPOT)) {
+      // TEST
+      fox_talk_for(fox, 2000);
       // Walk to gate
-      fox_walk_to(fox, (SDL_FPoint){GATE_POI.x, GATE_POI.y});
+      //      fox_walk_to(fox, (SDL_FPoint){GATE_POI.x, GATE_POI.y});
       // If key is in inventory open gate then go to PLAYGROUND scene
       // Else give hint about where to find the key
-      set_active_scene(PLAYGROUND);
+      //      set_active_scene(PLAYGROUND);
       break;
     }
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {

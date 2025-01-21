@@ -18,13 +18,22 @@ typedef enum horizontal_orientation {
   EAST = 1,
 } HorizontalOrientation;
 
+typedef enum fox_state {
+  IDLE,
+  WALKING,
+  TALKING,
+} FoxState;
+
 typedef struct fox {
-  AnimationData *animation;
+  AnimationData *walking;
+  AnimationData *talking;
   SDL_FPoint current_position;
   SDL_FPoint target_position;
   SDL_FPoint direction;
   HorizontalOrientation horizontal_orientation;
-  bool is_walking;
+  FoxState state;
+  Uint32 started_talking_at;
+  Uint32 talking_duration;
   bool has_key;
 } Fox;
 
@@ -39,5 +48,7 @@ void fox_render(Fox *fox, SDL_Renderer *renderer);
 void fox_free(Fox *fox);
 
 void fox_walk_to(Fox *fox, SDL_FPoint position);
+
+void fox_talk_for(Fox *fox, Uint32 talking_duration);
 
 #endif /* fox_h */
