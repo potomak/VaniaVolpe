@@ -11,6 +11,8 @@
 
 #include "image.h"
 
+static void (*on_animation_playback_end)(void);
+
 AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   AnimationData *animation = malloc(sizeof(AnimationData));
   SDL_Rect *sprite_clips = (SDL_Rect *)malloc(sizeof(SDL_Rect) * frames);
@@ -136,14 +138,18 @@ bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
   return true;
 }
 
-void play_animation(AnimationData *animation) {
+void play_animation(AnimationData *animation, void (*on_end)(void)) {
   animation->loop_count = 0;
   animation->is_playing = true;
+  on_animation_playback_end = on_end;
 }
 
 void stop_animation(AnimationData *animation) {
   animation->is_playing = false;
   animation->current_frame = 0;
+  if (on_animation_playback_end != NULL) {
+    on_animation_playback_end();
+  }
 }
 
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
