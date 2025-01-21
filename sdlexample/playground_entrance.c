@@ -40,7 +40,7 @@ static SDL_Point m_pos;
 static const SDL_Rect GATE_HOTSPOT = {471, 144, 217, 184};
 static const SDL_Rect EXCAVATOR_HOTSPOT = {197, 338, 108, 72};
 static const SDL_Rect SHOVEL_HOTSPOT = {128, 385, 77, 65};
-static const SDL_Rect KEY_HOTSPOT = {128, 385, 77, 65};
+static const SDL_Rect KEY_HOTSPOT = {9, 404, 75, 69};
 static const SDL_Rect WALKABLE_HOTSPOT = {1, 312, 795, 286};
 static const SDL_Rect NON_WALKABLE_HOTSPOT = {80, 341, 250, 179};
 static SDL_Rect hotspots[6];
@@ -48,8 +48,11 @@ static SDL_Rect hotspots[6];
 // Points of interest
 static const SDL_Point GATE_POI = {554, 344};
 static const SDL_Point SHOVEL_POI = {258, 507};
-static const SDL_Point KEY_POI = {258, 507};
+static const SDL_Point KEY_POI = {45, 494};
 static SDL_Point pois[3];
+
+// Scene state
+static bool has_key_been_revealed = false;
 
 static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
@@ -126,7 +129,7 @@ static bool load_media(SDL_Renderer *renderer) {
 
 static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
 
-static void on_fox_walked_to_gate(void) {
+static void maybe_open_gate(void) {
   // If key is in inventory open gate then go to PLAYGROUND scene
   if (fox->has_key) {
     play_animation(gate, go_to_playground);
@@ -138,13 +141,15 @@ static void on_fox_walked_to_gate(void) {
 
 static void add_key_to_inventory(void) { fox->has_key = true; }
 
-static void on_fox_walked_to_shovel(void) {
+static void reveal_key(void) { has_key_been_revealed = true; }
+
+static void maybe_dig_out_key(void) {
   // If key is in inventory don't do anything
   if (fox->has_key) {
     return;
   }
-  // Play shovel animation and add key to inventory
-  play_animation(shovel, add_key_to_inventory);
+  // Play shovel animation and reveal key
+  play_animation(shovel, reveal_key);
 }
 
 static void process_input(SDL_Event *event) {
@@ -156,8 +161,7 @@ static void process_input(SDL_Event *event) {
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &GATE_HOTSPOT)) {
       // Walk to gate
-      fox_walk_to(fox, (SDL_FPoint){GATE_POI.x, GATE_POI.y},
-                  on_fox_walked_to_gate);
+      fox_walk_to(fox, (SDL_FPoint){GATE_POI.x, GATE_POI.y}, maybe_open_gate);
       break;
     }
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
@@ -168,7 +172,14 @@ static void process_input(SDL_Event *event) {
     if (SDL_PointInRect(&m_pos, &SHOVEL_HOTSPOT)) {
       // Walk to shovel
       fox_walk_to(fox, (SDL_FPoint){SHOVEL_POI.x, SHOVEL_POI.y},
-                  on_fox_walked_to_shovel);
+                  maybe_dig_out_key);
+      break;
+    }
+    // If key hasn't been revealed yet skip this case
+    if (has_key_been_revealed && SDL_PointInRect(&m_pos, &KEY_HOTSPOT)) {
+      // Walk to key
+      fox_walk_to(fox, (SDL_FPoint){KEY_POI.x, KEY_POI.y},
+                  add_key_to_inventory);
       break;
     }
     if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT) &&
@@ -184,11 +195,20 @@ static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
-  render_image(renderer, &key, (SDL_Point){0, 0});
 
   render_animation(renderer, excavator, (SDL_Point){180, 350});
   render_animation(renderer, gate, (SDL_Point){491, 162});
   render_animation(renderer, shovel, (SDL_Point){112, 380});
+
+  if (has_key_been_revealed) {
+    if (fox->has_key) {
+      render_image(renderer, &key,
+                   (SDL_Point){fox->current_position.x - 50,
+                               fox->current_position.y - 80});
+    } else {
+      render_image(renderer, &key, (SDL_Point){20, 431});
+    }
+  }
 
   fox_render(fox, renderer);
 }
