@@ -88,7 +88,7 @@ bool load_image(SDL_Renderer *renderer, ImageData *image, const char *path) {
 // * One sprite clip per row
 // * Rows are delimited by '\n'
 // * Sprite clip components are delimited by ','
-bool load_animation_data(AnimationData *animation, const char *path) {
+static bool load_animation_data(AnimationData *animation, const char *path) {
   size_t size;
   char *data = SDL_LoadFile(path, &size);
   if (data == NULL) {
