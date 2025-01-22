@@ -28,6 +28,8 @@ Fox *make_fox(SDL_FPoint initial_position) {
   fox->started_talking_at = 0;
   fox->talking_duration = 0;
   fox->has_key = false;
+  fox->has_peg = false;
+  fox->has_acorns = false;
   return fox;
 }
 

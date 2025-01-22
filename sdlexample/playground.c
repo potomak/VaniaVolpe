@@ -33,34 +33,45 @@ static SDL_Point m_pos;
 
 // Hotspots
 static const SDL_Rect SLIDE_HOTSPOT = {253, 157, 302, 285};
-static const SDL_Rect SQUIRREL_HOTSPOT = {39, 147, 113, 97};
-static const SDL_Rect ACORNS_HOTSPOT = {659, 172, 136, 137};
+static const SDL_Rect SQUIRREL_HOTSPOT = {70, 147, 113, 97};
+static const SDL_Rect ACORNS_TREE_HOTSPOT = {668, 201, 126, 118};
+static const SDL_Rect ACORNS_FLOOR_HOTSPOT = {667, 500, 105, 98};
+static const SDL_Rect PEG_HOTSPOT = {83, 460, 91, 94};
 static const SDL_Rect WALKABLE_HOTSPOT_1 = {63, 333, 645, 262};
 static const SDL_Rect WALKABLE_HOTSPOT_2 = {707, 491, 88, 105};
 static const SDL_Rect WALKABLE_HOTSPOT_3 = {4, 531, 68, 63};
 static const SDL_Rect NON_WALKABLE_HOTSPOT = {236, 131, 403, 312};
-static SDL_Rect hotspots[7];
+static SDL_Rect hotspots[9];
 
 // Points of interest
 static const SDL_Point SLIDE_POI = {276, 454};
-static const SDL_Point SQUIRREL_POI = {115, 468};
-static const SDL_Point ACORNS_POI = {697, 455};
+static const SDL_Point SQUIRREL_POI = {219, 455};
+static const SDL_Point ACORNS_POI = {635, 498};
 static SDL_Point pois[3];
+
+// Scene state
+static bool has_slide_been_fixed = false;
+static bool have_acorns_fallen = false;
+static bool has_peg_been_dropped = false;
 
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
 
-  hotspots[0] = SLIDE_HOTSPOT;
-  hotspots[1] = SQUIRREL_HOTSPOT;
-  hotspots[2] = ACORNS_HOTSPOT;
-  hotspots[3] = WALKABLE_HOTSPOT_1;
-  hotspots[4] = WALKABLE_HOTSPOT_2;
-  hotspots[5] = WALKABLE_HOTSPOT_3;
-  hotspots[6] = NON_WALKABLE_HOTSPOT;
+  int i = 0;
+  hotspots[i++] = SLIDE_HOTSPOT;
+  hotspots[i++] = SQUIRREL_HOTSPOT;
+  hotspots[i++] = ACORNS_TREE_HOTSPOT;
+  hotspots[i++] = ACORNS_FLOOR_HOTSPOT;
+  hotspots[i++] = PEG_HOTSPOT;
+  hotspots[i++] = WALKABLE_HOTSPOT_1;
+  hotspots[i++] = WALKABLE_HOTSPOT_2;
+  hotspots[i++] = WALKABLE_HOTSPOT_3;
+  hotspots[i++] = NON_WALKABLE_HOTSPOT;
 
-  pois[0] = SLIDE_POI;
-  pois[1] = SQUIRREL_POI;
-  pois[2] = ACORNS_POI;
+  i = 0;
+  pois[i++] = SLIDE_POI;
+  pois[i++] = SQUIRREL_POI;
+  pois[i++] = ACORNS_POI;
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -103,6 +114,45 @@ static bool load_media(SDL_Renderer *renderer) {
   return true;
 }
 
+static void maybe_use_slide(void) {
+  // If peg is in the inventory fix the slide
+  if (fox->has_peg) {
+    fox->has_peg = false;
+    has_slide_been_fixed = true;
+    fox_talk_for(fox, 2000);
+    return;
+  }
+
+  // Else if slide is working use: win the game
+  if (has_slide_been_fixed) {
+    fox->current_position = (SDL_FPoint){336, 142};
+    fox_talk_for(fox, 2000);
+    // TODO: End screen
+    return;
+  }
+
+  // Else give hint to fix the slide
+  fox_talk_for(fox, 2000);
+}
+
+static void maybe_get_peg(void) {
+  // If acorns are in the inventory exchange them for the peg
+  if (fox->has_acorns) {
+    fox->has_acorns = false;
+    has_peg_been_dropped = true;
+    return;
+  }
+
+  // Else give hint to find acorns
+  fox_talk_for(fox, 2000);
+}
+
+static void make_acorns_fall(void) { have_acorns_fallen = true; }
+
+static void pickup_acorns(void) { fox->has_acorns = true; }
+
+static void pickup_peg(void) { fox->has_peg = true; }
+
 static void process_input(SDL_Event *event) {
   switch (event->type) {
   case SDL_MOUSEMOTION:
@@ -112,24 +162,38 @@ static void process_input(SDL_Event *event) {
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &SLIDE_HOTSPOT)) {
       // Walk to slide
-      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, NULL);
-      // If peg is in inventory fix slide
-      // Else if slide is working use: win the game
-      // Else give hint to fix the slide
+      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, maybe_use_slide);
       break;
     }
-    if (SDL_PointInRect(&m_pos, &SQUIRREL_HOTSPOT)) {
+    // If the squirrel already dropped the peg skip this case
+    if (!has_peg_been_dropped && SDL_PointInRect(&m_pos, &SQUIRREL_HOTSPOT)) {
       // Walk to squirrel
-      fox_walk_to(fox, (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y}, NULL);
-      // If peg is in inventory give hint to fix the slide
-      // Else if acorns are in inventory exchange peg for acorns
-      // Else give hint to find acorns
+      fox_walk_to(fox, (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y},
+                  maybe_get_peg);
       break;
     }
-    if (SDL_PointInRect(&m_pos, &ACORNS_HOTSPOT)) {
+    // If the acorns have already fallen skip this case
+    if (!have_acorns_fallen && SDL_PointInRect(&m_pos, &ACORNS_TREE_HOTSPOT)) {
       // Walk to acorns
-      fox_walk_to(fox, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y}, NULL);
-      // Add acorns to inventory
+      fox_walk_to(fox, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y},
+                  make_acorns_fall);
+      break;
+    }
+    // If the acorns haven't fallen yet, or if fox has acorns, or if acorns have
+    // been exchanged for the peg, skip this case
+    if (have_acorns_fallen && !fox->has_acorns && !has_peg_been_dropped &&
+        SDL_PointInRect(&m_pos, &ACORNS_FLOOR_HOTSPOT)) {
+      // Walk to acorns
+      fox_walk_to(fox, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y}, pickup_acorns);
+      break;
+    }
+    // If the peg hasn't been dropped yet, or if fox has the peg, or if the
+    // slide has been fixed already, skip this case
+    if (has_peg_been_dropped && !fox->has_peg && !has_slide_been_fixed &&
+        SDL_PointInRect(&m_pos, &PEG_HOTSPOT)) {
+      // Walk to peg
+      fox_walk_to(fox, (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y},
+                  pickup_peg);
       break;
     }
     if ((SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT_1) ||
@@ -148,8 +212,38 @@ static void update(float delta_time) { fox_update(fox, delta_time); }
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
   render_image(renderer, &squirrel, (SDL_Point){85, 160});
-  render_image(renderer, &peg, (SDL_Point){127, 175});
-  render_image(renderer, &acorns, (SDL_Point){698, 225});
+
+  if (has_peg_been_dropped) {
+    if (fox->has_peg) {
+      render_image(renderer, &peg,
+                   (SDL_Point){fox->current_position.x - 20,
+                               fox->current_position.y - 100});
+    } else {
+      if (has_slide_been_fixed) {
+        render_image(renderer, &peg, (SDL_Point){272, 263});
+      } else {
+        render_image(renderer, &peg, (SDL_Point){109, 474});
+      }
+    }
+  } else {
+    render_image(renderer, &peg, (SDL_Point){127, 175});
+  }
+
+  if (have_acorns_fallen) {
+    if (fox->has_acorns) {
+      render_image(renderer, &acorns,
+                   (SDL_Point){fox->current_position.x - 50,
+                               fox->current_position.y - 100});
+    } else {
+      if (has_peg_been_dropped) {
+        render_image(renderer, &acorns, (SDL_Point){137, 135});
+      } else {
+        render_image(renderer, &acorns, (SDL_Point){687, 503});
+      }
+    }
+  } else {
+    render_image(renderer, &acorns, (SDL_Point){698, 225});
+  }
 
   fox_render(fox, renderer);
 }

@@ -34,7 +34,10 @@ typedef struct fox {
   FoxState state;
   Uint32 started_talking_at;
   Uint32 talking_duration;
+  // Inventory
   bool has_key;
+  bool has_peg;
+  bool has_acorns;
 } Fox;
 
 Fox *make_fox(SDL_FPoint initial_position);
