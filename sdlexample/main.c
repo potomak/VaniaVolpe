@@ -57,6 +57,8 @@ int init_window(void) {
             Mix_GetError());
     return false;
   }
+  // Lower the music volume
+  Mix_VolumeMusic(30);
 
   return true;
 }
