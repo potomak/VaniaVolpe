@@ -7,6 +7,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2_mixer/SDL_mixer.h>
+#include <math.h>
 #include <stdbool.h>
 
 #include "constants.h"
@@ -50,10 +51,18 @@ static const SDL_Point SQUIRREL_POI = {219, 455};
 static const SDL_Point ACORNS_POI = {635, 498};
 static SDL_Point pois[3];
 
+// Objects position
+static const SDL_FPoint START_SLIDE_POS = (SDL_FPoint){326, 142};
+
+// Other constants
+static const float SLIDE_SIGMOID_HEIGHT = 240;
+
 // Scene state
 static bool has_slide_been_fixed = false;
 static bool have_acorns_fallen = false;
 static bool has_peg_been_dropped = false;
+static bool has_started_sliding = false;
+static float slide_x = 0;
 
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
@@ -131,9 +140,9 @@ static void maybe_use_slide(void) {
 
   // Else if slide is working use: win the game
   if (has_slide_been_fixed) {
-    fox->current_position = (SDL_FPoint){336, 142};
+    fox->current_position = START_SLIDE_POS;
     fox_talk_for(fox, 2000);
-    // TODO: End screen
+    has_started_sliding = true;
     return;
   }
 
@@ -213,7 +222,30 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) { fox_update(fox, delta_time); }
+// Used to compute the y position of the fox sliding down
+static float sigmoid(float x) {
+  float steepness = 0.025;
+  float center = 130;
+  float c = steepness * (x - center);
+  return SLIDE_SIGMOID_HEIGHT / (1 + exp(c));
+}
+
+static void update(float delta_time) {
+  fox_update(fox, delta_time);
+
+  float slide_y;
+  if (has_started_sliding) {
+    slide_y = sigmoid(slide_x);
+    fox->current_position =
+        (SDL_FPoint){START_SLIDE_POS.x + slide_x,
+                     START_SLIDE_POS.y - (slide_y - SLIDE_SIGMOID_HEIGHT)};
+    slide_x += 1.4;
+    if (slide_x > 270) {
+      slide_x = 0;
+      has_started_sliding = false;
+    }
+  }
+}
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
