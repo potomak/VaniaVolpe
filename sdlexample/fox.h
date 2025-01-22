@@ -26,6 +26,8 @@ typedef enum fox_state {
 
 typedef struct fox {
   AnimationData *walking;
+  Mix_Chunk *walking_sound;
+  int walking_sound_channel;
   AnimationData *talking;
   SDL_FPoint current_position;
   SDL_FPoint target_position;
