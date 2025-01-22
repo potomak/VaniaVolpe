@@ -224,7 +224,7 @@ static void process_input(SDL_Event *event) {
 
 // Used to compute the y position of the fox sliding down
 static float sigmoid(float x) {
-  float steepness = 0.025;
+  float steepness = -0.025;
   float center = 130;
   float c = steepness * (x - center);
   return SLIDE_SIGMOID_HEIGHT / (1 + exp(c));
@@ -237,8 +237,7 @@ static void update(float delta_time) {
   if (has_started_sliding) {
     slide_y = sigmoid(slide_x);
     fox->current_position =
-        (SDL_FPoint){START_SLIDE_POS.x + slide_x,
-                     START_SLIDE_POS.y - (slide_y - SLIDE_SIGMOID_HEIGHT)};
+        (SDL_FPoint){START_SLIDE_POS.x + slide_x, START_SLIDE_POS.y + slide_y};
     slide_x += 1.4;
     if (slide_x > 270) {
       slide_x = 0;
