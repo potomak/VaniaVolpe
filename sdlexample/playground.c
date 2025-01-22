@@ -28,7 +28,9 @@ static Fox *fox;
 static Mix_Music *music = NULL;
 
 // Sound effects
-// TODO
+static Mix_Chunk *acorns_falling_chunk = NULL;
+static Mix_Chunk *peg_falling_chunk = NULL;
+static Mix_Chunk *fix_slide_chunk = NULL;
 
 // Mouse position
 static SDL_Point m_pos;
@@ -124,7 +126,30 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load sound effects
-  // TODO
+  acorns_falling_chunk = Mix_LoadWAV("playground/acorns_falling.wav");
+  if (acorns_falling_chunk == NULL) {
+    fprintf(stderr,
+            "Failed to load acorns falling sound effect! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+
+  peg_falling_chunk = Mix_LoadWAV("playground/peg_falling.wav");
+  if (peg_falling_chunk == NULL) {
+    fprintf(stderr,
+            "Failed to load peg falling sound effect! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+
+  // TODO: Record new sound
+  fix_slide_chunk = Mix_LoadWAV("playground/peg_falling.wav");
+  if (fix_slide_chunk == NULL) {
+    fprintf(stderr,
+            "Failed to load fix slide sound effect! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
 
   return true;
 }
@@ -134,6 +159,8 @@ static void maybe_use_slide(void) {
   if (fox->has_peg) {
     fox->has_peg = false;
     has_slide_been_fixed = true;
+    Mix_PlayChannel(-1, fix_slide_chunk, 0);
+    // TODO: Wait for sound effect to end before starting to talk
     fox_talk_for(fox, 2000);
     return;
   }
@@ -155,6 +182,7 @@ static void maybe_get_peg(void) {
   if (fox->has_acorns) {
     fox->has_acorns = false;
     has_peg_been_dropped = true;
+    Mix_PlayChannel(-1, peg_falling_chunk, 0);
     return;
   }
 
@@ -162,7 +190,10 @@ static void maybe_get_peg(void) {
   fox_talk_for(fox, 2000);
 }
 
-static void make_acorns_fall(void) { have_acorns_fallen = true; }
+static void make_acorns_fall(void) {
+  have_acorns_fallen = true;
+  Mix_PlayChannel(-1, acorns_falling_chunk, 0);
+}
 
 static void pickup_acorns(void) { fox->has_acorns = true; }
 
@@ -296,6 +327,13 @@ static void deinit(void) {
 
   Mix_FreeMusic(music);
   music = NULL;
+
+  Mix_FreeChunk(acorns_falling_chunk);
+  Mix_FreeChunk(peg_falling_chunk);
+  Mix_FreeChunk(fix_slide_chunk);
+  acorns_falling_chunk = NULL;
+  peg_falling_chunk = NULL;
+  fix_slide_chunk = NULL;
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }

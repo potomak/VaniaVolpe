@@ -35,6 +35,7 @@ static Mix_Chunk *excavator_chunk = NULL;
 static int excavator_channel = -1;
 static Mix_Chunk *shovel_chunk = NULL;
 static Mix_Chunk *key_reveal_chunk = NULL;
+static Mix_Chunk *open_gate_chunk = NULL;
 
 // Mouse position
 static SDL_Point m_pos;
@@ -154,6 +155,15 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
+  // TODO: Record new sound
+  open_gate_chunk = Mix_LoadWAV("playground_entrance/key_reveal.wav");
+  if (open_gate_chunk == NULL) {
+    fprintf(stderr,
+            "Failed to load open gate sound effect! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+
   return true;
 }
 
@@ -162,6 +172,7 @@ static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
 static void maybe_open_gate(void) {
   // If key is in inventory open gate then go to PLAYGROUND scene
   if (fox->has_key) {
+    Mix_PlayChannel(-1, open_gate_chunk, 0);
     play_animation(gate, go_to_playground);
     return;
   }
@@ -294,9 +305,11 @@ static void deinit(void) {
   Mix_FreeChunk(excavator_chunk);
   Mix_FreeChunk(shovel_chunk);
   Mix_FreeChunk(key_reveal_chunk);
+  Mix_FreeChunk(open_gate_chunk);
   excavator_chunk = NULL;
   shovel_chunk = NULL;
   key_reveal_chunk = NULL;
+  open_gate_chunk = NULL;
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
