@@ -116,7 +116,7 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load music
-  music = Mix_LoadMUS("playground/music.wav");
+  music = Mix_LoadMUS("music/playground.wav");
   if (music == NULL) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
             Mix_GetError());
@@ -298,9 +298,9 @@ static void deinit(void) {
   music = NULL;
 }
 
-static void on_scene_active(void) {}
+static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
 
-static void on_scene_inactive(void) {}
+static void on_scene_inactive(void) { Mix_HaltMusic(); }
 
 Scene playground_scene = {
     .init = init,

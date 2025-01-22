@@ -142,9 +142,11 @@ static void deinit(void) {
 static void on_scene_active(void) {
   stop_animation(play_button);
   stop_animation(exit_button);
+
+  Mix_PlayMusic(music, -1);
 }
 
-static void on_scene_inactive(void) {}
+static void on_scene_inactive(void) { Mix_HaltMusic(); }
 
 Scene intro_scene = {
     .init = init,
