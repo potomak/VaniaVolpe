@@ -230,7 +230,7 @@ static void render(SDL_Renderer *renderer) {
   render_image(renderer, &background, (SDL_Point){0, 0});
 
   render_animation(renderer, excavator, (SDL_Point){180, 350});
-  render_animation(renderer, gate, (SDL_Point){491, 162});
+  render_animation(renderer, gate, (SDL_Point){491, 152});
   render_animation(renderer, shovel, (SDL_Point){112, 380});
 
   if (has_key_been_revealed) {

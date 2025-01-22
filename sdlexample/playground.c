@@ -19,6 +19,7 @@
 static ImageData background = {NULL, 0, 0};
 static ImageData squirrel = {NULL, 0, 0};
 static ImageData peg = {NULL, 0, 0};
+static ImageData fixed_peg = {NULL, 0, 0};
 static ImageData acorns = {NULL, 0, 0};
 static Fox *fox;
 
@@ -87,6 +88,11 @@ static bool load_media(SDL_Renderer *renderer) {
 
   if (!load_image(renderer, &peg, "playground/peg.png")) {
     fprintf(stderr, "Failed to load peg!\n");
+    return false;
+  }
+
+  if (!load_image(renderer, &fixed_peg, "playground/fixed_peg.png")) {
+    fprintf(stderr, "Failed to load fixed peg!\n");
     return false;
   }
 
@@ -220,7 +226,7 @@ static void render(SDL_Renderer *renderer) {
                                fox->current_position.y - 100});
     } else {
       if (has_slide_been_fixed) {
-        render_image(renderer, &peg, (SDL_Point){272, 263});
+        render_image(renderer, &fixed_peg, (SDL_Point){267, 263});
       } else {
         render_image(renderer, &peg, (SDL_Point){109, 474});
       }
@@ -252,6 +258,7 @@ static void deinit(void) {
   free_image_texture(&background);
   free_image_texture(&squirrel);
   free_image_texture(&peg);
+  free_image_texture(&fixed_peg);
   free_image_texture(&acorns);
 
   fox_free(fox);
