@@ -6,6 +6,7 @@
 //
 
 #include <SDL2/SDL.h>
+#include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
 
 #include "image.h"
@@ -46,6 +47,15 @@ bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
     return false;
   }
 
+  fox->walking_sound = Mix_LoadWAV("fox/walking.wav");
+  if (fox->walking_sound == NULL) {
+    fprintf(stderr, "Failed to load low sound effect! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+  // Lower the sample volume
+  fox->walking_sound->volume = 20;
+
   return true;
 }
 
@@ -76,6 +86,7 @@ void fox_update(Fox *fox, float delta_time) {
       fox->state = IDLE;
       fox->direction = (SDL_FPoint){0, 0};
       fox->current_position = fox->target_position;
+      Mix_HaltChannel(fox->walking_sound_channel);
       if (on_end_walking != NULL) {
         on_end_walking();
       }
@@ -115,6 +126,7 @@ void fox_render(Fox *fox, SDL_Renderer *renderer) {
 void fox_free(Fox *fox) {
   free_animation(fox->walking);
   free_animation(fox->talking);
+  Mix_FreeChunk(fox->walking_sound);
   free(fox);
 }
 
@@ -124,6 +136,11 @@ void fox_walk_to(Fox *fox, SDL_FPoint target_position, void (*on_end)(void)) {
   }
 
   on_end_walking = on_end;
+
+  if (fox->state != WALKING) {
+    // Play walking sound
+    fox->walking_sound_channel = Mix_PlayChannel(-1, fox->walking_sound, -1);
+  }
 
   play_animation(fox->walking, NULL);
   fox->state = WALKING;
