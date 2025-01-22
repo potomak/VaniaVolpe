@@ -31,7 +31,10 @@ static Fox *fox;
 static Mix_Music *music = NULL;
 
 // Sound effects
-// TODO
+static Mix_Chunk *excavator_chunk = NULL;
+static int excavator_channel = -1;
+static Mix_Chunk *shovel_chunk = NULL;
+static Mix_Chunk *key_reveal_chunk = NULL;
 
 // Mouse position
 static SDL_Point m_pos;
@@ -58,8 +61,8 @@ static bool has_key_been_revealed = false;
 
 static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
-  // Loop the animation 3 times before stopping
-  excavator->max_loop_count = 3;
+  // Loop the animation 6 times before stopping
+  excavator->max_loop_count = 6;
   excavator->speed_multiplier = 1. / 5;
   gate = make_animation_data(7, ONE_SHOT);
   shovel = make_animation_data(5, ONE_SHOT);
@@ -128,7 +131,28 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load sound effects
-  // TODO
+  excavator_chunk = Mix_LoadWAV("playground_entrance/excavator.wav");
+  if (excavator_chunk == NULL) {
+    fprintf(stderr,
+            "Failed to load excavator sound effect! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+
+  shovel_chunk = Mix_LoadWAV("playground_entrance/shovel.wav");
+  if (shovel_chunk == NULL) {
+    fprintf(stderr, "Failed to load shovel sound effect! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+
+  key_reveal_chunk = Mix_LoadWAV("playground_entrance/key_reveal.wav");
+  if (key_reveal_chunk == NULL) {
+    fprintf(stderr,
+            "Failed to load key reveal sound effect! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
 
   return true;
 }
@@ -148,7 +172,10 @@ static void maybe_open_gate(void) {
 
 static void add_key_to_inventory(void) { fox->has_key = true; }
 
-static void reveal_key(void) { has_key_been_revealed = true; }
+static void reveal_key(void) {
+  has_key_been_revealed = true;
+  Mix_PlayChannel(-1, key_reveal_chunk, 0);
+}
 
 static void maybe_dig_out_key(void) {
   // If key is in inventory don't do anything
@@ -158,6 +185,7 @@ static void maybe_dig_out_key(void) {
 
   // Play shovel animation and reveal key
   play_animation(shovel, reveal_key);
+  Mix_PlayChannel(-1, shovel_chunk, 0);
 }
 
 static void hint_about_gate(void) {
@@ -192,6 +220,10 @@ static void process_input(SDL_Event *event) {
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
       // Play excavator animation
       play_animation(excavator, NULL);
+      if (excavator_channel > -1) {
+        Mix_HaltChannel(excavator_channel);
+      }
+      excavator_channel = Mix_PlayChannel(-1, excavator_chunk, 0);
       break;
     }
     // If key has been revealed yet skip this case
@@ -258,6 +290,13 @@ static void deinit(void) {
 
   Mix_FreeMusic(music);
   music = NULL;
+
+  Mix_FreeChunk(excavator_chunk);
+  Mix_FreeChunk(shovel_chunk);
+  Mix_FreeChunk(key_reveal_chunk);
+  excavator_chunk = NULL;
+  shovel_chunk = NULL;
+  key_reveal_chunk = NULL;
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
