@@ -13,6 +13,7 @@
 #include "fox.h"
 #include "game.h"
 #include "image.h"
+#include "sound.h"
 
 #include "playground_entrance.h"
 
@@ -30,17 +31,25 @@ static Fox *fox;
 // Music
 static Mix_Music *music = NULL;
 
-// Sound effects
-static Mix_Chunk *excavator_chunk = NULL;
-static int excavator_channel = -1;
-static Mix_Chunk *shovel_chunk = NULL;
-static Mix_Chunk *key_reveal_chunk = NULL;
-static Mix_Chunk *open_gate_chunk = NULL;
-
-// Dialog
-static Mix_Chunk *examine_gate_1 = NULL;
-static Mix_Chunk *examine_gate_2 = NULL;
-static Mix_Chunk *examine_slide_from_outside = NULL;
+// Sound effects and dialog
+static int excavator_sound_channel = -1;
+static ChunkData chunks[7] = {
+    {NULL, "playground_entrance/excavator.wav"},
+    {NULL, "playground_entrance/shovel.wav"},
+    {NULL, "playground_entrance/key_reveal.wav"},
+    // I'm reusing the sound effect of the peg falling
+    {NULL, "playground/peg_falling.wav"},
+    {NULL, "playground_entrance/dialog/examine_gate_1.wav"},
+    {NULL, "playground_entrance/dialog/examine_gate_2.wav"},
+    {NULL, "playground_entrance/dialog/examine_slide_from_outside.wav"},
+};
+static ChunkData *excavator_sound = &chunks[0];
+static ChunkData *shovel_sound = &chunks[1];
+static ChunkData *key_reveal_sound = &chunks[2];
+static ChunkData *open_gate_sound = &chunks[3];
+static ChunkData *examine_gate_1 = &chunks[4];
+static ChunkData *examine_gate_2 = &chunks[5];
+static ChunkData *examine_slide_from_outside = &chunks[6];
 
 // Mouse position
 static SDL_Point m_pos;
@@ -137,58 +146,14 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  // Load sound effects
-  excavator_chunk = Mix_LoadWAV("playground_entrance/excavator.wav");
-  if (excavator_chunk == NULL) {
-    fprintf(stderr,
-            "Failed to load excavator sound effect! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  shovel_chunk = Mix_LoadWAV("playground_entrance/shovel.wav");
-  if (shovel_chunk == NULL) {
-    fprintf(stderr, "Failed to load shovel sound effect! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  key_reveal_chunk = Mix_LoadWAV("playground_entrance/key_reveal.wav");
-  if (key_reveal_chunk == NULL) {
-    fprintf(stderr,
-            "Failed to load key reveal sound effect! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  // I'm reusing the sound effect of the peg falling
-  open_gate_chunk = Mix_LoadWAV("playground/peg_falling.wav");
-  if (open_gate_chunk == NULL) {
-    fprintf(stderr,
-            "Failed to load open gate sound effect! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  // Load dialog
-  examine_gate_1 = Mix_LoadWAV("playground_entrance/dialog/examine_gate_1.wav");
-  if (examine_gate_1 == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-  examine_gate_2 = Mix_LoadWAV("playground_entrance/dialog/examine_gate_2.wav");
-  if (examine_gate_2 == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-  examine_slide_from_outside =
-      Mix_LoadWAV("playground_entrance/dialog/examine_slide_from_outside.wav");
-  if (examine_slide_from_outside == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
+  // Load sound effects and dialog
+  for (int i = 0; i < LEN(chunks); i++) {
+    chunks[i].chunk = Mix_LoadWAV(chunks[i].path);
+    if (chunks[i].chunk == NULL) {
+      fprintf(stderr, "Failed to load %s! SDL_mixer Error: %s\n",
+              chunks[i].path, Mix_GetError());
+      return false;
+    }
   }
 
   return true;
@@ -199,16 +164,16 @@ static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
 static void maybe_open_gate(void) {
   // If key is in inventory open gate then go to PLAYGROUND scene
   if (fox->has_key) {
-    Mix_PlayChannel(-1, open_gate_chunk, 0);
+    Mix_PlayChannel(-1, open_gate_sound->chunk, 0);
     play_animation(gate, go_to_playground);
     return;
   }
 
   // Else give hint about where to find the key
   if (examine_gate_count < 1) {
-    fox_talk(fox, examine_gate_1);
+    fox_talk(fox, examine_gate_1->chunk);
   } else {
-    fox_talk(fox, examine_gate_2);
+    fox_talk(fox, examine_gate_2->chunk);
   }
   examine_gate_count++;
 }
@@ -217,7 +182,7 @@ static void add_key_to_inventory(void) { fox->has_key = true; }
 
 static void reveal_key(void) {
   has_key_been_revealed = true;
-  Mix_PlayChannel(-1, key_reveal_chunk, 0);
+  Mix_PlayChannel(-1, key_reveal_sound->chunk, 0);
 }
 
 static void maybe_dig_out_key(void) {
@@ -228,12 +193,12 @@ static void maybe_dig_out_key(void) {
 
   // Play shovel animation and reveal key
   play_animation(shovel, reveal_key);
-  Mix_PlayChannel(-1, shovel_chunk, 0);
+  Mix_PlayChannel(-1, shovel_sound->chunk, 0);
 }
 
 static void examine_slide(void) {
   // Give hint about finding a key to open the gate
-  fox_talk(fox, examine_slide_from_outside);
+  fox_talk(fox, examine_slide_from_outside->chunk);
 }
 
 static void process_input(SDL_Event *event) {
@@ -251,10 +216,10 @@ static void process_input(SDL_Event *event) {
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
       // Play excavator animation
       play_animation(excavator, NULL);
-      if (excavator_channel > -1) {
-        Mix_HaltChannel(excavator_channel);
+      if (excavator_sound_channel > -1) {
+        Mix_HaltChannel(excavator_sound_channel);
       }
-      excavator_channel = Mix_PlayChannel(-1, excavator_chunk, 0);
+      excavator_sound_channel = Mix_PlayChannel(-1, excavator_sound->chunk, 0);
       break;
     }
     // If key has been revealed yet skip this case
@@ -322,21 +287,9 @@ static void deinit(void) {
   Mix_FreeMusic(music);
   music = NULL;
 
-  Mix_FreeChunk(excavator_chunk);
-  excavator_chunk = NULL;
-  Mix_FreeChunk(shovel_chunk);
-  shovel_chunk = NULL;
-  Mix_FreeChunk(key_reveal_chunk);
-  key_reveal_chunk = NULL;
-  Mix_FreeChunk(open_gate_chunk);
-  open_gate_chunk = NULL;
-
-  Mix_FreeChunk(examine_gate_1);
-  examine_gate_1 = NULL;
-  Mix_FreeChunk(examine_gate_2);
-  examine_gate_2 = NULL;
-  Mix_FreeChunk(examine_slide_from_outside);
-  examine_slide_from_outside = NULL;
+  for (int i = 0; i < LEN(chunks); i++) {
+    Mix_FreeChunk(chunks[i].chunk);
+  }
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
