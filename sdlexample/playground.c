@@ -32,6 +32,14 @@ static Mix_Chunk *acorns_falling_chunk = NULL;
 static Mix_Chunk *peg_falling_chunk = NULL;
 static Mix_Chunk *fix_slide_chunk = NULL;
 
+// Dialog
+static Mix_Chunk *examine_fixed_slide = NULL;
+static Mix_Chunk *examine_slide_1 = NULL;
+static Mix_Chunk *examine_slide_2 = NULL;
+static Mix_Chunk *examine_squirrel_1 = NULL;
+static Mix_Chunk *examine_squirrel_2 = NULL;
+static Mix_Chunk *sliding_down = NULL;
+
 // Mouse position
 static SDL_Point m_pos;
 
@@ -65,6 +73,8 @@ static bool have_acorns_fallen = false;
 static bool has_peg_been_dropped = false;
 static bool has_started_sliding = false;
 static float slide_x = 0;
+static int examine_slide_count = 0;
+static int examine_squirrel_count = 0;
 
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
@@ -151,6 +161,45 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
+  // Load dialog
+  examine_fixed_slide =
+      Mix_LoadWAV("playground/dialog/examine_fixed_slide.wav");
+  if (examine_fixed_slide == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+  examine_slide_1 = Mix_LoadWAV("playground/dialog/examine_slide_1.wav");
+  if (examine_slide_1 == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+  examine_slide_2 = Mix_LoadWAV("playground/dialog/examine_slide_2.wav");
+  if (examine_slide_2 == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+  examine_squirrel_1 = Mix_LoadWAV("playground/dialog/examine_squirrel_1.wav");
+  if (examine_squirrel_1 == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+  examine_squirrel_2 = Mix_LoadWAV("playground/dialog/examine_squirrel_2.wav");
+  if (examine_squirrel_2 == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+  sliding_down = Mix_LoadWAV("playground/dialog/sliding_down.wav");
+  if (sliding_down == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+
   return true;
 }
 
@@ -161,20 +210,25 @@ static void maybe_use_slide(void) {
     has_slide_been_fixed = true;
     Mix_PlayChannel(-1, fix_slide_chunk, 0);
     // TODO: Wait for sound effect to end before starting to talk
-    fox_talk_for(fox, 2000);
+    fox_talk(fox, examine_fixed_slide);
     return;
   }
 
   // Else if slide is working use: win the game
   if (has_slide_been_fixed) {
     fox->current_position = START_SLIDE_POS;
-    fox_talk_for(fox, 2000);
+    fox_talk(fox, sliding_down);
     has_started_sliding = true;
     return;
   }
 
   // Else give hint to fix the slide
-  fox_talk_for(fox, 2000);
+  if (examine_slide_count < 1) {
+    fox_talk(fox, examine_slide_1);
+  } else {
+    fox_talk(fox, examine_slide_2);
+  }
+  examine_slide_count++;
 }
 
 static void maybe_get_peg(void) {
@@ -187,7 +241,12 @@ static void maybe_get_peg(void) {
   }
 
   // Else give hint to find acorns
-  fox_talk_for(fox, 2000);
+  if (examine_squirrel_count < 1) {
+    fox_talk(fox, examine_squirrel_1);
+  } else {
+    fox_talk(fox, examine_squirrel_2);
+  }
+  examine_squirrel_count++;
 }
 
 static void make_acorns_fall(void) {
@@ -329,11 +388,24 @@ static void deinit(void) {
   music = NULL;
 
   Mix_FreeChunk(acorns_falling_chunk);
-  Mix_FreeChunk(peg_falling_chunk);
-  Mix_FreeChunk(fix_slide_chunk);
   acorns_falling_chunk = NULL;
+  Mix_FreeChunk(peg_falling_chunk);
   peg_falling_chunk = NULL;
+  Mix_FreeChunk(fix_slide_chunk);
   fix_slide_chunk = NULL;
+
+  Mix_FreeChunk(examine_fixed_slide);
+  examine_fixed_slide = NULL;
+  Mix_FreeChunk(examine_slide_1);
+  examine_slide_1 = NULL;
+  Mix_FreeChunk(examine_slide_2);
+  examine_slide_2 = NULL;
+  Mix_FreeChunk(examine_squirrel_1);
+  examine_squirrel_1 = NULL;
+  Mix_FreeChunk(examine_squirrel_2);
+  examine_squirrel_2 = NULL;
+  Mix_FreeChunk(sliding_down);
+  sliding_down = NULL;
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
