@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include "image.h"
+#include "sound.h"
 
 #include "fox.h"
 
@@ -159,11 +160,15 @@ void fox_walk_to(Fox *fox, SDL_FPoint target_position, void (*on_end)(void)) {
   fox->direction = (SDL_FPoint){dx / dist, dy / dist};
 }
 
-void fox_talk_for(Fox *fox, Uint32 talking_duration) {
+void fox_talk(Fox *fox, Mix_Chunk *dialog) {
   if (fox->state == WALKING) {
     return;
   }
 
+  Uint32 talking_duration = get_chunk_time_ms(dialog);
+  fprintf(stdout, "Sound duration: %d\n", talking_duration);
+
+  Mix_PlayChannel(-1, dialog, 0);
   play_animation(fox->talking, NULL);
   fox->state = TALKING;
   fox->talking_duration = talking_duration;

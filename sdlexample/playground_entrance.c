@@ -37,6 +37,11 @@ static Mix_Chunk *shovel_chunk = NULL;
 static Mix_Chunk *key_reveal_chunk = NULL;
 static Mix_Chunk *open_gate_chunk = NULL;
 
+// Dialog
+static Mix_Chunk *examine_gate_1 = NULL;
+static Mix_Chunk *examine_gate_2 = NULL;
+static Mix_Chunk *examine_slide_from_outside = NULL;
+
 // Mouse position
 static SDL_Point m_pos;
 
@@ -59,6 +64,7 @@ static SDL_Point pois[4];
 
 // Scene state
 static bool has_key_been_revealed = false;
+static int examine_gate_count = 0;
 
 static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
@@ -164,6 +170,27 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
+  // Load dialog
+  examine_gate_1 = Mix_LoadWAV("playground_entrance/dialog/examine_gate_1.wav");
+  if (examine_gate_1 == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+  examine_gate_2 = Mix_LoadWAV("playground_entrance/dialog/examine_gate_2.wav");
+  if (examine_gate_2 == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+  examine_slide_from_outside =
+      Mix_LoadWAV("playground_entrance/dialog/examine_slide_from_outside.wav");
+  if (examine_slide_from_outside == NULL) {
+    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
+            Mix_GetError());
+    return false;
+  }
+
   return true;
 }
 
@@ -178,7 +205,12 @@ static void maybe_open_gate(void) {
   }
 
   // Else give hint about where to find the key
-  fox_talk_for(fox, 2000);
+  if (examine_gate_count < 1) {
+    fox_talk(fox, examine_gate_1);
+  } else {
+    fox_talk(fox, examine_gate_2);
+  }
+  examine_gate_count++;
 }
 
 static void add_key_to_inventory(void) { fox->has_key = true; }
@@ -199,21 +231,9 @@ static void maybe_dig_out_key(void) {
   Mix_PlayChannel(-1, shovel_chunk, 0);
 }
 
-static void hint_about_gate(void) {
-  // Give hint about using the key to open the gate
-  if (fox->has_key) {
-    fox_talk_for(fox, 2000);
-    return;
-  }
-
-  // Give hint about picking up the key to open the gate
-  if (has_key_been_revealed) {
-    fox_talk_for(fox, 2000);
-    return;
-  }
-
+static void examine_slide(void) {
   // Give hint about finding a key to open the gate
-  fox_talk_for(fox, 2000);
+  fox_talk(fox, examine_slide_from_outside);
 }
 
 static void process_input(SDL_Event *event) {
@@ -255,7 +275,7 @@ static void process_input(SDL_Event *event) {
     }
     if (SDL_PointInRect(&m_pos, &SLIDE_HOTSPOT)) {
       // Walk to slide
-      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, hint_about_gate);
+      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, examine_slide);
       break;
     }
     if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT) &&
@@ -303,13 +323,20 @@ static void deinit(void) {
   music = NULL;
 
   Mix_FreeChunk(excavator_chunk);
-  Mix_FreeChunk(shovel_chunk);
-  Mix_FreeChunk(key_reveal_chunk);
-  Mix_FreeChunk(open_gate_chunk);
   excavator_chunk = NULL;
+  Mix_FreeChunk(shovel_chunk);
   shovel_chunk = NULL;
+  Mix_FreeChunk(key_reveal_chunk);
   key_reveal_chunk = NULL;
+  Mix_FreeChunk(open_gate_chunk);
   open_gate_chunk = NULL;
+
+  Mix_FreeChunk(examine_gate_1);
+  examine_gate_1 = NULL;
+  Mix_FreeChunk(examine_gate_2);
+  examine_gate_2 = NULL;
+  Mix_FreeChunk(examine_slide_from_outside);
+  examine_slide_from_outside = NULL;
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
