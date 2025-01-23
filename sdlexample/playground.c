@@ -94,6 +94,7 @@ static bool has_started_sliding = false;
 static float slide_x = 0;
 static int examine_slide_count = 0;
 static int examine_squirrel_count = 0;
+static int slides_count = 0;
 
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
@@ -194,6 +195,11 @@ static void process_input(SDL_Event *event) {
     SDL_GetMouseState(&m_pos.x, &m_pos.y);
     break;
   case SDL_MOUSEBUTTONDOWN:
+    // If has already slid three or more times go to outro
+    if (slides_count > 2) {
+      set_active_scene(OUTRO);
+      break;
+    }
     if (SDL_PointInRect(&m_pos, &SLIDE_HOTSPOT)) {
       // Walk to slide
       fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, maybe_use_slide);
@@ -261,6 +267,8 @@ static void update(float delta_time) {
     if (slide_x > 270) {
       slide_x = 0;
       has_started_sliding = false;
+      slides_count++;
+      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, NULL);
     }
   }
 }

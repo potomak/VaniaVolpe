@@ -22,6 +22,8 @@ typedef enum fox_state {
   IDLE,
   WALKING,
   TALKING,
+  SITTING,
+  WAVING,
 } FoxState;
 
 typedef struct fox {
@@ -29,6 +31,8 @@ typedef struct fox {
   Mix_Chunk *walking_sound;
   int walking_sound_channel;
   AnimationData *talking;
+  AnimationData *sitting;
+  AnimationData *waving;
   SDL_FPoint current_position;
   SDL_FPoint target_position;
   SDL_FPoint direction;
@@ -55,5 +59,9 @@ void fox_free(Fox *fox);
 void fox_walk_to(Fox *fox, SDL_FPoint position, void (*on_end)(void));
 
 void fox_talk(Fox *fox, Mix_Chunk *dialog);
+
+void fox_sit(Fox *fox);
+
+void fox_wave(Fox *fox);
 
 #endif /* fox_h */

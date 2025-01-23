@@ -22,6 +22,11 @@ Fox *make_fox(SDL_FPoint initial_position) {
   // Change default speed multiplier to make the animation slower
   fox->walking->speed_multiplier = 1. / 6;
   fox->talking = make_animation_data(3, LOOP);
+  fox->sitting = make_animation_data(3, LOOP);
+  // Play sitting animation by default because it will also be used for the idle
+  // state
+  play_animation(fox->sitting, NULL);
+  fox->waving = make_animation_data(3, LOOP);
   fox->current_position = initial_position;
   fox->target_position = initial_position;
   fox->direction = (SDL_FPoint){0, 0};
@@ -48,6 +53,18 @@ bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
     return false;
   }
 
+  if (!load_animation(renderer, fox->sitting, "fox/sitting.png",
+                      "fox/sitting.anim")) {
+    fprintf(stderr, "Failed to load fox sitting!\n");
+    return false;
+  }
+
+  if (!load_animation(renderer, fox->waving, "fox/waving.png",
+                      "fox/waving.anim")) {
+    fprintf(stderr, "Failed to load fox waving!\n");
+    return false;
+  }
+
   fox->walking_sound = Mix_LoadWAV("fox/walking.wav");
   if (fox->walking_sound == NULL) {
     fprintf(stderr, "Failed to load low sound effect! SDL_mixer Error: %s\n",
@@ -70,15 +87,21 @@ void fox_update(Fox *fox, float delta_time) {
   case EAST:
     fox->walking->flip = SDL_FLIP_HORIZONTAL;
     fox->talking->flip = SDL_FLIP_HORIZONTAL;
+    fox->sitting->flip = SDL_FLIP_HORIZONTAL;
+    fox->waving->flip = SDL_FLIP_HORIZONTAL;
     break;
   case WEST:
     fox->walking->flip = SDL_FLIP_NONE;
     fox->talking->flip = SDL_FLIP_NONE;
+    fox->sitting->flip = SDL_FLIP_NONE;
+    fox->waving->flip = SDL_FLIP_NONE;
     break;
   }
 
   switch (fox->state) {
   case IDLE:
+  case SITTING:
+  case WAVING:
     break;
   case WALKING:
     // Stop walking after reaching the target position
@@ -115,11 +138,19 @@ void fox_render(Fox *fox, SDL_Renderer *renderer) {
 
   switch (fox->state) {
   case IDLE:
+    render_animation(renderer, fox->sitting, position);
+    break;
   case WALKING:
     render_animation(renderer, fox->walking, position);
     break;
   case TALKING:
     render_animation(renderer, fox->talking, position);
+    break;
+  case SITTING:
+    render_animation(renderer, fox->sitting, position);
+    break;
+  case WAVING:
+    render_animation(renderer, fox->waving, position);
     break;
   }
 }
@@ -127,6 +158,8 @@ void fox_render(Fox *fox, SDL_Renderer *renderer) {
 void fox_free(Fox *fox) {
   free_animation(fox->walking);
   free_animation(fox->talking);
+  free_animation(fox->sitting);
+  free_animation(fox->waving);
   Mix_FreeChunk(fox->walking_sound);
   free(fox);
 }
@@ -173,4 +206,14 @@ void fox_talk(Fox *fox, Mix_Chunk *dialog) {
   fox->state = TALKING;
   fox->talking_duration = talking_duration;
   fox->started_talking_at = SDL_GetTicks();
+}
+
+void fox_sit(Fox *fox) {
+  play_animation(fox->sitting, NULL);
+  fox->state = SITTING;
+}
+
+void fox_wave(Fox *fox) {
+  play_animation(fox->waving, NULL);
+  fox->state = WAVING;
 }
