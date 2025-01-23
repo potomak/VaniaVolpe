@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include "constants.h"
+#include "fox.h"
 #include "game.h"
 #include "image.h"
 
@@ -23,6 +24,8 @@ static const ImageData *background = &images[0];
 // Animations
 static AnimationData *play_button;
 static AnimationData *exit_button;
+
+static Fox *fox;
 
 // Music
 static Mix_Music *music = NULL;
@@ -47,6 +50,9 @@ static void init(void) {
   play_button = make_animation_data(3, LOOP);
   exit_button = make_animation_data(3, LOOP);
 
+  fox = make_fox((SDL_FPoint){322, 317});
+  fox_sit(fox);
+
   hotspots[0] = PLAY_BUTTON_HOTSPOT;
   hotspots[1] = EXIT_BUTTON_HOTSPOT;
 }
@@ -61,6 +67,11 @@ static bool load_media(SDL_Renderer *renderer) {
   if (!load_animation(renderer, exit_button, "intro/exit_button.png",
                       "intro/exit_button.anim")) {
     fprintf(stderr, "Failed to load exit button!\n");
+    return false;
+  }
+
+  if (!fox_load_media(fox, renderer)) {
+    fprintf(stderr, "Failed to load fox!\n");
     return false;
   }
 
@@ -102,18 +113,22 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) {}
+static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
 
   render_animation(renderer, play_button, (SDL_Point){410, 260});
   render_animation(renderer, exit_button, (SDL_Point){440, 450});
+
+  fox_render(fox, renderer);
 }
 
 static void deinit(void) {
   free_animation(play_button);
   free_animation(exit_button);
+
+  fox_free(fox);
 
   Mix_FreeMusic(music);
   music = NULL;

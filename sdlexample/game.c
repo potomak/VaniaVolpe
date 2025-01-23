@@ -10,6 +10,7 @@
 
 // Scenes
 #include "intro.h"
+#include "outro.h"
 #include "playground.h"
 #include "playground_entrance.h"
 
@@ -31,6 +32,8 @@ Scene scene_instance(GameScene scene) {
     return playground_entrance_scene;
   case PLAYGROUND:
     return playground_scene;
+  case OUTRO:
+    return outro_scene;
   case EXAMPLE:
     return example_scene;
   default:

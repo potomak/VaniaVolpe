@@ -10,6 +10,8 @@
 		8401DA292D41916A00651807 /* sound.c in Sources */ = {isa = PBXBuildFile; fileRef = 8401DA282D41916A00651807 /* sound.c */; };
 		8401DA2B2D41949600651807 /* music in Resources */ = {isa = PBXBuildFile; fileRef = 8401DA2A2D41949600651807 /* music */; };
 		8401DA2D2D41FE3700651807 /* scene.c in Sources */ = {isa = PBXBuildFile; fileRef = 8401DA2C2D41FE3700651807 /* scene.c */; };
+		8401DA302D42A03F00651807 /* outro.c in Sources */ = {isa = PBXBuildFile; fileRef = 8401DA2F2D42A03F00651807 /* outro.c */; };
+		8401DA322D42A04B00651807 /* outro in Resources */ = {isa = PBXBuildFile; fileRef = 8401DA312D42A04B00651807 /* outro */; };
 		841C6A662D35B4B300C6F2DE /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A652D35B4B300C6F2DE /* SDL2_image.framework */; };
 		841C6A672D35B4B300C6F2DE /* SDL2_image.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A652D35B4B300C6F2DE /* SDL2_image.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		841C6A752D36A7AB00C6F2DE /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */; };
@@ -54,6 +56,9 @@
 		8401DA282D41916A00651807 /* sound.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sound.c; sourceTree = "<group>"; };
 		8401DA2A2D41949600651807 /* music */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = music; sourceTree = SOURCE_ROOT; };
 		8401DA2C2D41FE3700651807 /* scene.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = scene.c; sourceTree = "<group>"; };
+		8401DA2E2D42A03F00651807 /* outro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = outro.h; sourceTree = "<group>"; };
+		8401DA2F2D42A03F00651807 /* outro.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = outro.c; sourceTree = "<group>"; };
+		8401DA312D42A04B00651807 /* outro */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = outro; sourceTree = SOURCE_ROOT; };
 		841C6A652D35B4B300C6F2DE /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_image.framework; sourceTree = "<group>"; };
 		841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_mixer.framework; sourceTree = "<group>"; };
 		841C6A792D3850DA00C6F2DE /* intro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = intro.h; sourceTree = "<group>"; };
@@ -141,6 +146,9 @@
 				841C6A792D3850DA00C6F2DE /* intro.h */,
 				843CFC9E2D3550A70099E674 /* main.c */,
 				8401DA2A2D41949600651807 /* music */,
+				8401DA312D42A04B00651807 /* outro */,
+				8401DA2F2D42A03F00651807 /* outro.c */,
+				8401DA2E2D42A03F00651807 /* outro.h */,
 				8434D57E2D3F43840026F5B4 /* playground */,
 				842BA10D2D3A08FB00EEBF46 /* playground_entrance */,
 				842BA1062D39817B00EEBF46 /* playground_entrance.c */,
@@ -229,6 +237,7 @@
 				842BA10E2D3A08FB00EEBF46 /* playground_entrance in Resources */,
 				843CFC872D3200900099E674 /* Assets.xcassets in Resources */,
 				8401DA2B2D41949600651807 /* music in Resources */,
+				8401DA322D42A04B00651807 /* outro in Resources */,
 				8434D57D2D3B58CB0026F5B4 /* example in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -249,6 +258,7 @@
 				8401DA292D41916A00651807 /* sound.c in Sources */,
 				842BA1042D395C4900EEBF46 /* game.c in Sources */,
 				8434D5822D3F43DD0026F5B4 /* playground.c in Sources */,
+				8401DA302D42A03F00651807 /* outro.c in Sources */,
 				842BA0FE2D38B65D00EEBF46 /* example.c in Sources */,
 				843CFCA02D3550A70099E674 /* main.c in Sources */,
 			);
