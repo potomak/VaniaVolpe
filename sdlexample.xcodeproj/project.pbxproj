@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		8401DA292D41916A00651807 /* sound.c in Sources */ = {isa = PBXBuildFile; fileRef = 8401DA282D41916A00651807 /* sound.c */; };
 		8401DA2B2D41949600651807 /* music in Resources */ = {isa = PBXBuildFile; fileRef = 8401DA2A2D41949600651807 /* music */; };
+		8401DA2D2D41FE3700651807 /* scene.c in Sources */ = {isa = PBXBuildFile; fileRef = 8401DA2C2D41FE3700651807 /* scene.c */; };
 		841C6A662D35B4B300C6F2DE /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A652D35B4B300C6F2DE /* SDL2_image.framework */; };
 		841C6A672D35B4B300C6F2DE /* SDL2_image.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A652D35B4B300C6F2DE /* SDL2_image.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		841C6A752D36A7AB00C6F2DE /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */; };
@@ -52,6 +53,7 @@
 		8401DA272D41916A00651807 /* sound.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sound.h; sourceTree = "<group>"; };
 		8401DA282D41916A00651807 /* sound.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sound.c; sourceTree = "<group>"; };
 		8401DA2A2D41949600651807 /* music */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = music; sourceTree = SOURCE_ROOT; };
+		8401DA2C2D41FE3700651807 /* scene.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = scene.c; sourceTree = "<group>"; };
 		841C6A652D35B4B300C6F2DE /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_image.framework; sourceTree = "<group>"; };
 		841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_mixer.framework; sourceTree = "<group>"; };
 		841C6A792D3850DA00C6F2DE /* intro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = intro.h; sourceTree = "<group>"; };
@@ -145,6 +147,7 @@
 				842BA1052D39817B00EEBF46 /* playground_entrance.h */,
 				8434D5802D3F43DD0026F5B4 /* playground.c */,
 				8434D5812D3F43DD0026F5B4 /* playground.h */,
+				8401DA2C2D41FE3700651807 /* scene.c */,
 				842BA0FF2D393E8D00EEBF46 /* scene.h */,
 				843CFC8E2D3200900099E674 /* sdlexample.entitlements */,
 				8401DA282D41916A00651807 /* sound.c */,
@@ -239,6 +242,7 @@
 			files = (
 				841C6A7E2D38533E00C6F2DE /* image.c in Sources */,
 				842BA1072D39817B00EEBF46 /* playground_entrance.c in Sources */,
+				8401DA2D2D41FE3700651807 /* scene.c in Sources */,
 				841C6A7B2D3850DA00C6F2DE /* intro.c in Sources */,
 				842BA1112D3AA25600EEBF46 /* fox.c in Sources */,
 				842BA10C2D3992AA00EEBF46 /* debug.c in Sources */,

@@ -10,6 +10,7 @@
 
 typedef struct image_data {
   SDL_Texture *texture;
+  const char *path;
   int width;
   int height;
 } ImageData;
@@ -39,7 +40,7 @@ void free_image_texture(ImageData *image);
 
 void free_animation(AnimationData *animation);
 
-bool load_image(SDL_Renderer *renderer, ImageData *image, const char *path);
+bool load_image(SDL_Renderer *renderer, ImageData *image);
 
 bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
                     const char *sprite_path, const char *data_path);
@@ -51,6 +52,7 @@ void stop_animation(AnimationData *animation);
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point);
 
-void render_image(SDL_Renderer *renderer, ImageData *image, SDL_Point point);
+void render_image(SDL_Renderer *renderer, const ImageData *image,
+                  SDL_Point point);
 
 #endif /* image_h */

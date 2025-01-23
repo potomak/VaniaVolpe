@@ -11,6 +11,9 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
+#include "image.h"
+#include "sound.h"
+
 typedef struct scene {
   void (*init)(void);
   bool (*load_media)(SDL_Renderer *renderer);
@@ -31,6 +34,22 @@ typedef struct scene {
   // Points of interest in the scene
   SDL_Point *pois;
   int pois_length;
+
+  // Images
+  ImageData *images;
+  int images_length;
+
+  // Chunks (sound effects)
+  ChunkData *chunks;
+  int chunks_length;
 } Scene;
+
+bool load_scene_images(Scene scene, SDL_Renderer *renderer);
+
+bool load_scene_chunks(Scene scene);
+
+void free_scene_images(Scene scene);
+
+void free_scene_chunks(Scene scene);
 
 #endif /* scene_h */

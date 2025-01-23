@@ -50,15 +50,15 @@ void free_animation(AnimationData *animation) {
 }
 
 // Load image from file and create texture in image
-bool load_image(SDL_Renderer *renderer, ImageData *image, const char *path) {
+bool load_image(SDL_Renderer *renderer, ImageData *image) {
   // Free texture if it exists
   free_image_texture(image);
 
   // Load image at specified path
-  SDL_Surface *loaded_surface = IMG_Load(path);
+  SDL_Surface *loaded_surface = IMG_Load(image->path);
   if (loaded_surface == NULL) {
-    fprintf(stderr, "Unable to load image %s! SDL_image Error: %s\n", path,
-            IMG_GetError());
+    fprintf(stderr, "Unable to load image %s! SDL_image Error: %s\n",
+            image->path, IMG_GetError());
     return false;
   }
 
@@ -69,8 +69,8 @@ bool load_image(SDL_Renderer *renderer, ImageData *image, const char *path) {
   // Create texture from surface pixels
   image->texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
   if (image->texture == NULL) {
-    fprintf(stderr, "Unable to create texture from %s! SDL Error: %s\n", path,
-            SDL_GetError());
+    fprintf(stderr, "Unable to create texture from %s! SDL Error: %s\n",
+            image->path, SDL_GetError());
     return false;
   }
   // Get image dimensions
@@ -126,7 +126,8 @@ static bool load_animation_data(AnimationData *animation, const char *path) {
 
 bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
                     const char *sprite_path, const char *data_path) {
-  if (!load_image(renderer, &animation->image, sprite_path)) {
+  animation->image.path = sprite_path;
+  if (!load_image(renderer, &animation->image)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
     return false;
   }
@@ -183,7 +184,8 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
   }
 }
 
-void render_image(SDL_Renderer *renderer, ImageData *image, SDL_Point point) {
+void render_image(SDL_Renderer *renderer, const ImageData *image,
+                  SDL_Point point) {
   // Set rendering space and render to screen
   SDL_Rect render_quad = {point.x, point.y, image->width, image->height};
 
