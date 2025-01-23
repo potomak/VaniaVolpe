@@ -155,8 +155,8 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  // TODO: Record new sound
-  open_gate_chunk = Mix_LoadWAV("playground_entrance/key_reveal.wav");
+  // I'm reusing the sound effect of the peg falling
+  open_gate_chunk = Mix_LoadWAV("playground/peg_falling.wav");
   if (open_gate_chunk == NULL) {
     fprintf(stderr,
             "Failed to load open gate sound effect! SDL_mixer Error: %s\n",
