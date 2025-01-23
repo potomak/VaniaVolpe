@@ -43,13 +43,13 @@ static ChunkData chunks[7] = {
     {NULL, "playground_entrance/dialog/examine_gate_2.wav"},
     {NULL, "playground_entrance/dialog/examine_slide_from_outside.wav"},
 };
-static ChunkData *excavator_sound = &chunks[0];
-static ChunkData *shovel_sound = &chunks[1];
-static ChunkData *key_reveal_sound = &chunks[2];
-static ChunkData *open_gate_sound = &chunks[3];
-static ChunkData *examine_gate_1 = &chunks[4];
-static ChunkData *examine_gate_2 = &chunks[5];
-static ChunkData *examine_slide_from_outside = &chunks[6];
+static const ChunkData *excavator_sound = &chunks[0];
+static const ChunkData *shovel_sound = &chunks[1];
+static const ChunkData *key_reveal_sound = &chunks[2];
+static const ChunkData *open_gate_sound = &chunks[3];
+static const ChunkData *examine_gate_1 = &chunks[4];
+static const ChunkData *examine_gate_2 = &chunks[5];
+static const ChunkData *examine_slide_from_outside = &chunks[6];
 
 // Mouse position
 static SDL_Point m_pos;

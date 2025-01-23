@@ -14,6 +14,7 @@
 #include "fox.h"
 #include "game.h"
 #include "image.h"
+#include "sound.h"
 
 #include "playground.h"
 
@@ -27,18 +28,28 @@ static Fox *fox;
 // Music
 static Mix_Music *music = NULL;
 
-// Sound effects
-static Mix_Chunk *acorns_falling_chunk = NULL;
-static Mix_Chunk *peg_falling_chunk = NULL;
-static Mix_Chunk *fix_slide_chunk = NULL;
-
-// Dialog
-static Mix_Chunk *examine_fixed_slide = NULL;
-static Mix_Chunk *examine_slide_1 = NULL;
-static Mix_Chunk *examine_slide_2 = NULL;
-static Mix_Chunk *examine_squirrel_1 = NULL;
-static Mix_Chunk *examine_squirrel_2 = NULL;
-static Mix_Chunk *sliding_down = NULL;
+// Sound effects and dialog
+static ChunkData chunks[9] = {
+    {NULL, "playground/acorns_falling.wav"},
+    {NULL, "playground/peg_falling.wav"},
+    // TODO: Record new sound
+    {NULL, "playground/peg_falling.wav"},
+    {NULL, "playground/dialog/examine_fixed_slide.wav"},
+    {NULL, "playground/dialog/examine_slide_1.wav"},
+    {NULL, "playground/dialog/examine_slide_2.wav"},
+    {NULL, "playground/dialog/examine_squirrel_1.wav"},
+    {NULL, "playground/dialog/examine_squirrel_2.wav"},
+    {NULL, "playground/dialog/sliding_down.wav"},
+};
+static const ChunkData *acorns_falling_sound = &chunks[0];
+static const ChunkData *peg_falling_sound = &chunks[1];
+static const ChunkData *fix_slide_sound = &chunks[2];
+static const ChunkData *examine_fixed_slide = &chunks[3];
+static const ChunkData *examine_slide_1 = &chunks[4];
+static const ChunkData *examine_slide_2 = &chunks[5];
+static const ChunkData *examine_squirrel_1 = &chunks[6];
+static const ChunkData *examine_squirrel_2 = &chunks[7];
+static const ChunkData *sliding_down = &chunks[8];
 
 // Mouse position
 static SDL_Point m_pos;
@@ -135,69 +146,14 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  // Load sound effects
-  acorns_falling_chunk = Mix_LoadWAV("playground/acorns_falling.wav");
-  if (acorns_falling_chunk == NULL) {
-    fprintf(stderr,
-            "Failed to load acorns falling sound effect! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  peg_falling_chunk = Mix_LoadWAV("playground/peg_falling.wav");
-  if (peg_falling_chunk == NULL) {
-    fprintf(stderr,
-            "Failed to load peg falling sound effect! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  // TODO: Record new sound
-  fix_slide_chunk = Mix_LoadWAV("playground/peg_falling.wav");
-  if (fix_slide_chunk == NULL) {
-    fprintf(stderr,
-            "Failed to load fix slide sound effect! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  // Load dialog
-  examine_fixed_slide =
-      Mix_LoadWAV("playground/dialog/examine_fixed_slide.wav");
-  if (examine_fixed_slide == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-  examine_slide_1 = Mix_LoadWAV("playground/dialog/examine_slide_1.wav");
-  if (examine_slide_1 == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-  examine_slide_2 = Mix_LoadWAV("playground/dialog/examine_slide_2.wav");
-  if (examine_slide_2 == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-  examine_squirrel_1 = Mix_LoadWAV("playground/dialog/examine_squirrel_1.wav");
-  if (examine_squirrel_1 == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-  examine_squirrel_2 = Mix_LoadWAV("playground/dialog/examine_squirrel_2.wav");
-  if (examine_squirrel_2 == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-  sliding_down = Mix_LoadWAV("playground/dialog/sliding_down.wav");
-  if (sliding_down == NULL) {
-    fprintf(stderr, "Failed to load dialog! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
+  // Load sound effects and dialog
+  for (int i = 0; i < LEN(chunks); i++) {
+    chunks[i].chunk = Mix_LoadWAV(chunks[i].path);
+    if (chunks[i].chunk == NULL) {
+      fprintf(stderr, "Failed to load %s! SDL_mixer Error: %s\n",
+              chunks[i].path, Mix_GetError());
+      return false;
+    }
   }
 
   return true;
@@ -208,25 +164,25 @@ static void maybe_use_slide(void) {
   if (fox->has_peg) {
     fox->has_peg = false;
     has_slide_been_fixed = true;
-    Mix_PlayChannel(-1, fix_slide_chunk, 0);
+    Mix_PlayChannel(-1, fix_slide_sound->chunk, 0);
     // TODO: Wait for sound effect to end before starting to talk
-    fox_talk(fox, examine_fixed_slide);
+    fox_talk(fox, examine_fixed_slide->chunk);
     return;
   }
 
   // Else if slide is working use: win the game
   if (has_slide_been_fixed) {
     fox->current_position = START_SLIDE_POS;
-    fox_talk(fox, sliding_down);
+    fox_talk(fox, sliding_down->chunk);
     has_started_sliding = true;
     return;
   }
 
   // Else give hint to fix the slide
   if (examine_slide_count < 1) {
-    fox_talk(fox, examine_slide_1);
+    fox_talk(fox, examine_slide_1->chunk);
   } else {
-    fox_talk(fox, examine_slide_2);
+    fox_talk(fox, examine_slide_2->chunk);
   }
   examine_slide_count++;
 }
@@ -236,22 +192,22 @@ static void maybe_get_peg(void) {
   if (fox->has_acorns) {
     fox->has_acorns = false;
     has_peg_been_dropped = true;
-    Mix_PlayChannel(-1, peg_falling_chunk, 0);
+    Mix_PlayChannel(-1, peg_falling_sound->chunk, 0);
     return;
   }
 
   // Else give hint to find acorns
   if (examine_squirrel_count < 1) {
-    fox_talk(fox, examine_squirrel_1);
+    fox_talk(fox, examine_squirrel_1->chunk);
   } else {
-    fox_talk(fox, examine_squirrel_2);
+    fox_talk(fox, examine_squirrel_2->chunk);
   }
   examine_squirrel_count++;
 }
 
 static void make_acorns_fall(void) {
   have_acorns_fallen = true;
-  Mix_PlayChannel(-1, acorns_falling_chunk, 0);
+  Mix_PlayChannel(-1, acorns_falling_sound->chunk, 0);
 }
 
 static void pickup_acorns(void) { fox->has_acorns = true; }
@@ -387,25 +343,9 @@ static void deinit(void) {
   Mix_FreeMusic(music);
   music = NULL;
 
-  Mix_FreeChunk(acorns_falling_chunk);
-  acorns_falling_chunk = NULL;
-  Mix_FreeChunk(peg_falling_chunk);
-  peg_falling_chunk = NULL;
-  Mix_FreeChunk(fix_slide_chunk);
-  fix_slide_chunk = NULL;
-
-  Mix_FreeChunk(examine_fixed_slide);
-  examine_fixed_slide = NULL;
-  Mix_FreeChunk(examine_slide_1);
-  examine_slide_1 = NULL;
-  Mix_FreeChunk(examine_slide_2);
-  examine_slide_2 = NULL;
-  Mix_FreeChunk(examine_squirrel_1);
-  examine_squirrel_1 = NULL;
-  Mix_FreeChunk(examine_squirrel_2);
-  examine_squirrel_2 = NULL;
-  Mix_FreeChunk(sliding_down);
-  sliding_down = NULL;
+  for (int i = 0; i < LEN(chunks); i++) {
+    Mix_FreeChunk(chunks[i].chunk);
+  }
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
