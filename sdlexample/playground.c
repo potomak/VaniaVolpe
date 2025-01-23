@@ -18,11 +18,19 @@
 
 #include "playground.h"
 
-static ImageData background = {NULL, 0, 0};
-static ImageData squirrel = {NULL, 0, 0};
-static ImageData peg = {NULL, 0, 0};
-static ImageData fixed_peg = {NULL, 0, 0};
-static ImageData acorns = {NULL, 0, 0};
+static ImageData images[5] = {
+    {NULL, "playground/background.png", 0, 0},
+    {NULL, "playground/squirrel.png", 0, 0},
+    {NULL, "playground/peg.png", 0, 0},
+    {NULL, "playground/fixed_peg.png", 0, 0},
+    {NULL, "playground/acorns.png", 0, 0},
+};
+static const ImageData *background = &images[0];
+static const ImageData *squirrel = &images[1];
+static const ImageData *peg = &images[2];
+static const ImageData *fixed_peg = &images[3];
+static const ImageData *acorns = &images[4];
+
 static Fox *fox;
 
 // Music
@@ -108,31 +116,6 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_image(renderer, &background, "playground/background.png")) {
-    fprintf(stderr, "Failed to load background!\n");
-    return false;
-  }
-
-  if (!load_image(renderer, &squirrel, "playground/squirrel.png")) {
-    fprintf(stderr, "Failed to load squirrel!\n");
-    return false;
-  }
-
-  if (!load_image(renderer, &peg, "playground/peg.png")) {
-    fprintf(stderr, "Failed to load peg!\n");
-    return false;
-  }
-
-  if (!load_image(renderer, &fixed_peg, "playground/fixed_peg.png")) {
-    fprintf(stderr, "Failed to load fixed peg!\n");
-    return false;
-  }
-
-  if (!load_image(renderer, &acorns, "playground/acorns.png")) {
-    fprintf(stderr, "Failed to load acorns!\n");
-    return false;
-  }
-
   if (!fox_load_media(fox, renderer)) {
     fprintf(stderr, "Failed to load fox!\n");
     return false;
@@ -144,16 +127,6 @@ static bool load_media(SDL_Renderer *renderer) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
             Mix_GetError());
     return false;
-  }
-
-  // Load sound effects and dialog
-  for (int i = 0; i < LEN(chunks); i++) {
-    chunks[i].chunk = Mix_LoadWAV(chunks[i].path);
-    if (chunks[i].chunk == NULL) {
-      fprintf(stderr, "Failed to load %s! SDL_mixer Error: %s\n",
-              chunks[i].path, Mix_GetError());
-      return false;
-    }
   }
 
   return true;
@@ -293,59 +266,49 @@ static void update(float delta_time) {
 }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, &background, (SDL_Point){0, 0});
-  render_image(renderer, &squirrel, (SDL_Point){85, 160});
+  render_image(renderer, background, (SDL_Point){0, 0});
+  render_image(renderer, squirrel, (SDL_Point){85, 160});
 
   if (has_peg_been_dropped) {
     if (fox->has_peg) {
-      render_image(renderer, &peg,
+      render_image(renderer, peg,
                    (SDL_Point){fox->current_position.x - 20,
                                fox->current_position.y - 100});
     } else {
       if (has_slide_been_fixed) {
-        render_image(renderer, &fixed_peg, (SDL_Point){267, 263});
+        render_image(renderer, fixed_peg, (SDL_Point){267, 263});
       } else {
-        render_image(renderer, &peg, (SDL_Point){109, 474});
+        render_image(renderer, peg, (SDL_Point){109, 474});
       }
     }
   } else {
-    render_image(renderer, &peg, (SDL_Point){127, 175});
+    render_image(renderer, peg, (SDL_Point){127, 175});
   }
 
   if (have_acorns_fallen) {
     if (fox->has_acorns) {
-      render_image(renderer, &acorns,
+      render_image(renderer, acorns,
                    (SDL_Point){fox->current_position.x - 50,
                                fox->current_position.y - 100});
     } else {
       if (has_peg_been_dropped) {
-        render_image(renderer, &acorns, (SDL_Point){137, 135});
+        render_image(renderer, acorns, (SDL_Point){137, 135});
       } else {
-        render_image(renderer, &acorns, (SDL_Point){687, 503});
+        render_image(renderer, acorns, (SDL_Point){687, 503});
       }
     }
   } else {
-    render_image(renderer, &acorns, (SDL_Point){698, 225});
+    render_image(renderer, acorns, (SDL_Point){698, 225});
   }
 
   fox_render(fox, renderer);
 }
 
 static void deinit(void) {
-  free_image_texture(&background);
-  free_image_texture(&squirrel);
-  free_image_texture(&peg);
-  free_image_texture(&fixed_peg);
-  free_image_texture(&acorns);
-
   fox_free(fox);
 
   Mix_FreeMusic(music);
   music = NULL;
-
-  for (int i = 0; i < LEN(chunks); i++) {
-    Mix_FreeChunk(chunks[i].chunk);
-  }
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
@@ -365,4 +328,8 @@ Scene playground_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .images = images,
+    .images_length = LEN(images),
+    .chunks = chunks,
+    .chunks_length = LEN(chunks),
 };

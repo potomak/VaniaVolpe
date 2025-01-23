@@ -8,6 +8,8 @@
 #ifndef sound_h
 #define sound_h
 
+#import <SDL2_mixer/SDL_mixer.h>
+
 typedef struct chunk_data {
   Mix_Chunk *chunk;
   const char *path;

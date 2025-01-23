@@ -17,9 +17,12 @@
 
 #include "playground_entrance.h"
 
-// Background image
-static ImageData background = {NULL, 0, 0};
-static ImageData key = {NULL, 0, 0};
+static ImageData images[2] = {
+    {NULL, "playground_entrance/background.png", 0, 0},
+    {NULL, "playground_entrance/key.png", 0, 0},
+};
+static const ImageData *background = &images[0];
+static const ImageData *key = &images[1];
 
 // Animations
 static AnimationData *excavator;
@@ -104,17 +107,6 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_image(renderer, &background,
-                  "playground_entrance/background.png")) {
-    fprintf(stderr, "Failed to load background!\n");
-    return false;
-  }
-
-  if (!load_image(renderer, &key, "playground_entrance/key.png")) {
-    fprintf(stderr, "Failed to load key!\n");
-    return false;
-  }
-
   if (!load_animation(renderer, excavator, "playground_entrance/excavator.png",
                       "playground_entrance/excavator.anim")) {
     fprintf(stderr, "Failed to load excavator!\n");
@@ -144,16 +136,6 @@ static bool load_media(SDL_Renderer *renderer) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
             Mix_GetError());
     return false;
-  }
-
-  // Load sound effects and dialog
-  for (int i = 0; i < LEN(chunks); i++) {
-    chunks[i].chunk = Mix_LoadWAV(chunks[i].path);
-    if (chunks[i].chunk == NULL) {
-      fprintf(stderr, "Failed to load %s! SDL_mixer Error: %s\n",
-              chunks[i].path, Mix_GetError());
-      return false;
-    }
   }
 
   return true;
@@ -255,7 +237,7 @@ static void process_input(SDL_Event *event) {
 static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, &background, (SDL_Point){0, 0});
+  render_image(renderer, background, (SDL_Point){0, 0});
 
   render_animation(renderer, excavator, (SDL_Point){180, 350});
   render_animation(renderer, gate, (SDL_Point){491, 152});
@@ -263,11 +245,11 @@ static void render(SDL_Renderer *renderer) {
 
   if (has_key_been_revealed) {
     if (fox->has_key) {
-      render_image(renderer, &key,
+      render_image(renderer, key,
                    (SDL_Point){fox->current_position.x - 50,
                                fox->current_position.y - 80});
     } else {
-      render_image(renderer, &key, (SDL_Point){20, 431});
+      render_image(renderer, key, (SDL_Point){20, 431});
     }
   }
 
@@ -275,9 +257,6 @@ static void render(SDL_Renderer *renderer) {
 }
 
 static void deinit(void) {
-  free_image_texture(&background);
-  free_image_texture(&key);
-
   free_animation(excavator);
   free_animation(gate);
   free_animation(shovel);
@@ -286,10 +265,6 @@ static void deinit(void) {
 
   Mix_FreeMusic(music);
   music = NULL;
-
-  for (int i = 0; i < LEN(chunks); i++) {
-    Mix_FreeChunk(chunks[i].chunk);
-  }
 }
 
 static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
@@ -309,4 +284,8 @@ Scene playground_entrance_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .images = images,
+    .images_length = LEN(images),
+    .chunks = chunks,
+    .chunks_length = LEN(chunks),
 };

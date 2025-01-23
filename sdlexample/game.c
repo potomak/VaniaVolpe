@@ -57,7 +57,14 @@ void game_init(void) {
 bool game_load_media(SDL_Renderer *renderer) {
   for (int i = 0; i < SCENES_LENGTH; i++) {
     if (!scene_instance(i).load_media(renderer)) {
-      fprintf(stderr, "Failed to initialize scene!\n");
+      return false;
+    }
+
+    if (!load_scene_images(scene_instance(i), renderer)) {
+      return false;
+    }
+
+    if (!load_scene_chunks(scene_instance(i))) {
       return false;
     }
   }
@@ -100,5 +107,7 @@ void game_render(SDL_Renderer *renderer) {
 void game_deinit(void) {
   for (int i = 0; i < SCENES_LENGTH; i++) {
     scene_instance(i).deinit();
+    free_scene_images(scene_instance(i));
+    free_scene_chunks(scene_instance(i));
   }
 }

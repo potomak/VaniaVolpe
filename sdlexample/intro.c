@@ -15,8 +15,10 @@
 
 #include "intro.h"
 
-// Background image
-static ImageData background = {NULL, 0, 0};
+static ImageData images[1] = {
+    {NULL, "intro/background.png", 0, 0},
+};
+static const ImageData *background = &images[0];
 
 // Animations
 static AnimationData *play_button;
@@ -26,8 +28,12 @@ static AnimationData *exit_button;
 static Mix_Music *music = NULL;
 
 // Sound effects
-static Mix_Chunk *play_button_click_sound = NULL;
-static Mix_Chunk *exit_button_click_sound = NULL;
+static ChunkData chunks[2] = {
+    {NULL, "intro/play_button_click.wav"},
+    {NULL, "intro/exit_button_click.wav"},
+};
+static const ChunkData *_play_button_click_sound = &chunks[0];
+static const ChunkData *_exit_button_click_sound = &chunks[1];
 
 // Mouse position
 static SDL_Point m_pos;
@@ -46,11 +52,6 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_image(renderer, &background, "intro/background.png")) {
-    fprintf(stderr, "Failed to load background!\n");
-    return false;
-  }
-
   if (!load_animation(renderer, play_button, "intro/play_button.png",
                       "intro/play_button.anim")) {
     fprintf(stderr, "Failed to load play button!\n");
@@ -67,21 +68,6 @@ static bool load_media(SDL_Renderer *renderer) {
   music = Mix_LoadMUS("intro/music.wav");
   if (music == NULL) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  // Load sound effects
-  play_button_click_sound = Mix_LoadWAV("intro/play_button_click.wav");
-  if (play_button_click_sound == NULL) {
-    fprintf(stderr, "Failed to load sound effect! SDL_mixer Error: %s\n",
-            Mix_GetError());
-    return false;
-  }
-
-  exit_button_click_sound = Mix_LoadWAV("intro/exit_button_click.wav");
-  if (exit_button_click_sound == NULL) {
-    fprintf(stderr, "Failed to load sound effect! SDL_mixer Error: %s\n",
             Mix_GetError());
     return false;
   }
@@ -119,21 +105,15 @@ static void process_input(SDL_Event *event) {
 static void update(float delta_time) {}
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, &background, (SDL_Point){0, 0});
+  render_image(renderer, background, (SDL_Point){0, 0});
 
   render_animation(renderer, play_button, (SDL_Point){410, 260});
   render_animation(renderer, exit_button, (SDL_Point){440, 450});
 }
 
 static void deinit(void) {
-  free_image_texture(&background);
   free_animation(play_button);
   free_animation(exit_button);
-
-  Mix_FreeChunk(play_button_click_sound);
-  play_button_click_sound = NULL;
-  Mix_FreeChunk(exit_button_click_sound);
-  exit_button_click_sound = NULL;
 
   Mix_FreeMusic(music);
   music = NULL;
@@ -159,4 +139,8 @@ Scene intro_scene = {
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,
     .hotspots_length = LEN(hotspots),
+    .images = images,
+    .images_length = LEN(images),
+    .chunks = chunks,
+    .chunks_length = LEN(chunks),
 };
