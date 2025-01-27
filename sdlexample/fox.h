@@ -8,10 +8,9 @@
 #ifndef fox_h
 #define fox_h
 
-#define FOX_X_VELOCITY = 1
-#define FOX_Y_VELOCITY = 1
-
 #import "image.h"
+
+static const float FOX_VELOCITY = 200;
 
 typedef enum horizontal_orientation {
   WEST = -1,

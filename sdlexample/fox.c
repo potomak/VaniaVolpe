@@ -109,7 +109,6 @@ bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
 void fox_update(Fox *fox, float delta_time) {
   float dx = fox->target_position.x - fox->current_position.x;
   float dy = fox->target_position.y - fox->current_position.y;
-  float vel = 200;
   float ticks = SDL_GetTicks();
 
   switch (fox->horizontal_orientation) {
@@ -146,9 +145,11 @@ void fox_update(Fox *fox, float delta_time) {
       return;
     }
 
-    fox->current_position = (SDL_FPoint){
-        .x = fox->current_position.x + fox->direction.x * vel * delta_time,
-        .y = fox->current_position.y + fox->direction.y * vel * delta_time};
+    fox->current_position =
+        (SDL_FPoint){.x = fox->current_position.x +
+                          fox->direction.x * FOX_VELOCITY * delta_time,
+                     .y = fox->current_position.y +
+                          fox->direction.y * FOX_VELOCITY * delta_time};
     break;
   case TALKING:
     if (ticks - fox->started_talking_at >= fox->talking_duration) {
