@@ -176,7 +176,8 @@ static void process_input(SDL_Event *event) {
     // If mouse event happened
   case SDL_MOUSEMOTION:
     // Get mouse position
-    SDL_GetMouseState(&mPosition.x, &mPosition.y);
+    mPosition.x = event->motion.x;
+    mPosition.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
     Mix_PlayChannel(-1, gScratch, 0);

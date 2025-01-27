@@ -211,7 +211,8 @@ static void process_input(SDL_Event *event) {
   switch (event->type) {
   case SDL_MOUSEMOTION:
     // Get mouse position
-    SDL_GetMouseState(&m_pos.x, &m_pos.y);
+    m_pos.x = event->motion.x;
+    m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &GATE_HOTSPOT)) {
