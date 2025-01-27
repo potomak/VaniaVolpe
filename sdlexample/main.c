@@ -39,6 +39,9 @@ int init_window(void) {
     return false;
   }
 
+  // Scale
+  SDL_RenderSetLogicalSize(renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
+
   // Initialize renderer color
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
