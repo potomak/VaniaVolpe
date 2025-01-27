@@ -12,7 +12,8 @@
 
 typedef struct chunk_data {
   Mix_Chunk *chunk;
-  const char *path;
+  const char *filename;
+  const char *directory;
 } ChunkData;
 
 Uint32 get_chunk_time_ms(Mix_Chunk *chunk);

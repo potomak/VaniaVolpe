@@ -17,7 +17,7 @@
 #include "intro.h"
 
 static ImageData images[1] = {
-    {NULL, "intro/background.png", 0, 0},
+    {NULL, "intro_background.png", "intro", 0, 0},
 };
 static const ImageData *background = &images[0];
 
@@ -32,8 +32,8 @@ static Mix_Music *music = NULL;
 
 // Sound effects
 static ChunkData chunks[2] = {
-    {NULL, "intro/play_button_click.wav"},
-    {NULL, "intro/exit_button_click.wav"},
+    {NULL, "play_button_click.wav", "intro"},
+    {NULL, "exit_button_click.wav", "intro"},
 };
 static const ChunkData *_play_button_click_sound = &chunks[0];
 static const ChunkData *_exit_button_click_sound = &chunks[1];
@@ -58,14 +58,28 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_animation(renderer, play_button, "intro/play_button.png",
-                      "intro/play_button.anim")) {
+  if (!load_animation(renderer, play_button,
+                      (Asset){
+                          .filename = "play_button.png",
+                          .directory = "intro",
+                      },
+                      (Asset){
+                          .filename = "play_button.anim",
+                          .directory = "intro",
+                      })) {
     fprintf(stderr, "Failed to load play button!\n");
     return false;
   }
 
-  if (!load_animation(renderer, exit_button, "intro/exit_button.png",
-                      "intro/exit_button.anim")) {
+  if (!load_animation(renderer, exit_button,
+                      (Asset){
+                          .filename = "exit_button.png",
+                          .directory = "intro",
+                      },
+                      (Asset){
+                          .filename = "exit_button.anim",
+                          .directory = "intro",
+                      })) {
     fprintf(stderr, "Failed to load exit button!\n");
     return false;
   }
@@ -76,7 +90,10 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load music
-  music = Mix_LoadMUS("intro/music.wav");
+  music = Mix_LoadMUS(asset_path((Asset){
+      .filename = "intro.wav",
+      .directory = "music",
+  }));
   if (music == NULL) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
             Mix_GetError());

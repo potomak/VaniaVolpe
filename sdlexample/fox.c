@@ -41,31 +41,62 @@ Fox *make_fox(SDL_FPoint initial_position) {
 }
 
 bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
-  if (!load_animation(renderer, fox->walking, "fox/walking.png",
-                      "fox/walking.anim")) {
+  if (!load_animation(renderer, fox->walking,
+                      (Asset){
+                          .filename = "walking.png",
+                          .directory = "fox",
+                      },
+                      (Asset){
+                          .filename = "walking.anim",
+                          .directory = "fox",
+                      })) {
     fprintf(stderr, "Failed to load fox walking!\n");
     return false;
   }
 
-  if (!load_animation(renderer, fox->talking, "fox/talking.png",
-                      "fox/talking.anim")) {
+  if (!load_animation(renderer, fox->talking,
+                      (Asset){
+                          .filename = "talking.png",
+                          .directory = "fox",
+                      },
+                      (Asset){
+                          .filename = "talking.anim",
+                          .directory = "fox",
+                      })) {
     fprintf(stderr, "Failed to load fox talking!\n");
     return false;
   }
 
-  if (!load_animation(renderer, fox->sitting, "fox/sitting.png",
-                      "fox/sitting.anim")) {
+  if (!load_animation(renderer, fox->sitting,
+                      (Asset){
+                          .filename = "sitting.png",
+                          .directory = "fox",
+                      },
+                      (Asset){
+                          .filename = "sitting.anim",
+                          .directory = "fox",
+                      })) {
     fprintf(stderr, "Failed to load fox sitting!\n");
     return false;
   }
 
-  if (!load_animation(renderer, fox->waving, "fox/waving.png",
-                      "fox/waving.anim")) {
+  if (!load_animation(renderer, fox->waving,
+                      (Asset){
+                          .filename = "waving.png",
+                          .directory = "fox",
+                      },
+                      (Asset){
+                          .filename = "waving.anim",
+                          .directory = "fox",
+                      })) {
     fprintf(stderr, "Failed to load fox waving!\n");
     return false;
   }
 
-  fox->walking_sound = Mix_LoadWAV("fox/walking.wav");
+  fox->walking_sound = Mix_LoadWAV(asset_path((Asset){
+      .filename = "walking.wav",
+      .directory = "fox",
+  }));
   if (fox->walking_sound == NULL) {
     fprintf(stderr, "Failed to load low sound effect! SDL_mixer Error: %s\n",
             Mix_GetError());

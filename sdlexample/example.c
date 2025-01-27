@@ -56,14 +56,24 @@ static void init(void) {
 
 static bool load_media(SDL_Renderer *renderer) {
   // Load sprite sheet texture
-  if (!load_animation(renderer, walking, "example/foo.png",
-                      "example/foo.anim")) {
+  if (!load_animation(renderer, walking,
+                      (Asset){
+                          .filename = "foo.png",
+                          .directory = "example",
+                      },
+                      (Asset){
+                          .filename = "foo.anim",
+                          .directory = "example",
+                      })) {
     fprintf(stderr, "Failed to load walking animation!\n");
     return false;
   }
 
   // Load music
-  gMusic = Mix_LoadMUS("example/beat.wav");
+  gMusic = Mix_LoadMUS(asset_path((Asset){
+      .filename = "beat.wav",
+      .directory = "example",
+  }));
   if (gMusic == NULL) {
     fprintf(stderr, "Failed to load beat music! SDL_mixer Error: %s\n",
             Mix_GetError());
@@ -71,7 +81,10 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load sound effects
-  gScratch = Mix_LoadWAV("example/scratch.wav");
+  gScratch = Mix_LoadWAV(asset_path((Asset){
+      .filename = "scratch.wav",
+      .directory = "example",
+  }));
   if (gScratch == NULL) {
     fprintf(stderr,
             "Failed to load scratch sound effect! SDL_mixer Error: %s\n",
@@ -79,21 +92,30 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
 
-  gHigh = Mix_LoadWAV("example/high.wav");
+  gHigh = Mix_LoadWAV(asset_path((Asset){
+      .filename = "high.wav",
+      .directory = "example",
+  }));
   if (gHigh == NULL) {
     fprintf(stderr, "Failed to load high sound effect! SDL_mixer Error: %s\n",
             Mix_GetError());
     return false;
   }
 
-  gMedium = Mix_LoadWAV("example/medium.wav");
+  gMedium = Mix_LoadWAV(asset_path((Asset){
+      .filename = "medium.wav",
+      .directory = "example",
+  }));
   if (gMedium == NULL) {
     fprintf(stderr, "Failed to load medium sound effect! SDL_mixer Error: %s\n",
             Mix_GetError());
     return false;
   }
 
-  gLow = Mix_LoadWAV("example/low.wav");
+  gLow = Mix_LoadWAV(asset_path((Asset){
+      .filename = "low.wav",
+      .directory = "example",
+  }));
   if (gLow == NULL) {
     fprintf(stderr, "Failed to load low sound effect! SDL_mixer Error: %s\n",
             Mix_GetError());

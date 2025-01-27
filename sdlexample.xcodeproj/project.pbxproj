@@ -33,6 +33,7 @@
 		843CFC9B2D3202B10099E674 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; };
 		843CFC9C2D3202B10099E674 /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		843CFCA02D3550A70099E674 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 843CFC9E2D3550A70099E674 /* main.c */; };
+		845E9AB82D4718FF00E30B67 /* asset.c in Sources */ = {isa = PBXBuildFile; fileRef = 845E9AB72D4718FF00E30B67 /* asset.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -90,6 +91,8 @@
 		843CFC9A2D3202B10099E674 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
 		843CFC9E2D3550A70099E674 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		843CFC9F2D3550A70099E674 /* constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = constants.h; sourceTree = "<group>"; };
+		845E9AB62D4718FF00E30B67 /* asset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asset.h; sourceTree = "<group>"; };
+		845E9AB72D4718FF00E30B67 /* asset.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = asset.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,6 +129,8 @@
 		843CFC822D3200860099E674 /* sdlexample */ = {
 			isa = PBXGroup;
 			children = (
+				845E9AB72D4718FF00E30B67 /* asset.c */,
+				845E9AB62D4718FF00E30B67 /* asset.h */,
 				843CFC862D3200900099E674 /* Assets.xcassets */,
 				843CFC9F2D3550A70099E674 /* constants.h */,
 				842BA10B2D3992AA00EEBF46 /* debug.c */,
@@ -260,6 +265,7 @@
 				8434D5822D3F43DD0026F5B4 /* playground.c in Sources */,
 				8401DA302D42A03F00651807 /* outro.c in Sources */,
 				842BA0FE2D38B65D00EEBF46 /* example.c in Sources */,
+				845E9AB82D4718FF00E30B67 /* asset.c in Sources */,
 				843CFCA02D3550A70099E674 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

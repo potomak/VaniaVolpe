@@ -19,11 +19,11 @@
 #include "playground.h"
 
 static ImageData images[5] = {
-    {NULL, "playground/background.png", 0, 0},
-    {NULL, "playground/squirrel.png", 0, 0},
-    {NULL, "playground/peg.png", 0, 0},
-    {NULL, "playground/fixed_peg.png", 0, 0},
-    {NULL, "playground/acorns.png", 0, 0},
+    {NULL, "playground_background.png", "playground", 0, 0},
+    {NULL, "squirrel.png", "playground", 0, 0},
+    {NULL, "peg.png", "playground", 0, 0},
+    {NULL, "fixed_peg.png", "playground", 0, 0},
+    {NULL, "acorns.png", "playground", 0, 0},
 };
 static const ImageData *background = &images[0];
 static const ImageData *squirrel = &images[1];
@@ -38,16 +38,16 @@ static Mix_Music *music = NULL;
 
 // Sound effects and dialog
 static ChunkData chunks[9] = {
-    {NULL, "playground/acorns_falling.wav"},
-    {NULL, "playground/peg_falling.wav"},
+    {NULL, "acorns_falling.wav", "playground"},
+    {NULL, "peg_falling.wav", "playground"},
     // TODO: Record new sound
-    {NULL, "playground/peg_falling.wav"},
-    {NULL, "playground/dialog/examine_fixed_slide.wav"},
-    {NULL, "playground/dialog/examine_slide_1.wav"},
-    {NULL, "playground/dialog/examine_slide_2.wav"},
-    {NULL, "playground/dialog/examine_squirrel_1.wav"},
-    {NULL, "playground/dialog/examine_squirrel_2.wav"},
-    {NULL, "playground/dialog/sliding_down.wav"},
+    {NULL, "peg_falling.wav", "playground"},
+    {NULL, "examine_fixed_slide.wav", "playground/dialog"},
+    {NULL, "examine_slide_1.wav", "playground/dialog"},
+    {NULL, "examine_slide_2.wav", "playground/dialog"},
+    {NULL, "examine_squirrel_1.wav", "playground/dialog"},
+    {NULL, "examine_squirrel_2.wav", "playground/dialog"},
+    {NULL, "sliding_down.wav", "playground/dialog"},
 };
 static const ChunkData *acorns_falling_sound = &chunks[0];
 static const ChunkData *peg_falling_sound = &chunks[1];
@@ -123,7 +123,10 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load music
-  music = Mix_LoadMUS("music/playground.wav");
+  music = Mix_LoadMUS(asset_path((Asset){
+      .filename = "playground.wav",
+      .directory = "music",
+  }));
   if (music == NULL) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
             Mix_GetError());

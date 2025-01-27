@@ -17,7 +17,7 @@
 #include "outro.h"
 
 static ImageData images[1] = {
-    {NULL, "outro/background.png", 0, 0},
+    {NULL, "outro_background.png", "outro", 0, 0},
 };
 static const ImageData *background = &images[0];
 
@@ -38,7 +38,10 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load music
-  music = Mix_LoadMUS("intro/music.wav");
+  music = Mix_LoadMUS(asset_path((Asset){
+      .filename = "intro.wav",
+      .directory = "music",
+  }));
   if (music == NULL) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
             Mix_GetError());

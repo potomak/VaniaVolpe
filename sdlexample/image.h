@@ -8,9 +8,12 @@
 #ifndef image_h
 #define image_h
 
+#import "asset.h"
+
 typedef struct image_data {
   SDL_Texture *texture;
-  const char *path;
+  const char *filename;
+  const char *directory;
   int width;
   int height;
 } ImageData;
@@ -43,7 +46,7 @@ void free_animation(AnimationData *animation);
 bool load_image(SDL_Renderer *renderer, ImageData *image);
 
 bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
-                    const char *sprite_path, const char *data_path);
+                    Asset sprite_asset, Asset data_asset);
 
 void play_animation(AnimationData *animation, void (*on_end)(void));
 
