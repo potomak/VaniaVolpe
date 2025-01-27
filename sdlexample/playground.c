@@ -85,6 +85,7 @@ static const SDL_FPoint START_SLIDE_POS = (SDL_FPoint){326, 142};
 
 // Other constants
 static const float SLIDE_SIGMOID_HEIGHT = 240;
+static const float SLIDE_X_VELOCITY = 100;
 
 // Scene state
 static bool has_slide_been_fixed = false;
@@ -263,12 +264,11 @@ static void update(float delta_time) {
   fox_update(fox, delta_time);
 
   float slide_y;
-  float vel = 100;
   if (has_started_sliding) {
     slide_y = sigmoid(slide_x);
     fox->current_position =
         (SDL_FPoint){START_SLIDE_POS.x + slide_x, START_SLIDE_POS.y + slide_y};
-    slide_x += vel * delta_time;
+    slide_x += SLIDE_X_VELOCITY * delta_time;
     if (slide_x > 270) {
       slide_x = 0;
       has_started_sliding = false;
