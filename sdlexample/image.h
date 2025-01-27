@@ -26,14 +26,13 @@ typedef enum animation_playback_style {
 
 typedef struct animation_data {
   int frames;
-  int current_frame;
+  int start_time;
   bool is_playing;
   AnimationPlaybackStyle style;
   int loop_count;
   int max_loop_count;
   SDL_Rect *sprite_clips;
   ImageData image;
-  float speed_multiplier;
   SDL_RendererFlip flip;
 } AnimationData;
 

@@ -16,7 +16,7 @@ static void (*on_animation_playback_end)(void);
 AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   AnimationData *animation = malloc(sizeof(AnimationData));
   SDL_Rect *sprite_clips = (SDL_Rect *)malloc(sizeof(SDL_Rect) * frames);
-  animation->current_frame = 0;
+  animation->start_time = 0;
   animation->frames = frames;
   animation->is_playing = false;
   animation->style = style;
@@ -24,8 +24,6 @@ AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   animation->max_loop_count = 0;
   animation->sprite_clips = sprite_clips;
   animation->image = (ImageData){NULL, 0, 0};
-  // Default multiplier used to slow down animations
-  animation->speed_multiplier = 1. / 4;
   animation->flip = SDL_FLIP_NONE;
   return animation;
 }
@@ -145,14 +143,23 @@ bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
 }
 
 void play_animation(AnimationData *animation, void (*on_end)(void)) {
+  if (animation->is_playing) {
+    return;
+  }
+
   animation->loop_count = 0;
   animation->is_playing = true;
+  animation->start_time = SDL_GetTicks();
   on_animation_playback_end = on_end;
 }
 
 void stop_animation(AnimationData *animation) {
+  if (!animation->is_playing) {
+    return;
+  }
+
   animation->is_playing = false;
-  animation->current_frame = 0;
+  animation->start_time = 0;
   if (on_animation_playback_end != NULL) {
     on_animation_playback_end();
   }
@@ -161,7 +168,13 @@ void stop_animation(AnimationData *animation) {
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point) {
   // Get current frame clip
-  int clip_index = animation->current_frame * animation->speed_multiplier;
+  int delta = 0;
+  int ms_per_frame = 83; // at 12 FPS: 1 / 12 * 1000
+  int clip_index = 0;
+  if (animation->is_playing) {
+    delta = SDL_GetTicks() - animation->start_time;
+    clip_index = (delta / ms_per_frame) % animation->frames;
+  }
   SDL_Rect *clip = &animation->sprite_clips[clip_index];
 
   // Set rendering space and render to screen
@@ -171,16 +184,9 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
   SDL_RenderCopyEx(renderer, animation->image.texture, clip, &render_quad, 0,
                    NULL, animation->flip);
 
-  if (animation->is_playing) {
-    // Go to next frame
-    ++animation->current_frame;
-  }
-
   // Cycle animation
-  if (animation->current_frame * animation->speed_multiplier >=
-      animation->frames) {
-    animation->current_frame = 0;
-    animation->loop_count++;
+  if (animation->is_playing) {
+    animation->loop_count = delta / ms_per_frame / animation->frames;
 
     if (animation->style == ONE_SHOT &&
         animation->loop_count > animation->max_loop_count) {

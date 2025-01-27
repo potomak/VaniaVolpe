@@ -82,7 +82,6 @@ static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
   // Loop the animation 6 times before stopping
   excavator->max_loop_count = 6;
-  excavator->speed_multiplier = 1. / 5;
   gate = make_animation_data(7, ONE_SHOT);
   shovel = make_animation_data(5, ONE_SHOT);
   // Loop the animation 3 times before stopping
