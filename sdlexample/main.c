@@ -25,9 +25,9 @@ int init_window(void) {
     fprintf(stderr, "Warning: Linear texture filtering not enabled!");
   }
 
-  window = SDL_CreateWindow("A simple game loop using C & SDL",
-                            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                            WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+  window = SDL_CreateWindow("Vania Volpe - Lo Scivolo", SDL_WINDOWPOS_CENTERED,
+                            SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
+                            SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
   if (!window) {
     fprintf(stderr, "Error creating SDL Window.\n");
     return false;
