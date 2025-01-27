@@ -118,7 +118,7 @@ void destroy_image(void) { IMG_Quit(); }
 void destroy_sound(void) { Mix_Quit(); }
 
 // Main function
-int main(int argc, char *args[]) {
+int SDL_main(int argc, char *argv[]) {
   game.is_running = init_window();
   if (!game.is_running) {
     fprintf(stderr, "Failed to initialize window!\n");
@@ -150,3 +150,25 @@ int main(int argc, char *args[]) {
 
   return 0;
 }
+
+/* Include the SDL main definition header */
+#include <SDL2/SDL_main.h>
+
+#if defined(__IPHONEOS__) || defined(__TVOS__)
+
+#ifndef SDL_MAIN_HANDLED
+#ifdef main
+#undef main
+#endif
+
+int main(int argc, char *argv[]) {
+  return SDL_UIKitRunApp(argc, argv, SDL_main);
+}
+
+#endif /* !SDL_MAIN_HANDLED */
+
+#else
+
+int main(int argc, char *argv[]) { return SDL_main(argc, argv); }
+
+#endif /* __IPHONEOS__ || __TVOS__ */
