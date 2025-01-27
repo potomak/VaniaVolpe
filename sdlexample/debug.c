@@ -27,9 +27,11 @@ void debug_process_input(SDL_Event *event) {
   case SDL_MOUSEMOTION:
     // Get mouse position
     if (is_m_down) {
-      SDL_GetMouseState(&m_pos_up.x, &m_pos_up.y);
+      m_pos_up.x = event->motion.x;
+      m_pos_up.y = event->motion.y;
     } else {
-      SDL_GetMouseState(&m_pos.x, &m_pos.y);
+      m_pos.x = event->motion.x;
+      m_pos.y = event->motion.y;
     }
     break;
   case SDL_MOUSEBUTTONDOWN:
