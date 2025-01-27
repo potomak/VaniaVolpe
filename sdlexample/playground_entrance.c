@@ -18,8 +18,8 @@
 #include "playground_entrance.h"
 
 static ImageData images[2] = {
-    {NULL, "playground_entrance/background.png", 0, 0},
-    {NULL, "playground_entrance/key.png", 0, 0},
+    {NULL, "playground_entrance_background.png", "playground_entrance", 0, 0},
+    {NULL, "key.png", "playground_entrance", 0, 0},
 };
 static const ImageData *background = &images[0];
 static const ImageData *key = &images[1];
@@ -37,14 +37,14 @@ static Mix_Music *music = NULL;
 // Sound effects and dialog
 static int excavator_sound_channel = -1;
 static ChunkData chunks[7] = {
-    {NULL, "playground_entrance/excavator.wav"},
-    {NULL, "playground_entrance/shovel.wav"},
-    {NULL, "playground_entrance/key_reveal.wav"},
+    {NULL, "excavator.wav", "playground_entrance"},
+    {NULL, "shovel.wav", "playground_entrance"},
+    {NULL, "key_reveal.wav", "playground_entrance"},
     // I'm reusing the sound effect of the peg falling
-    {NULL, "playground/peg_falling.wav"},
-    {NULL, "playground_entrance/dialog/examine_gate_1.wav"},
-    {NULL, "playground_entrance/dialog/examine_gate_2.wav"},
-    {NULL, "playground_entrance/dialog/examine_slide_from_outside.wav"},
+    {NULL, "peg_falling.wav", "playground"},
+    {NULL, "examine_gate_1.wav", "playground_entrance/dialog"},
+    {NULL, "examine_gate_2.wav", "playground_entrance/dialog"},
+    {NULL, "examine_slide_from_outside.wav", "playground_entrance/dialog"},
 };
 static const ChunkData *excavator_sound = &chunks[0];
 static const ChunkData *shovel_sound = &chunks[1];
@@ -107,20 +107,41 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_animation(renderer, excavator, "playground_entrance/excavator.png",
-                      "playground_entrance/excavator.anim")) {
+  if (!load_animation(renderer, excavator,
+                      (Asset){
+                          .filename = "excavator.png",
+                          .directory = "playground_entrance",
+                      },
+                      (Asset){
+                          .filename = "excavator.anim",
+                          .directory = "playground_entrance",
+                      })) {
     fprintf(stderr, "Failed to load excavator!\n");
     return false;
   }
 
-  if (!load_animation(renderer, gate, "playground_entrance/gate.png",
-                      "playground_entrance/gate.anim")) {
+  if (!load_animation(renderer, gate,
+                      (Asset){
+                          .filename = "gate.png",
+                          .directory = "playground_entrance",
+                      },
+                      (Asset){
+                          .filename = "gate.anim",
+                          .directory = "playground_entrance",
+                      })) {
     fprintf(stderr, "Failed to load gate!\n");
     return false;
   }
 
-  if (!load_animation(renderer, shovel, "playground_entrance/shovel.png",
-                      "playground_entrance/shovel.anim")) {
+  if (!load_animation(renderer, shovel,
+                      (Asset){
+                          .filename = "shovel.png",
+                          .directory = "playground_entrance",
+                      },
+                      (Asset){
+                          .filename = "shovel.anim",
+                          .directory = "playground_entrance",
+                      })) {
     fprintf(stderr, "Failed to load shovel!\n");
     return false;
   }
@@ -131,7 +152,10 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load music
-  music = Mix_LoadMUS("music/playground.wav");
+  music = Mix_LoadMUS(asset_path((Asset){
+      .filename = "playground.wav",
+      .directory = "music",
+  }));
   if (music == NULL) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
             Mix_GetError());

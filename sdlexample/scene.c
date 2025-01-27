@@ -19,10 +19,14 @@ bool load_scene_images(Scene scene, SDL_Renderer *renderer) {
 
 bool load_scene_chunks(Scene scene) {
   for (int i = 0; i < scene.chunks_length; i++) {
-    scene.chunks[i].chunk = Mix_LoadWAV(scene.chunks[i].path);
+    const char *path = asset_path((Asset){
+        .filename = scene.chunks[i].filename,
+        .directory = scene.chunks[i].directory,
+    });
+    scene.chunks[i].chunk = Mix_LoadWAV(path);
     if (scene.chunks[i].chunk == NULL) {
-      fprintf(stderr, "Failed to load %s! SDL_mixer Error: %s\n",
-              scene.chunks[i].path, Mix_GetError());
+      fprintf(stderr, "Failed to load %s! SDL_mixer Error: %s\n", path,
+              Mix_GetError());
       return false;
     }
   }

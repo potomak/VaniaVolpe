@@ -55,10 +55,14 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
   free_image_texture(image);
 
   // Load image at specified path
-  SDL_Surface *loaded_surface = IMG_Load(image->path);
+  const char *image_path = asset_path((Asset){
+      .filename = image->filename,
+      .directory = image->directory,
+  });
+  SDL_Surface *loaded_surface = IMG_Load(image_path);
   if (loaded_surface == NULL) {
     fprintf(stderr, "Unable to load image %s! SDL_image Error: %s\n",
-            image->path, IMG_GetError());
+            image_path, IMG_GetError());
     return false;
   }
 
@@ -70,7 +74,7 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
   image->texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
   if (image->texture == NULL) {
     fprintf(stderr, "Unable to create texture from %s! SDL Error: %s\n",
-            image->path, SDL_GetError());
+            image_path, SDL_GetError());
     return false;
   }
   // Get image dimensions
@@ -125,14 +129,15 @@ static bool load_animation_data(AnimationData *animation, const char *path) {
 }
 
 bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
-                    const char *sprite_path, const char *data_path) {
-  animation->image.path = sprite_path;
+                    Asset sprite_asset, Asset data_asset) {
+  animation->image.filename = sprite_asset.filename;
+  animation->image.directory = sprite_asset.directory;
   if (!load_image(renderer, &animation->image)) {
     fprintf(stderr, "Failed to load walking animation texture!\n");
     return false;
   }
 
-  if (!load_animation_data(animation, data_path)) {
+  if (!load_animation_data(animation, asset_path(data_asset))) {
     return false;
   }
 
