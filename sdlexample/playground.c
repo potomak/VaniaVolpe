@@ -88,14 +88,14 @@ static const float SLIDE_SIGMOID_HEIGHT = 240;
 static const float SLIDE_X_VELOCITY = 100;
 
 // Scene state
-static bool has_slide_been_fixed = false;
-static bool have_acorns_fallen = false;
-static bool has_peg_been_dropped = false;
-static bool has_started_sliding = false;
-static float slide_x = 0;
-static int examine_slide_count = 0;
-static int examine_squirrel_count = 0;
-static int slides_count = 0;
+static bool has_slide_been_fixed;
+static bool have_acorns_fallen;
+static bool has_peg_been_dropped;
+static bool has_started_sliding;
+static float slide_x;
+static int examine_slide_count;
+static int examine_squirrel_count;
+static int slides_count;
 
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
@@ -324,7 +324,23 @@ static void deinit(void) {
   music = NULL;
 }
 
-static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
+static void on_scene_active(void) {
+  Mix_PlayMusic(music, -1);
+
+  // Initialize scene state
+  has_slide_been_fixed = false;
+  have_acorns_fallen = false;
+  has_peg_been_dropped = false;
+  has_started_sliding = false;
+  slide_x = 0;
+  examine_slide_count = 0;
+  examine_squirrel_count = 0;
+  slides_count = 0;
+
+  // Initialize fox state
+  fox->has_peg = false;
+  fox->has_acorns = false;
+}
 
 static void on_scene_inactive(void) { Mix_HaltMusic(); }
 
