@@ -75,8 +75,8 @@ static const SDL_Point SLIDE_POI = {371, 333};
 static SDL_Point pois[4];
 
 // Scene state
-static bool has_key_been_revealed = false;
-static int examine_gate_count = 0;
+static bool has_key_been_revealed;
+static int examine_gate_count;
 
 static void init(void) {
   excavator = make_animation_data(4, ONE_SHOT);
@@ -291,7 +291,16 @@ static void deinit(void) {
   music = NULL;
 }
 
-static void on_scene_active(void) { Mix_PlayMusic(music, -1); }
+static void on_scene_active(void) {
+  Mix_PlayMusic(music, -1);
+
+  // Initialize scene state
+  has_key_been_revealed = false;
+  examine_gate_count = 0;
+
+  // Initialize fox state
+  fox->has_key = false;
+}
 
 static void on_scene_inactive(void) { Mix_HaltMusic(); }
 
