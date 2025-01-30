@@ -35,7 +35,6 @@ typedef struct fox {
   SDL_FPoint current_position;
   SDL_FPoint target_position;
   SDL_FPoint direction;
-  HorizontalOrientation horizontal_orientation;
   FoxState state;
   Uint32 started_talking_at;
   Uint32 talking_duration;

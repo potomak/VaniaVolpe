@@ -16,6 +16,23 @@
 
 static void (*on_end_walking)(void);
 
+static void fox_face(Fox *fox, HorizontalOrientation horizontal_orientation) {
+  switch (horizontal_orientation) {
+  case EAST:
+    fox->walking->flip = SDL_FLIP_HORIZONTAL;
+    fox->talking->flip = SDL_FLIP_HORIZONTAL;
+    fox->sitting->flip = SDL_FLIP_HORIZONTAL;
+    fox->waving->flip = SDL_FLIP_HORIZONTAL;
+    break;
+  case WEST:
+    fox->walking->flip = SDL_FLIP_NONE;
+    fox->talking->flip = SDL_FLIP_NONE;
+    fox->sitting->flip = SDL_FLIP_NONE;
+    fox->waving->flip = SDL_FLIP_NONE;
+    break;
+  }
+}
+
 Fox *make_fox(SDL_FPoint initial_position) {
   Fox *fox = malloc(sizeof(Fox));
   fox->walking = make_animation_data(4, LOOP);
@@ -28,13 +45,13 @@ Fox *make_fox(SDL_FPoint initial_position) {
   fox->current_position = initial_position;
   fox->target_position = initial_position;
   fox->direction = (SDL_FPoint){0, 0};
-  fox->horizontal_orientation = WEST;
   fox->state = IDLE;
   fox->started_talking_at = 0;
   fox->talking_duration = 0;
   fox->has_key = false;
   fox->has_peg = false;
   fox->has_acorns = false;
+  fox_face(fox, WEST);
   return fox;
 }
 
@@ -110,21 +127,6 @@ void fox_update(Fox *fox, float delta_time) {
   float dx = fox->target_position.x - fox->current_position.x;
   float dy = fox->target_position.y - fox->current_position.y;
   float ticks = SDL_GetTicks();
-
-  switch (fox->horizontal_orientation) {
-  case EAST:
-    fox->walking->flip = SDL_FLIP_HORIZONTAL;
-    fox->talking->flip = SDL_FLIP_HORIZONTAL;
-    fox->sitting->flip = SDL_FLIP_HORIZONTAL;
-    fox->waving->flip = SDL_FLIP_HORIZONTAL;
-    break;
-  case WEST:
-    fox->walking->flip = SDL_FLIP_NONE;
-    fox->talking->flip = SDL_FLIP_NONE;
-    fox->sitting->flip = SDL_FLIP_NONE;
-    fox->waving->flip = SDL_FLIP_NONE;
-    break;
-  }
 
   switch (fox->state) {
   case IDLE:
@@ -214,9 +216,9 @@ void fox_walk_to(Fox *fox, SDL_FPoint target_position, void (*on_end)(void)) {
   float dy = fox->target_position.y - fox->current_position.y;
 
   if (dx > 0) {
-    fox->horizontal_orientation = EAST;
+    fox_face(fox, EAST);
   } else {
-    fox->horizontal_orientation = WEST;
+    fox_face(fox, WEST);
   }
 
   float dist = sqrtf(powf(dx, 2) + powf(dy, 2));
