@@ -101,28 +101,29 @@ static bool load_animation_data(AnimationData *animation, const char *path) {
   }
 
   // Support coordinates up to 99999
-  char num[6];
+  char num[6], c;
   int rect[4], row = 0, num_i = 0, rect_i = 0;
   for (int i = 0; i < size; i++) {
-    if (data[i] == ',') {
+    c = data[i];
+    if (c == ',' || c == '\n') {
       num[num_i] = '\0';
       rect[rect_i++] = atoi(num);
       num_i = 0;
-    } else if (data[i] == '\n') {
-      num[num_i] = '\0';
-      rect[rect_i] = atoi(num);
-      animation->sprite_clips[row] =
-          (SDL_Rect){.x = rect[0], .y = rect[1], .w = rect[2], .h = rect[3]};
-      rect_i = 0;
-      num_i = 0;
-      row++;
+      if (c == '\n') {
+        animation->sprite_clips[row++] = (SDL_Rect){
+            .x = rect[0],
+            .y = rect[1],
+            .w = rect[2],
+            .h = rect[3],
+        };
+        rect_i = 0;
+      }
     } else {
-      num[num_i++] = data[i];
+      num[num_i++] = c;
     }
   }
 
   SDL_free(data);
-
   return true;
 }
 
