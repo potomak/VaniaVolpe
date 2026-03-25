@@ -174,8 +174,9 @@ void terminal_poll_events(void) {
         push_key(SDL_KEYDOWN, SDLK_d);
         break;
       case 'q':
-      case 'Q': {
-        // Treat q/Q as quit
+      case 'Q':
+      case CACA_KEY_CTRL_C:  // Ctrl+C — libcaca raw mode intercepts SIGINT
+      case CACA_KEY_CTRL_D: {
         SDL_Event quit;
         SDL_memset(&quit, 0, sizeof(quit));
         quit.type = SDL_QUIT;

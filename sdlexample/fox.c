@@ -133,9 +133,13 @@ void fox_update(Fox *fox, float delta_time) {
   case SITTING:
   case WAVING:
     break;
-  case WALKING:
-    // Stop walking after reaching the target position
-    if (fabsf(dx) <= 2 && fabsf(dy) <= 2) {
+  case WALKING: {
+    // Stop when within 2px of target OR when we have passed it (dot product
+    // of the original direction and the remaining vector turns negative).
+    // The latter handles long frames where the fox overshoots the 2px window.
+    bool close_enough = fabsf(dx) <= 2 && fabsf(dy) <= 2;
+    bool overshot = (fox->direction.x * dx + fox->direction.y * dy) <= 0;
+    if (close_enough || overshot) {
       stop_animation(fox->walking);
       fox->state = IDLE;
       fox->direction = (SDL_FPoint){0, 0};
@@ -153,6 +157,7 @@ void fox_update(Fox *fox, float delta_time) {
                      .y = fox->current_position.y +
                           fox->direction.y * FOX_VELOCITY * delta_time};
     break;
+  }
   case TALKING:
     if (ticks - fox->started_talking_at >= fox->talking_duration) {
       stop_animation(fox->talking);
