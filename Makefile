@@ -47,9 +47,29 @@ $(TARGET_TERMINAL): $(TERMINAL_OBJS)
 %.terminal.o: %.c
 	$(CC) $(CFLAGS) $(CACA_CFLAGS) -c $< -o $@
 
+# ── emscripten / web target (WebAssembly, runs in the browser) ───────────────
+
+EMCC       = emcc
+WEB_DIR    = build/web
+WEB_TARGET = $(WEB_DIR)/index.html
+EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
+             -sUSE_SDL_MIXER=2
+EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./sdlexample/emscripten/compat
+EM_PRELOAD = --preload-file intro --preload-file fox --preload-file playground \
+             --preload-file playground_entrance --preload-file outro \
+             --preload-file example --preload-file music
+EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 -lm $(EM_PRELOAD)
+
+web: $(WEB_TARGET)
+
+$(WEB_TARGET): $(SRCS)
+	mkdir -p $(WEB_DIR)
+	$(EMCC) $(EM_CFLAGS) $(SRCS) $(EM_LDFLAGS) -o $(WEB_TARGET)
+
 # ── housekeeping ──────────────────────────────────────────────────────────────
 
 clean:
 	rm -f $(OBJS) $(TERMINAL_OBJS) $(TARGET) $(TARGET_TERMINAL)
+	rm -rf build
 
-.PHONY: all terminal clean
+.PHONY: all terminal web clean
