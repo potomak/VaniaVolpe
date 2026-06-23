@@ -19,7 +19,10 @@ SDL_Renderer *renderer = NULL;
 
 // Function to initialize our SDL window
 int init_window(void) {
-  if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+  // Initialize only the subsystems the game needs. SDL_INIT_EVERYTHING also
+  // pulls in haptic/joystick/sensor, which Emscripten's SDL2 port does not
+  // implement, causing SDL_Init to fail in the browser.
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
     fprintf(stderr, "Error initializing SDL.\n");
     return false;
   }
