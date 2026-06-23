@@ -58,11 +58,13 @@ EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./sdlexample/emscripten/compat
 EM_PRELOAD = --preload-file intro --preload-file fox --preload-file playground \
              --preload-file playground_entrance --preload-file outro \
              --preload-file example --preload-file music
-EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 -lm $(EM_PRELOAD)
+EM_SHELL   = sdlexample/emscripten/shell.html
+EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 -lm $(EM_PRELOAD) \
+             --shell-file $(EM_SHELL)
 
 web: $(WEB_TARGET)
 
-$(WEB_TARGET): $(SRCS)
+$(WEB_TARGET): $(SRCS) $(EM_SHELL)
 	mkdir -p $(WEB_DIR)
 	$(EMCC) $(EM_CFLAGS) $(SRCS) $(EM_LDFLAGS) -o $(WEB_TARGET)
 
