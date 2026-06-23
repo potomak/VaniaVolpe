@@ -8,6 +8,10 @@
 #include "game.h"
 #include "image.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 // Global variables
 int last_frame_time = 0;
 SDL_Window *window = NULL;
@@ -120,6 +124,18 @@ void destroy_image(void) { IMG_Quit(); }
 
 void destroy_sound(void) { Mix_Quit(); }
 
+// One iteration of the game loop, shared by the native and web entry points.
+static void main_loop(void) {
+  process_input();
+  update();
+  render();
+#ifdef __EMSCRIPTEN__
+  if (!game.is_running) {
+    emscripten_cancel_main_loop();
+  }
+#endif
+}
+
 // Main function
 int SDL_main(int argc, char *argv[]) {
   game.is_running = init_window();
@@ -139,10 +155,13 @@ int SDL_main(int argc, char *argv[]) {
   // Hack to execute lifecycle callbacks for the first scene
   set_active_scene(INTRO);
 
+#ifdef __EMSCRIPTEN__
+  // The browser owns the event loop; drive the game via requestAnimationFrame
+  // (fps = 0) and never return (simulate_infinite_loop = 1).
+  emscripten_set_main_loop(main_loop, 0, 1);
+#else
   while (game.is_running) {
-    process_input();
-    update();
-    render();
+    main_loop();
   }
 
   game_deinit();
@@ -150,6 +169,7 @@ int SDL_main(int argc, char *argv[]) {
   destroy_window();
   destroy_image();
   destroy_sound();
+#endif
 
   return 0;
 }
