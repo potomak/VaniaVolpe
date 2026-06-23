@@ -7,14 +7,14 @@ planned change to the engine right now.
 ## Current behaviour
 
 1. A click/tap is handled in the active scene's `process_input`
-   (`sdlexample/playground.c`, `sdlexample/playground_entrance.c`). Object
+   (`src/playground.c`, `src/playground_entrance.c`). Object
    hotspots are checked first; anything else falls through to movement.
 2. The destination is snapped onto legal ground by `nearest_walkable_point()`
-   (`sdlexample/scene.c`): it takes the nearest point of the union of the
+   (`src/scene.c`): it takes the nearest point of the union of the
    scene's `WALKABLE_*` rectangles and, if that lands inside the
    `NON_WALKABLE_HOTSPOT` rectangle (e.g. the sandbox), pushes it just past the
    nearest edge.
-3. `fox_walk_to(target)` (`sdlexample/fox.c`) then moves the fox in a **straight
+3. `fox_walk_to(target)` (`src/fox.c`) then moves the fox in a **straight
    line** toward that target at `FOX_VELOCITY` (200 px/s), updated each frame in
    `fox_update`, stopping when within 2 px.
 
@@ -55,7 +55,7 @@ gameplay problem.
 
 ## Relevant code
 
-- `sdlexample/fox.c` — `fox_walk_to`, `fox_update` (the straight-line mover).
-- `sdlexample/scene.c` — `nearest_walkable_point` (destination snapping).
-- `sdlexample/playground.c`, `sdlexample/playground_entrance.c` — the
+- `src/fox.c` — `fox_walk_to`, `fox_update` (the straight-line mover).
+- `src/scene.c` — `nearest_walkable_point` (destination snapping).
+- `src/playground.c`, `src/playground_entrance.c` — the
   `WALKABLE_*` and `NON_WALKABLE_HOTSPOT` rectangle definitions per scene.

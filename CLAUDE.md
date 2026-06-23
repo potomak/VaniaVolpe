@@ -11,7 +11,7 @@ builds three ways: a desktop SDL window, a terminal (libcaca) renderer, and a
 Live web build: https://potomak.github.io/VaniaVolpe/
 
 ## Build & run
-All source is in `sdlexample/`. Build via `make`:
+All source is in `src/`. Build via `make`:
 
 - `make` — desktop SDL window → `./vaniavolpe`. Needs the SDL2 / SDL2_image /
   SDL2_mixer dev libraries (resolved via `pkg-config`).
@@ -34,7 +34,7 @@ The GitHub Actions workflow `.github/workflows/deploy-pages.yml` compiles the we
 target on every push to `main` and deploys it to GitHub Pages.
 
 ## Repo map
-- `sdlexample/` — all C sources/headers.
+- `src/` — all C sources/headers.
   - `main.c` (desktop entry + game loop), `main_terminal.c` + `terminal.c`
     (libcaca entry).
   - `game.c` / `scene.h` (scene framework), `fox.c` (player state machine),
@@ -70,7 +70,7 @@ Dialogue is **audio-only** (no on-screen text) via `fox_talk`. See
 - The game loop is driven by `emscripten_set_main_loop` under `__EMSCRIPTEN__`
   (a blocking `while` loop would hang the browser); native uses a normal loop.
 - Includes use the `<SDL2/...>`, `<SDL2_image/...>`, `<SDL2_mixer/...>` style; the
-  web build relies on `sdlexample/emscripten/compat/` to map these to
+  web build relies on `src/emscripten/compat/` to map these to
   Emscripten's unprefixed headers.
 - iOS Safari audio needs an in-gesture `AudioContext.resume()`; handled in
   `emscripten/shell.html`. Don't remove it.

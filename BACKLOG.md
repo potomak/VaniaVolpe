@@ -17,7 +17,7 @@ want her to go. Hints are voice-only (the game has no on-screen text).
   animation frame's bounds around `current_position`; hit-test the fox at the top
   of each scene's `process_input` (before movement handling).
 - **C2 (code + audio):** on a fox tap, a per-scene `give_hint()` picks a line by
-  world state and plays it via `fox_talk()` (`sdlexample/fox.c`):
+  world state and plays it via `fox_talk()` (`src/fox.c`):
   - *playground_entrance:* key not revealed → "dig with the shovel"; key revealed
     but no key → "go get the key"; has key → "use the key on the gate".
   - *playground:* no acorns → "shake the acorns down"; has acorns → "give them to
@@ -38,11 +38,11 @@ destination (drag-to-move). Both scenes' `process_input`. Layer on after C.
 
 The fox currently lacks dedicated animations for using the slide. Add two,
 following the existing animation pattern (the ~10 steps mirroring
-`walking`/`talking`/`sitting`/`waving` across `sdlexample/fox.h` and `fox.c`: new
+`walking`/`talking`/`sitting`/`waving` across `src/fox.h` and `fox.c`: new
 struct field + `FoxState` + `make_fox` + `fox_load_media` + `fox_render` +
 `fox_update` + `fox_face` + `fox_free` + a trigger helper).
 
-- **Climb:** in the slide-fixed path of `maybe_use_slide` (`sdlexample/playground.c`),
+- **Climb:** in the slide-fixed path of `maybe_use_slide` (`src/playground.c`),
   play a climb animation up the stairs before snapping to `START_SLIDE_POS`.
 - **Slide:** during the sigmoid descent in `update()` the fox currently shows the
   *talking* animation; swap in a dedicated `sliding` animation for the descent
