@@ -142,6 +142,8 @@ IDLE ──fox_wave()──> WAVING
 4. Each frame: `position += direction × FOX_VELOCITY × dt` (200 px/s).
 5. When distance to target < 2 px, stops sound, sets state to `IDLE`, fires callback.
 
+**Known limitation:** movement is a straight line with no collision or pathfinding, so the fox can walk *through* non-walkable areas. See [`MOVEMENT.md`](MOVEMENT.md) for details and future work.
+
 #### Inventory
 
 ```c
