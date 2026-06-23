@@ -241,12 +241,15 @@ static void process_input(SDL_Event *event) {
                   pickup_peg);
       break;
     }
-    if ((SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT_1) ||
-         SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT_2) ||
-         SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT_3)) &&
-        !SDL_PointInRect(&m_pos, &NON_WALKABLE_HOTSPOT)) {
-      // Walk to current position
-      fox_walk_to(fox, (SDL_FPoint){m_pos.x, m_pos.y}, NULL);
+    // Walk to the clicked point, or to the nearest reachable point if it falls
+    // outside the walkable area (e.g. the sandbox).
+    {
+      const SDL_Rect walkables[] = {WALKABLE_HOTSPOT_1, WALKABLE_HOTSPOT_2,
+                                    WALKABLE_HOTSPOT_3};
+      fox_walk_to(fox,
+                  nearest_walkable_point(m_pos, walkables, LEN(walkables),
+                                         NON_WALKABLE_HOTSPOT),
+                  NULL);
     }
     break;
   }
