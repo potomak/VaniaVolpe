@@ -60,7 +60,7 @@ static SDL_Point m_pos;
 // Hotspots
 static const SDL_Rect GATE_HOTSPOT = {471, 144, 217, 184};
 static const SDL_Rect EXCAVATOR_HOTSPOT = {197, 338, 108, 72};
-static const SDL_Rect SHOVEL_HOTSPOT = {128, 385, 77, 65};
+static const SDL_Rect SHOVEL_HOTSPOT = {112, 378, 88, 72};
 static const SDL_Rect KEY_HOTSPOT = {9, 404, 75, 69};
 static const SDL_Rect SLIDE_HOTSPOT = {165, 47, 129, 107};
 static const SDL_Rect WALKABLE_HOTSPOT = {1, 312, 795, 286};
@@ -249,11 +249,12 @@ static void process_input(SDL_Event *event) {
       fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, examine_slide);
       break;
     }
-    if (SDL_PointInRect(&m_pos, &WALKABLE_HOTSPOT) &&
-        !SDL_PointInRect(&m_pos, &NON_WALKABLE_HOTSPOT)) {
-      // Walk to current position
-      fox_walk_to(fox, (SDL_FPoint){m_pos.x, m_pos.y}, NULL);
-    }
+    // Walk to the clicked point, or to the nearest reachable point if it falls
+    // outside the walkable area (e.g. the sandbox).
+    fox_walk_to(fox,
+                nearest_walkable_point(m_pos, &WALKABLE_HOTSPOT, 1,
+                                       NON_WALKABLE_HOTSPOT),
+                NULL);
     break;
   }
 }

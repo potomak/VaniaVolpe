@@ -44,6 +44,11 @@ typedef struct scene {
   int chunks_length;
 } Scene;
 
+// Nearest point that is inside one of the walkable rects and outside the
+// non-walkable rect, to the given click.
+SDL_FPoint nearest_walkable_point(SDL_Point click, const SDL_Rect *walkables,
+                                  int walkables_length, SDL_Rect non_walkable);
+
 bool load_scene_images(Scene scene, SDL_Renderer *renderer);
 
 bool load_scene_chunks(Scene scene);
