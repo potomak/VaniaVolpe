@@ -36,6 +36,31 @@
       onRuntimeInitialized: function () { Module.setStatus(''); },
     };
     Module.setStatus('Caricamento di Vania Volpe…');
+
+    // iOS Safari audio unlock.
+    //
+    // When navigator.userActivation exists (iOS Safari 16.4+), SDL2's Web Audio
+    // glue resumes the AudioContext from a setInterval timer rather than from the
+    // user-gesture handler. iOS only honours AudioContext.resume() when it is
+    // called synchronously inside the gesture, so the context stays suspended and
+    // there is no sound. Resume it ourselves on the first interaction.
+    function unlockAudio() {
+      try {
+        var SDL2 = window.Module && Module.SDL2;
+        if (SDL2 && SDL2.audioContext && SDL2.audioContext.state === 'suspended') {
+          SDL2.audioContext.resume();
+        }
+      } catch (e) {}
+    }
+    ['touchstart', 'touchend', 'mousedown', 'click', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, unlockAudio, false);
+    });
+
+    // Play audio even when the iPhone ring/silent switch is on (Safari 16.4+);
+    // a no-op on browsers without the Audio Session API.
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
+    } catch (e) {}
   </script>
   {{{ SCRIPT }}}
 </body>
