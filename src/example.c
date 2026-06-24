@@ -12,6 +12,7 @@
 #include "constants.h"
 #include "game.h"
 #include "image.h"
+#include "lo_scivolo.h"
 
 #include "example.h"
 

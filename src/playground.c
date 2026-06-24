@@ -14,6 +14,7 @@
 #include "fox.h"
 #include "game.h"
 #include "image.h"
+#include "lo_scivolo.h"
 #include "sound.h"
 
 #include "playground.h"
@@ -91,6 +92,9 @@ static const float SLIDE_X_VELOCITY = 100;
 static bool has_slide_been_fixed;
 static bool have_acorns_fallen;
 static bool has_peg_been_dropped;
+// Inventory (adventure state, formerly on the fox)
+static bool has_peg;
+static bool has_acorns;
 static bool has_started_sliding;
 static float slide_x;
 static int examine_slide_count;
@@ -139,8 +143,8 @@ static bool load_media(SDL_Renderer *renderer) {
 
 static void maybe_use_slide(void) {
   // If peg is in the inventory fix the slide
-  if (fox->has_peg) {
-    fox->has_peg = false;
+  if (has_peg) {
+    has_peg = false;
     has_slide_been_fixed = true;
     Mix_PlayChannel(-1, fix_slide_sound->chunk, 0);
     // TODO: Wait for sound effect to end before starting to talk
@@ -167,8 +171,8 @@ static void maybe_use_slide(void) {
 
 static void maybe_get_peg(void) {
   // If acorns are in the inventory exchange them for the peg
-  if (fox->has_acorns) {
-    fox->has_acorns = false;
+  if (has_acorns) {
+    has_acorns = false;
     has_peg_been_dropped = true;
     Mix_PlayChannel(-1, peg_falling_sound->chunk, 0);
     return;
@@ -188,9 +192,9 @@ static void make_acorns_fall(void) {
   Mix_PlayChannel(-1, acorns_falling_sound->chunk, 0);
 }
 
-static void pickup_acorns(void) { fox->has_acorns = true; }
+static void pickup_acorns(void) { has_acorns = true; }
 
-static void pickup_peg(void) { fox->has_peg = true; }
+static void pickup_peg(void) { has_peg = true; }
 
 static void process_input(SDL_Event *event) {
   switch (event->type) {
@@ -226,7 +230,7 @@ static void process_input(SDL_Event *event) {
     }
     // If the acorns haven't fallen yet, or if fox has acorns, or if acorns have
     // been exchanged for the peg, skip this case
-    if (have_acorns_fallen && !fox->has_acorns && !has_peg_been_dropped &&
+    if (have_acorns_fallen && !has_acorns && !has_peg_been_dropped &&
         SDL_PointInRect(&m_pos, &ACORNS_FLOOR_HOTSPOT)) {
       // Walk to acorns
       fox_walk_to(fox, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y}, pickup_acorns);
@@ -234,7 +238,7 @@ static void process_input(SDL_Event *event) {
     }
     // If the peg hasn't been dropped yet, or if fox has the peg, or if the
     // slide has been fixed already, skip this case
-    if (has_peg_been_dropped && !fox->has_peg && !has_slide_been_fixed &&
+    if (has_peg_been_dropped && !has_peg && !has_slide_been_fixed &&
         SDL_PointInRect(&m_pos, &PEG_HOTSPOT)) {
       // Walk to peg
       fox_walk_to(fox, (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y},
@@ -286,7 +290,7 @@ static void render(SDL_Renderer *renderer) {
   render_image(renderer, squirrel, (SDL_Point){85, 160});
 
   if (has_peg_been_dropped) {
-    if (fox->has_peg) {
+    if (has_peg) {
       render_image(renderer, peg,
                    (SDL_Point){fox->current_position.x - 20,
                                fox->current_position.y - 100});
@@ -302,7 +306,7 @@ static void render(SDL_Renderer *renderer) {
   }
 
   if (have_acorns_fallen) {
-    if (fox->has_acorns) {
+    if (has_acorns) {
       render_image(renderer, acorns,
                    (SDL_Point){fox->current_position.x - 50,
                                fox->current_position.y - 100});
@@ -341,8 +345,8 @@ static void on_scene_active(void) {
   slides_count = 0;
 
   // Initialize fox state
-  fox->has_peg = false;
-  fox->has_acorns = false;
+  has_peg = false;
+  has_acorns = false;
 }
 
 static void on_scene_inactive(void) { Mix_HaltMusic(); }

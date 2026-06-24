@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "game.h"
 #include "image.h"
+#include "lo_scivolo.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -145,6 +146,10 @@ int SDL_main(int argc, char *argv[]) {
   if (!game.is_running) {
     fprintf(stderr, "Failed to initialize window!\n");
   }
+
+  // Select the adventure to run before initializing its scenes.
+  lo_scivolo_register();
+  set_current_adventure(&lo_scivolo);
 
   game_init();
 

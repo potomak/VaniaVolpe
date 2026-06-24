@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "game.h"
 #include "image.h"
+#include "lo_scivolo.h"
 #include "terminal.h"
 
 static int last_frame_time = 0;
@@ -121,6 +122,10 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Failed to initialize terminal window.\n");
     return 1;
   }
+
+  // Select the adventure to run before initializing its scenes.
+  lo_scivolo_register();
+  set_current_adventure(&lo_scivolo);
 
   game_init();
 

@@ -1,48 +1,18 @@
 //
 //  fox.h
-//  sdlexample
-//
-//  Created by Giovanni Cappellotto on 1/17/25.
+//  The fox is now just a concrete Actor: a spec (in fox.c) plus thin,
+//  named wrappers over the generic actor_* API. A new character (e.g. a
+//  chicken) is a new spec, not a new code file.
 //
 
 #ifndef fox_h
 #define fox_h
 
-#import "image.h"
+#include "actor.h"
 
-static const float FOX_VELOCITY = 200;
+extern const ActorSpec FOX_SPEC;
 
-typedef enum horizontal_orientation {
-  WEST = -1,
-  EAST = 1,
-} HorizontalOrientation;
-
-typedef enum fox_state {
-  IDLE,
-  WALKING,
-  TALKING,
-  SITTING,
-  WAVING,
-} FoxState;
-
-typedef struct fox {
-  AnimationData *walking;
-  Mix_Chunk *walking_sound;
-  int walking_sound_channel;
-  AnimationData *talking;
-  AnimationData *sitting;
-  AnimationData *waving;
-  SDL_FPoint current_position;
-  SDL_FPoint target_position;
-  SDL_FPoint direction;
-  FoxState state;
-  Uint32 started_talking_at;
-  Uint32 talking_duration;
-  // Inventory
-  bool has_key;
-  bool has_peg;
-  bool has_acorns;
-} Fox;
+typedef Actor Fox;
 
 Fox *make_fox(SDL_FPoint initial_position);
 

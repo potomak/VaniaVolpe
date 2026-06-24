@@ -5,45 +5,27 @@
 //  Created by Giovanni Cappellotto on 1/16/25.
 //
 
-// Special scene used as a playground
-#include "example.h"
-
-// Scenes
-#include "intro.h"
-#include "outro.h"
-#include "playground.h"
-#include "playground_entrance.h"
+#include "game.h"
 
 // Features for debugging the game
 #include "debug.h"
-
-#include "game.h"
 
 Game game = {
     .is_running = false,
     .is_debugging = false,
 };
 
-Scene scene_instance(GameScene scene) {
-  switch (scene) {
-  case INTRO:
-    return intro_scene;
-  case PLAYGROUND_ENTRANCE:
-    return playground_entrance_scene;
-  case PLAYGROUND:
-    return playground_scene;
-  case OUTRO:
-    return outro_scene;
-  case EXAMPLE:
-    return example_scene;
-  default:
-    fprintf(stderr, "Warning: scene not defined!\n");
-    return (Scene){};
-  }
+void set_current_adventure(const Adventure *adventure) {
+  game.current_adventure = adventure;
+  game.current_scene = adventure->entry_scene;
+}
+
+Scene scene_instance(int scene) {
+  return game.current_adventure->scenes[scene];
 }
 
 // Sets a new scene as the current scene
-void set_active_scene(GameScene scene) {
+void set_active_scene(int scene) {
   scene_instance(game.current_scene).on_scene_inactive();
   scene_instance(scene).on_scene_active();
   game.current_scene = scene;
@@ -52,13 +34,13 @@ void set_active_scene(GameScene scene) {
 void exit_game(void) { game.is_running = false; }
 
 void game_init(void) {
-  for (int i = 0; i < SCENES_LENGTH; i++) {
+  for (int i = 0; i < game.current_adventure->scenes_length; i++) {
     scene_instance(i).init();
   }
 }
 
 bool game_load_media(SDL_Renderer *renderer) {
-  for (int i = 0; i < SCENES_LENGTH; i++) {
+  for (int i = 0; i < game.current_adventure->scenes_length; i++) {
     if (!scene_instance(i).load_media(renderer)) {
       return false;
     }
@@ -108,7 +90,7 @@ void game_render(SDL_Renderer *renderer) {
 }
 
 void game_deinit(void) {
-  for (int i = 0; i < SCENES_LENGTH; i++) {
+  for (int i = 0; i < game.current_adventure->scenes_length; i++) {
     scene_instance(i).deinit();
     free_scene_images(scene_instance(i));
     free_scene_chunks(scene_instance(i));
