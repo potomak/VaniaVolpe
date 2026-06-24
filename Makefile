@@ -12,7 +12,7 @@ GAME_SRCS = \
 	src/scene.c \
 	src/actor.c \
 	src/fox.c \
-	src/the_slide.c \
+	src/vania_fox_the_slide.c \
 	src/image.c \
 	src/sound.c \
 	src/asset.c \
