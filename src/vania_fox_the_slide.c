@@ -1,6 +1,7 @@
 //
 //  vania_fox_the_slide.c
-//  Registers the "Lo Scivolo" adventure by assembling its scenes into a table.
+//  Registers the Vania Fox - The Slide adventure by assembling its scenes into a
+//  table.
 //
 
 #include "vania_fox_the_slide.h"
@@ -11,15 +12,15 @@
 #include "playground.h"
 #include "playground_entrance.h"
 
-#define LO_SCIVOLO_SCENES_LENGTH 5
+#define VANIA_FOX_THE_SLIDE_SCENES_LENGTH 5
 
-static Scene scenes[LO_SCIVOLO_SCENES_LENGTH];
+static Scene scenes[VANIA_FOX_THE_SLIDE_SCENES_LENGTH];
 
 Adventure vania_fox_the_slide = {
     .id = "vania-fox-the-slide",
     .title = "Vania Volpe - Lo Scivolo",
     .scenes = scenes,
-    .scenes_length = LO_SCIVOLO_SCENES_LENGTH,
+    .scenes_length = VANIA_FOX_THE_SLIDE_SCENES_LENGTH,
     .entry_scene = INTRO,
 };
 
