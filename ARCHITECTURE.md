@@ -16,7 +16,7 @@
 
 ```
 VaniaVolpe/
-├── sdlexample/             # All source code
+├── src/                    # All source code
 │   ├── main.c              # Entry point and game loop
 │   ├── game.{c,h}          # Central game controller
 │   ├── scene.{c,h}         # Generic scene interface

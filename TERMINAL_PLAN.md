@@ -14,9 +14,9 @@ and scene code is completely unchanged**.
 ## New files
 
 ```
-sdlexample/terminal.h          — public API for the terminal backend
-sdlexample/terminal.c          — libcaca rendering + input translation
-sdlexample/main_terminal.c     — entry point for the terminal target
+src/terminal.h                 — public API for the terminal backend
+src/terminal.c                 — libcaca rendering + input translation
+src/main_terminal.c            — entry point for the terminal target
                                  (replaces main.c; uses offscreen SDL driver)
 include/                        — existing Linux header shims (unchanged)
 ```
