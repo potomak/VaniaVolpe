@@ -7,7 +7,7 @@
 #include "constants.h"
 #include "game.h"
 #include "image.h"
-#include "lo_scivolo.h"
+#include "the_slide.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -148,8 +148,8 @@ int SDL_main(int argc, char *argv[]) {
   }
 
   // Select the adventure to run before initializing its scenes.
-  lo_scivolo_register();
-  set_current_adventure(&lo_scivolo);
+  the_slide_register();
+  set_current_adventure(&the_slide);
 
   game_init();
 

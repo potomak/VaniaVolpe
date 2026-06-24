@@ -12,7 +12,7 @@ GAME_SRCS = \
 	src/scene.c \
 	src/actor.c \
 	src/fox.c \
-	src/lo_scivolo.c \
+	src/the_slide.c \
 	src/image.c \
 	src/sound.c \
 	src/asset.c \

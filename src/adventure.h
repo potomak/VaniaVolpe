@@ -2,7 +2,7 @@
 //  adventure.h
 //  An adventure is a self-contained, ordered set of scenes with an entry point.
 //  The engine runs whichever adventure is current; adventures are registered by
-//  content modules (see lo_scivolo.c), keeping the engine content-agnostic.
+//  content modules (see the_slide.c), keeping the engine content-agnostic.
 //
 
 #ifndef adventure_h

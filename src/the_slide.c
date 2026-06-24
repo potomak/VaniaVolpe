@@ -1,9 +1,9 @@
 //
-//  lo_scivolo.c
+//  the_slide.c
 //  Registers the "Lo Scivolo" adventure by assembling its scenes into a table.
 //
 
-#include "lo_scivolo.h"
+#include "the_slide.h"
 
 #include "example.h"
 #include "intro.h"
@@ -15,15 +15,15 @@
 
 static Scene scenes[LO_SCIVOLO_SCENES_LENGTH];
 
-Adventure lo_scivolo = {
-    .id = "lo-scivolo",
+Adventure the_slide = {
+    .id = "the-slide",
     .title = "Vania Volpe - Lo Scivolo",
     .scenes = scenes,
     .scenes_length = LO_SCIVOLO_SCENES_LENGTH,
     .entry_scene = INTRO,
 };
 
-void lo_scivolo_register(void) {
+void the_slide_register(void) {
   scenes[INTRO] = intro_scene;
   scenes[PLAYGROUND_ENTRANCE] = playground_entrance_scene;
   scenes[PLAYGROUND] = playground_scene;

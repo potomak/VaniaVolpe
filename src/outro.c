@@ -13,7 +13,7 @@
 #include "fox.h"
 #include "game.h"
 #include "image.h"
-#include "lo_scivolo.h"
+#include "the_slide.h"
 
 #include "outro.h"
 

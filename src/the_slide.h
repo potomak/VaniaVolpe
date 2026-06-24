@@ -1,15 +1,15 @@
 //
-//  lo_scivolo.h
+//  the_slide.h
 //  The "Lo Scivolo" adventure module: its scene indices and registration.
 //
 
-#ifndef lo_scivolo_h
-#define lo_scivolo_h
+#ifndef the_slide_h
+#define the_slide_h
 
 #include "adventure.h"
 
 // Scene indices for this adventure (used by its scenes for transitions).
-enum lo_scivolo_scene {
+enum the_slide_scene {
   INTRO,
   PLAYGROUND_ENTRANCE,
   PLAYGROUND,
@@ -17,9 +17,9 @@ enum lo_scivolo_scene {
   EXAMPLE,
 };
 
-extern Adventure lo_scivolo;
+extern Adventure the_slide;
 
 // Populate the adventure's scene table. Call once before set_current_adventure.
-void lo_scivolo_register(void);
+void the_slide_register(void);
 
-#endif /* lo_scivolo_h */
+#endif /* the_slide_h */
