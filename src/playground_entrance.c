@@ -13,6 +13,7 @@
 #include "fox.h"
 #include "game.h"
 #include "image.h"
+#include "vania_fox_the_slide.h"
 #include "sound.h"
 
 #include "playground_entrance.h"
@@ -76,6 +77,8 @@ static SDL_Point pois[4];
 
 // Scene state
 static bool has_key_been_revealed;
+// Inventory (adventure state, formerly on the fox)
+static bool has_key;
 static int examine_gate_count;
 
 static void init(void) {
@@ -168,7 +171,7 @@ static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
 
 static void maybe_open_gate(void) {
   // If key is in inventory open gate then go to PLAYGROUND scene
-  if (fox->has_key) {
+  if (has_key) {
     Mix_PlayChannel(-1, open_gate_sound->chunk, 0);
     play_animation(gate, go_to_playground);
     return;
@@ -183,7 +186,7 @@ static void maybe_open_gate(void) {
   examine_gate_count++;
 }
 
-static void add_key_to_inventory(void) { fox->has_key = true; }
+static void add_key_to_inventory(void) { has_key = true; }
 
 static void reveal_key(void) {
   has_key_been_revealed = true;
@@ -192,7 +195,7 @@ static void reveal_key(void) {
 
 static void maybe_dig_out_key(void) {
   // If key is in inventory don't do anything
-  if (fox->has_key) {
+  if (has_key) {
     return;
   }
 
@@ -237,7 +240,7 @@ static void process_input(SDL_Event *event) {
     }
     // If key hasn't been revealed yet, or if key has been picked up already,
     // then skip this case
-    if (has_key_been_revealed && !fox->has_key &&
+    if (has_key_been_revealed && !has_key &&
         SDL_PointInRect(&m_pos, &KEY_HOTSPOT)) {
       // Walk to key
       fox_walk_to(fox, (SDL_FPoint){KEY_POI.x, KEY_POI.y},
@@ -269,7 +272,7 @@ static void render(SDL_Renderer *renderer) {
   render_animation(renderer, shovel, (SDL_Point){112, 380});
 
   if (has_key_been_revealed) {
-    if (fox->has_key) {
+    if (has_key) {
       render_image(renderer, key,
                    (SDL_Point){fox->current_position.x - 50,
                                fox->current_position.y - 80});
@@ -300,7 +303,7 @@ static void on_scene_active(void) {
   examine_gate_count = 0;
 
   // Initialize fox state
-  fox->has_key = false;
+  has_key = false;
 }
 
 static void on_scene_inactive(void) { Mix_HaltMusic(); }

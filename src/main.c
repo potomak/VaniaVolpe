@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "game.h"
 #include "image.h"
+#include "vania_fox_the_slide.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -145,6 +146,10 @@ int SDL_main(int argc, char *argv[]) {
   if (!game.is_running) {
     fprintf(stderr, "Failed to initialize window!\n");
   }
+
+  // Select the adventure to run before initializing its scenes.
+  vania_fox_the_slide_register();
+  set_current_adventure(&vania_fox_the_slide);
 
   game_init();
 

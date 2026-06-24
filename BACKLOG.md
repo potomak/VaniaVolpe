@@ -59,13 +59,35 @@ obstacle-avoiding routing — a corner waypoint around the rectangle for the sim
 single-obstacle case, or a navigation grid / navmesh + A\* for the general case.
 Keep the engine simple until this becomes a felt gameplay problem.
 
+### Task G — Add the new engine files to the Xcode project
+*Required for the iOS/Mac build (there is no Xcode on the build machine).*
+
+The Adventure + Actor refactor (PR #10, Rollout Step 1) added source files that
+must be registered in `sdlexample.xcodeproj` before the iOS/Mac target compiles:
+`src/actor.{c,h}`, `src/adventure.h`, `src/vania_fox_the_slide.{c,h}`. In Xcode,
+drag them into the `src` group and make sure the `.c` files are in the target's
+**Compile Sources** build phase (the `.h` files only need to be in the group).
+The Makefile native/web/terminal builds already include them.
+
+### Task H — Adventure hub UI (Rollout Step 2)
+*Foundation landed in PR #10.*
+
+Add a hub scene — the app shell that lists the registered adventures and launches
+the selected one, returning to it on completion instead of starting straight into
+a single adventure. Then author a **second adventure** as a module, introducing
+**Gina Gallina** as a second `Actor` spec, to exercise the module seams and the
+actor abstraction. The engine is already adventure-agnostic (Adventure registry +
+generic Actor), so this is mostly new content plus a small menu UI.
+
 ## Suggested sequencing
 
-1. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
+1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
+2. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
    as the `.wav`s arrive.
-2. **E** — engine wiring can be written behind the new states; lands with the art.
-3. **D** — optional polish.
-4. **F** — only if the walk-through becomes a real problem.
+3. **E** — engine wiring can be written behind the new states; lands with the art.
+4. **D** — optional polish.
+5. **F** — only if the walk-through becomes a real problem.
+6. **H** — the hub + a second adventure, when ready to grow the collection.
 
 ## Asset checklist (blocks C2 and E; to be provided)
 
@@ -79,3 +101,6 @@ Keep the engine simple until this becomes a felt gameplay problem.
   reachable point instead of being ignored (#5).
 - Web build target + GitHub Pages deployment; custom minimal HTML shell; iOS
   Safari audio fix.
+- Multi-adventure foundation (#10, Rollout Step 1): engine/content split via an
+  `Adventure` registry, a generic `Actor` (the fox is now a spec), and the
+  `vania_fox_the_slide` adventure module. Follow-ups: Task G, Task H.

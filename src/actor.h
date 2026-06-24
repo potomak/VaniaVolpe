@@ -1,0 +1,85 @@
+//
+//  actor.h
+//  Generic animated, positioned character (the player or an NPC). A concrete
+//  character (fox, chicken, …) is described by an ActorSpec — data, not code —
+//  so the engine carries no character-specific fields.
+//
+
+#ifndef actor_h
+#define actor_h
+
+#include <SDL2/SDL.h>
+#include <SDL2_mixer/SDL_mixer.h>
+#include <stdbool.h>
+
+#include "image.h"
+
+typedef enum horizontal_orientation {
+  WEST = -1,
+  EAST = 1,
+} HorizontalOrientation;
+
+typedef enum actor_state {
+  IDLE,
+  WALKING,
+  TALKING,
+  SITTING,
+  WAVING,
+  // Always last: number of states / size of the animation table.
+  ACTOR_STATE_COUNT,
+} ActorState;
+
+// One animation in a character's spec (a sprite sheet + its .anim metadata).
+typedef struct actor_anim_spec {
+  ActorState state;
+  const char *sprite_filename;
+  const char *data_filename;
+  int frames;
+  AnimationPlaybackStyle style;
+} ActorAnimSpec;
+
+// Static description of a character. Two characters differ only by their spec.
+typedef struct actor_spec {
+  const char *id;
+  const char *assets_dir;          // e.g. "fox"
+  float velocity;                  // walking speed, px/s
+  const char *move_sound_filename; // looped while walking; NULL for none
+  int move_sound_volume;
+  ActorState idle_state;           // animation shown while IDLE (e.g. SITTING)
+  ActorState move_state;           // animation shown while WALKING
+  const ActorAnimSpec *anims;
+  int anims_length;
+} ActorSpec;
+
+typedef struct actor {
+  const ActorSpec *spec;
+  // Indexed by ActorState; entries the spec doesn't provide stay NULL.
+  AnimationData *animations[ACTOR_STATE_COUNT];
+  Mix_Chunk *move_sound;
+  int move_sound_channel;
+  SDL_FPoint current_position;
+  SDL_FPoint target_position;
+  SDL_FPoint direction;
+  ActorState state;
+  Uint32 started_talking_at;
+  Uint32 talking_duration;
+} Actor;
+
+Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);
+
+bool actor_load_media(Actor *actor, SDL_Renderer *renderer);
+
+void actor_update(Actor *actor, float delta_time);
+
+void actor_render(Actor *actor, SDL_Renderer *renderer);
+
+void actor_free(Actor *actor);
+
+void actor_walk_to(Actor *actor, SDL_FPoint position, void (*on_end)(void));
+
+void actor_talk(Actor *actor, Mix_Chunk *dialog);
+
+// Play a one-off state animation (e.g. SITTING, WAVING) and hold it.
+void actor_play_state(Actor *actor, ActorState state);
+
+#endif /* actor_h */

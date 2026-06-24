@@ -10,7 +10,9 @@ TARGET_TERMINAL = vaniavolpe_terminal
 GAME_SRCS = \
 	src/game.c \
 	src/scene.c \
+	src/actor.c \
 	src/fox.c \
+	src/vania_fox_the_slide.c \
 	src/image.c \
 	src/sound.c \
 	src/asset.c \

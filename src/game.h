@@ -8,30 +8,24 @@
 #ifndef game_h
 #define game_h
 
-#import "scene.h"
-
-typedef enum game_scene {
-  INTRO,
-  PLAYGROUND_ENTRANCE,
-  PLAYGROUND,
-  OUTRO,
-  EXAMPLE,
-  // This should always be the last value in the enum
-  // It is a hack to iterate over all the scenes
-  SCENES_LENGTH,
-} GameScene;
+#include "adventure.h"
+#include "scene.h"
 
 typedef struct game {
   bool is_running;
   bool is_debugging;
-  GameScene current_scene;
+  const Adventure *current_adventure;
+  int current_scene;
 } Game;
 
 extern Game game;
 
-Scene scene_instance(GameScene scene);
+// Select the adventure to run (sets the current scene to its entry scene).
+void set_current_adventure(const Adventure *adventure);
 
-void set_active_scene(GameScene scene);
+Scene scene_instance(int scene);
+
+void set_active_scene(int scene);
 
 void exit_game(void);
 

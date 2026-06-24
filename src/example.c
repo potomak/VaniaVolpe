@@ -12,6 +12,7 @@
 #include "constants.h"
 #include "game.h"
 #include "image.h"
+#include "vania_fox_the_slide.h"
 
 #include "example.h"
 
