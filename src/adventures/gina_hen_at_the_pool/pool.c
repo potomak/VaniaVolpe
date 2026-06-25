@@ -2,8 +2,9 @@
 //  pool.c
 //  Poolside: the entry scene and the spine of the puzzle. Gina starts in the
 //  umbrella shade and cannot leave it until she has put sunscreen on. Once she
-//  can move, she collects goggles, loses the pool float to a gust of wind, and —
-//  after the float is recovered (via the tree and the vine) — finally dives in.
+//  can move, she collects goggles, loses the pool float to a gust of wind, and
+//  — after the float is recovered (via the tree and the vine) — finally dives
+//  in.
 //
 
 #include <SDL2/SDL.h>
@@ -23,10 +24,8 @@
 
 // Images (background + objects), auto-loaded from the scene's images table.
 static ImageData images[5] = {
-    {NULL, "background.png", "pool", 0, 0},
-    {NULL, "water.png", "pool", 0, 0},
-    {NULL, "sunscreen.png", "pool", 0, 0},
-    {NULL, "goggles.png", "pool", 0, 0},
+    {NULL, "background.png", "pool", 0, 0}, {NULL, "water.png", "pool", 0, 0},
+    {NULL, "sunscreen.png", "pool", 0, 0},  {NULL, "goggles.png", "pool", 0, 0},
     {NULL, "float.png", "pool", 0, 0},
 };
 static const ImageData *background = &images[0];
@@ -94,9 +93,12 @@ static bool load_media(SDL_Renderer *renderer) {
   return hen_load_media(gina, renderer);
 }
 
-// ── interactions ──────────────────────────────────────────────────────────────
+// ── interactions
+// ──────────────────────────────────────────────────────────────
 
-static void open_sunscreen_minigame(void) { set_active_scene(SUNSCREEN_MINIGAME); }
+static void open_sunscreen_minigame(void) {
+  set_active_scene(SUNSCREEN_MINIGAME);
+}
 
 static void collect_goggles(void) {
   gina_state.has_goggles = true;
@@ -105,13 +107,13 @@ static void collect_goggles(void) {
 
 static void float_blows_away(void) {
   gina_state.float_state = FLOAT_STUCK_IN_TREE;
-  Mix_PlayChannel(-1, chunks[1].chunk, 0);  // wind
+  Mix_PlayChannel(-1, chunks[1].chunk, 0); // wind
   gina_say(gina, "Oh no! Il vento ha portato il salvagente sull'albero!",
            voice());
 }
 
 static void dive(void) {
-  Mix_PlayChannel(-1, chunks[2].chunk, 0);  // splash
+  Mix_PlayChannel(-1, chunks[2].chunk, 0); // splash
   fprintf(stdout, "Gina: Che bello! Ancora!\n");
   // Replay the adventure in place.
   gina_state_reset();
@@ -152,7 +154,8 @@ static void process_input(SDL_Event *event) {
         hen_walk_to(gina, (SDL_FPoint){SUNSCREEN_POI.x, SUNSCREEN_POI.y},
                     open_sunscreen_minigame);
       } else {
-        gina_say(gina, "Devo mettere la crema solare prima di uscire dall'ombra!",
+        gina_say(gina,
+                 "Devo mettere la crema solare prima di uscire dall'ombra!",
                  voice());
       }
       break;

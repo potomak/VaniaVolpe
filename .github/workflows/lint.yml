@@ -1,0 +1,47 @@
+name: Lint (clang-format + clang-tidy)
+
+# Advisory only: posts inline annotations, a step summary, and a PR comment, but
+# never fails the check (there is no gating step, and .clang-tidy sets no
+# WarningsAsErrors). See .clang-format / .clang-tidy for the rules.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # bear records the real compiler invocations into compile_commands.json so
+      # clang-tidy resolves the pkg-config/-I flags and the SDL headers. The dev
+      # libraries are needed for that build to succeed.
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bear \
+            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libcaca-dev
+
+      - name: Generate compile_commands.json
+        run: bear -- make all terminal
+
+      - name: Run clang-format and clang-tidy
+        uses: cpp-linter/cpp-linter-action@v2
+        id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          version: "18"
+          style: file          # use .clang-format
+          tidy-checks: ""       # use .clang-tidy
+          database: "."         # where compile_commands.json lives
+          files-changed-only: false
+          ignore: "build|include|src/emscripten"
+          step-summary: true
+          thread-comments: true
+      # No gating step on steps.linter.outputs.checks-failed → non-blocking.

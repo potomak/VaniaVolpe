@@ -44,10 +44,10 @@ SDL_FPoint nearest_walkable_point(SDL_Point click, const SDL_Rect *walkables,
   // If the closest point lands inside the non-walkable rect, push it just past
   // the nearest edge, then keep it inside the winning walkable rect.
   if (SDL_PointInRect(&best, &non_walkable)) {
-    int left = best.x - non_walkable.x;                       // exit left
-    int right = (non_walkable.x + non_walkable.w) - best.x;   // exit right
-    int top = best.y - non_walkable.y;                        // exit up
-    int bottom = (non_walkable.y + non_walkable.h) - best.y;  // exit down
+    int left = best.x - non_walkable.x;                      // exit left
+    int right = (non_walkable.x + non_walkable.w) - best.x;  // exit right
+    int top = best.y - non_walkable.y;                       // exit up
+    int bottom = (non_walkable.y + non_walkable.h) - best.y; // exit down
     int min = left;
     if (right < min) {
       min = right;

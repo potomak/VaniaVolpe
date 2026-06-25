@@ -1,6 +1,7 @@
 //
 //  gina_hen_at_the_pool.c
-//  Registers "Gina la Gallina in Piscina" by assembling its scenes into a table.
+//  Registers "Gina la Gallina in Piscina" by assembling its scenes into a
+//  table.
 //
 
 #include "gina_hen_at_the_pool.h"
@@ -23,8 +24,8 @@ Adventure gina_hen_at_the_pool = {
     .scenes = scenes,
     .scenes_length = GINA_HEN_AT_THE_POOL_SCENES_LENGTH,
     .entry_scene = POOL,
-    // Reset the cross-scene puzzle state every time the adventure is entered, so
-    // it always starts fresh and is replayable.
+    // Reset the cross-scene puzzle state every time the adventure is entered,
+    // so it always starts fresh and is replayable.
     .on_enter = gina_state_reset,
 };
 

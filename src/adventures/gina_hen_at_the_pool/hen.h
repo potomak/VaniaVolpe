@@ -1,8 +1,8 @@
 //
 //  hen.h
 //  Gina the hen: a concrete Actor (a spec in hen.c plus thin wrappers over the
-//  generic actor_* API), mirroring fox.{c,h}. A new character is a new spec, not
-//  a new code file.
+//  generic actor_* API), mirroring fox.{c,h}. A new character is a new spec,
+//  not a new code file.
 //
 
 #ifndef hen_h

@@ -134,13 +134,11 @@ void actor_update(Actor *actor, float delta_time) {
       return;
     }
 
-    actor->current_position =
-        (SDL_FPoint){.x = actor->current_position.x +
-                          actor->direction.x * actor->spec->velocity *
-                              delta_time,
-                     .y = actor->current_position.y +
-                          actor->direction.y * actor->spec->velocity *
-                              delta_time};
+    actor->current_position = (SDL_FPoint){
+        .x = actor->current_position.x +
+             actor->direction.x * actor->spec->velocity * delta_time,
+        .y = actor->current_position.y +
+             actor->direction.y * actor->spec->velocity * delta_time};
     break;
   }
   case TALKING:

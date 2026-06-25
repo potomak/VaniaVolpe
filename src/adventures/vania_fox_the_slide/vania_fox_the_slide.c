@@ -1,7 +1,7 @@
 //
 //  vania_fox_the_slide.c
-//  Registers the Vania Fox - The Slide adventure by assembling its scenes into a
-//  table.
+//  Registers the Vania Fox - The Slide adventure by assembling its scenes into
+//  a table.
 //
 
 #include "vania_fox_the_slide.h"

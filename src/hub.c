@@ -74,7 +74,8 @@ static void render(SDL_Renderer *renderer) {
   // One placeholder button per adventure (distinct colour each).
   for (int i = 0; i < content_count; i++) {
     SDL_Rect rect = menu_button_rect(i);
-    SDL_SetRenderDrawColor(renderer, 0xC0, (Uint8)(0x60 + i * 0x50), 0x40, 0xFF);
+    SDL_SetRenderDrawColor(renderer, 0xC0, (Uint8)(0x60 + i * 0x50), 0x40,
+                           0xFF);
     SDL_RenderFillRect(renderer, &rect);
     SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
     SDL_RenderDrawRect(renderer, &rect);
@@ -92,7 +93,7 @@ static Scene scenes[1];
 Adventure hub = {
     .id = "hub",
     .title = "Vania Volpe Adventures",
-    .assets_root = NULL,  // drawn with placeholder rects; no asset files
+    .assets_root = NULL, // drawn with placeholder rects; no asset files
     .scenes = scenes,
     .scenes_length = 1,
     .entry_scene = MENU,

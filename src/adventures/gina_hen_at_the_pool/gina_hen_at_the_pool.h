@@ -12,11 +12,11 @@
 
 // Scene indices for this adventure (used by its scenes for transitions).
 enum gina_hen_at_the_pool_scene {
-  POOL,                // entry: poolside, where the puzzle starts
-  TREE,                // the tree with Carla the crow
-  VINE,                // the grape vine
-  SUNSCREEN_MINIGAME,  // brush sunscreen onto Gina
-  GRAPES_MINIGAME,     // pick every grape
+  POOL,               // entry: poolside, where the puzzle starts
+  TREE,               // the tree with Carla the crow
+  VINE,               // the grape vine
+  SUNSCREEN_MINIGAME, // brush sunscreen onto Gina
+  GRAPES_MINIGAME,    // pick every grape
 };
 
 extern Adventure gina_hen_at_the_pool;

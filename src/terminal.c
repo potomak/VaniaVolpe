@@ -14,14 +14,14 @@
 #define BMASK 0x00FF0000
 #define AMASK 0xFF000000
 
-static caca_canvas_t  *cv     = NULL;
-static caca_display_t *dp     = NULL;
-static caca_dither_t  *dither = NULL;
-static void           *pixels = NULL;
-static int             pitch  = 0;
+static caca_canvas_t *cv = NULL;
+static caca_display_t *dp = NULL;
+static caca_dither_t *dither = NULL;
+static void *pixels = NULL;
+static int pitch = 0;
 
 bool terminal_init(SDL_Renderer *renderer) {
-  pitch  = WINDOW_WIDTH * 4; // 4 bytes per pixel (RGBA32)
+  pitch = WINDOW_WIDTH * 4; // 4 bytes per pixel (RGBA32)
   pixels = malloc(WINDOW_HEIGHT * pitch);
   if (!pixels) {
     fprintf(stderr, "terminal: failed to allocate pixel buffer\n");
@@ -54,8 +54,8 @@ bool terminal_init(SDL_Renderer *renderer) {
   // at its own speed.
   caca_set_display_time(dp, 100000);
 
-  dither = caca_create_dither(32, WINDOW_WIDTH, WINDOW_HEIGHT, pitch,
-                              RMASK, GMASK, BMASK, AMASK);
+  dither = caca_create_dither(32, WINDOW_WIDTH, WINDOW_HEIGHT, pitch, RMASK,
+                              GMASK, BMASK, AMASK);
   if (!dither) {
     fprintf(stderr, "terminal: failed to create caca dither\n");
     caca_free_display(dp);
@@ -70,10 +70,11 @@ bool terminal_init(SDL_Renderer *renderer) {
 }
 
 void terminal_present(SDL_Renderer *renderer) {
-  if (!dp) return;
+  if (!dp)
+    return;
 
-  if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA32,
-                           pixels, pitch) != 0) {
+  if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA32, pixels,
+                           pitch) != 0) {
     fprintf(stderr, "terminal: SDL_RenderReadPixels failed: %s\n",
             SDL_GetError());
     return;
@@ -88,13 +89,15 @@ void terminal_present(SDL_Renderer *renderer) {
 // Scale a caca character-cell coordinate to game logical pixels.
 static int scale_x(int cx) {
   int cw = caca_get_canvas_width(cv);
-  if (cw <= 0) return 0;
+  if (cw <= 0)
+    return 0;
   return (cx * WINDOW_WIDTH) / cw;
 }
 
 static int scale_y(int cy) {
   int ch = caca_get_canvas_height(cv);
-  if (ch <= 0) return 0;
+  if (ch <= 0)
+    return 0;
   return (cy * WINDOW_HEIGHT) / ch;
 }
 
@@ -103,12 +106,11 @@ static void push_mouse_button(Uint32 type, int game_x, int game_y,
                               Uint8 button) {
   SDL_Event ev;
   SDL_memset(&ev, 0, sizeof(ev));
-  ev.type               = type;
-  ev.button.button      = button;
-  ev.button.state       = (type == SDL_MOUSEBUTTONDOWN) ? SDL_PRESSED
-                                                        : SDL_RELEASED;
-  ev.button.x           = game_x;
-  ev.button.y           = game_y;
+  ev.type = type;
+  ev.button.button = button;
+  ev.button.state = (type == SDL_MOUSEBUTTONDOWN) ? SDL_PRESSED : SDL_RELEASED;
+  ev.button.x = game_x;
+  ev.button.y = game_y;
   SDL_PushEvent(&ev);
 }
 
@@ -116,9 +118,9 @@ static void push_mouse_button(Uint32 type, int game_x, int game_y,
 static void push_mouse_motion(int game_x, int game_y) {
   SDL_Event ev;
   SDL_memset(&ev, 0, sizeof(ev));
-  ev.type         = SDL_MOUSEMOTION;
-  ev.motion.x     = game_x;
-  ev.motion.y     = game_y;
+  ev.type = SDL_MOUSEMOTION;
+  ev.motion.x = game_x;
+  ev.motion.y = game_y;
   SDL_PushEvent(&ev);
 }
 
@@ -126,14 +128,15 @@ static void push_mouse_motion(int game_x, int game_y) {
 static void push_key(Uint32 type, SDL_Keycode sym) {
   SDL_Event ev;
   SDL_memset(&ev, 0, sizeof(ev));
-  ev.type            = type;
-  ev.key.state       = (type == SDL_KEYDOWN) ? SDL_PRESSED : SDL_RELEASED;
-  ev.key.keysym.sym  = sym;
+  ev.type = type;
+  ev.key.state = (type == SDL_KEYDOWN) ? SDL_PRESSED : SDL_RELEASED;
+  ev.key.keysym.sym = sym;
   SDL_PushEvent(&ev);
 }
 
 void terminal_poll_events(void) {
-  if (!dp) return;
+  if (!dp)
+    return;
 
   caca_event_t cev;
   while (caca_get_event(dp, CACA_EVENT_ANY, &cev, 0) > 0) {
@@ -175,7 +178,7 @@ void terminal_poll_events(void) {
         break;
       case 'q':
       case 'Q':
-      case CACA_KEY_CTRL_C:  // Ctrl+C — libcaca raw mode intercepts SIGINT
+      case CACA_KEY_CTRL_C: // Ctrl+C — libcaca raw mode intercepts SIGINT
       case CACA_KEY_CTRL_D: {
         SDL_Event quit;
         SDL_memset(&quit, 0, sizeof(quit));
@@ -210,8 +213,20 @@ void terminal_poll_events(void) {
 }
 
 void terminal_deinit(void) {
-  if (dither) { caca_free_dither(dither); dither = NULL; }
-  if (dp)     { caca_free_display(dp);    dp     = NULL; }
-  if (cv)     { caca_free_canvas(cv);     cv     = NULL; }
-  if (pixels) { free(pixels);             pixels = NULL; }
+  if (dither) {
+    caca_free_dither(dither);
+    dither = NULL;
+  }
+  if (dp) {
+    caca_free_display(dp);
+    dp = NULL;
+  }
+  if (cv) {
+    caca_free_canvas(cv);
+    cv = NULL;
+  }
+  if (pixels) {
+    free(pixels);
+    pixels = NULL;
+  }
 }

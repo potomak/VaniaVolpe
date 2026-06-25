@@ -14,8 +14,8 @@
 #include "fox.h"
 #include "game.h"
 #include "image.h"
-#include "vania_fox_the_slide.h"
 #include "sound.h"
+#include "vania_fox_the_slide.h"
 
 #include "playground.h"
 

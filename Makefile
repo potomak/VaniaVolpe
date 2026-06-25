@@ -110,10 +110,26 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS)
 	# black screen. Stamping keeps every fetch from one deploy consistent.
 	sed -i 's|__CACHE_BUST__|$(WEB_CACHE_BUST)|g; s|src="index.js"|src="index.js?v=$(WEB_CACHE_BUST)"|g' $(WEB_TARGET)
 
+# ── formatting (clang-format, LLVM style; see .clang-format) ──────────────────
+
+CLANG_FORMAT ?= clang-format
+# All first-party C sources/headers; the bundled SDL shims under
+# src/emscripten/compat/ and include/ are intentionally left alone.
+FORMAT_SRCS = $(shell find src \( -name '*.c' -o -name '*.h' \) \
+                -not -path 'src/emscripten/compat/*')
+
+# Rewrite sources in place to match .clang-format.
+format:
+	$(CLANG_FORMAT) -i $(FORMAT_SRCS)
+
+# Fail if anything is not formatted (what CI mirrors); changes nothing.
+format-check:
+	$(CLANG_FORMAT) --dry-run --Werror $(FORMAT_SRCS)
+
 # ── housekeeping ──────────────────────────────────────────────────────────────
 
 clean:
 	rm -f $(OBJS) $(TERMINAL_OBJS) $(TARGET) $(TARGET_TERMINAL)
 	rm -rf build
 
-.PHONY: all terminal web clean
+.PHONY: all terminal web clean format format-check

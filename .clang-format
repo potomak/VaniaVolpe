@@ -1,0 +1,7 @@
+# C99 style for VaniaVolpe. The codebase already follows LLVM style (two-space
+# indent, 80-column, right-aligned pointers, attached braces); the keys below are
+# made explicit so the intent is self-documenting. Run `make format` to apply.
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 80
+PointerAlignment: Right
