@@ -17,6 +17,11 @@ typedef struct adventure {
   Scene *scenes;     // table of scenes; indices are adventure-local
   int scenes_length;
   int entry_scene;   // index of the scene to start on
+
+  // Optional: called when the adventure is entered (e.g. selected from the hub),
+  // before its entry scene's on_scene_active. Use it to reset cross-scene state
+  // so the adventure is replayable. May be NULL.
+  void (*on_enter)(void);
 } Adventure;
 
 #endif /* adventure_h */

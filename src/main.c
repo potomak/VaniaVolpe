@@ -6,6 +6,7 @@
 
 #include "constants.h"
 #include "game.h"
+#include "gina_hen_at_the_pool.h"
 #include "hub.h"
 #include "image.h"
 #include "vania_fox_the_slide.h"
@@ -150,13 +151,16 @@ int SDL_main(int argc, char *argv[]) {
 
   // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();
-  static const Adventure *content[] = {&vania_fox_the_slide};
-  hub_register(content, 1);
+  gina_hen_at_the_pool_register();
+  static const Adventure *content[] = {&vania_fox_the_slide,
+                                       &gina_hen_at_the_pool};
+  hub_register(content, 2);
 
   // Register the hub first (it is the start screen and the back-to-hub target),
   // then the content adventures. All of them are initialized and loaded up front.
-  static const Adventure *all[] = {&hub, &vania_fox_the_slide};
-  register_adventures(all, 2);
+  static const Adventure *all[] = {&hub, &vania_fox_the_slide,
+                                   &gina_hen_at_the_pool};
+  register_adventures(all, 3);
   set_current_adventure(&hub);
 
   game_init();

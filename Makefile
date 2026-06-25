@@ -1,8 +1,9 @@
 CC      = gcc
-# Adventure module directory (its own sources, headers and assets).
+# Adventure module directories (each has its own sources, headers and assets).
 VFTS_DIR = src/adventures/vania_fox_the_slide
+GINA_DIR = src/adventures/gina_hen_at_the_pool
 CFLAGS  = -std=c99 -Wall $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer) \
-          -I./include -I./src -I$(VFTS_DIR)
+          -I./include -I./src -I$(VFTS_DIR) -I$(GINA_DIR)
 LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image SDL2_mixer) -lm
 TARGET  = vaniavolpe
 
@@ -27,7 +28,15 @@ GAME_SRCS = \
 	$(VFTS_DIR)/playground_entrance.c \
 	$(VFTS_DIR)/playground.c \
 	$(VFTS_DIR)/outro.c \
-	$(VFTS_DIR)/example.c
+	$(VFTS_DIR)/example.c \
+	$(GINA_DIR)/hen.c \
+	$(GINA_DIR)/gina_state.c \
+	$(GINA_DIR)/gina_hen_at_the_pool.c \
+	$(GINA_DIR)/pool.c \
+	$(GINA_DIR)/tree.c \
+	$(GINA_DIR)/vine.c \
+	$(GINA_DIR)/sunscreen_minigame.c \
+	$(GINA_DIR)/grapes_minigame.c
 
 SRCS = src/main.c $(GAME_SRCS)
 OBJS = $(SRCS:.c=.o)
@@ -63,14 +72,20 @@ WEB_TARGET = $(WEB_DIR)/index.html
 EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
              -sUSE_SDL_MIXER=2
 EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./src/emscripten/compat \
-             -I./src -I$(VFTS_DIR)
+             -I./src -I$(VFTS_DIR) -I$(GINA_DIR)
 EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/intro \
              --preload-file $(VFTS_DIR)/assets/fox \
              --preload-file $(VFTS_DIR)/assets/playground \
              --preload-file $(VFTS_DIR)/assets/playground_entrance \
              --preload-file $(VFTS_DIR)/assets/outro \
              --preload-file $(VFTS_DIR)/assets/example \
-             --preload-file $(VFTS_DIR)/assets/music
+             --preload-file $(VFTS_DIR)/assets/music \
+             --preload-file $(GINA_DIR)/assets/hen \
+             --preload-file $(GINA_DIR)/assets/pool \
+             --preload-file $(GINA_DIR)/assets/tree \
+             --preload-file $(GINA_DIR)/assets/vine \
+             --preload-file $(GINA_DIR)/assets/sunscreen \
+             --preload-file $(GINA_DIR)/assets/grapes
 EM_SHELL   = src/emscripten/shell.html
 EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 -lm $(EM_PRELOAD) \
              --shell-file $(EM_SHELL)
