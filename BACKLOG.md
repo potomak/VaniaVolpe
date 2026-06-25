@@ -86,6 +86,33 @@ a single adventure. Then author a **second adventure** as a module, introducing
 actor abstraction. The engine is already adventure-agnostic (Adventure registry +
 generic Actor), so this is mostly new content plus a small menu UI.
 
+### Task I — Lazy-load adventures (on demand, not all up front)
+*Performance, especially on mobile; enables per-adventure asset downloads.*
+
+The engine currently initializes and loads media for **every** registered
+adventure at startup: `game_init` / `game_load_media` (`src/game.c`) iterate all
+adventures, calling `adventure_init` / `adventure_load_media` (`src/adventure.c`)
+on each. So every adventure's assets are created up front — wasteful on memory and
+startup time, and on the web the single `index.data` (all adventures' art/audio)
+must finish downloading before the hub even appears.
+
+Instead, load only what's needed:
+- At startup, init + load **only the hub and the default active adventure**.
+- Init + load each other adventure **on demand** — the first time it's selected
+  (`switch_to_adventure`, `src/game.c`) — then keep it resident (or free it on
+  exit if memory pressure warrants).
+- **Web:** split assets per adventure so the user only downloads an adventure's
+  assets after selecting it — e.g. per-adventure Emscripten data packages fetched
+  on demand instead of one monolithic `--preload-file` `index.data`.
+
+Care points: `game_deinit` frees *all* adventures today, so it must only free what
+was actually loaded; guard against loading an adventure twice; and because a
+scene's `process_input` can call `switch_to_adventure`, the on-demand load must
+happen *before* activating the new adventure's entry scene. The per-adventure
+methods (`adventure_init` / `adventure_load_media` / `adventure_deinit`, #16)
+already encapsulate load/teardown, so this is mostly a scheduling change in
+`game.c` plus a per-adventure "loaded" flag.
+
 ## Suggested sequencing
 
 1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
@@ -95,6 +122,8 @@ generic Actor), so this is mostly new content plus a small menu UI.
 4. **D** — optional polish.
 5. **F** — only if the walk-through becomes a real problem.
 6. **H** — the hub + a second adventure, when ready to grow the collection.
+7. **I** — lazy-load adventures once the collection is large enough that loading
+   everything up front is a felt cost (memory/startup, or web download size).
 
 ## Asset checklist (blocks C2 and E; to be provided)
 
