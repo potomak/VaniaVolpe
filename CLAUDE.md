@@ -34,36 +34,41 @@ The GitHub Actions workflow `.github/workflows/deploy-pages.yml` compiles the we
 target on every push to `main` and deploys it to GitHub Pages.
 
 ## Repo map
-- `src/` — all C sources/headers.
-  - `main.c` (desktop entry + game loop), `main_terminal.c` + `terminal.c`
-    (libcaca entry).
-  - `game.c` / `scene.h` (scene framework), `fox.c` (player state machine),
-    `image.c` (sprite/animation engine), `sound.c`, `asset.c` (path resolution),
-    `debug.c`.
-  - Scenes: `intro.c`, `playground_entrance.c`, `playground.c`, `outro.c`,
-    `example.c`.
+- `src/` — **common engine / app shell**: `main.c` (desktop entry + game loop),
+  `main_terminal.c` + `terminal.c` (libcaca entry), `game.c` + `adventure.h`
+  (adventure registry), `scene.{c,h}` (scene framework), `actor.{c,h}` (generic
+  character engine), `image.c` (sprite/animation engine), `sound.c`, `asset.c`
+  (path resolution), `debug.c`.
   - `emscripten/compat/` — header shims so `<SDL2/...>` includes resolve under
     Emscripten; `emscripten/shell.html` — custom web page (canvas + iOS audio
     unlock).
-- Asset folders (PNG / WAV / `.anim`): `intro/ fox/ playground/
-  playground_entrance/ outro/ example/ music/`.
+- `src/adventures/<adventure>/` — **one self-contained adventure per directory**.
+  E.g. `src/adventures/vania_fox_the_slide/`: the adventure module
+  (`vania_fox_the_slide.{c,h}`), its scenes (`intro.c`, `playground_entrance.c`,
+  `playground.c`, `outro.c`, `example.c`), its actor (`fox.{c,h}` — the fox spec),
+  and its `assets/` subtree (PNG / WAV / `.anim`: `intro/ fox/ playground/
+  playground_entrance/ outro/ example/ music/`).
 - `include/` — bundled SDL_image / SDL_mixer forwarding headers (native build).
 - Docs: `ARCHITECTURE.md` (deep design), `MOVEMENT.md` (movement limitation +
   future pathfinding), `BACKLOG.md` (future tasks), `TERMINAL_PLAN.md`.
 
 ## How it works (quick)
-Scene-based: `Game` holds the current `GameScene`; each scene implements the
-`Scene` callback struct (`init` / `load_media` / `process_input` / `update` /
-`render` / …) in `scene.h`. The fox is a small state machine (IDLE / WALKING /
-TALKING / …); clicks hit-test `hotspots` and walk to `pois` via `fox_walk_to`.
-Animations are sprite sheets + a CSV `.anim` file (`x,y,w,h` per frame, 12 FPS).
-Dialogue is **audio-only** (no on-screen text) via `fox_talk`. See
-`ARCHITECTURE.md` for the full design.
+Scene-based: `Game` runs the current `Adventure` (an ordered scene table); each
+scene implements the `Scene` callback struct (`init` / `load_media` /
+`process_input` / `update` / `render` / …) in `scene.h`. The playable character is
+a generic `Actor` (the fox is an `ActorSpec`): a small state machine (IDLE /
+WALKING / TALKING / …); clicks hit-test `hotspots` and walk to `pois` via
+`actor_walk_to`. Animations are sprite sheets + a CSV `.anim` file (`x,y,w,h` per
+frame, 12 FPS). Dialogue is **audio-only** (no on-screen text) via `actor_talk`.
+Each adventure declares an `assets_root` so `asset_path()` resolves its assets.
+See `ARCHITECTURE.md` for the full design.
 
 ## Gotchas
 - **Assets in the web build** must live under one of the `--preload-file` dirs in
-  the `Makefile` (`intro fox playground playground_entrance outro example music`);
-  files elsewhere won't exist in the browser's virtual filesystem.
+  the `Makefile` (the adventure's `assets/` subdirs, e.g.
+  `src/adventures/vania_fox_the_slide/assets/{intro,fox,playground,…}`); files
+  elsewhere won't exist in the browser's virtual filesystem. An adventure's
+  `assets_root` (set in its module) must match where those assets are preloaded.
 - **SDL init must be `SDL_INIT_VIDEO | SDL_INIT_AUDIO`**, not
   `SDL_INIT_EVERYTHING` — Emscripten's SDL2 port has no haptic/joystick support
   and `SDL_Init` fails otherwise (black screen).

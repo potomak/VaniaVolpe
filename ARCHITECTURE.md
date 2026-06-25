@@ -16,33 +16,38 @@
 
 ```
 VaniaVolpe/
-├── src/                    # All source code
-│   ├── main.c              # Entry point and game loop
-│   ├── game.{c,h}          # Central game controller
-│   ├── scene.{c,h}         # Generic scene interface
-│   ├── fox.{c,h}           # Player character
-│   ├── image.{c,h}         # Sprite/animation engine
-│   ├── sound.{c,h}         # Audio utilities
-│   ├── asset.{c,h}         # Cross-platform asset path resolution
-│   ├── constants.h         # Global constants (resolution, FPS, etc.)
-│   ├── debug.{c,h}         # Debug overlay rendering
-│   ├── intro.{c,h}         # Scene: title/main menu
-│   ├── playground_entrance.{c,h}  # Scene: key & gate puzzle
-│   ├── playground.{c,h}    # Scene: slide repair puzzle
-│   ├── outro.{c,h}         # Scene: end screen
-│   └── example.{c,h}       # Scene: dev sandbox (unused in release)
+├── src/                       # Common engine / app shell
+│   ├── main.c                 # Desktop entry point and game loop
+│   ├── main_terminal.c        # Terminal (libcaca) entry point
+│   ├── terminal.{c,h}         # libcaca rendering backend
+│   ├── game.{c,h}             # Central controller / adventure registry
+│   ├── adventure.h            # Adventure descriptor
+│   ├── scene.{c,h}            # Generic scene interface
+│   ├── actor.{c,h}            # Generic character engine (movement, talk, …)
+│   ├── image.{c,h}            # Sprite/animation engine
+│   ├── sound.{c,h}            # Audio utilities
+│   ├── asset.{c,h}            # Cross-platform asset path resolution
+│   ├── constants.h            # Global constants (resolution, FPS, etc.)
+│   ├── debug.{c,h}            # Debug overlay rendering
+│   ├── emscripten/            # Web compat-shim headers + custom shell.html
+│   └── adventures/            # One self-contained adventure per directory
+│       └── vania_fox_the_slide/
+│           ├── vania_fox_the_slide.{c,h}   # Adventure module (scene table)
+│           ├── fox.{c,h}                    # Its actor (the fox ActorSpec)
+│           ├── intro.{c,h}                  # Scene: title/main menu
+│           ├── playground_entrance.{c,h}    # Scene: key & gate puzzle
+│           ├── playground.{c,h}             # Scene: slide repair puzzle
+│           ├── outro.{c,h}                  # Scene: end screen
+│           ├── example.{c,h}                # Scene: dev sandbox (unused)
+│           └── assets/                      # This adventure's static assets
+│               ├── fox/ intro/ outro/ music/ example/
+│               ├── playground/        (└── dialog/  voice lines)
+│               └── playground_entrance/ (└── dialog/  voice lines)
 │
-├── fox/                    # Fox character sprites + animations
-├── intro/                  # Intro scene assets
-├── playground_entrance/    # Entrance scene assets
-│   └── dialog/             # Voice lines for this scene
-├── playground/             # Playground scene assets
-│   └── dialog/             # Voice lines for this scene
-├── outro/                  # Outro scene assets
-├── music/                  # Background music tracks
-├── example/                # Dev sandbox assets
-└── sdlexample.xcodeproj/   # Xcode project
+├── include/                   # Bundled SDL_image / SDL_mixer headers (native)
+└── sdlexample.xcodeproj/      # Xcode project
 ```
+
 
 ---
 

@@ -7,6 +7,8 @@
 
 #include "game.h"
 
+// Asset path resolution (adventure assets root)
+#include "asset.h"
 // Features for debugging the game
 #include "debug.h"
 
@@ -18,6 +20,7 @@ Game game = {
 void set_current_adventure(const Adventure *adventure) {
   game.current_adventure = adventure;
   game.current_scene = adventure->entry_scene;
+  asset_set_root(adventure->assets_root);
 }
 
 Scene scene_instance(int scene) {

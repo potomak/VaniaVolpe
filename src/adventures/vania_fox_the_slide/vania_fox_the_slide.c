@@ -19,6 +19,7 @@ static Scene scenes[VANIA_FOX_THE_SLIDE_SCENES_LENGTH];
 Adventure vania_fox_the_slide = {
     .id = "vania-fox-the-slide",
     .title = "Vania Volpe - Lo Scivolo",
+    .assets_root = "src/adventures/vania_fox_the_slide/assets",
     .scenes = scenes,
     .scenes_length = VANIA_FOX_THE_SLIDE_SCENES_LENGTH,
     .entry_scene = INTRO,

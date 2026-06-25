@@ -13,6 +13,7 @@
 typedef struct adventure {
   const char *id;
   const char *title;
+  const char *assets_root;  // base dir for this adventure's assets (non-iOS)
   Scene *scenes;     // table of scenes; indices are adventure-local
   int scenes_length;
   int entry_scene;   // index of the scene to start on
