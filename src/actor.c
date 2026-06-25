@@ -158,8 +158,8 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
 
   // Assumes that all animation frames have the same size.
   SDL_Point position = (SDL_Point){
-      .x = actor->current_position.x - reference->sprite_clips[0].w / 2,
-      .y = actor->current_position.y - reference->sprite_clips[0].h / 2};
+      .x = (int)actor->current_position.x - reference->sprite_clips[0].w / 2,
+      .y = (int)actor->current_position.y - reference->sprite_clips[0].h / 2};
 
   // IDLE renders the actor's idle animation (e.g. the fox's sitting sprite).
   ActorState state =

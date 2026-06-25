@@ -85,15 +85,16 @@ static void process_input(void) {
       game.is_running = false;
       break;
     case SDL_KEYDOWN:
-      if (event.key.keysym.sym == SDLK_ESCAPE)
+      if (event.key.keysym.sym == SDLK_ESCAPE) {
         game.is_running = false;
+      }
       break;
     }
   }
 }
 
 static void update(void) {
-  float delta_time = (SDL_GetTicks() - last_frame_time) / 1000.0f;
+  float delta_time = (SDL_GetTicks() - last_frame_time) / 1000.0;
   last_frame_time = SDL_GetTicks();
   game_update(delta_time);
 }

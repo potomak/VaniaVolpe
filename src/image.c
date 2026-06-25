@@ -101,8 +101,12 @@ static bool load_animation_data(AnimationData *animation, const char *path) {
   }
 
   // Support coordinates up to 99999
-  char num[6], c;
-  int rect[4], row = 0, num_i = 0, rect_i = 0;
+  char num[6];
+  char c;
+  int rect[4];
+  int row = 0;
+  int num_i = 0;
+  int rect_i = 0;
   for (int i = 0; i < size; i++) {
     c = data[i];
     if (c == ',' || c == '\n') {

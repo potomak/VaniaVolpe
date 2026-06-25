@@ -25,7 +25,7 @@ void set_current_adventure(const Adventure *adventure);
 
 // Register every adventure that exists (init/load/deinit iterate all of them).
 // The first entry is treated as the hub (the back-to-hub button returns to it).
-void register_adventures(const Adventure **adventures, int count);
+void register_adventures(const Adventure **registered, int count);
 
 // Transition to another adventure at runtime (e.g. hub selection, back-to-hub).
 // Safe to call from a scene's process_input, like set_active_scene.

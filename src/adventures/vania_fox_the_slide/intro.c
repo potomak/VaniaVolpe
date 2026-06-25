@@ -36,8 +36,6 @@ static ChunkData chunks[2] = {
     {NULL, "play_button_click.wav", "intro"},
     {NULL, "exit_button_click.wav", "intro"},
 };
-static const ChunkData *_play_button_click_sound = &chunks[0];
-static const ChunkData *_exit_button_click_sound = &chunks[1];
 
 // Mouse position
 static SDL_Point m_pos;

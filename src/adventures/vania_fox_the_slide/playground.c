@@ -264,7 +264,7 @@ static float sigmoid(float x) {
   float steepness = -0.025;
   float center = 130;
   float c = steepness * (x - center);
-  return SLIDE_SIGMOID_HEIGHT / (1 + exp(c));
+  return SLIDE_SIGMOID_HEIGHT / (1 + expf(c));
 }
 
 static void update(float delta_time) {

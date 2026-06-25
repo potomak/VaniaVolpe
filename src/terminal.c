@@ -22,7 +22,7 @@ static int pitch = 0;
 
 bool terminal_init(SDL_Renderer *renderer) {
   pitch = WINDOW_WIDTH * 4; // 4 bytes per pixel (RGBA32)
-  pixels = malloc(WINDOW_HEIGHT * pitch);
+  pixels = malloc((size_t)WINDOW_HEIGHT * pitch);
   if (!pixels) {
     fprintf(stderr, "terminal: failed to allocate pixel buffer\n");
     return false;
@@ -70,8 +70,9 @@ bool terminal_init(SDL_Renderer *renderer) {
 }
 
 void terminal_present(SDL_Renderer *renderer) {
-  if (!dp)
+  if (!dp) {
     return;
+  }
 
   if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA32, pixels,
                            pitch) != 0) {
@@ -89,15 +90,17 @@ void terminal_present(SDL_Renderer *renderer) {
 // Scale a caca character-cell coordinate to game logical pixels.
 static int scale_x(int cx) {
   int cw = caca_get_canvas_width(cv);
-  if (cw <= 0)
+  if (cw <= 0) {
     return 0;
+  }
   return (cx * WINDOW_WIDTH) / cw;
 }
 
 static int scale_y(int cy) {
   int ch = caca_get_canvas_height(cv);
-  if (ch <= 0)
+  if (ch <= 0) {
     return 0;
+  }
   return (cy * WINDOW_HEIGHT) / ch;
 }
 
@@ -135,8 +138,9 @@ static void push_key(Uint32 type, SDL_Keycode sym) {
 }
 
 void terminal_poll_events(void) {
-  if (!dp)
+  if (!dp) {
     return;
+  }
 
   caca_event_t cev;
   while (caca_get_event(dp, CACA_EVENT_ANY, &cev, 0) > 0) {
