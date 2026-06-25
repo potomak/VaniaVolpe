@@ -37,6 +37,9 @@ void set_current_adventure(const Adventure *adventure) {
   game.current_adventure = adventure;
   game.current_scene = adventure->entry_scene;
   asset_set_root(adventure->assets_root);
+  if (adventure->on_enter != NULL) {
+    adventure->on_enter();
+  }
 }
 
 void switch_to_adventure(const Adventure *adventure) {
@@ -46,6 +49,9 @@ void switch_to_adventure(const Adventure *adventure) {
   game.current_adventure = adventure;
   game.current_scene = adventure->entry_scene;
   asset_set_root(adventure->assets_root);
+  if (adventure->on_enter != NULL) {
+    adventure->on_enter();
+  }
   scene_instance(game.current_scene).on_scene_active();
 }
 
