@@ -1,0 +1,27 @@
+# Static-analysis checks for VaniaVolpe (C99). Advisory only: the CI lint workflow
+# reports findings as PR annotations but never fails the build (WarningsAsErrors is
+# empty), so this can be tuned without blocking anyone.
+#
+# A few families are disabled because they are noisy for a small SDL game:
+#   readability-magic-numbers            - coordinates / sizes are inherently literal
+#   readability-identifier-length        - short loop/local names are idiomatic here
+#   bugprone-easily-swappable-parameters - flags ordinary (x, y) style signatures
+#   readability-function-cognitive-complexity - scene callbacks are naturally long
+#   bugprone-narrowing-conversions       - int pixel coords -> SDL_FPoint is pervasive
+#   bugprone-switch-missing-default-case - switch (event.type) without default is idiomatic
+Checks: >
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-identifier-length,
+  -readability-function-cognitive-complexity,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-switch-missing-default-case
+WarningsAsErrors: ''
+# Analyze our own headers under src/, but not the bundled SDL forwarding headers
+# in include/ or the Emscripten compat shims.
+HeaderFilterRegex: '^src/(?!emscripten/compat/).*'
