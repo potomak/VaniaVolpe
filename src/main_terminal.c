@@ -9,11 +9,11 @@
 #include "gina_hen_at_the_pool.h"
 #include "hub.h"
 #include "image.h"
-#include "vania_fox_the_slide.h"
 #include "terminal.h"
+#include "vania_fox_the_slide.h"
 
 static int last_frame_time = 0;
-static SDL_Window   *window   = NULL;
+static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
 static int init_window(void) {
@@ -31,9 +31,9 @@ static int init_window(void) {
     return false;
   }
 
-  window = SDL_CreateWindow("Vania Volpe",
-                            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                            WINDOW_WIDTH, WINDOW_HEIGHT, 0);
+  window =
+      SDL_CreateWindow("Vania Volpe", SDL_WINDOWPOS_CENTERED,
+                       SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
   if (!window) {
     fprintf(stderr, "Error creating SDL window: %s\n", SDL_GetError());
     return false;
@@ -94,7 +94,7 @@ static void process_input(void) {
 
 static void update(void) {
   float delta_time = (SDL_GetTicks() - last_frame_time) / 1000.0f;
-  last_frame_time  = SDL_GetTicks();
+  last_frame_time = SDL_GetTicks();
   game_update(delta_time);
 }
 
@@ -117,7 +117,8 @@ static void destroy_window(void) {
 }
 
 int main(int argc, char *argv[]) {
-  (void)argc; (void)argv;
+  (void)argc;
+  (void)argv;
 
   game.is_running = init_window();
   if (!game.is_running) {

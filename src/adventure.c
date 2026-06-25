@@ -1,9 +1,9 @@
 //
 //  adventure.c
 //  Adventure-level lifecycle: prepare/teardown for a whole adventure by
-//  delegating to each of its scenes. Keeping the per-scene loop here (instead of
-//  in game.c) means the game layer drives adventures without depending on how a
-//  scene loads or frees its images and sound chunks.
+//  delegating to each of its scenes. Keeping the per-scene loop here (instead
+//  of in game.c) means the game layer drives adventures without depending on
+//  how a scene loads or frees its images and sound chunks.
 //
 
 #include "adventure.h"

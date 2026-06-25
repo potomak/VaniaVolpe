@@ -63,7 +63,8 @@ static bool load_media(SDL_Renderer *renderer) {
 
 // Mark the cell under (x, y), if it is over Gina and not already painted.
 static void brush_at(int x, int y) {
-  if (x < GINA_X || x >= GINA_X + GINA_W || y < GINA_Y || y >= GINA_Y + GINA_H) {
+  if (x < GINA_X || x >= GINA_X + GINA_W || y < GINA_Y ||
+      y >= GINA_Y + GINA_H) {
     return;
   }
   int c = (x - GINA_X) / (GINA_W / COLS);

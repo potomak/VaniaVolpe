@@ -157,7 +157,8 @@ int SDL_main(int argc, char *argv[]) {
   hub_register(content, 2);
 
   // Register the hub first (it is the start screen and the back-to-hub target),
-  // then the content adventures. All of them are initialized and loaded up front.
+  // then the content adventures. All of them are initialized and loaded up
+  // front.
   static const Adventure *all[] = {&hub, &vania_fox_the_slide,
                                    &gina_hen_at_the_pool};
   register_adventures(all, 3);

@@ -45,8 +45,8 @@ typedef struct actor_spec {
   float velocity;                  // walking speed, px/s
   const char *move_sound_filename; // looped while walking; NULL for none
   int move_sound_volume;
-  ActorState idle_state;           // animation shown while IDLE (e.g. SITTING)
-  ActorState move_state;           // animation shown while WALKING
+  ActorState idle_state; // animation shown while IDLE (e.g. SITTING)
+  ActorState move_state; // animation shown while WALKING
   const ActorAnimSpec *anims;
   int anims_length;
 } ActorSpec;

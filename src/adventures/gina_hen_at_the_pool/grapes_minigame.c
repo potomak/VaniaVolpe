@@ -71,7 +71,7 @@ static void process_input(SDL_Event *event) {
       if (SDL_PointInRect(&m_pos, &r)) {
         collected[i] = true;
         collected_count++;
-        Mix_PlayChannel(-1, chunks[1].chunk, 0);  // pop
+        Mix_PlayChannel(-1, chunks[1].chunk, 0); // pop
         break;
       }
     }

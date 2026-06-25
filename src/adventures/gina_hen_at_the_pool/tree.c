@@ -1,8 +1,8 @@
 //
 //  tree.c
-//  The tree where the pool float ends up stuck, and where Carla the crow perches.
-//  Carla helps Gina get the float back — but only in exchange for grapes, for
-//  which she first hands over a basket.
+//  The tree where the pool float ends up stuck, and where Carla the crow
+//  perches. Carla helps Gina get the float back — but only in exchange for
+//  grapes, for which she first hands over a basket.
 //
 
 #include <SDL2/SDL.h>
@@ -75,7 +75,8 @@ static bool load_media(SDL_Renderer *renderer) {
   return hen_load_media(gina, renderer);
 }
 
-// ── interactions ──────────────────────────────────────────────────────────────
+// ── interactions
+// ──────────────────────────────────────────────────────────────
 
 static void examine_float(void) {
   switch (gina_state.examine_float_count) {
@@ -93,7 +94,7 @@ static void examine_float(void) {
 }
 
 static void talk_to_carla(void) {
-  Mix_PlayChannel(-1, chunks[1].chunk, 0);  // caw
+  Mix_PlayChannel(-1, chunks[1].chunk, 0); // caw
 
   if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
     if (gina_state.has_grapes) {
@@ -105,8 +106,7 @@ static void talk_to_carla(void) {
     }
     if (!gina_state.has_basket) {
       gina_state.has_basket = true;
-      gina_say(gina,
-               "Ti aiuto se mi porti dell'uva. Prendi questo cestino!",
+      gina_say(gina, "Ti aiuto se mi porti dell'uva. Prendi questo cestino!",
                voice());
       return;
     }

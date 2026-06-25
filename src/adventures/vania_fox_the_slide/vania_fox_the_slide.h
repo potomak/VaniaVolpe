@@ -1,6 +1,7 @@
 //
 //  vania_fox_the_slide.h
-//  The Vania Fox - The Slide adventure module: its scene indices and registration.
+//  The Vania Fox - The Slide adventure module: its scene indices and
+//  registration.
 //
 
 #ifndef vania_fox_the_slide_h
