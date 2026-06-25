@@ -25,8 +25,15 @@
   <div id="status">Caricamento di Vania Volpe…</div>
   <script>
     var statusEl = document.getElementById('status');
+    // Per-build version stamped in by the Makefile (see the web target). Used to
+    // cache-bust the wasm/data fetches so a redeploy never pairs a stale cached
+    // file with a fresh one under these fixed names (which fails -> black screen).
+    var CACHE_BUST = '__CACHE_BUST__';
     var Module = {
       canvas: (function () { return document.getElementById('canvas'); })(),
+      locateFile: function (path) {
+        return /\.(wasm|data)$/.test(path) ? path + '?v=' + CACHE_BUST : path;
+      },
       print: function (t) { console.log(t); },
       printErr: function (t) { console.error(t); },
       setStatus: function (t) {

@@ -69,6 +69,10 @@ $(TARGET_TERMINAL): $(TERMINAL_OBJS)
 EMCC       = emcc
 WEB_DIR    = build/web
 WEB_TARGET = $(WEB_DIR)/index.html
+# Per-build id stamped into the page to cache-bust the fixed-name sub-resources
+# (index.js/.wasm/.data) on each deploy. The commit SHA changes whenever the
+# build does; fall back to a timestamp outside a git checkout.
+WEB_CACHE_BUST := $(shell git rev-parse --short HEAD 2>/dev/null || date +%s)
 EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
              -sUSE_SDL_MIXER=2
 EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./src/emscripten/compat \
@@ -89,12 +93,21 @@ EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/intro \
 EM_SHELL   = src/emscripten/shell.html
 EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 -lm $(EM_PRELOAD) \
              --shell-file $(EM_SHELL)
+# Every file packed into index.data; listing them makes the bundle rebuild when
+# art/audio changes (the sources alone wouldn't trigger it).
+WEB_ASSETS = $(shell find $(VFTS_DIR)/assets $(GINA_DIR)/assets -type f)
 
 web: $(WEB_TARGET)
 
-$(WEB_TARGET): $(SRCS) $(EM_SHELL)
+$(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS)
 	mkdir -p $(WEB_DIR)
 	$(EMCC) $(EM_CFLAGS) $(SRCS) $(EM_LDFLAGS) -o $(WEB_TARGET)
+	# Stamp the per-build id: replace the shell's __CACHE_BUST__ placeholder (used
+	# by Module.locateFile for the .wasm/.data fetches) and version the index.js
+	# script tag. GitHub Pages serves these under stable names, so without this a
+	# redeploy can pair a cached old file with a fresh sibling -> failed load /
+	# black screen. Stamping keeps every fetch from one deploy consistent.
+	sed -i 's|__CACHE_BUST__|$(WEB_CACHE_BUST)|g; s|src="index.js"|src="index.js?v=$(WEB_CACHE_BUST)"|g' $(WEB_TARGET)
 
 # ── housekeeping ──────────────────────────────────────────────────────────────
 
