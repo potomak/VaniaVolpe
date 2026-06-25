@@ -8,6 +8,8 @@
 #ifndef debug_h
 #define debug_h
 
+#include <SDL2/SDL.h>
+
 void debug_process_input(SDL_Event *event);
 
 void debug_render(SDL_Renderer *renderer);

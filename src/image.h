@@ -8,7 +8,10 @@
 #ifndef image_h
 #define image_h
 
-#import "asset.h"
+#include <SDL2/SDL.h>
+#include <stdbool.h>
+
+#include "asset.h"
 
 typedef struct image_data {
   SDL_Texture *texture;
