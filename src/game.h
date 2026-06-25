@@ -23,6 +23,14 @@ extern Game game;
 // Select the adventure to run (sets the current scene to its entry scene).
 void set_current_adventure(const Adventure *adventure);
 
+// Register every adventure that exists (init/load/deinit iterate all of them).
+// The first entry is treated as the hub (the back-to-hub button returns to it).
+void register_adventures(const Adventure **adventures, int count);
+
+// Transition to another adventure at runtime (e.g. hub selection, back-to-hub).
+// Safe to call from a scene's process_input, like set_active_scene.
+void switch_to_adventure(const Adventure *adventure);
+
 Scene scene_instance(int scene);
 
 void set_active_scene(int scene);

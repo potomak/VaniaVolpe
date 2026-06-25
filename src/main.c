@@ -6,6 +6,7 @@
 
 #include "constants.h"
 #include "game.h"
+#include "hub.h"
 #include "image.h"
 #include "vania_fox_the_slide.h"
 
@@ -147,9 +148,16 @@ int SDL_main(int argc, char *argv[]) {
     fprintf(stderr, "Failed to initialize window!\n");
   }
 
-  // Select the adventure to run before initializing its scenes.
+  // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();
-  set_current_adventure(&vania_fox_the_slide);
+  static const Adventure *content[] = {&vania_fox_the_slide};
+  hub_register(content, 1);
+
+  // Register the hub first (it is the start screen and the back-to-hub target),
+  // then the content adventures. All of them are initialized and loaded up front.
+  static const Adventure *all[] = {&hub, &vania_fox_the_slide};
+  register_adventures(all, 2);
+  set_current_adventure(&hub);
 
   game_init();
 
@@ -161,7 +169,7 @@ int SDL_main(int argc, char *argv[]) {
   }
 
   // Hack to execute lifecycle callbacks for the first scene
-  set_active_scene(INTRO);
+  set_active_scene(hub.entry_scene);
 
 #ifdef __EMSCRIPTEN__
   // The browser owns the event loop; drive the game via requestAnimationFrame

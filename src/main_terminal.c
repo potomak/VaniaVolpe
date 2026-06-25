@@ -6,6 +6,7 @@
 
 #include "constants.h"
 #include "game.h"
+#include "hub.h"
 #include "image.h"
 #include "vania_fox_the_slide.h"
 #include "terminal.h"
@@ -123,9 +124,15 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // Select the adventure to run before initializing its scenes.
+  // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();
-  set_current_adventure(&vania_fox_the_slide);
+  static const Adventure *content[] = {&vania_fox_the_slide};
+  hub_register(content, 1);
+
+  // Register the hub first (start screen + back-to-hub target), then content.
+  static const Adventure *all[] = {&hub, &vania_fox_the_slide};
+  register_adventures(all, 2);
+  set_current_adventure(&hub);
 
   game_init();
 
@@ -137,7 +144,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  set_active_scene(INTRO);
+  set_active_scene(hub.entry_scene);
 
   last_frame_time = SDL_GetTicks();
   while (game.is_running) {
