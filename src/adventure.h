@@ -24,4 +24,18 @@ typedef struct adventure {
   void (*on_enter)(void);
 } Adventure;
 
+// Lifecycle for a whole adventure: each delegates to every one of its scenes, so
+// the game can drive an adventure without knowing how a scene loads or frees its
+// media. The game iterates its registered adventures and calls these.
+
+// Initialize every scene in the adventure.
+void adventure_init(const Adventure *adventure);
+
+// Load every scene's media (the adventure's own assets root is selected first).
+// Returns false as soon as any scene fails to load.
+bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer);
+
+// Deinitialize every scene and free its loaded media.
+void adventure_deinit(const Adventure *adventure);
+
 #endif /* adventure_h */
