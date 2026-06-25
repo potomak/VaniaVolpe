@@ -15,4 +15,7 @@ typedef struct asset {
 
 const char *asset_path(Asset asset);
 
+// Set the base directory prepended to non-iOS asset paths (NULL to disable).
+void asset_set_root(const char *root);
+
 #endif /* asset_h */

@@ -59,15 +59,22 @@ obstacle-avoiding routing — a corner waypoint around the rectangle for the sim
 single-obstacle case, or a navigation grid / navmesh + A\* for the general case.
 Keep the engine simple until this becomes a felt gameplay problem.
 
-### Task G — Add the new engine files to the Xcode project
+### Task G — Sync the Xcode project with the new layout
 *Required for the iOS/Mac build (there is no Xcode on the build machine).*
 
-The Adventure + Actor refactor (PR #10, Rollout Step 1) added source files that
-must be registered in `sdlexample.xcodeproj` before the iOS/Mac target compiles:
-`src/actor.{c,h}`, `src/adventure.h`, `src/vania_fox_the_slide.{c,h}`. In Xcode,
-drag them into the `src` group and make sure the `.c` files are in the target's
-**Compile Sources** build phase (the `.h` files only need to be in the group).
-The Makefile native/web/terminal builds already include them.
+The Adventure + Actor refactor (PR #10) and the per-adventure directory move
+changed the source/asset layout, so `sdlexample.xcodeproj` needs to match before
+the iOS/Mac target compiles:
+- Add the common engine files now in `src/`: `actor.{c,h}`, `adventure.h`.
+- Add the adventure module group `src/adventures/vania_fox_the_slide/`
+  (`vania_fox_the_slide.{c,h}`, `fox.{c,h}`, and the scene files moved there) —
+  the previously-referenced `src/fox.{c,h}`, `src/intro.c`, etc. moved here.
+- Repoint the **asset folder references** to
+  `src/adventures/vania_fox_the_slide/assets/*` (iOS bundles assets flat, so this
+  is build-config only — runtime is unaffected).
+- Ensure every `.c` is in the target's **Compile Sources** build phase.
+
+The Makefile native/web/terminal builds already reflect the new layout.
 
 ### Task H — Adventure hub UI (Rollout Step 2)
 *Foundation landed in PR #10.*
