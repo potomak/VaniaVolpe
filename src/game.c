@@ -70,27 +70,14 @@ void exit_game(void) { game.is_running = false; }
 
 void game_init(void) {
   for (int a = 0; a < adventures_count; a++) {
-    for (int i = 0; i < adventures[a]->scenes_length; i++) {
-      adventures[a]->scenes[i].init();
-    }
+    adventure_init(adventures[a]);
   }
 }
 
 bool game_load_media(SDL_Renderer *renderer) {
   for (int a = 0; a < adventures_count; a++) {
-    // Each adventure loads from its own assets directory.
-    asset_set_root(adventures[a]->assets_root);
-    for (int i = 0; i < adventures[a]->scenes_length; i++) {
-      Scene scene = adventures[a]->scenes[i];
-      if (!scene.load_media(renderer)) {
-        return false;
-      }
-      if (!load_scene_images(scene, renderer)) {
-        return false;
-      }
-      if (!load_scene_chunks(scene)) {
-        return false;
-      }
+    if (!adventure_load_media(adventures[a], renderer)) {
+      return false;
     }
   }
   return true;
@@ -148,11 +135,6 @@ void game_render(SDL_Renderer *renderer) {
 
 void game_deinit(void) {
   for (int a = 0; a < adventures_count; a++) {
-    for (int i = 0; i < adventures[a]->scenes_length; i++) {
-      Scene scene = adventures[a]->scenes[i];
-      scene.deinit();
-      free_scene_images(scene);
-      free_scene_chunks(scene);
-    }
+    adventure_deinit(adventures[a]);
   }
 }
