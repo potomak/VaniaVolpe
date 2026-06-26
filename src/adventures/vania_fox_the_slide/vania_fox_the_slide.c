@@ -6,13 +6,12 @@
 
 #include "vania_fox_the_slide.h"
 
-#include "example.h"
 #include "intro.h"
 #include "outro.h"
 #include "playground.h"
 #include "playground_entrance.h"
 
-#define VANIA_FOX_THE_SLIDE_SCENES_LENGTH 5
+#define VANIA_FOX_THE_SLIDE_SCENES_LENGTH 4
 
 static Scene scenes[VANIA_FOX_THE_SLIDE_SCENES_LENGTH];
 
@@ -30,5 +29,4 @@ void vania_fox_the_slide_register(void) {
   scenes[PLAYGROUND_ENTRANCE] = playground_entrance_scene;
   scenes[PLAYGROUND] = playground_scene;
   scenes[OUTRO] = outro_scene;
-  scenes[EXAMPLE] = example_scene;
 }

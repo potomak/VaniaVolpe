@@ -45,9 +45,9 @@ target on every push to `main` and deploys it to GitHub Pages.
 - `src/adventures/<adventure>/` — **one self-contained adventure per directory**.
   E.g. `src/adventures/vania_fox_the_slide/`: the adventure module
   (`vania_fox_the_slide.{c,h}`), its scenes (`intro.c`, `playground_entrance.c`,
-  `playground.c`, `outro.c`, `example.c`), its actor (`fox.{c,h}` — the fox spec),
+  `playground.c`, `outro.c`), its actor (`fox.{c,h}` — the fox spec),
   and its `assets/` subtree (PNG / WAV / `.anim`: `intro/ fox/ playground/
-  playground_entrance/ outro/ example/ music/`).
+  playground_entrance/ outro/ music/`).
 - `include/` — bundled SDL_image / SDL_mixer forwarding headers (native build).
 - Docs: `ARCHITECTURE.md` (deep design), `MOVEMENT.md` (movement limitation +
   future pathfinding), `BACKLOG.md` (future tasks), `TERMINAL_PLAN.md`.
