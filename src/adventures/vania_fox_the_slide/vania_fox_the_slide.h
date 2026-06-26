@@ -15,7 +15,6 @@ enum vania_fox_the_slide_scene {
   PLAYGROUND_ENTRANCE,
   PLAYGROUND,
   OUTRO,
-  EXAMPLE,
 };
 
 extern Adventure vania_fox_the_slide;

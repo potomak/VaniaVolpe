@@ -29,7 +29,6 @@ GAME_SRCS = \
 	$(VFTS_DIR)/playground_entrance.c \
 	$(VFTS_DIR)/playground.c \
 	$(VFTS_DIR)/outro.c \
-	$(VFTS_DIR)/example.c \
 	$(GINA_DIR)/hen.c \
 	$(GINA_DIR)/gina_state.c \
 	$(GINA_DIR)/gina_hen_at_the_pool.c \
@@ -83,7 +82,6 @@ EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/intro \
              --preload-file $(VFTS_DIR)/assets/playground \
              --preload-file $(VFTS_DIR)/assets/playground_entrance \
              --preload-file $(VFTS_DIR)/assets/outro \
-             --preload-file $(VFTS_DIR)/assets/example \
              --preload-file $(VFTS_DIR)/assets/music \
              --preload-file $(GINA_DIR)/assets/hen \
              --preload-file $(GINA_DIR)/assets/pool \
