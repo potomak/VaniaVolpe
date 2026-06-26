@@ -29,7 +29,13 @@
     // cache-bust the wasm/data fetches so a redeploy never pairs a stale cached
     // file with a fresh one under these fixed names (which fails -> black screen).
     var CACHE_BUST = '__CACHE_BUST__';
+    // Language for the build: ?lang= overrides the browser language. Passed to
+    // the C entry point as --locale=, which maps it to a supported locale
+    // ("en-US" -> en_US) and defaults to it_IT.
+    var LANG_PREF =
+      new URLSearchParams(location.search).get('lang') || navigator.language || '';
     var Module = {
+      arguments: LANG_PREF ? ['--locale=' + LANG_PREF] : [],
       canvas: (function () { return document.getElementById('canvas'); })(),
       locateFile: function (path) {
         return /\.(wasm|data)$/.test(path) ? path + '?v=' + CACHE_BUST : path;

@@ -213,15 +213,26 @@ Thin wrapper providing `get_chunk_time_ms(Mix_Chunk*)` to calculate the playback
 
 ---
 
-### `asset.c` – Asset Path Resolution
+### `asset.c` – Asset Path & Locale Resolution
 
-Abstracts the difference between platforms:
+Resolves an `Asset{directory, filename}` to a path, layering a **locale** over an
+adventure's `assets_root`:
 
 ```c
-// iOS/tvOS: use filename only (bundle lookup)
-// macOS/Linux: build "directory/filename" path
-char *asset_path(const char *directory, const char *filename);
+const char *asset_path(Asset asset);    // <root>/<locale>/<dir>/<file>, falling
+                                        // back to <root>/common/<dir>/<file>
+void asset_set_root(const char *root);  // per-adventure assets dir
+void asset_set_locale(const char *l);   // "it_IT" (default/source), "en_US", …
 ```
+
+Localized assets (voice WAVs, text-bearing images like the intro/outro and the
+labelled buttons) live under `assets/<locale>/`; shared assets (sprites, music,
+SFX, drawn backgrounds) under `assets/common/`. The lookup tries the active
+locale, then `common` — strict, with no cross-language fallback, so each locale
+must provide all of its assets. On iOS the bundle is flat today (localization
+there is a follow-up). `detect_locale()` (`locale.c`) picks the locale from a
+`--locale=` argument, `$VANIA_LOCALE`, or `$LANG`; the web build forwards the
+browser language (or `?lang=`) via `Module.arguments`.
 
 ---
 

@@ -38,7 +38,7 @@ target on every push to `main` and deploys it to GitHub Pages.
   `main_terminal.c` + `terminal.c` (libcaca entry), `game.c` + `adventure.h`
   (adventure registry), `scene.{c,h}` (scene framework), `actor.{c,h}` (generic
   character engine), `image.c` (sprite/animation engine), `sound.c`, `asset.c`
-  (path resolution), `debug.c`.
+  (locale-aware path resolution) + `locale.c` (locale selection), `debug.c`.
   - `emscripten/compat/` — header shims so `<SDL2/...>` includes resolve under
     Emscripten; `emscripten/shell.html` — custom web page (canvas + iOS audio
     unlock).
@@ -46,8 +46,8 @@ target on every push to `main` and deploys it to GitHub Pages.
   E.g. `src/adventures/vania_fox_the_slide/`: the adventure module
   (`vania_fox_the_slide.{c,h}`), its scenes (`intro.c`, `playground_entrance.c`,
   `playground.c`, `outro.c`), its actor (`fox.{c,h}` — the fox spec),
-  and its `assets/` subtree (PNG / WAV / `.anim`: `intro/ fox/ playground/
-  playground_entrance/ outro/ music/`).
+  and its `assets/` subtree, split into `common/` (shared) and one dir per locale
+  (`it_IT/`, `en_US/`); each holds the scene subdirs (`intro/ playground/ …`).
 - `include/` — bundled SDL_image / SDL_mixer forwarding headers (native build).
 - Docs: `ARCHITECTURE.md` (deep design), `MOVEMENT.md` (movement limitation +
   future pathfinding), `BACKLOG.md` (future tasks), `TERMINAL_PLAN.md`.
@@ -64,11 +64,19 @@ Each adventure declares an `assets_root` so `asset_path()` resolves its assets.
 See `ARCHITECTURE.md` for the full design.
 
 ## Gotchas
-- **Assets in the web build** must live under one of the `--preload-file` dirs in
-  the `Makefile` (the adventure's `assets/` subdirs, e.g.
-  `src/adventures/vania_fox_the_slide/assets/{intro,fox,playground,…}`); files
+- **Assets are localized.** Each adventure's `assets/` splits into `common/`
+  (shared) and one dir per locale (`it_IT`, `en_US`, …). `asset_path()` resolves
+  `<assets_root>/<locale>/<dir>/<file>`, then `<assets_root>/common/<dir>/<file>`
+  — strict, no cross-language fallback, so **every locale must be complete**.
+  Voice/dialog WAVs and text-bearing images (intro/outro, labelled buttons) go
+  under the locale; sprites, music, SFX and plain backgrounds go under `common/`.
+  The active locale comes from `--locale=` / `$VANIA_LOCALE` / `$LANG` (web: the
+  browser language, or `?lang=`); default `it_IT`. `tools/gen_en_us_placeholders.sh`
+  scaffolds a complete `en_US` from `it_IT`.
+- **Assets in the web build** must live under a `--preload-file` dir in the
+  `Makefile` (now `assets/common` + each `assets/<locale>` per adventure); files
   elsewhere won't exist in the browser's virtual filesystem. An adventure's
-  `assets_root` (set in its module) must match where those assets are preloaded.
+  `assets_root` must match where those assets are preloaded.
 - **SDL init must be `SDL_INIT_VIDEO | SDL_INIT_AUDIO`**, not
   `SDL_INIT_EVERYTHING` — Emscripten's SDL2 port has no haptic/joystick support
   and `SDL_Init` fails otherwise (black screen).

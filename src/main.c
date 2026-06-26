@@ -4,11 +4,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "asset.h"
 #include "constants.h"
 #include "game.h"
 #include "gina_hen_at_the_pool.h"
 #include "hub.h"
 #include "image.h"
+#include "locale.h"
 #include "vania_fox_the_slide.h"
 
 #ifdef __EMSCRIPTEN__
@@ -148,6 +150,10 @@ int SDL_main(int argc, char *argv[]) {
   if (!game.is_running) {
     fprintf(stderr, "Failed to initialize window!\n");
   }
+
+  // Choose the language before any media is loaded (asset paths resolve through
+  // the active locale).
+  asset_set_locale(detect_locale(argc, argv));
 
   // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();

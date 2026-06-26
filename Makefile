@@ -22,6 +22,7 @@ GAME_SRCS = \
 	src/image.c \
 	src/sound.c \
 	src/asset.c \
+	src/locale.c \
 	src/debug.c \
 	$(VFTS_DIR)/fox.c \
 	$(VFTS_DIR)/vania_fox_the_slide.c \
@@ -77,18 +78,14 @@ EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
              -sUSE_SDL_MIXER=2
 EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./src/emscripten/compat \
              -I./src -I$(VFTS_DIR) -I$(GINA_DIR)
-EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/intro \
-             --preload-file $(VFTS_DIR)/assets/fox \
-             --preload-file $(VFTS_DIR)/assets/playground \
-             --preload-file $(VFTS_DIR)/assets/playground_entrance \
-             --preload-file $(VFTS_DIR)/assets/outro \
-             --preload-file $(VFTS_DIR)/assets/music \
-             --preload-file $(GINA_DIR)/assets/hen \
-             --preload-file $(GINA_DIR)/assets/pool \
-             --preload-file $(GINA_DIR)/assets/tree \
-             --preload-file $(GINA_DIR)/assets/vine \
-             --preload-file $(GINA_DIR)/assets/sunscreen \
-             --preload-file $(GINA_DIR)/assets/grapes
+# Preload each adventure's shared (common) layer plus every locale. Per-locale
+# web bundles (download only the chosen language) are a future optimisation.
+EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
+             --preload-file $(VFTS_DIR)/assets/it_IT \
+             --preload-file $(VFTS_DIR)/assets/en_US \
+             --preload-file $(GINA_DIR)/assets/common \
+             --preload-file $(GINA_DIR)/assets/it_IT \
+             --preload-file $(GINA_DIR)/assets/en_US
 EM_SHELL   = src/emscripten/shell.html
 EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 -lm $(EM_PRELOAD) \
              --shell-file $(EM_SHELL)
