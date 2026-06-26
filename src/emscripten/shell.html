@@ -37,8 +37,23 @@
       print: function (t) { console.log(t); },
       printErr: function (t) { console.error(t); },
       setStatus: function (t) {
-        if (statusEl) statusEl.textContent = t;
-        if (t === '') statusEl && (statusEl.style.display = 'none');
+        if (!statusEl) return;
+        if (t === '') {
+          statusEl.style.display = 'none';
+          return;
+        }
+        statusEl.style.display = '';
+        // Emscripten reports the data download as a raw byte counter,
+        // "Downloading data... (loaded/total)". Show a percentage instead: it
+        // reads the totals Emscripten already computes, so there is no hard-coded
+        // size to keep in sync — it updates itself as the assets change.
+        var m = t.match(/\((\d+)\/(\d+)\)/);
+        if (m && Number(m[2]) > 0) {
+          var pct = Math.min(100, Math.round((Number(m[1]) / Number(m[2])) * 100));
+          statusEl.textContent = 'Caricamento di Vania Volpe… ' + pct + '%';
+        } else {
+          statusEl.textContent = 'Caricamento di Vania Volpe…';
+        }
       },
       onRuntimeInitialized: function () { Module.setStatus(''); },
     };
