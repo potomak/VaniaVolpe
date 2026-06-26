@@ -81,7 +81,10 @@ See `ARCHITECTURE.md` for the full design.
   `emscripten/shell.html`. Don't remove it.
 
 ## Conventions
-- Work on a feature branch off `main` and open a PR — don't push to `main`
-  directly.
-- Keep changes scoped (one task per PR); see `BACKLOG.md` for the queued work.
+- Work on a feature branch off `main`; never push to `main` directly. When a task
+  is finished, **the agent opens the pull request** (the maintainer prefers not to
+  open PRs manually). The agent never merges — the maintainer reviews and merges.
+- Keep changes scoped (one task per PR). Prefer **independent PRs branched off
+  `main`** over stacked branches, so they can be merged in any order without
+  re-rebasing after each merge. See `BACKLOG.md` for the queued work.
 - Match the existing C style (C99, two-space indent, `lower_snake_case`).
