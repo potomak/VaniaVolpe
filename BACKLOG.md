@@ -113,6 +113,25 @@ methods (`adventure_init` / `adventure_load_media` / `adventure_deinit`, #16)
 already encapsulate load/teardown, so this is mostly a scheduling change in
 `game.c` plus a per-adventure "loaded" flag.
 
+### Task J — Internationalization follow-ups
+*The locale-aware asset layer shipped; these extend it.*
+
+Localization now works via `assets/common/` + `assets/<locale>/` and a strict
+`asset_path` (locale → common), with the locale chosen at startup
+(`--locale=` / `$VANIA_LOCALE` / `$LANG`; web: browser language or `?lang=`).
+Remaining work:
+- **In-hub language picker** + runtime switch — the hub lists languages and
+  re-loads media on change (ties into Task I: a locale switch is a media reload).
+- **iOS bundling** — drop the flat-filename shortcut in `asset_path` and bundle
+  `common/` + `<locale>/` as Xcode folder references so the same two-step lookup
+  works on iOS (extends Task G).
+- **Per-locale web bundles** — preload only the chosen language so a browser
+  downloads one locale, not all of them (pairs with Task I lazy-loading).
+- **Real translations** — replace the generated `en_US` placeholders (English
+  voice lines + intro/outro/button art); add further locales as needed.
+- **On-screen text** — if any is ever added, a per-locale key→string table is the
+  analog of this asset layer (the Vania script is in the adventure's `DIALOGS.md`).
+
 ## Suggested sequencing
 
 1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
@@ -124,6 +143,8 @@ already encapsulate load/teardown, so this is mostly a scheduling change in
 6. **H** — the hub + a second adventure, when ready to grow the collection.
 7. **I** — lazy-load adventures once the collection is large enough that loading
    everything up front is a felt cost (memory/startup, or web download size).
+8. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
+   real translations) as more languages are actually shipped.
 
 ## Asset checklist (blocks C2 and E; to be provided)
 

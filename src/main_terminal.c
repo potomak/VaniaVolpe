@@ -4,11 +4,13 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "asset.h"
 #include "constants.h"
 #include "game.h"
 #include "gina_hen_at_the_pool.h"
 #include "hub.h"
 #include "image.h"
+#include "locale.h"
 #include "terminal.h"
 #include "vania_fox_the_slide.h"
 
@@ -118,14 +120,14 @@ static void destroy_window(void) {
 }
 
 int main(int argc, char *argv[]) {
-  (void)argc;
-  (void)argv;
-
   game.is_running = init_window();
   if (!game.is_running) {
     fprintf(stderr, "Failed to initialize terminal window.\n");
     return 1;
   }
+
+  // Choose the language before any media is loaded.
+  asset_set_locale(detect_locale(argc, argv));
 
   // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();
