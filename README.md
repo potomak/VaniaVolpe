@@ -1,30 +1,50 @@
 # Vania Volpe
 
-https://giovanni.curlybrackets.it/sdl-adventure-game/
+A small collection of **Italian point-and-click adventure games for toddlers**,
+written in **C99 + SDL2**. One engine, two adventures, three ways to play.
 
-## Dialogs
+▶️ **Play in your browser:** https://potomak.github.io/VaniaVolpe/
 
-### Playground entrance
+## The adventures
 
-* Examining the gate without the key
-  * Il cancello è chiuso. Mi serve una chiave per aprirlo
-  * Proviamo a cercare la chiave nella buca della sabbia
+Both are launched from a simple in-app hub:
 
-* Examining the slide
-  * Che bello! Uno scivolo! Per raggiungerlo devo prima aprire il cancello
+- **Vania Volpe – Lo Scivolo** — Vania the fox fixes a slide at the playground:
+  find the key, trade acorns with the squirrel, then slide! The spoken script is
+  in [`src/adventures/vania_fox_the_slide/DIALOGS.md`](src/adventures/vania_fox_the_slide/DIALOGS.md).
+- **Gina la Gallina in Piscina** — Gina the hen at the pool: sunscreen and
+  goggles, a float the wind steals away, Carla the crow, and a grape-picking
+  trade to get it back. Currently uses placeholder art.
 
-### Playground
+Dialogue is **audio-only** — there is no on-screen text, so the games suit
+pre-readers.
 
-* Examining the slide
-  * Ecco lo scivolo! Ma, manca uno scalino! Come faccio a salire?
-  * Proviamo a chiedere al nostro amico scoiattolo, se può aiutarci ad aggiustare lo scivolo
+## Build & run
 
-* Examining the squirrel without acorns
-  * Ciao amico scoiattolo, mi puoi aiutare ad aggiustare lo scivolo? Mmm... Ha detto che vorrebbe delle ghiande
-  * Lo scoiattolo vuole delle ghiande in cambio dello scalino mancante. Proviamo a cercarle sull'altro albero
+Needs the SDL2 / SDL2_image / SDL2_mixer dev libraries (resolved via
+`pkg-config`). Build with `make`:
 
-* After fixing the slide
-  * Evviva! Adesso che lo scivolo è riparato posso giocare!
+| Command | Output | Notes |
+| --- | --- | --- |
+| `make` | `./vaniavolpe` | desktop SDL window |
+| `make terminal` | `./vaniavolpe_terminal` | libcaca renderer, no display server needed (also needs `caca`) |
+| `make web` | `build/web/index.{html,js,wasm,data}` | WebAssembly; run after `source /path/to/emsdk/emsdk_env.sh` |
 
-* Sliding down the slide
-  * Ehhhh! Che divertente! Ancora!
+`make web` is what CI builds and deploys to GitHub Pages on every push to `main`.
+
+## Layout
+
+- `src/` — the shared engine / app shell: game loop, scene framework, the generic
+  `Actor`, image/sound/asset handling, and the adventure hub.
+- `src/adventures/<name>/` — one self-contained adventure per directory (its
+  scenes, actor spec, module, and `assets/`).
+- `include/` — bundled SDL_image / SDL_mixer forwarding headers for the native
+  build.
+
+## More docs
+
+- [`CLAUDE.md`](CLAUDE.md) — build/run, repo map and conventions (for contributors
+  and AI agents).
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — the engine design in depth.
+- [`BACKLOG.md`](BACKLOG.md) — queued work.
+- [`MOVEMENT.md`](MOVEMENT.md), [`TERMINAL_PLAN.md`](TERMINAL_PLAN.md) — focused notes.
