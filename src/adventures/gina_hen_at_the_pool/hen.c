@@ -6,9 +6,9 @@
 #include "hen.h"
 
 static const ActorAnimSpec HEN_ANIMS[] = {
-    {IDLE, "idle.png", "idle.anim", 1, LOOP},
-    {WALKING, "walking.png", "walking.anim", 1, LOOP},
-    {TALKING, "talking.png", "talking.anim", 1, LOOP},
+    {IDLE, "idle.png", "idle.anim", 2, LOOP},
+    {WALKING, "walking.png", "walking.anim", 4, LOOP},
+    {TALKING, "talking.png", "talking.anim", 3, LOOP},
 };
 
 const ActorSpec HEN_SPEC = {
