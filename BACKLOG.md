@@ -293,32 +293,100 @@ classic "second texture loads the wrong file" bug waiting to happen.
 - Log once when *neither* the locale nor the common file exists, so a typo'd filename
   surfaces here instead of as a cryptic downstream "IMG_Load: Couldn't open …".
 
+### Task R — Per-actor walk-completion callback
+*Code-only; real design bug, from the `actor.c` review.*
+
+`on_end_walking` is a single file-`static` callback (`actor.c:17`) shared by every
+`Actor`, set globally in `actor_walk_to` (`actor.c:195`). With the engine now generic
+over multiple actors (fox + hen), a second `actor_walk_to` overwrites the first's
+callback, so when actor A arrives it can fire actor B's `on_end`. Not triggered today
+(only one actor is active at a time — one per adventure, one adventure active), but it
+violates the multi-actor contract the abstraction promises.
+
+- Move the callback (and an optional `void *userdata`) onto the `Actor`; have
+  `actor_walk_to(actor, target, cb, userdata)` store it per-instance.
+- Clear it *before* invoking it on arrival (`actor.c:131`) so a callback that starts a
+  new walk isn't immediately clobbered.
+- Same pattern lives in `image.c` (`on_animation_playback_end`, set by
+  `play_animation`) — give animations a per-instance end callback too, or document why
+  the global is safe.
+
+### Task S — Actor audio safety (channels & lifetime)
+*Code-only; includes two real crashes, from the `actor.c` review.*
+
+- **Halt-all bug:** on arrival `actor_update` calls
+  `Mix_HaltChannel(actor->move_sound_channel)` (`actor.c:130`), but that channel is
+  `-1` when the actor has no move sound or when `Mix_PlayChannel` failed (e.g. all
+  channels busy under click-spam) — and `Mix_HaltChannel(-1)` halts **every** channel,
+  killing dialogue and SFX. Guard with `if (actor->move_sound_channel >= 0)`.
+- **Use-after-free:** `actor_free` (`actor.c:183`) calls `Mix_FreeChunk(move_sound)`
+  without halting its channel first — a use-after-free if it's still playing (notably
+  on Emscripten's audio thread). Halt the channel, then free.
+- **NULL dialog crash:** `actor_talk(actor, NULL)` (`actor.c:215`) flows into
+  `get_chunk_time_ms`, which dereferences `chunk->alen` → crash. Guard `dialog != NULL`.
+- **Voice channel tracking:** store the dialogue channel (`actor->voice_channel`) and
+  play voice on the channel reserved by Task K, so a new line/click can interrupt the
+  current one instead of overlapping or being dropped.
+- **Tidy:** use `Mix_VolumeChunk(actor->move_sound, vol)` instead of the deprecated
+  `move_sound->volume =` (`actor.c:102`; assert 0–128), and replace the stray
+  `fprintf(stdout, "Sound duration: …")` (`actor.c:221`) with `SDL_Log` (or drop it).
+
+### Task T — Actor state-machine hardening
+*Code-only; small correctness/robustness nits, from the `actor.c` review.*
+
+- **Divide-by-zero:** tapping exactly on the actor makes `dist == 0` in
+  `actor_walk_to` (`actor.c:211`), so `direction` becomes NaN. It self-corrects next
+  frame (the `close_enough` test catches `dx==dy==0`), but relying on NaN is fragile —
+  guard `dist == 0` (skip the walk / zero the direction). Name the `2 px` arrival
+  window `ACTOR_ARRIVE_EPSILON`, and use `dx*dx` instead of `powf(dx, 2)` for
+  consistency with the overshoot test.
+- **Time base:** `actor_update` reads `float ticks = SDL_GetTicks()` (`actor.c:111`)
+  and compares against `Uint32` talk timing — use `Uint32` throughout so it stays
+  precise and wraps cleanly (same fix family as Task L1).
+- **Consistency:** `actor_play_state` sets `state` even when the animation is NULL
+  (`actor.c:230`), unlike `actor_talk`/`actor_walk_to` which refuse when busy — pick
+  one policy (e.g. return `bool` success).
+- **Compiler help:** drop the `case ACTOR_STATE_COUNT` sentinel from the `actor_update`
+  switch (`actor.c:117`) and build with `-Wswitch` so a newly added `ActorState` that
+  isn't handled is flagged.
+- **Allocation safety:** `make_actor` (`actor.c:47`) `malloc`s with no NULL check and
+  no cleanup if a later animation load fails — add the check. And add a one-line
+  comment that an actor's animations are per-instance (cloned in `make_actor`), so the
+  next contributor knows `actor_face` flipping "all animations" won't turn both actors.
+
 ## Suggested sequencing
 
 1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
 2. **M** — fix the logical-coordinate input bug first; it's a live bug on
-   resized/Retina/web windows and underpins every hit-test.
-3. **K** — reserve a dialogue channel; small, high-value (stops SFX cutting voice
+   resized/Retina/web windows and underpins every hit-test (incl. `actor_walk_to`
+   targets).
+3. **S** — actor audio safety: two real crashes (halt-all-channels, free-while-playing)
+   plus the NULL-dialog guard; pairs with **K**.
+4. **K** — reserve a dialogue channel; small, high-value (stops SFX cutting voice
    lines), no assets needed.
-4. **N** — unify the adventure/scene transitions (fixes the activation-order bug and
+5. **R** — per-actor walk callback; do with the engine-correctness cluster before a
+   second on-screen actor makes the shared callback bite.
+6. **N** — unify the adventure/scene transitions (fixes the activation-order bug and
    drops the main.c hack); pairs well with **L**.
-5. **P** — give `asset_path` a caller-owned buffer before the asset set grows and a
+7. **P** — give `asset_path` a caller-owned buffer before the asset set grows and a
    shared filename across two roots causes a silent wrong-asset load.
-6. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
+8. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
    as the `.wav`s arrive.
-7. **E** — engine wiring can be written behind the new states; lands with the art.
-8. **D** — optional polish.
-9. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
+9. **E** — engine wiring can be written behind the new states; lands with the art.
+10. **D** — optional polish.
+11. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
    main.c work).
-10. **Q** — portable single-hit asset resolution; do with **L** or before a
+12. **T** — actor state-machine hardening (divide-by-zero, `Uint32` time, `-Wswitch`,
+   malloc check); low-risk, bundle with **L**/**Q**.
+13. **Q** — portable single-hit asset resolution; do with **L** or before a
    Windows/iOS port (drops `access()`/`<unistd.h>`, adds missing-asset logging).
-11. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
+14. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
    alongside **M**/**G**.
-12. **F** — only if the walk-through becomes a real problem.
-13. **H** — the hub + a second adventure, when ready to grow the collection.
-14. **I** — lazy-load adventures once the collection is large enough that loading
+15. **F** — only if the walk-through becomes a real problem.
+16. **H** — the hub + a second adventure, when ready to grow the collection.
+17. **I** — lazy-load adventures once the collection is large enough that loading
    everything up front is a felt cost (memory/startup, or web download size).
-15. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
+18. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
    real translations) as more languages are actually shipped.
 
 ## Asset checklist (blocks C2 and E; to be provided)
