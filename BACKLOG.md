@@ -400,6 +400,45 @@ Add the three bounds checks + EOF flush, or replace the hand-rolled scan with
 `sscanf("%d,%d,%d,%d", …)` / `strtol` per line (handles whitespace and CRLF, no manual
 buffer) — the files are tiny.
 
+### Task W — Fix get_chunk_time_ms overflow and robustness
+*Code-only; from the `sound.c` review.*
+
+`get_chunk_time_ms` (`src/sound.c`) drives talk-animation length from the actual WAV
+duration — exactly right for lip-syncing the Italian voiceover — but the final
+`(frames * 1000) / freq` is all `Uint32`. For a long clip (e.g. ~89 s+ at 48 kHz),
+`frames * 1000` exceeds 2³² and wraps, so the talk animation ends mid-narration. Today's
+fox/hen lines are 2–3 s so it's latent, but a story scene with a longer narration would
+hit it every time.
+
+- Do the millisecond math in 64-bit: `(Uint64)frames * 1000 / freq`.
+- Guard `chunk == NULL` (return 0) so a stray `actor_talk(actor, NULL)` can't deref
+  `chunk->alen` (defense in depth; the call-site guard is Task S), and guard against
+  `freq`/`chans` being 0.
+- When `Mix_QuerySpec` fails (audio device not open) it returns 0, which makes the talk
+  animation end instantly — `SDL_Log` it so that reads as "audio not open" instead of
+  "talk animation is broken".
+
+### Task X — Scene asset lifecycle: pass `Scene *`, unwind partial loads, null freed chunks
+*Code-only; a leak + a dangling-pointer bug, from the `scene.c` review.*
+
+`load_scene_images`/`load_scene_chunks`/`free_scene_images`/`free_scene_chunks`
+(`scene.c:77`–`114`) all take `Scene` **by value**. It works only because `images`/
+`chunks` are pointers (the writes go through the copied pointer), but it's misleading,
+copies the whole struct per call, and means `free_scene_chunks` can't null the freed
+`chunk` pointers — so they dangle (`scene.c:112`).
+
+- Take `Scene *scene` in all four; after `Mix_FreeChunk(scene->chunks[i].chunk)` set
+  `scene->chunks[i].chunk = NULL` (the image side already nulls the texture in
+  `free_image_texture`).
+- **Unwind partial loads:** if image/chunk *i* fails to load, items `0..i-1` stay
+  loaded and the caller gets `false` with no handle to free them. Free what was loaded
+  before returning `false` (or have the caller call the matching `free_scene_*`).
+- Minor pathing hardening in `nearest_walkable_point` (`scene.c:21`): the `long`
+  distance math is fine at 800×600 but use a fixed-width `int64_t` (or clamp) to keep
+  static analyzers quiet; and document that `non_walkable` is a *single* exclusion
+  zone — if a scene (e.g. Gina's pool) needs more, take `const SDL_Rect *blocked, int
+  count` (a stepping stone toward the full pathfinding in Task F).
+
 ## Suggested sequencing
 
 1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
@@ -418,25 +457,29 @@ buffer) — the files are tiny.
    drops the main.c hack); pairs well with **L**.
 8. **P** — give `asset_path` a caller-owned buffer before the asset set grows and a
    shared filename across two roots causes a silent wrong-asset load.
-9. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
+9. **X** — pass `Scene *` + unwind partial scene loads + null freed chunks; fixes a
+   leak and dangling pointers, easy alongside **N**.
+10. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
    as the `.wav`s arrive.
-10. **E** — engine wiring can be written behind the new states; lands with the art.
-11. **D** — optional polish.
-12. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
+11. **E** — engine wiring can be written behind the new states; lands with the art.
+12. **D** — optional polish.
+13. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
    main.c work).
-13. **T** — actor state-machine hardening (divide-by-zero, `Uint32` time, `-Wswitch`,
+14. **T** — actor state-machine hardening (divide-by-zero, `Uint32` time, `-Wswitch`,
    malloc check); low-risk, bundle with **L**/**Q**.
-14. **V** — harden the `.anim` CSV parser (overflow guards + EOF flush); cheap, bundle
+15. **V** — harden the `.anim` CSV parser (overflow guards + EOF flush); cheap, bundle
    with the **T** hardening pass.
-15. **Q** — portable single-hit asset resolution; do with **L** or before a
+16. **W** — 64-bit fix for `get_chunk_time_ms` (talk duration wraps past ~89 s);
+   tiny, do with the **T**/**V** hardening pass.
+17. **Q** — portable single-hit asset resolution; do with **L** or before a
    Windows/iOS port (drops `access()`/`<unistd.h>`, adds missing-asset logging).
-16. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
+18. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
    alongside **M**/**G**.
-17. **F** — only if the walk-through becomes a real problem.
-18. **H** — the hub + a second adventure, when ready to grow the collection.
-19. **I** — lazy-load adventures once the collection is large enough that loading
+19. **F** — only if the walk-through becomes a real problem.
+20. **H** — the hub + a second adventure, when ready to grow the collection.
+21. **I** — lazy-load adventures once the collection is large enough that loading
    everything up front is a felt cost (memory/startup, or web download size).
-20. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
+22. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
    real translations) as more languages are actually shipped.
 
 ## Asset checklist (blocks C2 and E; to be provided)
