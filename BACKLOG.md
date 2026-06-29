@@ -193,22 +193,89 @@ code exists):
   unlock (AudioContext resume on first gesture) is already handled in
   `src/emscripten/shell.html`; keep as a watch-item, not a new task.
 
+### Task M — Map input to logical render coordinates
+*Code-only; real bug, surfaced by a `game.c` review.*
+
+Hit-testing assumes window pixels equal logical pixels, but they don't: the window
+is created `RESIZABLE | ALLOW_HIGHDPI` (`src/main.c`) and the renderer uses
+`SDL_RenderSetLogicalSize(renderer, 800, 600)`, while every hit-test reads raw
+`event->button.x/y` / `event->motion.x/y` and compares against logical-space rects
+(`HUB_BUTTON` in `game.c:102`; the scene hotspots/POIs in `hub.c`, `playground.c`,
+`playground_entrance.c`, `pool.c`, …, and `debug.c`). So on a resized or
+Retina/HiDPI window — and the scaled web canvas — clicks land at the wrong spot
+(e.g. the top-right back button misses).
+
+- Add one helper that converts an event's coordinates to logical space via
+  `SDL_RenderWindowToLogical(renderer, wx, wy, &lx, &ly)`, and use it everywhere a
+  scene/engine reads pointer coordinates. The renderer must be reachable where input
+  is processed (today `game_process_input`/scene `process_input` don't receive it —
+  thread it through, or expose the active renderer).
+- Fix the engine `HUB_BUTTON` test and the per-scene hotspot tests through the same
+  helper so there's a single conversion point. (`actor.c` movement/click handling
+  likely has the same assumption — audit it too.)
+
+### Task N — Unify adventure/scene transitions and harden the scene router
+*Code-only; correctness + maintainability, from the `game.c` review.*
+
+- **Activation-order bug:** `set_active_scene` (`game.c:63`) calls the new scene's
+  `on_scene_active()` *before* assigning `game.current_scene = scene`, so any
+  `on_scene_active` that reads `current_scene` sees the *old* scene. Set the field
+  first, then call `on_scene_active()`.
+- **One transition function:** `set_current_adventure` and `switch_to_adventure`
+  differ only by whether they run scene inactive/active callbacks, which is exactly
+  why `main.c` needs the `set_active_scene(hub.entry_scene)` hack at startup. Merge
+  them into a single `adventure_switch_to()` that always does old-scene-inactive →
+  set new adventure/scene → adventure `on_enter` → new-scene-active. Removes the
+  hack (supersedes the `set_active_scene` half of Task L5).
+- **Bounds/NULL-safe router:** `scene_instance` (`game.c:58`) returns a `Scene` by
+  value with no bounds check and dereferences `game.current_adventure` unconditionally.
+  Return a `const Scene *`, assert `current_adventure != NULL` and
+  `0 <= scene < scenes_count` (needs a scene count on `Adventure`), so a bad index or
+  pre-init call fails loudly instead of corrupting/crashing.
+- **Pass the hub explicitly** instead of inferring it as `registered[0]` in
+  `register_adventures`, and either copy the registry array the engine keeps or
+  document that the caller must keep it alive for the whole run (today it survives
+  only because `main` passes a `static` array).
+
+### Task O — Toddler-friendly hub button and touch input
+*Code-only; UX for the target age, some overlap with iOS Task G.*
+
+- The back-to-hub `HUB_BUTTON` is 40×40 logical px — below Apple's 44pt minimum and
+  small for a 2-year-old. Bump to ≥64×64 with a comfortable margin (a
+  `#define HUB_BUTTON_SIZE` rather than the inline literal).
+- Ignore key auto-repeat on the debug toggle (`if (event->key.repeat) break;` in
+  `game_process_input`) so holding **D** doesn't strobe debug mode at frame rate.
+- Handle `SDL_FINGERDOWN`/touch explicitly for iPad (toddlers tap with fingers).
+  Mouse events are synthesized from touch on web/mobile so it works today, but
+  explicit touch (and ignoring the synthesized duplicate) is cleaner — pairs with
+  the iOS sync (Task G) and the coordinate fix (Task M).
+
+*Deferred from the same review:* rename `is_running`/`is_debugging` and move `Game`
+into an `AppContext` — cosmetic, folded into the already-deferred `AppContext` note
+under Task L; not worth a standalone change now.
+
 ## Suggested sequencing
 
 1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
-2. **K** — reserve a dialogue channel; small, high-value (stops SFX cutting voice
+2. **M** — fix the logical-coordinate input bug first; it's a live bug on
+   resized/Retina/web windows and underpins every hit-test.
+3. **K** — reserve a dialogue channel; small, high-value (stops SFX cutting voice
    lines), no assets needed.
-3. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
+4. **N** — unify the adventure/scene transitions (fixes the activation-order bug and
+   drops the main.c hack); pairs well with **L**.
+5. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
    as the `.wav`s arrive.
-4. **E** — engine wiring can be written behind the new states; lands with the art.
-5. **D** — optional polish.
-6. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
+6. **E** — engine wiring can be written behind the new states; lands with the art.
+7. **D** — optional polish.
+8. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
    main.c work).
-7. **F** — only if the walk-through becomes a real problem.
-8. **H** — the hub + a second adventure, when ready to grow the collection.
-9. **I** — lazy-load adventures once the collection is large enough that loading
+9. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
+   alongside **M**/**G**.
+10. **F** — only if the walk-through becomes a real problem.
+11. **H** — the hub + a second adventure, when ready to grow the collection.
+12. **I** — lazy-load adventures once the collection is large enough that loading
    everything up front is a felt cost (memory/startup, or web download size).
-10. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
+13. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
    real translations) as more languages are actually shipped.
 
 ## Asset checklist (blocks C2 and E; to be provided)
