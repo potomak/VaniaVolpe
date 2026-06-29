@@ -132,18 +132,83 @@ Remaining work:
 - **On-screen text** — if any is ever added, a per-locale key→string table is the
   analog of this asset layer (the Vania script is in the adventure's `DIALOGS.md`).
 
+### Task K — Reserve a mixer channel for dialogue
+*Code-only; surfaced by a `main.c` review.*
+
+Audio is the entire UX in this no-text game, but voice and SFX share one
+unreserved channel pool: `actor_talk` (`src/actor.c`) and every sound effect play
+with `Mix_PlayChannel(-1, …)` (first free channel), and the mixer opens with the
+default 8 channels. So a toddler click-spamming SFX can steal the channel mid-line
+and cut the fox/hen off — bad for a pre-reader who relies on the voice.
+
+- In SDL init (`init_window`, `src/main.c`, mirrored in `src/main_terminal.c`):
+  `Mix_AllocateChannels(16)` then `Mix_ReserveChannels(1)` to reserve channel 0.
+- Play dialogue on the reserved channel in `actor_talk` (`src/actor.c`) —
+  `Mix_PlayChannel(0, dialog, 0)` — so SFX (still `-1`, i.e. channels ≥ 1) can't
+  evict it. Optionally halt channel 0 before a new line so dialogue can't overlap
+  itself.
+- Drive-by: name the `Mix_VolumeMusic(30)` magic number with a constant in
+  `constants.h`. (`AUDIO_CHUNK_SIZE` is already `#define`d to 2048 — fine.)
+
+### Task L — main.c app-lifecycle hardening
+*Code-only; small, low-risk correctness fixes from the same review.*
+
+A cluster of fixes in `src/main.c` (mirror to `src/main_terminal.c` where the same
+code exists):
+
+- **L1 — delta-time first frame:** `last_frame_time` starts at `0`, so frame 1 gets
+  a delta of "time since SDL init" (often 0.1–2 s) and actors teleport. Set
+  `last_frame_time = SDL_GetTicks()` right before entering the loop (as
+  `main_terminal.c` already does), read `SDL_GetTicks()` once per `update()`, and
+  store ticks as `Uint32` (wraps cleanly) instead of `int`.
+- **L2 — shutdown order + leak:** tear down in reverse-init order
+  (`Mix_CloseAudio()` → `Mix_Quit()` → `IMG_Quit()` → renderer/window →
+  `SDL_Quit()`); today `destroy_window()` calls `SDL_Quit()` *before*
+  `destroy_image()`/`destroy_sound()`, and `Mix_CloseAudio()` (matching
+  `Mix_OpenAudio`) is missing entirely.
+- **L3 — diagnostics + renderer fallback:** include `SDL_GetError()` /
+  `IMG_GetError()` / `Mix_GetError()` in every failure message (most are generic,
+  e.g. "Error creating SDL Window."), and fall back to `SDL_RENDERER_SOFTWARE` when
+  `ACCELERATED | PRESENTVSYNC` fails, to avoid a black screen on software/web
+  contexts.
+- **L4 — small consistency:** `init_window` is declared `int` but returns
+  `true`/`false` — return `bool`; unify logging on `SDL_Log*` (drop the mixed
+  `fprintf(stderr, …)`) so messages reach the browser console / logcat / stderr.
+- **L5 — registration single source of truth + drop the scene hack:** the hub
+  `content[]` (2 adventures) and engine `all[]` (3, incl. the hub) duplicate the
+  adventure list in `SDL_main`, so a new adventure must be added in both places (and
+  can be forgotten). Derive both from one list. And make scene/adventure activation
+  run the first scene's enter callback itself, so the `// Hack to execute lifecycle
+  callbacks for the first scene` (`set_active_scene(hub.entry_scene)`) is no longer
+  needed in `main` — otherwise every adventure author copies the hack.
+
+*Evaluated and deferred (from the same review, intentionally not promoted):*
+- **Bundle the globals (`window`/`renderer`/`last_frame_time`) into an `AppContext`:**
+  low ROI now — `renderer` is already threaded as a parameter and there are only
+  three globals (duplicated across the two `main*.c`). Reconsider when a third
+  backend lands (ties to the terminal split).
+- **Drop the iOS `SDL_main` / `SDL_UIKitRunApp` block:** intentional and correct;
+  the iOS/Mac project isn't even synced yet (Task G) — leave as-is.
+- **Emscripten "tap to start" + `Mix_ResumeAudio` overlay:** the browser audio
+  unlock (AudioContext resume on first gesture) is already handled in
+  `src/emscripten/shell.html`; keep as a watch-item, not a new task.
+
 ## Suggested sequencing
 
 1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
-2. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
+2. **K** — reserve a dialogue channel; small, high-value (stops SFX cutting voice
+   lines), no assets needed.
+3. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
    as the `.wav`s arrive.
-3. **E** — engine wiring can be written behind the new states; lands with the art.
-4. **D** — optional polish.
-5. **F** — only if the walk-through becomes a real problem.
-6. **H** — the hub + a second adventure, when ready to grow the collection.
-7. **I** — lazy-load adventures once the collection is large enough that loading
+4. **E** — engine wiring can be written behind the new states; lands with the art.
+5. **D** — optional polish.
+6. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
+   main.c work).
+7. **F** — only if the walk-through becomes a real problem.
+8. **H** — the hub + a second adventure, when ready to grow the collection.
+9. **I** — lazy-load adventures once the collection is large enough that loading
    everything up front is a felt cost (memory/startup, or web download size).
-8. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
+10. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
    real translations) as more languages are actually shipped.
 
 ## Asset checklist (blocks C2 and E; to be provided)
