@@ -95,7 +95,8 @@ WEB_ASSETS = $(shell find $(VFTS_DIR)/assets $(GINA_DIR)/assets -type f)
 
 web: $(WEB_TARGET)
 
-$(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS)
+$(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
+               src/emscripten/catalog.html tools/gen_asset_catalog.py
 	mkdir -p $(WEB_DIR)
 	$(EMCC) $(EM_CFLAGS) $(SRCS) $(EM_LDFLAGS) -o $(WEB_TARGET)
 	# Stamp the per-build id: replace the shell's __CACHE_BUST__ placeholder (used
@@ -104,6 +105,11 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS)
 	# redeploy can pair a cached old file with a fresh sibling -> failed load /
 	# black screen. Stamping keeps every fetch from one deploy consistent.
 	sed -i 's|__CACHE_BUST__|$(WEB_CACHE_BUST)|g; s|src="index.js"|src="index.js?v=$(WEB_CACHE_BUST)"|g' $(WEB_TARGET)
+	# Asset catalog reference page (build/web/catalog.html): copy the raw assets
+	# into the published site (the game bundles them into the opaque index.data,
+	# which the catalog can't read) and emit catalog.json describing them.
+	python3 tools/gen_asset_catalog.py --out $(WEB_DIR)
+	cp src/emscripten/catalog.html $(WEB_DIR)/catalog.html
 
 # ── formatting (clang-format, LLVM style; see .clang-format) ──────────────────
 

@@ -19,7 +19,12 @@ All source is in `src/`. Build via `make`:
   server needed). Also needs `caca`.
 - `make web` — WebAssembly → `build/web/index.{html,js,wasm,data}`. Needs the
   **Emscripten SDK** (`emcc` on `PATH`); run `make web` after
-  `source /path/to/emsdk/emsdk_env.sh`.
+  `source /path/to/emsdk/emsdk_env.sh`. Also emits the **asset catalog** —
+  `build/web/catalog.html` + `catalog.json` + a raw copy of every asset under
+  `build/web/assets/` — a reference/QA page (deployed to
+  `…/VaniaVolpe/catalog.html`) that lists assets per adventure/locale, plays
+  audio and animations, and flags any locale missing a file the reference locale
+  (`it_IT`) has. Built by `tools/gen_asset_catalog.py` + `src/emscripten/catalog.html`.
 - `make clean` — removes objects, binaries, and `build/`.
 
 `build/` is git-ignored; never commit generated web artifacts.
