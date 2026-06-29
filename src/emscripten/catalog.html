@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vania Volpe — Asset Catalog</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #fff; --ink: #1d2530; --muted: #6b7685;
+    --line: #e2e6ec; --accent: #7a3cc0; --ok: #1e8e3e; --warn: #b06000;
+    --err: #c5221f; --chip: #eef0f4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  a { color: var(--accent); }
+  header {
+    background: var(--panel); border-bottom: 1px solid var(--line);
+    padding: 18px 22px; position: sticky; top: 0; z-index: 5;
+  }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header .meta { color: var(--muted); font-size: 13px; }
+  .controls { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+  .controls input[type=search] {
+    padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px;
+    font-size: 14px; min-width: 220px;
+  }
+  .controls label { font-size: 13px; color: var(--muted); cursor: pointer; user-select: none; }
+  nav.advnav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  nav.advnav a {
+    text-decoration: none; background: var(--chip); padding: 5px 11px;
+    border-radius: 999px; font-size: 13px; color: var(--ink);
+  }
+  main { padding: 22px; max-width: 1200px; margin: 0 auto; }
+  section.adventure { margin-bottom: 40px; }
+  section.adventure > h2 { margin: 0 0 2px; font-size: 22px; }
+  .advsub { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+  .chip {
+    background: var(--chip); border-radius: 6px; padding: 3px 9px; font-size: 12px;
+    color: var(--ink);
+  }
+  .layer { margin: 18px 0; }
+  .layer > h3 {
+    font-size: 16px; margin: 0 0 8px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--line);
+  }
+  .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+  .badge.ok { background: #e6f4ea; color: var(--ok); }
+  .badge.err { background: #fce8e6; color: var(--err); }
+  .badge.ref { background: #efe6fb; color: var(--accent); }
+  .missing-box {
+    background: #fce8e6; border: 1px solid #f3c0bd; color: #7a1512;
+    border-radius: 8px; padding: 8px 12px; margin: 8px 0; font-size: 13px;
+  }
+  .missing-box ul { margin: 6px 0 0; padding-left: 18px; }
+  .scene { margin: 14px 0; }
+  .scene > h4 { font-size: 14px; margin: 0 0 8px; color: var(--muted); text-transform: none; }
+  .grid {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .card .cname { font-weight: 600; font-size: 13px; word-break: break-all; }
+  .card .ctype {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--muted);
+  }
+  .card .cmeta { font-size: 12px; color: var(--muted); }
+  .preview {
+    background: repeating-conic-gradient(#e9ecf1 0% 25%, #fff 0% 50%) 50% / 16px 16px;
+    border-radius: 7px; min-height: 90px; display: flex; align-items: center;
+    justify-content: center; overflow: hidden; padding: 6px;
+  }
+  .preview img { max-width: 100%; max-height: 180px; display: block; image-rendering: auto; }
+  .preview canvas { image-rendering: pixelated; }
+  .frames { display: flex; flex-wrap: wrap; gap: 4px; }
+  .frames .fr {
+    background: repeating-conic-gradient(#e9ecf1 0% 25%, #fff 0% 50%) 50% / 10px 10px;
+    border: 1px solid var(--line); border-radius: 4px; padding: 2px;
+  }
+  .frames .fr canvas { display: block; image-rendering: pixelated; }
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  button.mini {
+    font-size: 12px; padding: 3px 9px; border: 1px solid var(--line);
+    background: var(--chip); border-radius: 6px; cursor: pointer;
+  }
+  audio { width: 100%; }
+  details { font-size: 12px; }
+  details summary { cursor: pointer; color: var(--muted); }
+  details pre { background: #f0f2f5; padding: 8px; border-radius: 6px; overflow: auto; }
+  .hidden { display: none !important; }
+  #error { color: var(--err); padding: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Vania Volpe — Asset Catalog</h1>
+  <div class="meta" id="summary">Loading…</div>
+  <div class="controls">
+    <input type="search" id="search" placeholder="Filter by name or scene…" autocomplete="off">
+    <label><input type="checkbox" class="tf" value="animation" checked> animations</label>
+    <label><input type="checkbox" class="tf" value="audio" checked> audio</label>
+    <label><input type="checkbox" class="tf" value="image" checked> images</label>
+    <label><input type="checkbox" class="tf" value="metadata" checked> metadata</label>
+    <a href="./" style="margin-left:auto">↩ back to the game</a>
+  </div>
+  <nav class="advnav" id="advnav"></nav>
+</header>
+<main id="root"></main>
+<div id="error" class="hidden"></div>
+
+<script>
+"use strict";
+const FPS_MS = 83; // engine plays animations at 12 FPS (see src/image.c)
+const CYAN = [0, 255, 255]; // engine color-key (transparent); harmless for alpha PNGs
+
+// ── shared animation driver: one rAF loop ticks every visible sprite canvas ──
+const animators = []; // {canvas, ctx, src, frames, w, h, playing, start}
+function tick(now) {
+  for (const a of animators) {
+    if (!a.ready || !a.playing) continue;
+    const i = Math.floor((now - a.start) / FPS_MS) % a.frames.length;
+    const f = a.frames[i];
+    a.ctx.clearRect(0, 0, a.canvas.width, a.canvas.height);
+    a.ctx.drawImage(a.src, f.x, f.y, f.w, f.h, 0, 0, a.canvas.width, a.canvas.height);
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// Load a sprite sheet and color-key cyan to transparent once (returns a canvas).
+function loadKeyed(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const cx = c.getContext("2d");
+      cx.drawImage(img, 0, 0);
+      try {
+        const data = cx.getImageData(0, 0, c.width, c.height);
+        const px = data.data;
+        for (let i = 0; i < px.length; i += 4) {
+          if (px[i] === CYAN[0] && px[i + 1] === CYAN[1] && px[i + 2] === CYAN[2]) px[i + 3] = 0;
+        }
+        cx.putImageData(data, 0, 0);
+      } catch (e) { /* tainted canvas shouldn't happen for same-origin */ }
+      resolve(c);
+    };
+    img.onerror = () => reject(new Error("failed to load " + url));
+    img.src = url;
+  });
+}
+
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+};
+const fmtBytes = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + " MB"
+  : b >= 1024 ? (b / 1024).toFixed(1) + " KB" : b + " B";
+
+function animationCard(a) {
+  const card = el("div", "card");
+  card.dataset.type = "animation";
+  card.dataset.search = (a.name + " " + a.path).toLowerCase();
+  card.append(el("div", "cname", a.name));
+  card.append(el("div", "ctype", "animation · " + a.frame_count + " frames"));
+
+  const preview = el("div", "preview");
+  const fw = a.frames.length ? a.frames[0].w : (a.width || 1);
+  const fh = a.frames.length ? a.frames[0].h : (a.height || 1);
+  const scale = Math.min(2, Math.max(1, Math.floor(150 / Math.max(fw, fh)) || 1));
+  const canvas = el("canvas");
+  canvas.width = fw; canvas.height = fh;
+  canvas.style.width = (fw * scale) + "px"; canvas.style.height = (fh * scale) + "px";
+  preview.append(canvas);
+  card.append(preview);
+
+  const animator = {
+    canvas, ctx: canvas.getContext("2d"), frames: a.frames,
+    ready: false, playing: true, start: performance.now(), src: null,
+  };
+  animators.push(animator);
+
+  const framesRow = el("div", "frames");
+  card.append(framesRow);
+
+  loadKeyed(a.path).then((keyed) => {
+    animator.src = keyed; animator.ready = true;
+    // Per-frame thumbnails (the individual sprites that compose the animation).
+    a.frames.forEach((f) => {
+      const holder = el("div", "fr");
+      const fc = el("canvas");
+      const fs = Math.min(2, Math.max(1, Math.floor(48 / Math.max(f.w, f.h)) || 1));
+      fc.width = f.w; fc.height = f.h;
+      fc.style.width = (f.w * fs) + "px"; fc.style.height = (f.h * fs) + "px";
+      fc.getContext("2d").drawImage(keyed, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+      holder.append(fc); framesRow.append(holder);
+    });
+  }).catch(() => { preview.append(el("div", "cmeta", "⚠ failed to load sheet")); });
+
+  const row = el("div", "row");
+  const toggle = el("button", "mini", "❚❚ pause");
+  toggle.onclick = () => {
+    animator.playing = !animator.playing;
+    if (animator.playing) animator.start = performance.now() - 0;
+    toggle.textContent = animator.playing ? "❚❚ pause" : "▶ play";
+  };
+  row.append(toggle);
+  row.append(el("span", "cmeta", (a.width && a.height ? a.width + "×" + a.height + " · " : "") + fmtBytes(a.bytes)));
+  card.append(row);
+
+  const det = el("details");
+  det.append(el("summary", null, ".anim frames"));
+  const pre = el("pre", null, a.frames.map((f) => [f.x, f.y, f.w, f.h].join(",")).join("\n"));
+  det.append(pre);
+  const links = el("div", "cmeta");
+  links.innerHTML = '<a href="' + a.path + '" download>sheet</a> · <a href="' + a.anim_path + '" download>.anim</a>'
+    + (a.json_path ? ' · <a href="' + a.json_path + '" download>.json</a>' : "");
+  det.append(links);
+  card.append(det);
+  return card;
+}
+
+function imageCard(a) {
+  const card = el("div", "card");
+  card.dataset.type = "image";
+  card.dataset.search = (a.name + " " + a.path).toLowerCase();
+  card.append(el("div", "cname", a.name));
+  card.append(el("div", "ctype", "image"));
+  const preview = el("div", "preview");
+  const img = el("img");
+  img.loading = "lazy"; img.src = a.path; img.alt = a.name;
+  preview.append(img);
+  card.append(preview);
+  card.append(el("div", "cmeta",
+    (a.width && a.height ? a.width + "×" + a.height + " · " : "") + fmtBytes(a.bytes)));
+  return card;
+}
+
+function audioCard(a) {
+  const card = el("div", "card");
+  card.dataset.type = "audio";
+  card.dataset.search = (a.name + " " + a.path).toLowerCase();
+  card.append(el("div", "cname", a.name));
+  card.append(el("div", "ctype", "audio"));
+  const audio = el("audio");
+  audio.controls = true; audio.preload = "none"; audio.src = a.path;
+  card.append(audio);
+  card.append(el("div", "cmeta", fmtBytes(a.bytes)));
+  return card;
+}
+
+function metadataCard(a) {
+  const card = el("div", "card");
+  card.dataset.type = "metadata";
+  card.dataset.search = (a.name + " " + a.path).toLowerCase();
+  card.append(el("div", "cname", a.name));
+  card.append(el("div", "ctype", "metadata"));
+  const links = el("div", "cmeta");
+  links.innerHTML = '<a href="' + a.path + '" download>download</a>';
+  card.append(links);
+  card.append(el("div", "cmeta", fmtBytes(a.bytes)));
+  return card;
+}
+
+function assetCard(a) {
+  if (a.type === "animation") return animationCard(a);
+  if (a.type === "image") return imageCard(a);
+  if (a.type === "audio") return audioCard(a);
+  return metadataCard(a);
+}
+
+function layerBlock(adv, layer) {
+  const block = el("div", "layer");
+  const h3 = el("h3");
+  if (!layer.is_locale) {
+    h3.append(document.createTextNode("Shared (common)"));
+  } else {
+    h3.append(document.createTextNode("Locale: " + layer.name));
+    if (layer.is_reference) {
+      const b = el("span", "badge ref", "reference"); h3.append(b);
+    } else if (layer.missing && layer.missing.length) {
+      h3.append(el("span", "badge err", layer.missing.length + " missing"));
+    } else {
+      h3.append(el("span", "badge ok", "complete"));
+    }
+  }
+  block.append(h3);
+
+  if (layer.missing && layer.missing.length) {
+    const box = el("div", "missing-box");
+    box.append(document.createTextNode("Missing vs " + adv.reference_locale + ":"));
+    const ul = el("ul");
+    layer.missing.forEach((m) => ul.append(el("li", null, m)));
+    box.append(ul);
+    block.append(box);
+  }
+  if (layer.extra && layer.extra.length) {
+    const box = el("div", "missing-box");
+    box.style.background = "#fff4e5"; box.style.borderColor = "#f0d39a"; box.style.color = "#6b4b00";
+    box.append(document.createTextNode("Extra (not in " + adv.reference_locale + "): " + layer.extra.join(", ")));
+    block.append(box);
+  }
+
+  for (const scene of layer.scenes) {
+    const sc = el("div", "scene");
+    sc.append(el("h4", null, scene.name + " · " + scene.assets.length));
+    const grid = el("div", "grid");
+    scene.assets.forEach((a) => grid.append(assetCard(a)));
+    sc.append(grid);
+    block.append(sc);
+  }
+  return block;
+}
+
+function render(data) {
+  document.getElementById("summary").textContent =
+    data.totals.adventures + " adventures · " + data.totals.assets
+    + " assets · generated " + data.generated;
+  const nav = document.getElementById("advnav");
+  const root = document.getElementById("root");
+  for (const adv of data.adventures) {
+    const a = el("a", null, adv.title); a.href = "#" + adv.id; nav.append(a);
+
+    const sec = el("section", "adventure");
+    sec.id = adv.id;
+    sec.append(el("h2", null, adv.title));
+    sec.append(el("div", "advsub", adv.dir + " · locales: " + adv.locales.join(", ")
+      + " (reference: " + adv.reference_locale + ")"));
+    const chips = el("div", "chips");
+    const c = adv.counts;
+    chips.append(el("span", "chip", c.total + " total"));
+    Object.keys(c.by_type).sort().forEach((t) =>
+      chips.append(el("span", "chip", c.by_type[t] + " " + t)));
+    sec.append(chips);
+    for (const layer of adv.layers) sec.append(layerBlock(adv, layer));
+    root.append(sec);
+  }
+  wireFilters();
+}
+
+function wireFilters() {
+  const search = document.getElementById("search");
+  const boxes = Array.from(document.querySelectorAll(".tf"));
+  const apply = () => {
+    const q = search.value.trim().toLowerCase();
+    const allowed = new Set(boxes.filter((b) => b.checked).map((b) => b.value));
+    document.querySelectorAll(".card").forEach((card) => {
+      const okType = allowed.has(card.dataset.type);
+      const okText = !q || card.dataset.search.includes(q);
+      card.classList.toggle("hidden", !(okType && okText));
+    });
+    // Hide scenes/layers that ended up empty.
+    document.querySelectorAll(".scene").forEach((sc) => {
+      const any = sc.querySelector(".card:not(.hidden)");
+      sc.classList.toggle("hidden", !any);
+    });
+    document.querySelectorAll(".layer").forEach((ly) => {
+      const any = ly.querySelector(".scene:not(.hidden)");
+      // keep layers with a missing-box visible even if no cards match
+      const box = ly.querySelector(".missing-box");
+      ly.classList.toggle("hidden", !any && !box);
+    });
+  };
+  search.addEventListener("input", apply);
+  boxes.forEach((b) => b.addEventListener("change", apply));
+}
+
+fetch("./catalog.json")
+  .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  .then(render)
+  .catch((e) => {
+    const err = document.getElementById("error");
+    err.classList.remove("hidden");
+    err.textContent = "Could not load catalog.json — run `make web` to generate it. (" + e.message + ")";
+  });
+</script>
+</body>
+</html>
