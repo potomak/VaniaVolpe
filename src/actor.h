@@ -63,6 +63,9 @@ typedef struct actor {
   ActorState state;
   Uint32 started_talking_at;
   Uint32 talking_duration;
+  // Fired once when the current walk reaches its target; per-instance so two
+  // actors walking at once don't clobber each other's callback. NULL when idle.
+  void (*on_end_walking)(void);
 } Actor;
 
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);

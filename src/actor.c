@@ -11,10 +11,9 @@
 #include <stdio.h>
 
 #include "actor.h"
+#include "constants.h"
 #include "image.h"
 #include "sound.h"
-
-static void (*on_end_walking)(void);
 
 // Animation used to centre the sprite on the actor's position. Assumes all of
 // an actor's frames share a size (as the original fox did).
@@ -66,6 +65,7 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   actor->state = IDLE;
   actor->started_talking_at = 0;
   actor->talking_duration = 0;
+  actor->on_end_walking = NULL;
   actor_face(actor, WEST);
   return actor;
 }
@@ -99,7 +99,7 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
               spec->id, Mix_GetError());
       return false;
     }
-    actor->move_sound->volume = spec->move_sound_volume;
+    Mix_VolumeChunk(actor->move_sound, spec->move_sound_volume);
   }
 
   return true;
@@ -120,16 +120,26 @@ void actor_update(Actor *actor, float delta_time) {
     // Stop when within 2px of target OR when we have passed it (dot product
     // of the original direction and the remaining vector turns negative).
     // The latter handles long frames where the actor overshoots the 2px window.
-    bool close_enough = fabsf(dx) <= 2 && fabsf(dy) <= 2;
+    bool close_enough =
+        fabsf(dx) <= ACTOR_ARRIVE_EPSILON && fabsf(dy) <= ACTOR_ARRIVE_EPSILON;
     bool overshot = (actor->direction.x * dx + actor->direction.y * dy) <= 0;
     if (close_enough || overshot) {
       stop_animation(actor->animations[actor->spec->move_state]);
       actor->state = IDLE;
       actor->direction = (SDL_FPoint){0, 0};
       actor->current_position = actor->target_position;
-      Mix_HaltChannel(actor->move_sound_channel);
-      if (on_end_walking != NULL) {
-        on_end_walking();
+      // Only halt our own walk-sound channel; -1 would halt every channel
+      // (dialogue and SFX included).
+      if (actor->move_sound_channel >= 0) {
+        Mix_HaltChannel(actor->move_sound_channel);
+        actor->move_sound_channel = -1;
+      }
+      // Clear the callback before firing it so a callback that starts a new
+      // walk isn't immediately overwritten.
+      void (*on_end)(void) = actor->on_end_walking;
+      actor->on_end_walking = NULL;
+      if (on_end != NULL) {
+        on_end();
       }
       return;
     }
@@ -181,6 +191,11 @@ void actor_free(Actor *actor) {
     }
   }
   if (actor->move_sound) {
+    // Stop the channel before freeing the chunk it may still be playing
+    // (a use-after-free otherwise, especially on Emscripten's audio thread).
+    if (actor->move_sound_channel >= 0) {
+      Mix_HaltChannel(actor->move_sound_channel);
+    }
     Mix_FreeChunk(actor->move_sound);
   }
   free(actor);
@@ -192,7 +207,22 @@ void actor_walk_to(Actor *actor, SDL_FPoint target_position,
     return;
   }
 
-  on_end_walking = on_end;
+  float dx = target_position.x - actor->current_position.x;
+  float dy = target_position.y - actor->current_position.y;
+  float dist = sqrtf(dx * dx + dy * dy);
+
+  // Tapping on (or right next to) the actor leaves dist ~= 0; dividing by it
+  // would make the direction NaN. There's nowhere to walk, so just "arrive".
+  if (dist < ACTOR_ARRIVE_EPSILON) {
+    actor->target_position = actor->current_position;
+    actor->direction = (SDL_FPoint){0, 0};
+    if (on_end != NULL) {
+      on_end();
+    }
+    return;
+  }
+
+  actor->on_end_walking = on_end;
 
   if (actor->state != WALKING && actor->move_sound) {
     // Play walking sound
@@ -203,22 +233,17 @@ void actor_walk_to(Actor *actor, SDL_FPoint target_position,
   actor->state = WALKING;
   actor->target_position = target_position;
 
-  float dx = actor->target_position.x - actor->current_position.x;
-  float dy = actor->target_position.y - actor->current_position.y;
-
   actor_face(actor, dx > 0 ? EAST : WEST);
 
-  float dist = sqrtf(powf(dx, 2) + powf(dy, 2));
   actor->direction = (SDL_FPoint){dx / dist, dy / dist};
 }
 
 void actor_talk(Actor *actor, Mix_Chunk *dialog) {
-  if (actor->state == WALKING) {
+  if (actor->state == WALKING || dialog == NULL) {
     return;
   }
 
   Uint32 talking_duration = get_chunk_time_ms(dialog);
-  fprintf(stdout, "Sound duration: %d\n", talking_duration);
 
   Mix_PlayChannel(-1, dialog, 0);
   play_animation(actor->animations[TALKING], NULL);

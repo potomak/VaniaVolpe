@@ -218,6 +218,17 @@ Retina/HiDPI window — and the scaled web canvas — clicks land at the wrong s
   helper so there's a single conversion point. (`actor.c` movement/click handling
   likely has the same assumption — audit it too.)
 
+> **Note (attempted 2026-06):** a central `SDL_RenderWindowToLogical` conversion in
+> `game_process_input` was tried and **backed out** — it regressed the web build. On
+> Emscripten, SDL already reports mouse coordinates in *logical* space (which is why
+> hit-testing works on web today without any conversion), so converting again
+> double-scales them (badly under a HiDPI canvas). So this is **not** a uniform
+> window→logical fix: it must be per-backend (convert on native desktop where events
+> are in window pixels, skip on Emscripten) and needs verification on a real resized /
+> HiDPI desktop window and an actual iPad — neither of which the CI smoke covers. The
+> headless web smoke (`scratchpad/gina_smoke.js`) runs with `deviceScaleFactor: 2` and
+> is a good regression guard for the "don't break web" half.
+
 ### Task N — Unify adventure/scene transitions and harden the scene router
 *Code-only; correctness + maintainability, from the `game.c` review.*
 
