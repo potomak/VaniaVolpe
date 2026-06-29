@@ -124,7 +124,11 @@ Remaining work:
   re-loads media on change (ties into Task I: a locale switch is a media reload).
 - **iOS bundling** — drop the flat-filename shortcut in `asset_path` and bundle
   `common/` + `<locale>/` as Xcode folder references so the same two-step lookup
-  works on iOS (extends Task G).
+  works on iOS (extends Task G). Note the iOS branch currently returns the bare
+  filename and ignores `asset_root`, so per-adventure `asset_set_root()` is a no-op
+  there; the fix must prepend the root (use `SDL_GetBasePath()` for a portable base)
+  and run the locale→common lookup. Consider a bare-language fallback (`it` as well
+  as `it_IT`), since iOS locale codes are often just the language.
 - **Per-locale web bundles** — preload only the chosen language so a browser
   downloads one locale, not all of them (pairs with Task I lazy-loading).
 - **Real translations** — replace the generated `en_US` placeholders (English
@@ -254,6 +258,41 @@ Retina/HiDPI window — and the scaled web canvas — clicks land at the wrong s
 into an `AppContext` — cosmetic, folded into the already-deferred `AppContext` note
 under Task L; not worth a standalone change now.
 
+### Task P — asset_path(): caller-owned buffer
+*Code-only; latent footgun, from the `asset.c` review.*
+
+`asset_path` returns a pointer into a single function-`static resolved_path[1024]`
+(`asset.c:51`), so two live results clobber each other — e.g.
+`load_two(asset_path(a), asset_path(b))` would resolve both to the second path.
+Every call site today consumes the result immediately in one load
+(`IMG_Load`/`Mix_LoadWAV`/`Mix_LoadMUS`/`load_animation_data`), so it's latent — but
+with two adventures whose assets share filenames across different roots (`walking.wav`
+in both, `pool/float.png` vs `tree/float.png`, many `background.png`), it's the
+classic "second texture loads the wrong file" bug waiting to happen.
+
+- Add a caller-owned variant — `bool asset_resolve(Asset, char *buf, size_t n)`
+  returning whether the localized layer was used (vs the common fallback) — and let
+  the caller own the storage. Keep `asset_path()` as a thin, documented wrapper for
+  the existing single-use sites, or migrate them.
+- While changing the API, document the lifetime contract of `asset_set_root` /
+  `asset_set_locale`: they store the pointer, not a copy (`asset.c:23`/`27`), so the
+  string must outlive the asset system. True today (string literals + `detect_locale`
+  statics); either state the contract or `strdup`/free on set.
+
+### Task Q — Portable, single-hit asset resolution
+*Code-only; portability + diagnostics, from the `asset.c` review.*
+
+- Replace the `access(F_OK)` pre-check (`asset.c:57`) with a real open probe
+  (`SDL_RWFromFile`) — or, better, try-load-then-fallback (attempt the locale path,
+  and only on failure try `common`). This drops the POSIX `<unistd.h>` dependency
+  (Windows has no `access`), avoids the extra virtual-FS stat on Emscripten, and
+  closes the TOCTOU window between the check and the real `IMG_Load`/`Mix_LoadWAV`.
+- Check `snprintf` truncation in `build_path` (`asset.c:42`) instead of truncating
+  silently, and name the `1024` buffer (`#define ASSET_PATH_MAX`) — Windows
+  `PATH_MAX` is 260, Linux 4096.
+- Log once when *neither* the locale nor the common file exists, so a typo'd filename
+  surfaces here instead of as a cryptic downstream "IMG_Load: Couldn't open …".
+
 ## Suggested sequencing
 
 1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
@@ -263,19 +302,23 @@ under Task L; not worth a standalone change now.
    lines), no assets needed.
 4. **N** — unify the adventure/scene transitions (fixes the activation-order bug and
    drops the main.c hack); pairs well with **L**.
-5. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
+5. **P** — give `asset_path` a caller-owned buffer before the asset set grows and a
+   shared filename across two roots causes a silent wrong-asset load.
+6. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
    as the `.wav`s arrive.
-6. **E** — engine wiring can be written behind the new states; lands with the art.
-7. **D** — optional polish.
-8. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
+7. **E** — engine wiring can be written behind the new states; lands with the art.
+8. **D** — optional polish.
+9. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
    main.c work).
-9. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
+10. **Q** — portable single-hit asset resolution; do with **L** or before a
+   Windows/iOS port (drops `access()`/`<unistd.h>`, adds missing-asset logging).
+11. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
    alongside **M**/**G**.
-10. **F** — only if the walk-through becomes a real problem.
-11. **H** — the hub + a second adventure, when ready to grow the collection.
-12. **I** — lazy-load adventures once the collection is large enough that loading
+12. **F** — only if the walk-through becomes a real problem.
+13. **H** — the hub + a second adventure, when ready to grow the collection.
+14. **I** — lazy-load adventures once the collection is large enough that loading
    everything up front is a felt cost (memory/startup, or web download size).
-13. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
+15. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
    real translations) as more languages are actually shipped.
 
 ## Asset checklist (blocks C2 and E; to be provided)
