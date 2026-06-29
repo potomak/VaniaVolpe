@@ -354,6 +354,52 @@ violates the multi-actor contract the abstraction promises.
   comment that an actor's animations are per-instance (cloned in `make_actor`), so the
   next contributor knows `actor_face` flipping "all animations" won't turn both actors.
 
+### Task U — Decouple animation update from render (+ per-animation frame rate)
+*Code-only; from the `image.c` review.*
+
+`render_animation` (`image.c:173`) advances the current frame, recomputes
+`loop_count`, and calls `stop_animation` — which fires the end callback — all inside
+the render path. So animation speed tracks *render* frequency (render twice → talk
+plays twice as fast), and an end callback (which can switch scene/adventure) fires
+mid-render.
+
+- Extract `animation_update(animation, now_ms)` that advances frames and handles
+  `ONE_SHOT` completion/stop, and call it from `actor_update` (and any other animation
+  owner). Keep `render_animation` pure — just blit the current clip.
+- Make the frame duration a per-animation field (default 83 ms; note 83 ms is
+  ~12.05 FPS and drifts ~1 frame / 20 s) carried on `ActorAnimSpec`/`AnimationData`,
+  so different actors can animate at different speeds.
+- While here: `render_animation` should early-out when `image.texture == NULL` (failed
+  load) instead of passing it to `SDL_RenderCopyEx`; call
+  `SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND)` after creation (defensive —
+  alpha PNGs like the hen rely on blend, though `SDL_CreateTextureFromSurface` usually
+  sets it); NULL-check the two `make_animation_data` mallocs; add a `#define` for the
+  cyan color key in `image.h`; document that `ImageData.filename/directory` are
+  *borrowed* (owned by the `ActorSpec` literals — ties to the lifetime contract in
+  Task P); and consider a `play_animation` restart option (today a second
+  `play_animation` on an already-playing animation is a silent no-op).
+
+### Task V — Harden the `.anim` CSV parser
+*Code-only; prevents overflow on malformed clip files, from the `image.c` review.*
+
+`load_animation_data` (`image.c:95`) trusts its input completely:
+- `num_i` is unbounded (`image.c:126`) — a 6+ digit field overflows the 6-byte `num`
+  buffer (stack smash). Bound it.
+- `rect_i` is never checked `< 4` (`image.c:114`) — a line with >4 fields writes past
+  `rect[4]`.
+- `row` is never checked `< animation->frames` (`image.c:117`) — more lines than the
+  spec's frame count overflow the heap `sprite_clips[]`. (This check also enforces the
+  `.anim` ↔ `ActorAnimSpec` frame-count contract — a real mismatch risk when editing a
+  `.anim` without bumping `frames`.)
+- A final line with no trailing newline is dropped (a rect is only committed on `\n`) —
+  flush at EOF.
+- CRLF leaves `\r` in the buffer (`atoi` tolerates it by luck); strip it. And `atoi`
+  silently yields 0 on garbage.
+
+Add the three bounds checks + EOF flush, or replace the hand-rolled scan with
+`sscanf("%d,%d,%d,%d", …)` / `strtol` per line (handles whitespace and CRLF, no manual
+buffer) — the files are tiny.
+
 ## Suggested sequencing
 
 1. **G** — required to keep the iOS/Mac build green after the Step-1 refactor.
@@ -366,27 +412,31 @@ violates the multi-actor contract the abstraction promises.
    lines), no assets needed.
 5. **R** — per-actor walk callback; do with the engine-correctness cluster before a
    second on-screen actor makes the shared callback bite.
-6. **N** — unify the adventure/scene transitions (fixes the activation-order bug and
+6. **U** — split animation update from render (fixes render-rate-dependent speed and
+   callbacks firing mid-render); engine correctness, pairs with **R**.
+7. **N** — unify the adventure/scene transitions (fixes the activation-order bug and
    drops the main.c hack); pairs well with **L**.
-7. **P** — give `asset_path` a caller-owned buffer before the asset set grows and a
+8. **P** — give `asset_path` a caller-owned buffer before the asset set grows and a
    shared filename across two roots causes a silent wrong-asset load.
-8. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
+9. **C** — biggest remaining UX win; write C1 + the state machine, fill in lines
    as the `.wav`s arrive.
-9. **E** — engine wiring can be written behind the new states; lands with the art.
-10. **D** — optional polish.
-11. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
+10. **E** — engine wiring can be written behind the new states; lands with the art.
+11. **D** — optional polish.
+12. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
    main.c work).
-12. **T** — actor state-machine hardening (divide-by-zero, `Uint32` time, `-Wswitch`,
+13. **T** — actor state-machine hardening (divide-by-zero, `Uint32` time, `-Wswitch`,
    malloc check); low-risk, bundle with **L**/**Q**.
-13. **Q** — portable single-hit asset resolution; do with **L** or before a
+14. **V** — harden the `.anim` CSV parser (overflow guards + EOF flush); cheap, bundle
+   with the **T** hardening pass.
+15. **Q** — portable single-hit asset resolution; do with **L** or before a
    Windows/iOS port (drops `access()`/`<unistd.h>`, adds missing-asset logging).
-14. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
+16. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
    alongside **M**/**G**.
-15. **F** — only if the walk-through becomes a real problem.
-16. **H** — the hub + a second adventure, when ready to grow the collection.
-17. **I** — lazy-load adventures once the collection is large enough that loading
+17. **F** — only if the walk-through becomes a real problem.
+18. **H** — the hub + a second adventure, when ready to grow the collection.
+19. **I** — lazy-load adventures once the collection is large enough that loading
    everything up front is a felt cost (memory/startup, or web download size).
-18. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
+20. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
    real translations) as more languages are actually shipped.
 
 ## Asset checklist (blocks C2 and E; to be provided)
