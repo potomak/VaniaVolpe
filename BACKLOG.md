@@ -218,6 +218,17 @@ Retina/HiDPI window — and the scaled web canvas — clicks land at the wrong s
   helper so there's a single conversion point. (`actor.c` movement/click handling
   likely has the same assumption — audit it too.)
 
+> **Note (attempted 2026-06):** a central `SDL_RenderWindowToLogical` conversion in
+> `game_process_input` was tried and **backed out** — it regressed the web build. On
+> Emscripten, SDL already reports mouse coordinates in *logical* space (which is why
+> hit-testing works on web today without any conversion), so converting again
+> double-scales them (badly under a HiDPI canvas). So this is **not** a uniform
+> window→logical fix: it must be per-backend (convert on native desktop where events
+> are in window pixels, skip on Emscripten) and needs verification on a real resized /
+> HiDPI desktop window and an actual iPad — neither of which the CI smoke covers. The
+> headless web smoke (`scratchpad/gina_smoke.js`) runs with `deviceScaleFactor: 2` and
+> is a good regression guard for the "don't break web" half.
+
 ### Task N — Unify adventure/scene transitions and harden the scene router
 *Code-only; correctness + maintainability, from the `game.c` review.*
 
@@ -293,53 +304,47 @@ classic "second texture loads the wrong file" bug waiting to happen.
 - Log once when *neither* the locale nor the common file exists, so a typo'd filename
   surfaces here instead of as a cryptic downstream "IMG_Load: Couldn't open …".
 
-### Task R — Per-actor walk-completion callback
+### Task R — Per-instance animation end callback
 *Code-only; real design bug, from the `actor.c` review.*
 
-`on_end_walking` is a single file-`static` callback (`actor.c:17`) shared by every
-`Actor`, set globally in `actor_walk_to` (`actor.c:195`). With the engine now generic
-over multiple actors (fox + hen), a second `actor_walk_to` overwrites the first's
-callback, so when actor A arrives it can fire actor B's `on_end`. Not triggered today
-(only one actor is active at a time — one per adventure, one adventure active), but it
-violates the multi-actor contract the abstraction promises.
+**Shipped in #28:** the actor half — `on_end_walking` is now a per-instance
+`Actor.on_end_walking` field, cleared before firing, so two actors' walk callbacks
+can't clobber each other.
 
-- Move the callback (and an optional `void *userdata`) onto the `Actor`; have
-  `actor_walk_to(actor, target, cb, userdata)` store it per-instance.
-- Clear it *before* invoking it on arrival (`actor.c:131`) so a callback that starts a
-  new walk isn't immediately clobbered.
-- Same pattern lives in `image.c` (`on_animation_playback_end`, set by
-  `play_animation`) — give animations a per-instance end callback too, or document why
-  the global is safe.
+*Remaining:* the same global-callback pattern still lives in `image.c`
+(`on_animation_playback_end`, a file-`static` set by `play_animation` and fired by
+`stop_animation`). It's actively used by object animations (`playground_entrance.c`
+plays the gate/shovel with non-NULL callbacks), and the actor's own
+`play_animation(..., NULL)` calls reset it to NULL — so a walk starting mid object
+animation drops that animation's callback. Give `AnimationData` a per-instance end
+callback (+ optional `void *userdata`), set by `play_animation`, cleared before firing.
 
 ### Task S — Actor audio safety (channels & lifetime)
-*Code-only; includes two real crashes, from the `actor.c` review.*
+*Code-only; included two real crashes, from the `actor.c` review.*
 
-- **Halt-all bug:** on arrival `actor_update` calls
-  `Mix_HaltChannel(actor->move_sound_channel)` (`actor.c:130`), but that channel is
-  `-1` when the actor has no move sound or when `Mix_PlayChannel` failed (e.g. all
-  channels busy under click-spam) — and `Mix_HaltChannel(-1)` halts **every** channel,
-  killing dialogue and SFX. Guard with `if (actor->move_sound_channel >= 0)`.
-- **Use-after-free:** `actor_free` (`actor.c:183`) calls `Mix_FreeChunk(move_sound)`
-  without halting its channel first — a use-after-free if it's still playing (notably
-  on Emscripten's audio thread). Halt the channel, then free.
-- **NULL dialog crash:** `actor_talk(actor, NULL)` (`actor.c:215`) flows into
-  `get_chunk_time_ms`, which dereferences `chunk->alen` → crash. Guard `dialog != NULL`.
-- **Voice channel tracking:** store the dialogue channel (`actor->voice_channel`) and
-  play voice on the channel reserved by Task K, so a new line/click can interrupt the
-  current one instead of overlapping or being dropped.
-- **Tidy:** use `Mix_VolumeChunk(actor->move_sound, vol)` instead of the deprecated
-  `move_sound->volume =` (`actor.c:102`; assert 0–128), and replace the stray
-  `fprintf(stdout, "Sound duration: …")` (`actor.c:221`) with `SDL_Log` (or drop it).
+**Shipped in #28:** the crash/correctness items —
+- Halt-all bug: `Mix_HaltChannel(actor->move_sound_channel)` is now guarded
+  `>= 0`, so a `-1` channel (no move sound, or `Mix_PlayChannel` failed under
+  click-spam) no longer halts **every** channel.
+- Use-after-free: `actor_free` halts the channel before `Mix_FreeChunk`.
+- NULL-dialog crash: `actor_talk(actor, NULL)` now returns early.
+- Tidy: `Mix_VolumeChunk` replaces the deprecated `move_sound->volume =`, and the
+  stray `fprintf(stdout, "Sound duration: …")` is gone.
+
+*Remaining:* **voice-channel tracking** — store the dialogue channel
+(`actor->voice_channel`) and play voice on the channel reserved by Task K, so a new
+line/click can interrupt the current one instead of overlapping or being dropped (do
+this with **K**). And assert the move-sound volume is in 0–128 in the spec loader.
 
 ### Task T — Actor state-machine hardening
 *Code-only; small correctness/robustness nits, from the `actor.c` review.*
 
-- **Divide-by-zero:** tapping exactly on the actor makes `dist == 0` in
-  `actor_walk_to` (`actor.c:211`), so `direction` becomes NaN. It self-corrects next
-  frame (the `close_enough` test catches `dx==dy==0`), but relying on NaN is fragile —
-  guard `dist == 0` (skip the walk / zero the direction). Name the `2 px` arrival
-  window `ACTOR_ARRIVE_EPSILON`, and use `dx*dx` instead of `powf(dx, 2)` for
-  consistency with the overshoot test.
+**Shipped in #28:** the divide-by-zero — tapping on the actor made `dist == 0` and
+`direction` NaN; `actor_walk_to` now measures distance first and "arrives" within
+`ACTOR_ARRIVE_EPSILON` (a named constant), using `dx*dx` instead of `powf`.
+
+*Remaining:*
+
 - **Time base:** `actor_update` reads `float ticks = SDL_GetTicks()` (`actor.c:111`)
   and compares against `Uint32` talk timing — use `Uint32` throughout so it stays
   precise and wraps cleanly (same fix family as Task L1).
@@ -400,24 +405,6 @@ Add the three bounds checks + EOF flush, or replace the hand-rolled scan with
 `sscanf("%d,%d,%d,%d", …)` / `strtol` per line (handles whitespace and CRLF, no manual
 buffer) — the files are tiny.
 
-### Task W — Fix get_chunk_time_ms overflow and robustness
-*Code-only; from the `sound.c` review.*
-
-`get_chunk_time_ms` (`src/sound.c`) drives talk-animation length from the actual WAV
-duration — exactly right for lip-syncing the Italian voiceover — but the final
-`(frames * 1000) / freq` is all `Uint32`. For a long clip (e.g. ~89 s+ at 48 kHz),
-`frames * 1000` exceeds 2³² and wraps, so the talk animation ends mid-narration. Today's
-fox/hen lines are 2–3 s so it's latent, but a story scene with a longer narration would
-hit it every time.
-
-- Do the millisecond math in 64-bit: `(Uint64)frames * 1000 / freq`.
-- Guard `chunk == NULL` (return 0) so a stray `actor_talk(actor, NULL)` can't deref
-  `chunk->alen` (defense in depth; the call-site guard is Task S), and guard against
-  `freq`/`chans` being 0.
-- When `Mix_QuerySpec` fails (audio device not open) it returns 0, which makes the talk
-  animation end instantly — `SDL_Log` it so that reads as "audio not open" instead of
-  "talk animation is broken".
-
 ### Task X — Scene asset lifecycle: pass `Scene *`, unwind partial loads, null freed chunks
 *Code-only; a leak + a dangling-pointer bug, from the `scene.c` review.*
 
@@ -445,12 +432,12 @@ copies the whole struct per call, and means `free_scene_chunks` can't null the f
 2. **M** — fix the logical-coordinate input bug first; it's a live bug on
    resized/Retina/web windows and underpins every hit-test (incl. `actor_walk_to`
    targets).
-3. **S** — actor audio safety: two real crashes (halt-all-channels, free-while-playing)
-   plus the NULL-dialog guard; pairs with **K**.
-4. **K** — reserve a dialogue channel; small, high-value (stops SFX cutting voice
-   lines), no assets needed.
-5. **R** — per-actor walk callback; do with the engine-correctness cluster before a
-   second on-screen actor makes the shared callback bite.
+3. **K** — reserve a dialogue channel; small, high-value (stops SFX cutting voice
+   lines), no assets needed. Unblocks the **S** remainder (voice-channel interrupt).
+4. **S** (remainder) — voice-channel tracking/interrupt + the 0–128 volume assert;
+   do with **K**. (Crash guards already shipped in #28.)
+5. **R** (remainder) — give `image.c` animations a per-instance end callback; do with
+   **U**. (The actor walk callback already shipped in #28.)
 6. **U** — split animation update from render (fixes render-rate-dependent speed and
    callbacks firing mid-render); engine correctness, pairs with **R**.
 7. **N** — unify the adventure/scene transitions (fixes the activation-order bug and
@@ -465,21 +452,20 @@ copies the whole struct per call, and means `free_scene_chunks` can't null the f
 12. **D** — optional polish.
 13. **L** — main.c lifecycle hardening; low-risk, land anytime (good alongside other
    main.c work).
-14. **T** — actor state-machine hardening (divide-by-zero, `Uint32` time, `-Wswitch`,
-   malloc check); low-risk, bundle with **L**/**Q**.
+14. **T** (remainder) — actor state-machine hardening (`Uint32` time, `-Wswitch`,
+   `play_state` policy, malloc check); low-risk, bundle with **L**/**Q**.
+   (Divide-by-zero already shipped in #28.)
 15. **V** — harden the `.anim` CSV parser (overflow guards + EOF flush); cheap, bundle
    with the **T** hardening pass.
-16. **W** — 64-bit fix for `get_chunk_time_ms` (talk duration wraps past ~89 s);
-   tiny, do with the **T**/**V** hardening pass.
-17. **Q** — portable single-hit asset resolution; do with **L** or before a
+16. **Q** — portable single-hit asset resolution; do with **L** or before a
    Windows/iOS port (drops `access()`/`<unistd.h>`, adds missing-asset logging).
-18. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
+17. **O** — toddler input polish (bigger button, key-repeat, touch); cheap, do
    alongside **M**/**G**.
-19. **F** — only if the walk-through becomes a real problem.
-20. **H** — the hub + a second adventure, when ready to grow the collection.
-21. **I** — lazy-load adventures once the collection is large enough that loading
+18. **F** — only if the walk-through becomes a real problem.
+19. **H** — the hub + a second adventure, when ready to grow the collection.
+20. **I** — lazy-load adventures once the collection is large enough that loading
    everything up front is a felt cost (memory/startup, or web download size).
-22. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
+21. **J** — i18n follow-ups (language picker, iOS bundling, per-locale web bundles,
    real translations) as more languages are actually shipped.
 
 ## Asset checklist (blocks C2 and E; to be provided)
@@ -489,6 +475,12 @@ copies the whole struct per call, and means `free_scene_chunks` can't null the f
 
 ## Shipped
 
+- Engine hardening from the code review (#28): actor audio crash guards
+  (`Mix_HaltChannel(-1)` no longer halts every channel, no free-while-playing, NULL
+  dialog guard), per-actor walk callback, tap-on-actor divide-by-zero guard, and the
+  `get_chunk_time_ms` 64-bit overflow fix (full **W**; partial **R**/**S**/**T** —
+  remainders still listed above). Input-coordinate fix (**M**) attempted and backed
+  out (see its note).
 - **A** — enlarged the shovel hotspot (#5).
 - **B** — clicks outside the walkable area now walk the fox to the nearest
   reachable point instead of being ignored (#5).
