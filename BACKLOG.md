@@ -350,7 +350,28 @@ buffer) — the files are tiny.
   explicit touch (and ignoring the synthesized duplicate) is cleaner — pairs with
   the iOS sync (*Sync the Xcode project*) and *Map input to logical render coordinates*.
 
-## 18. Walk around non-walkable areas
+## 18. Real adventure-picker hub
+*Needs art assets. The hub in production is a placeholder.*
+
+The hub scene (`src/hub.c`) is a placeholder: it fills a dark-blue background and draws
+one solid-colored `SDL_Rect` per content adventure (distinct colour + white outline, see
+`menu_button_rect`/`render`), hit-tests clicks, and `switch_to_adventure`s. There are no
+labels, no art, and no audio, and `hub.assets_root = NULL` ("drawn with placeholder
+rects; no asset files") — so a pre-reader can't tell the adventures apart. Make it a
+real menu:
+
+- Replace the placeholder rects with recognizable per-adventure buttons — a cover/
+  thumbnail image or labelled button per adventure, with hover/press states like the
+  intro buttons. Give the hub a real `assets_root` and load the art (today it's `NULL`).
+- Localize the labels/art (adventure titles differ per locale) via the existing
+  `assets/<locale>/` layer — ties into *Internationalization follow-ups*.
+- Optional toddler polish: a title/header, background art, menu music, and generous tap
+  targets.
+
+(The "author a second adventure" half of the original hub task already shipped — Gina is
+a full second adventure — so this item is just the menu presentation.)
+
+## 19. Walk around non-walkable areas
 *Future; see [`MOVEMENT.md`](MOVEMENT.md).*
 
 Movement is a straight line with no collision/pathfinding, so the fox can walk
@@ -359,7 +380,7 @@ obstacle-avoiding routing — a corner waypoint around the rectangle for the sim
 single-obstacle case, or a navigation grid / navmesh + A\* for the general case.
 Keep the engine simple until this becomes a felt gameplay problem.
 
-## 19. Lazy-load adventures (on demand, not all up front)
+## 20. Lazy-load adventures (on demand, not all up front)
 *Performance, especially on mobile; enables per-adventure asset downloads.*
 
 The engine currently initializes and loads media for **every** registered
@@ -386,7 +407,7 @@ methods (`adventure_init` / `adventure_load_media` / `adventure_deinit`, #16)
 already encapsulate load/teardown, so this is mostly a scheduling change in
 `game.c` plus a per-adventure "loaded" flag.
 
-## 20. Internationalization follow-ups
+## 21. Internationalization follow-ups
 *The locale-aware asset layer shipped; these extend it.*
 
 Localization now works via `assets/common/` + `assets/<locale>/` and a strict
