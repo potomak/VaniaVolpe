@@ -100,4 +100,10 @@ See `ARCHITECTURE.md` for the full design.
 - Keep changes scoped (one task per PR). Prefer **independent PRs branched off
   `main`** over stacked branches, so they can be merged in any order without
   re-rebasing after each merge. See `BACKLOG.md` for the queued work.
+- **Groom the backlog in the same PR.** A PR that addresses a `BACKLOG.md` item
+  removes that item in the same PR — or, if only part of it shipped, updates the
+  item with a note on what's done and what's left. Don't leave it for a follow-up,
+  and don't keep a "shipped" archive: the git history is the record. The backlog is
+  ordered by priority (top = do next) and items reference each other by **title**,
+  not by a position number or letter (those aren't stable).
 - Match the existing C style (C99, two-space indent, `lower_snake_case`).
