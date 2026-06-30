@@ -130,7 +130,12 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) { fox_update(fox, delta_time); }
+static void update(float delta_time) {
+  int now = SDL_GetTicks();
+  animation_update(play_button, now);
+  animation_update(exit_button, now);
+  fox_update(fox, delta_time);
+}
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});

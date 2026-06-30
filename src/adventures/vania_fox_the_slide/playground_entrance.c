@@ -262,7 +262,13 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) { fox_update(fox, delta_time); }
+static void update(float delta_time) {
+  int now = SDL_GetTicks();
+  animation_update(excavator, now);
+  animation_update(gate, now);
+  animation_update(shovel, now);
+  fox_update(fox, delta_time);
+}
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});

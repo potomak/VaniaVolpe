@@ -36,6 +36,8 @@ typedef struct actor_anim_spec {
   const char *data_filename;
   int frames;
   AnimationPlaybackStyle style;
+  // Milliseconds per frame; 0 means the engine default (DEFAULT_MS_PER_FRAME).
+  int ms_per_frame;
 } ActorAnimSpec;
 
 // Static description of a character. Two characters differ only by their spec.

@@ -50,8 +50,11 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   }
   for (int i = 0; i < spec->anims_length; i++) {
     const ActorAnimSpec *anim = &spec->anims[i];
-    actor->animations[anim->state] =
-        make_animation_data(anim->frames, anim->style);
+    AnimationData *animation = make_animation_data(anim->frames, anim->style);
+    if (animation != NULL && anim->ms_per_frame > 0) {
+      animation->ms_per_frame = anim->ms_per_frame;
+    }
+    actor->animations[anim->state] = animation;
   }
   // Play the idle animation by default; it is also used for the IDLE state.
   if (actor->animations[spec->idle_state]) {
@@ -106,6 +109,16 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
 }
 
 void actor_update(Actor *actor, float delta_time) {
+  // Advance every playing animation each frame (timing lives here now, not in
+  // render). All actor animations loop with no end callback, so this never
+  // fires a stray callback.
+  int now = SDL_GetTicks();
+  for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
+    if (actor->animations[i] != NULL) {
+      animation_update(actor->animations[i], now);
+    }
+  }
+
   float dx = actor->target_position.x - actor->current_position.x;
   float dy = actor->target_position.y - actor->current_position.y;
   float ticks = SDL_GetTicks();
