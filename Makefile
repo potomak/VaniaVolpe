@@ -45,6 +45,13 @@ OBJS = $(SRCS:.c=.o)
 TERMINAL_SRCS = src/main_terminal.c src/terminal.c $(GAME_SRCS)
 TERMINAL_OBJS = $(patsubst %.c,%.terminal.o,$(TERMINAL_SRCS))
 
+TARGET_TEST = vaniavolpe_test
+# Headless smoke test: the game plus a scripted-playthrough entry point. No
+# libcaca — it renders offscreen and reads pixels back instead of drawing to a
+# terminal. The .test.o suffix keeps its objects separate from the other builds.
+TEST_SRCS = src/main_test.c $(GAME_SRCS)
+TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))
+
 # ── default target (SDL window) ───────────────────────────────────────────────
 
 all: $(TARGET)
@@ -64,6 +71,21 @@ $(TARGET_TERMINAL): $(TERMINAL_OBJS)
 
 %.terminal.o: %.c
 	$(CC) $(CFLAGS) $(CACA_CFLAGS) -c $< -o $@
+
+# ── headless test target (scripted playthrough, no display server) ────────────
+
+test: $(TARGET_TEST)
+
+$(TARGET_TEST): $(TEST_OBJS)
+	$(CC) $(TEST_OBJS) $(LDFLAGS) -o $@
+
+%.test.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Build and run the smoke test (offscreen video + dummy audio are set by the
+# binary itself). Exits non-zero if the playthrough regresses.
+run-test: $(TARGET_TEST)
+	./$(TARGET_TEST)
 
 # ── emscripten / web target (WebAssembly, runs in the browser) ───────────────
 
@@ -130,7 +152,8 @@ format-check:
 # ── housekeeping ──────────────────────────────────────────────────────────────
 
 clean:
-	rm -f $(OBJS) $(TERMINAL_OBJS) $(TARGET) $(TARGET_TERMINAL)
+	rm -f $(OBJS) $(TERMINAL_OBJS) $(TEST_OBJS) \
+	      $(TARGET) $(TARGET_TERMINAL) $(TARGET_TEST)
 	rm -rf build
 
-.PHONY: all terminal web clean format format-check
+.PHONY: all terminal test run-test web clean format format-check

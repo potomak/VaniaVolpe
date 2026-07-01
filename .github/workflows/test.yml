@@ -1,0 +1,33 @@
+name: Test (headless playthrough)
+
+# Gating: builds the headless test target and runs the scripted Gina
+# playthrough. The job fails if the game doesn't reach the expected states, so a
+# broken playthrough blocks the PR the way a broken web build does.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The test target renders offscreen (SDL's built-in "offscreen" video
+      # driver) and uses the dummy audio driver, so no display server or sound
+      # card is needed — just the SDL dev libraries. libcaca is not required.
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev
+
+      - name: Build the headless test target
+        run: make test
+
+      - name: Run the scripted playthrough
+        run: ./vaniavolpe_test

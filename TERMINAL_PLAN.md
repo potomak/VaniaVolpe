@@ -168,13 +168,20 @@ Click anywhere the fox can walk to move him; click hotspots to interact.
 
 ---
 
-## Future: headless test target
+## Headless test target — implemented
 
-Because the game runs with no display server in this mode, snapshot testing
-becomes possible:
+Because the game runs with no display server in this mode, it can be driven in
+CI. The `test` target (`make test` → `vaniavolpe_test`, `src/main_test.c`) builds
+the game with an offscreen software renderer and the `dummy` audio driver, pushes
+a scripted sequence of mouse events onto SDL's queue, and plays Gina's whole
+adventure — the native analog of the browser `scratchpad/gina_smoke.js`.
 
-- Run the game loop for N frames with simulated SDL events.
-- Call `SDL_RenderReadPixels` after specific frames.
-- Hash or diff the pixel buffer against a known-good reference.
-- Compile as a separate `test` target with `SDL_AUDIODRIVER=dummy` to also
-  silence audio.
+Rather than hashing pixels (brittle across SDL versions / CPUs), it asserts on
+**behaviour**: it captures the dialogue the game prints and checks the expected
+lines appear in order, plus a cheap `SDL_RenderReadPixels` "frame isn't a single
+flat colour" check to catch a blank-screen regression. It exits non-zero on any
+miss, and runs on every push/PR via `.github/workflows/test.yml`.
+
+A faster, fully deterministic variant (fixed-step clock instead of real
+wall-clock time) and optional golden-pixel snapshots are noted in the tracking
+issue as possible future refinements.
