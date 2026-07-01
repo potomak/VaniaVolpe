@@ -91,10 +91,14 @@ static bool load_media(SDL_Renderer *renderer) {
   }
 
   // Load music
-  music = Mix_LoadMUS(asset_path((Asset){
-      .filename = "intro.wav",
-      .directory = "music",
-  }));
+  char music_path[ASSET_PATH_MAX];
+  asset_resolve(
+      (Asset){
+          .filename = "intro.wav",
+          .directory = "music",
+      },
+      music_path, sizeof(music_path));
+  music = Mix_LoadMUS(music_path);
   if (music == NULL) {
     fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
             Mix_GetError());

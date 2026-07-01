@@ -219,11 +219,16 @@ Resolves an `Asset{directory, filename}` to a path, layering a **locale** over a
 adventure's `assets_root`:
 
 ```c
-const char *asset_path(Asset asset);    // <root>/<locale>/<dir>/<file>, falling
-                                        // back to <root>/common/<dir>/<file>
+bool asset_resolve(Asset a, char *buf, size_t n); // resolve into caller's buffer;
+                                        // true if the locale layer was used
 void asset_set_root(const char *root);  // per-adventure assets dir
 void asset_set_locale(const char *l);   // "it_IT" (default/source), "en_US", …
 ```
+
+`asset_resolve` writes into a caller-owned buffer (`ASSET_PATH_MAX` bytes), so two
+resolved paths can be live at once without clobbering each other — every call site
+declares a local buffer, resolves, then loads. `asset_set_root`/`asset_set_locale`
+store the pointer, not a copy, so the string must outlive the asset system.
 
 Localized assets (voice WAVs, text-bearing images like the intro/outro and the
 labelled buttons) live under `assets/<locale>/`; shared assets (sprites, music,

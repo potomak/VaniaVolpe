@@ -5,6 +5,7 @@
 //  Created by Giovanni Cappellotto on 1/26/25.
 //
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -31,11 +32,13 @@ void asset_set_locale(const char *locale) {
 const char *asset_get_locale(void) { return asset_locale; }
 
 #if defined(__IPHONEOS__) || defined(__TVOS__)
-const char *asset_path(Asset asset) {
+bool asset_resolve(Asset asset, char *buf, size_t n) {
   // iOS bundles assets flat (by filename). Localizing the iOS build needs
   // folder-reference bundling so this can resolve <locale>/ then common/ like
-  // the other platforms (tracked in BACKLOG). For now return the bare name.
-  return asset.filename;
+  // the other platforms (tracked in the backlog). For now use the bare name;
+  // there is no locale layer, so report the common fallback.
+  snprintf(buf, n, "%s", asset.filename);
+  return false;
 }
 #else
 // Build "[root/]<layer>/<directory>/<filename>" into buf.
@@ -48,16 +51,14 @@ static void build_path(char *buf, size_t n, const char *layer, Asset asset) {
   }
 }
 
-const char *asset_path(Asset asset) {
-  static char resolved_path[1024];
-
+bool asset_resolve(Asset asset, char *buf, size_t n) {
   // The active locale's asset wins when present; otherwise fall back to the
   // shared "common" layer. Strict: no fallback to another language.
-  build_path(resolved_path, sizeof(resolved_path), asset_locale, asset);
-  if (access(resolved_path, F_OK) == 0) {
-    return resolved_path;
+  build_path(buf, n, asset_locale, asset);
+  if (access(buf, F_OK) == 0) {
+    return true;
   }
-  build_path(resolved_path, sizeof(resolved_path), ASSET_COMMON, asset);
-  return resolved_path;
+  build_path(buf, n, ASSET_COMMON, asset);
+  return false;
 }
 #endif
