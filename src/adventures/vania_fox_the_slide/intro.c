@@ -22,9 +22,11 @@ static ImageData images[1] = {
 };
 static const ImageData *background = &images[0];
 
-// Animations
+// Animations (the framework ticks and frees these; the scene only declares
+// them)
 static AnimationData *play_button;
 static AnimationData *exit_button;
+static AnimationData *animations[2];
 
 static Fox *fox;
 
@@ -46,8 +48,8 @@ static const SDL_Rect EXIT_BUTTON_HOTSPOT = {436, 430, 277, 103};
 static SDL_Rect hotspots[2];
 
 static void init(void) {
-  play_button = make_animation_data(3, LOOP);
-  exit_button = make_animation_data(3, LOOP);
+  play_button = animations[0] = make_animation_data(3, LOOP);
+  exit_button = animations[1] = make_animation_data(3, LOOP);
 
   fox = make_fox((SDL_FPoint){322, 317});
   fox_sit(fox);
@@ -142,9 +144,6 @@ static void render(SDL_Renderer *renderer) {
 }
 
 static void deinit(void) {
-  free_animation(play_button);
-  free_animation(exit_button);
-
   fox_free(fox);
 
   Mix_FreeMusic(music);
@@ -175,4 +174,6 @@ Scene intro_scene = {
     .images_length = LEN(images),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
+    .animations = animations,
+    .animations_length = LEN(animations),
 };

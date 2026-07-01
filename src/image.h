@@ -13,8 +13,19 @@
 
 #include "asset.h"
 
+// Cyan is the transparent color key for sprite sheets (see load_image).
+#define COLOR_KEY_R 0x00
+#define COLOR_KEY_G 0xFF
+#define COLOR_KEY_B 0xFF
+
+// Default animation speed, 12 FPS. Per-animation overrides live in
+// AnimationData.ms_per_frame / ActorAnimSpec.ms_per_frame.
+#define DEFAULT_MS_PER_FRAME 83
+
 typedef struct image_data {
   SDL_Texture *texture;
+  // Borrowed, not owned: these point at string literals in an ActorSpec / scene
+  // table that outlive the ImageData. Don't free them.
   const char *filename;
   const char *directory;
   int width;
@@ -34,6 +45,11 @@ typedef struct animation_data {
   AnimationPlaybackStyle style;
   int loop_count;
   int max_loop_count;
+  // Frame index to draw; advanced by animation_update, read by
+  // render_animation.
+  int current_frame;
+  // Milliseconds per frame (defaults to DEFAULT_MS_PER_FRAME).
+  int ms_per_frame;
   SDL_Rect *sprite_clips;
   ImageData image;
   SDL_RendererFlip flip;
@@ -53,6 +69,12 @@ bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
 void play_animation(AnimationData *animation, void (*on_end)(void));
 
 void stop_animation(AnimationData *animation);
+
+// Advance an animation's current frame from elapsed time, and (for ONE_SHOT)
+// stop it when complete. Call once per frame from the owner's update step —
+// keeping timing out of render_animation so playback speed doesn't depend on
+// how often the frame is drawn, and so end callbacks don't fire mid-render.
+void animation_update(AnimationData *animation, int now_ms);
 
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point);

@@ -114,6 +114,10 @@ void game_process_input(SDL_Event *event) {
 }
 
 void game_update(float delta_time) {
+  // Advance the active scene's animations before its own update. A ONE_SHOT end
+  // callback fired here may switch scene, so re-fetch the current scene for the
+  // update() call (same re-entrancy as a scene switch from process_input).
+  update_scene_animations(scene_instance(game.current_scene), SDL_GetTicks());
   scene_instance(game.current_scene).update(delta_time);
 }
 

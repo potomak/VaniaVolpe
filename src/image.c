@@ -15,13 +15,22 @@ static void (*on_animation_playback_end)(void);
 
 AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   AnimationData *animation = malloc(sizeof(AnimationData));
+  if (animation == NULL) {
+    return NULL;
+  }
   SDL_Rect *sprite_clips = (SDL_Rect *)malloc(sizeof(SDL_Rect) * frames);
+  if (sprite_clips == NULL) {
+    free(animation);
+    return NULL;
+  }
   animation->start_time = 0;
   animation->frames = frames;
   animation->is_playing = false;
   animation->style = style;
   animation->loop_count = 0;
   animation->max_loop_count = 0;
+  animation->current_frame = 0;
+  animation->ms_per_frame = DEFAULT_MS_PER_FRAME;
   animation->sprite_clips = sprite_clips;
   animation->image = (ImageData){NULL, 0, 0};
   animation->flip = SDL_FLIP_NONE;
@@ -66,7 +75,8 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
 
   // Color key image
   SDL_SetColorKey(loaded_surface, SDL_TRUE,
-                  SDL_MapRGB(loaded_surface->format, 0, 0xFF, 0xFF));
+                  SDL_MapRGB(loaded_surface->format, COLOR_KEY_R, COLOR_KEY_G,
+                             COLOR_KEY_B));
 
   // Create texture from surface pixels
   image->texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
@@ -75,6 +85,9 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
             image_path, SDL_GetError());
     return false;
   }
+  // Enable alpha blending so transparent-background PNGs (alpha, not just the
+  // cyan key) composite correctly on every driver.
+  SDL_SetTextureBlendMode(image->texture, SDL_BLENDMODE_BLEND);
   // Get image dimensions
   image->width = loaded_surface->w;
   image->height = loaded_surface->h;
@@ -153,6 +166,7 @@ void play_animation(AnimationData *animation, void (*on_end)(void)) {
   }
 
   animation->loop_count = 0;
+  animation->current_frame = 0;
   animation->is_playing = true;
   animation->start_time = SDL_GetTicks();
   on_animation_playback_end = on_end;
@@ -165,39 +179,45 @@ void stop_animation(AnimationData *animation) {
 
   animation->is_playing = false;
   animation->start_time = 0;
+  animation->current_frame = 0;
   if (on_animation_playback_end != NULL) {
     on_animation_playback_end();
   }
 }
 
+void animation_update(AnimationData *animation, int now_ms) {
+  if (!animation->is_playing) {
+    return;
+  }
+
+  int ms_per_frame = animation->ms_per_frame > 0 ? animation->ms_per_frame
+                                                 : DEFAULT_MS_PER_FRAME;
+  int delta = now_ms - animation->start_time;
+  animation->current_frame = (delta / ms_per_frame) % animation->frames;
+  animation->loop_count = delta / ms_per_frame / animation->frames;
+
+  // A ONE_SHOT stops (and fires its end callback) once it has looped its
+  // allotted number of times. stop_animation resets current_frame to 0.
+  if (animation->style == ONE_SHOT &&
+      animation->loop_count > animation->max_loop_count) {
+    stop_animation(animation);
+  }
+}
+
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point) {
-  // Get current frame clip
-  int delta = 0;
-  int ms_per_frame = 83; // at 12 FPS: 1 / 12 * 1000
-  int clip_index = 0;
-  if (animation->is_playing) {
-    delta = SDL_GetTicks() - animation->start_time;
-    clip_index = (delta / ms_per_frame) % animation->frames;
+  // Failed/!loaded animations have no texture; skip them instead of asking SDL
+  // to render NULL.
+  if (animation->image.texture == NULL) {
+    return;
   }
-  SDL_Rect *clip = &animation->sprite_clips[clip_index];
 
-  // Set rendering space and render to screen
+  // Pure draw: blit the frame chosen by animation_update. No timing here, so
+  // playback speed is independent of how often the scene is rendered.
+  SDL_Rect *clip = &animation->sprite_clips[animation->current_frame];
   SDL_Rect render_quad = {point.x, point.y, clip->w, clip->h};
-
-  // Render to screen
   SDL_RenderCopyEx(renderer, animation->image.texture, clip, &render_quad, 0,
                    NULL, animation->flip);
-
-  // Cycle animation
-  if (animation->is_playing) {
-    animation->loop_count = delta / ms_per_frame / animation->frames;
-
-    if (animation->style == ONE_SHOT &&
-        animation->loop_count > animation->max_loop_count) {
-      stop_animation(animation);
-    }
-  }
 }
 
 void render_image(SDL_Renderer *renderer, const ImageData *image,
