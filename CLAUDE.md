@@ -55,7 +55,8 @@ target on every push to `main` and deploys it to GitHub Pages.
   (`it_IT/`, `en_US/`); each holds the scene subdirs (`intro/ playground/ …`).
 - `include/` — bundled SDL_image / SDL_mixer forwarding headers (native build).
 - Docs: `ARCHITECTURE.md` (deep design), `MOVEMENT.md` (movement limitation +
-  future pathfinding), `BACKLOG.md` (future tasks), `TERMINAL_PLAN.md`.
+  future pathfinding), `TERMINAL_PLAN.md`. The queued work lives in **GitHub
+  issues** (label `backlog`), not a file.
 
 ## How it works (quick)
 Scene-based: `Game` runs the current `Adventure` (an ordered scene table); each
@@ -99,11 +100,11 @@ See `ARCHITECTURE.md` for the full design.
   open PRs manually). The agent never merges — the maintainer reviews and merges.
 - Keep changes scoped (one task per PR). Prefer **independent PRs branched off
   `main`** over stacked branches, so they can be merged in any order without
-  re-rebasing after each merge. See `BACKLOG.md` for the queued work.
-- **Groom the backlog in the same PR.** A PR that addresses a `BACKLOG.md` item
-  removes that item in the same PR — or, if only part of it shipped, updates the
-  item with a note on what's done and what's left. Don't leave it for a follow-up,
-  and don't keep a "shipped" archive: the git history is the record. The backlog is
-  ordered by priority (top = do next) and items reference each other by **title**,
-  not by a position number or letter (those aren't stable).
+  re-rebasing after each merge. The queued work lives in **GitHub issues** (label
+  `backlog`, prioritised with `priority: high` / `priority: medium` / `priority:
+  low`, and `needs-art` / `needs-audio` where assets must be authored separately).
+- **Close the issue in the same PR.** A PR that addresses a `backlog` issue closes
+  it with `Closes #N` in the PR description — or, if only part ships, comment on the
+  issue with what's done and what's left and leave it open. New work surfaced while
+  doing a task becomes a new `backlog` issue rather than a TODO left in the tree.
 - Match the existing C style (C99, two-space indent, `lower_snake_case`).
