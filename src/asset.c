@@ -5,9 +5,9 @@
 //  Created by Giovanni Cappellotto on 1/26/25.
 //
 
+#include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #include "asset.h"
 
@@ -41,24 +41,52 @@ bool asset_resolve(Asset asset, char *buf, size_t n) {
   return false;
 }
 #else
-// Build "[root/]<layer>/<directory>/<filename>" into buf.
-static void build_path(char *buf, size_t n, const char *layer, Asset asset) {
+// Build "[root/]<layer>/<directory>/<filename>" into buf. Returns false (and
+// logs) if the path did not fit — snprintf would otherwise truncate silently,
+// and buffers are tight on some targets (Windows PATH_MAX is 260).
+static bool build_path(char *buf, size_t n, const char *layer, Asset asset) {
+  int written;
   if (asset_root != NULL) {
-    snprintf(buf, n, "%s/%s/%s/%s", asset_root, layer, asset.directory,
-             asset.filename);
+    written = snprintf(buf, n, "%s/%s/%s/%s", asset_root, layer,
+                       asset.directory, asset.filename);
   } else {
-    snprintf(buf, n, "%s/%s/%s", layer, asset.directory, asset.filename);
+    written =
+        snprintf(buf, n, "%s/%s/%s", layer, asset.directory, asset.filename);
   }
+  if (written < 0 || (size_t)written >= n) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Asset path too long: %s/%s",
+                 asset.directory, asset.filename);
+    return false;
+  }
+  return true;
+}
+
+// True if a file exists at path. Uses SDL_RWFromFile (the same mechanism the
+// loaders use) rather than POSIX access(): portable (no <unistd.h>, which
+// Windows lacks) and correct on Emscripten's virtual filesystem.
+static bool file_exists(const char *path) {
+  SDL_RWops *rw = SDL_RWFromFile(path, "rb");
+  if (rw == NULL) {
+    return false;
+  }
+  SDL_RWclose(rw);
+  return true;
 }
 
 bool asset_resolve(Asset asset, char *buf, size_t n) {
   // The active locale's asset wins when present; otherwise fall back to the
   // shared "common" layer. Strict: no fallback to another language.
-  build_path(buf, n, asset_locale, asset);
-  if (access(buf, F_OK) == 0) {
+  if (build_path(buf, n, asset_locale, asset) && file_exists(buf)) {
     return true;
   }
   build_path(buf, n, ASSET_COMMON, asset);
+  if (!file_exists(buf)) {
+    // Neither layer has the file. Surface it here (with the resolved path)
+    // instead of leaving it as a cryptic downstream "Couldn't open …".
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Asset not found in locale '%s' or common: %s/%s",
+                 asset_locale, asset.directory, asset.filename);
+  }
   return false;
 }
 #endif
