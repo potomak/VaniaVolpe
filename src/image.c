@@ -62,10 +62,13 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
   free_image_texture(image);
 
   // Load image at specified path
-  const char *image_path = asset_path((Asset){
-      .filename = image->filename,
-      .directory = image->directory,
-  });
+  char image_path[ASSET_PATH_MAX];
+  asset_resolve(
+      (Asset){
+          .filename = image->filename,
+          .directory = image->directory,
+      },
+      image_path, sizeof(image_path));
   SDL_Surface *loaded_surface = IMG_Load(image_path);
   if (loaded_surface == NULL) {
     fprintf(stderr, "Unable to load image %s! SDL_image Error: %s\n",
@@ -153,7 +156,9 @@ bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
     return false;
   }
 
-  if (!load_animation_data(animation, asset_path(data_asset))) {
+  char data_path[ASSET_PATH_MAX];
+  asset_resolve(data_asset, data_path, sizeof(data_path));
+  if (!load_animation_data(animation, data_path)) {
     return false;
   }
 

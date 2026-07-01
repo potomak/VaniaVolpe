@@ -66,12 +66,12 @@ a generic `Actor` (the fox is an `ActorSpec`): a small state machine (IDLE /
 WALKING / TALKING / …); clicks hit-test `hotspots` and walk to `pois` via
 `actor_walk_to`. Animations are sprite sheets + a CSV `.anim` file (`x,y,w,h` per
 frame, 12 FPS). Dialogue is **audio-only** (no on-screen text) via `actor_talk`.
-Each adventure declares an `assets_root` so `asset_path()` resolves its assets.
+Each adventure declares an `assets_root` so `asset_resolve()` resolves its assets.
 See `ARCHITECTURE.md` for the full design.
 
 ## Gotchas
 - **Assets are localized.** Each adventure's `assets/` splits into `common/`
-  (shared) and one dir per locale (`it_IT`, `en_US`, …). `asset_path()` resolves
+  (shared) and one dir per locale (`it_IT`, `en_US`, …). `asset_resolve()` resolves
   `<assets_root>/<locale>/<dir>/<file>`, then `<assets_root>/common/<dir>/<file>`
   — strict, no cross-language fallback, so **every locale must be complete**.
   Voice/dialog WAVs and text-bearing images (intro/outro, labelled buttons) go

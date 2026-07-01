@@ -93,10 +93,14 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
   }
 
   if (spec->move_sound_filename) {
-    actor->move_sound = Mix_LoadWAV(asset_path((Asset){
-        .filename = spec->move_sound_filename,
-        .directory = spec->assets_dir,
-    }));
+    char move_sound_path[ASSET_PATH_MAX];
+    asset_resolve(
+        (Asset){
+            .filename = spec->move_sound_filename,
+            .directory = spec->assets_dir,
+        },
+        move_sound_path, sizeof(move_sound_path));
+    actor->move_sound = Mix_LoadWAV(move_sound_path);
     if (actor->move_sound == NULL) {
       fprintf(stderr, "Failed to load %s move sound! SDL_mixer Error: %s\n",
               spec->id, Mix_GetError());
