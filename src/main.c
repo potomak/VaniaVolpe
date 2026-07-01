@@ -2,7 +2,6 @@
 #include <SDL2_image/SDL_image.h>
 #include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "asset.h"
 #include "constants.h"
@@ -18,36 +17,50 @@
 #endif
 
 // Global variables
-int last_frame_time = 0;
+Uint32 last_frame_time = 0;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 
 // Function to initialize our SDL window
-int init_window(void) {
+bool init_window(void) {
   // Initialize only the subsystems the game needs. SDL_INIT_EVERYTHING also
   // pulls in haptic/joystick/sensor, which Emscripten's SDL2 port does not
   // implement, causing SDL_Init to fail in the browser.
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
-    fprintf(stderr, "Error initializing SDL.\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_Init failed: %s",
+                 SDL_GetError());
     return false;
   }
 
   // Set texture filtering to linear
   if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1")) {
-    fprintf(stderr, "Warning: Linear texture filtering not enabled!");
+    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                "Linear texture filtering not enabled");
   }
 
   window = SDL_CreateWindow("Vania Volpe - Lo Scivolo", SDL_WINDOWPOS_CENTERED,
                             SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
                             SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
   if (!window) {
-    fprintf(stderr, "Error creating SDL Window.\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow failed: %s",
+                 SDL_GetError());
     return false;
   }
+
+  // Prefer an accelerated, vsynced renderer; fall back to software so a machine
+  // with no usable GPU (or a headless/software context) renders instead of
+  // showing a black screen.
   renderer = SDL_CreateRenderer(
       window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (!renderer) {
-    fprintf(stderr, "Error creating SDL Renderer.\n");
+    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                "Accelerated renderer unavailable (%s); trying software",
+                SDL_GetError());
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+  }
+  if (!renderer) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateRenderer failed: %s",
+                 SDL_GetError());
     return false;
   }
 
@@ -60,16 +73,16 @@ int init_window(void) {
   // Initialize PNG loading
   int imgFlags = IMG_INIT_PNG;
   if (!(IMG_Init(imgFlags) & imgFlags)) {
-    fprintf(stderr, "SDL_image could not initialize! SDL_image Error: %s\n",
-            IMG_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "IMG_Init failed: %s",
+                 IMG_GetError());
     return false;
   }
 
   // Initialize SDL_mixer
   if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT,
                     MIX_DEFAULT_CHANNELS, AUDIO_CHUNK_SIZE) < 0) {
-    fprintf(stderr, "SDL_mixer could not initialize! SDL_mixer Error: %s\n",
-            Mix_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Mix_OpenAudio failed: %s",
+                 Mix_GetError());
     return false;
   }
   // Lower the music volume
@@ -101,11 +114,11 @@ void process_input(void) {
 
 // Update function with a fixed time step
 void update(void) {
-  // Get delta_time factor converted to seconds to be used to update objects
-  float delta_time = (SDL_GetTicks() - last_frame_time) / 1000.0;
-
-  // Store the milliseconds of the current frame to be used in the next one
-  last_frame_time = SDL_GetTicks();
+  // Read the tick count once and use it for both the delta and the next frame's
+  // baseline, so the two can't drift.
+  Uint32 now = SDL_GetTicks();
+  float delta_time = (now - last_frame_time) / 1000.0f;
+  last_frame_time = now;
 
   game_update(delta_time);
 }
@@ -130,7 +143,10 @@ void destroy_window(void) {
 
 void destroy_image(void) { IMG_Quit(); }
 
-void destroy_sound(void) { Mix_Quit(); }
+void destroy_sound(void) {
+  Mix_CloseAudio(); // matches Mix_OpenAudio
+  Mix_Quit();
+}
 
 // One iteration of the game loop, shared by the native and web entry points.
 static void main_loop(void) {
@@ -148,7 +164,7 @@ static void main_loop(void) {
 int SDL_main(int argc, char *argv[]) {
   game.is_running = init_window();
   if (!game.is_running) {
-    fprintf(stderr, "Failed to initialize window!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to initialize window!");
   }
 
   // Choose the language before any media is loaded (asset paths resolve through
@@ -158,16 +174,24 @@ int SDL_main(int argc, char *argv[]) {
   // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();
   gina_hen_at_the_pool_register();
+
+  // The content adventures, in menu order. This is the single source of truth:
+  // the hub's list and the engine's full registry below both derive from it, so
+  // adding an adventure is a one-line edit here.
   static const Adventure *content[] = {&vania_fox_the_slide,
                                        &gina_hen_at_the_pool};
-  hub_register(content, 2);
+  hub_register(content, LEN(content));
 
   // Register the hub first (it is the start screen and the back-to-hub target),
   // then the content adventures. All of them are initialized and loaded up
-  // front.
-  static const Adventure *all[] = {&hub, &vania_fox_the_slide,
-                                   &gina_hen_at_the_pool};
-  register_adventures(all, 3);
+  // front. Both arrays stay static because hub_register/register_adventures
+  // retain the pointers for the whole run.
+  static const Adventure *all[1 + LEN(content)];
+  all[0] = &hub;
+  for (int i = 0; i < (int)LEN(content); i++) {
+    all[i + 1] = content[i];
+  }
+  register_adventures(all, LEN(all));
   set_current_adventure(&hub);
 
   game_init();
@@ -176,11 +200,16 @@ int SDL_main(int argc, char *argv[]) {
     game.is_running = game_load_media(renderer);
   }
   if (!game.is_running) {
-    fprintf(stderr, "Failed to load media!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load media!");
   }
 
   // Hack to execute lifecycle callbacks for the first scene
   set_active_scene(hub.entry_scene);
+
+  // Baseline the frame clock right before the loop so the first delta is ~0
+  // instead of "time since SDL init" (which would teleport time-stepped
+  // actors).
+  last_frame_time = SDL_GetTicks();
 
 #ifdef __EMSCRIPTEN__
   // The browser owns the event loop; drive the game via requestAnimationFrame
@@ -193,9 +222,11 @@ int SDL_main(int argc, char *argv[]) {
 
   game_deinit();
 
-  destroy_window();
-  destroy_image();
+  // Tear down in reverse-init order: audio, then image, then renderer/window
+  // (destroy_window calls SDL_Quit last).
   destroy_sound();
+  destroy_image();
+  destroy_window();
 #endif
 
   return 0;
