@@ -25,10 +25,12 @@ static ImageData images[2] = {
 static const ImageData *background = &images[0];
 static const ImageData *key = &images[1];
 
-// Animations
+// Animations (the framework ticks and frees these; the scene only declares
+// them)
 static AnimationData *excavator;
 static AnimationData *gate;
 static AnimationData *shovel;
+static AnimationData *animations[3];
 
 static Fox *fox;
 
@@ -82,11 +84,11 @@ static bool has_key;
 static int examine_gate_count;
 
 static void init(void) {
-  excavator = make_animation_data(4, ONE_SHOT);
+  excavator = animations[0] = make_animation_data(4, ONE_SHOT);
   // Loop the animation 6 times before stopping
   excavator->max_loop_count = 6;
-  gate = make_animation_data(7, ONE_SHOT);
-  shovel = make_animation_data(5, ONE_SHOT);
+  gate = animations[1] = make_animation_data(7, ONE_SHOT);
+  shovel = animations[2] = make_animation_data(5, ONE_SHOT);
   // Loop the animation 3 times before stopping
   shovel->max_loop_count = 3;
 
@@ -262,13 +264,7 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) {
-  int now = SDL_GetTicks();
-  animation_update(excavator, now);
-  animation_update(gate, now);
-  animation_update(shovel, now);
-  fox_update(fox, delta_time);
-}
+static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
@@ -291,10 +287,6 @@ static void render(SDL_Renderer *renderer) {
 }
 
 static void deinit(void) {
-  free_animation(excavator);
-  free_animation(gate);
-  free_animation(shovel);
-
   fox_free(fox);
 
   Mix_FreeMusic(music);
@@ -331,4 +323,6 @@ Scene playground_entrance_scene = {
     .images_length = LEN(images),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
+    .animations = animations,
+    .animations_length = LEN(animations),
 };

@@ -101,6 +101,14 @@ bool load_scene_chunks(Scene scene) {
   return true;
 }
 
+void update_scene_animations(Scene scene, int now_ms) {
+  for (int i = 0; i < scene.animations_length; i++) {
+    if (scene.animations[i] != NULL) {
+      animation_update(scene.animations[i], now_ms);
+    }
+  }
+}
+
 void free_scene_images(Scene scene) {
   for (int i = 0; i < scene.images_length; i++) {
     free_image_texture(&scene.images[i]);
@@ -110,5 +118,13 @@ void free_scene_images(Scene scene) {
 void free_scene_chunks(Scene scene) {
   for (int i = 0; i < scene.chunks_length; i++) {
     Mix_FreeChunk(scene.chunks[i].chunk);
+  }
+}
+
+void free_scene_animations(Scene scene) {
+  for (int i = 0; i < scene.animations_length; i++) {
+    if (scene.animations[i] != NULL) {
+      free_animation(scene.animations[i]);
+    }
   }
 }

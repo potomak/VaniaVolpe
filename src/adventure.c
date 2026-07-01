@@ -42,5 +42,6 @@ void adventure_deinit(const Adventure *adventure) {
     scene.deinit();
     free_scene_images(scene);
     free_scene_chunks(scene);
+    free_scene_animations(scene);
   }
 }

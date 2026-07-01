@@ -42,6 +42,12 @@ typedef struct scene {
   // Chunks (sound effects)
   ChunkData *chunks;
   int chunks_length;
+
+  // Animations the scene draws itself (buttons, props, …). The framework ticks
+  // them each frame and frees them on teardown, so scenes only declare them —
+  // they don't call animation_update. (An actor ticks its own animations.)
+  AnimationData **animations;
+  int animations_length;
 } Scene;
 
 // Nearest point that is inside one of the walkable rects and outside the
@@ -53,8 +59,14 @@ bool load_scene_images(Scene scene, SDL_Renderer *renderer);
 
 bool load_scene_chunks(Scene scene);
 
+// Advance the scene's declared animations (called once per frame by the
+// engine).
+void update_scene_animations(Scene scene, int now_ms);
+
 void free_scene_images(Scene scene);
 
 void free_scene_chunks(Scene scene);
+
+void free_scene_animations(Scene scene);
 
 #endif /* scene_h */
