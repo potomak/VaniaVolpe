@@ -41,11 +41,17 @@ adventure's dialogue in order — the gate for gameplay regressions. Before push
 - Run `make test` if you touched engine/gameplay code.
 - Play-test the interaction you changed (desktop, or the deployed web build).
 
-CI on every push/PR: `.github/workflows/test.yml` runs the headless playthrough
-(gating) and `.github/workflows/lint.yml` runs clang-format/clang-tidy (advisory).
+The click choreography, waits and expected dialogue live in
+`test/scripts/<name>.json` — one source of truth shared by the native test (via
+a generated header) and the browser test. `test/web/run_playtest.js` reads the
+same JSON and drives the web build with Puppeteer, saving screenshots.
+
+CI on every push/PR: `.github/workflows/test.yml` runs the native headless
+playthrough and `web-test.yml` runs the browser playthrough (both gating);
+`lint.yml` runs clang-format/clang-tidy (advisory).
 `.github/workflows/deploy-pages.yml` compiles the web target on pushes to `main`
 and deploys it to GitHub Pages. See ARCHITECTURE.md → *Terminal & Headless
-Backends* for how the test harness works.
+Backends* for how the harnesses work.
 
 ## Repo map
 - `src/` — **common engine / app shell**: `main.c` (desktop entry + game loop),
@@ -63,8 +69,10 @@ Backends* for how the test harness works.
   and its `assets/` subtree, split into `common/` (shared) and one dir per locale
   (`it_IT/`, `en_US/`); each holds the scene subdirs (`intro/ playground/ …`).
 - `include/` — bundled SDL_image / SDL_mixer forwarding headers (native build).
-- `test/` — headless test harness (`harness.{c,h}`), the scripted play-tests
-  (`play_gina.c`, …), and the `main_test.c` entry point (`make test`).
+- `test/` — headless test harness (`harness.{c,h}`), the script interpreter
+  (`script.{c,h}`), the play-tests (`play_gina.c`, …) and `main_test.c` entry
+  point (`make test`); `scripts/` holds the shared JSON playthroughs and `web/`
+  the Puppeteer browser test that consumes them.
 - Docs: `ARCHITECTURE.md` (deep design, incl. the terminal & headless-test
   backends), `MOVEMENT.md` (movement limitation + future pathfinding). The queued
   work lives in **GitHub issues** (label `backlog`), not a file.

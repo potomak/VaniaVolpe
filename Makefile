@@ -49,8 +49,14 @@ TARGET_TEST = vaniavolpe_test
 # Headless smoke test: the game plus a scripted-playthrough harness (test/). No
 # libcaca — it renders offscreen and reads pixels back instead of drawing to a
 # terminal. The .test.o suffix keeps its objects separate from the other builds.
-TEST_SRCS = test/main_test.c test/harness.c test/play_gina.c $(GAME_SRCS)
+TEST_SRCS = test/main_test.c test/harness.c test/script.c test/play_gina.c \
+            $(GAME_SRCS)
 TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))
+
+# Playthrough scripts are the single source of truth shared with the browser
+# test (test/web); the native test consumes a generated header of each one.
+GEN_DIR = build/gen
+GINA_SCRIPT_H = $(GEN_DIR)/gina_script.h
 
 # ── default target (SDL window) ───────────────────────────────────────────────
 
@@ -79,8 +85,16 @@ test: $(TARGET_TEST)
 $(TARGET_TEST): $(TEST_OBJS)
 	$(CC) $(TEST_OBJS) $(LDFLAGS) -o $@
 
+# Generate the C step table from the shared JSON script.
+$(GINA_SCRIPT_H): test/scripts/gina.json tools/gen_playtest.py
+	mkdir -p $(GEN_DIR)
+	python3 tools/gen_playtest.py --name gina --in $< --out $@
+
+# The Gina play-test #includes the generated header.
+test/play_gina.test.o: $(GINA_SCRIPT_H)
+
 %.test.o: %.c
-	$(CC) $(CFLAGS) -Itest -c $< -o $@
+	$(CC) $(CFLAGS) -Itest -I$(GEN_DIR) -c $< -o $@
 
 # Build and run the smoke test (offscreen video + dummy audio are set by the
 # binary itself). Exits non-zero if the playthrough regresses.

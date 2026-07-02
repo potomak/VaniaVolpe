@@ -373,11 +373,16 @@ Both the terminal renderer and the automated test reuse one trick: before `SDL_I
 
 ### Headless test target (`make test`)
 
-`test/` builds `vaniavolpe_test`: the same offscreen game, no libcaca. It pushes a **scripted** sequence of mouse events (`test/play_gina.c`) through a reusable harness (`test/harness.{c,h}`) and asserts the adventure ran correctly — the native analog of the browser `scratchpad/gina_smoke.js`:
+`test/` builds `vaniavolpe_test`: the same offscreen game, no libcaca. It runs a **scripted** playthrough through a reusable harness (`test/harness.{c,h}`) and asserts the adventure ran correctly:
 
 - **Assertions on behaviour, not pixels.** Dialogue and messages go through `SDL_Log`; the harness installs an `SDL_LogSetOutputFunction` sink, captures that stream, and checks the expected lines appear in order. A `SDL_RenderReadPixels` "frame isn't a single flat colour" check guards against a blank-screen / missing-texture regression. The binary exits non-zero on any miss.
+- **Shared script.** The playthrough — click coordinates, waits, the sunscreen "brush" gesture, and the expected dialogue — lives in `test/scripts/<name>.json`, the single source of truth. `tools/gen_playtest.py` turns it into a generated C header (`build/gen/<name>_script.h`) that `test/play_gina.c` drives via `script_run` (`test/script.{c,h}`).
 - **CI:** `.github/workflows/test.yml` builds and runs it on every push / PR, gating merges the way the web build does.
 - **Limitation:** the run is real wall-clock time (animation and talk-duration timing read `SDL_GetTicks()` directly), so a full playthrough takes ~45 s; a fixed-step clock is a possible future refinement.
+
+### Browser test (`test/web`)
+
+`test/web/run_playtest.js` reads the **same** `test/scripts/<name>.json` and drives the deployed-shape web build with Puppeteer, so the native and browser playthroughs stay in lockstep. It saves a screenshot at each `screenshot` step and asserts the expected dialogue in the browser console (Emscripten routes `SDL_Log` there). `.github/workflows/web-test.yml` builds the web target, serves it, runs the script, and uploads the screenshots as an artifact.
 
 ---
 

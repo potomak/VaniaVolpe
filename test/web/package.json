@@ -1,0 +1,12 @@
+{
+  "name": "vaniavolpe-web-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Headless-browser playthrough test for the VaniaVolpe web build.",
+  "scripts": {
+    "test": "node run_playtest.js ../scripts/gina.json"
+  },
+  "dependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}
