@@ -116,6 +116,17 @@ typedef struct walk_area {
 typedef struct walk_grid {
   Uint8 cells[WALK_GRID_H][WALK_GRID_W];
 } WalkGrid;
+```
+
+> **Scrollable scenes** (`DEPTH_AND_CAMERA.md`, #67) make the grid
+> *scene*-sized rather than window-sized: dimensions become `WalkGrid` fields
+> derived from the scene size (static maximums `MAX_SCENE_W`/`MAX_SCENE_H`),
+> the A* cost array becomes `Uint32`, and the `.walk` format gains a
+> `walk <w> <h>` header line. See that spec's *Interlocks with the movement
+> plan* for the exact deltas; if this plan is implemented after camera
+> support lands, build it scene-sized from the start.
+
+```c
 
 // Rasterise the rects into the grid (called once from the scene's init).
 void walk_grid_build(WalkGrid *grid, const WalkArea *area);
