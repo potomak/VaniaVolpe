@@ -1,0 +1,51 @@
+name: Web test (headless browser)
+
+# Gating: builds the WebAssembly target, serves it, and runs the shared
+# playthrough script (test/scripts/gina.json) against it with Puppeteer,
+# asserting the expected dialogue appears in the browser console. Screenshots
+# taken along the way are uploaded as an artifact.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  web-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build web target with Emscripten
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git ~/emsdk
+          ~/emsdk/emsdk install latest
+          ~/emsdk/emsdk activate latest
+          source ~/emsdk/emsdk_env.sh
+          make web
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install browser-test deps
+        working-directory: test/web
+        run: npm install
+
+      - name: Run the browser playthrough
+        run: |
+          python3 -m http.server 8099 --directory build/web &
+          sleep 2
+          cd test/web
+          SHOTS="$GITHUB_WORKSPACE/screenshots" \
+            node run_playtest.js ../scripts/gina.json
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gina-playthrough-screenshots
+          path: screenshots/
+          if-no-files-found: warn
