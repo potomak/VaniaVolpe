@@ -8,7 +8,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "constants.h"
 #include "game.h"
@@ -77,7 +76,8 @@ static void brush_at(int x, int y) {
 
   if (painted_count >= (int)(COVERAGE_THRESHOLD * ROWS * COLS)) {
     gina_state.has_sunscreen = true;
-    fprintf(stdout, "Gina: Pronta! Ora posso uscire al sole!\n");
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Gina: Pronta! Ora posso uscire al sole!");
     Mix_PlayChannel(-1, chunks[0].chunk, 0);
     set_active_scene(POOL);
   }

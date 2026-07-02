@@ -95,8 +95,8 @@ bool load_scene_chunks(Scene scene) {
         path, sizeof(path));
     scene.chunks[i].chunk = Mix_LoadWAV(path);
     if (scene.chunks[i].chunk == NULL) {
-      fprintf(stderr, "Failed to load %s! SDL_mixer Error: %s\n", path,
-              Mix_GetError());
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load %s: %s", path,
+                   Mix_GetError());
       return false;
     }
   }

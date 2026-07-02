@@ -7,7 +7,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "constants.h"
 #include "game.h"
@@ -77,7 +76,8 @@ static void process_input(SDL_Event *event) {
     }
     if (collected_count == GRAPE_COUNT) {
       gina_state.has_grapes = true;
-      fprintf(stdout, "Gina: Cestino pieno d'uva! Ora torno da Carla.\n");
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                  "Gina: Cestino pieno d'uva! Ora torno da Carla.");
       set_active_scene(VINE);
     }
     break;

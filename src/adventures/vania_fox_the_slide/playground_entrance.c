@@ -120,7 +120,7 @@ static bool load_media(SDL_Renderer *renderer) {
                           .filename = "excavator.anim",
                           .directory = "playground_entrance",
                       })) {
-    fprintf(stderr, "Failed to load excavator!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load excavator");
     return false;
   }
 
@@ -133,7 +133,7 @@ static bool load_media(SDL_Renderer *renderer) {
                           .filename = "gate.anim",
                           .directory = "playground_entrance",
                       })) {
-    fprintf(stderr, "Failed to load gate!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load gate");
     return false;
   }
 
@@ -146,12 +146,12 @@ static bool load_media(SDL_Renderer *renderer) {
                           .filename = "shovel.anim",
                           .directory = "playground_entrance",
                       })) {
-    fprintf(stderr, "Failed to load shovel!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load shovel");
     return false;
   }
 
   if (!fox_load_media(fox, renderer)) {
-    fprintf(stderr, "Failed to load fox!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load fox");
     return false;
   }
 
@@ -165,8 +165,8 @@ static bool load_media(SDL_Renderer *renderer) {
       music_path, sizeof(music_path));
   music = Mix_LoadMUS(music_path);
   if (music == NULL) {
-    fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
-            Mix_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",
+                 Mix_GetError());
     return false;
   }
 

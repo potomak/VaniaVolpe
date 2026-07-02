@@ -41,8 +41,9 @@ void debug_process_input(SDL_Event *event) {
     break;
   case SDL_MOUSEBUTTONUP:
     is_m_down = false;
-    fprintf(stdout, "Rect: {%d, %d, %d, %d}\n", m_pos_down.x, m_pos_down.y,
-            m_pos_up.x - m_pos_down.x, m_pos_up.y - m_pos_down.y);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Rect: {%d, %d, %d, %d}",
+                m_pos_down.x, m_pos_down.y, m_pos_up.x - m_pos_down.x,
+                m_pos_up.y - m_pos_down.y);
     break;
   }
 }

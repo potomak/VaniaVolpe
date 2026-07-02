@@ -10,7 +10,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "constants.h"
 #include "game.h"
@@ -114,7 +113,7 @@ static void float_blows_away(void) {
 
 static void dive(void) {
   Mix_PlayChannel(-1, chunks[2].chunk, 0); // splash
-  fprintf(stdout, "Gina: Che bello! Ancora!\n");
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Gina: Che bello! Ancora!");
   // Replay the adventure in place.
   gina_state_reset();
   gina->current_position = HEN_START;

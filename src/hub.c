@@ -5,7 +5,6 @@
 
 #include <SDL2/SDL.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "constants.h"
 #include "game.h"
@@ -53,8 +52,9 @@ static void process_input(SDL_Event *event) {
     for (int i = 0; i < content_count; i++) {
       SDL_Rect rect = menu_button_rect(i);
       if (SDL_PointInRect(&m_pos, &rect)) {
-        fprintf(stdout, "Hub: starting adventure '%s'\n",
-                content_adventures[i]->title);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Hub: starting adventure '%s'",
+                    content_adventures[i]->title);
         switch_to_adventure(content_adventures[i]);
         break;
       }

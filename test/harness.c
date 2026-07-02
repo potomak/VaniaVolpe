@@ -13,15 +13,16 @@
 #include "image.h"
 #include "vania_fox_the_slide.h"
 
-// Dialogue (fprintf(stdout, …) / gina_say) is redirected here so the harness
-// can read it back and assert on it; the run's own summary goes to stderr.
-// Switching the game to SDL_Log for dialogue would change this capture
-// mechanism.
-#define CAPTURE_PATH "vaniavolpe_test_stdout.log"
-
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static Uint32 last_frame_time = 0;
+
+// Dialogue and messages go through SDL_Log; we install our own log sink so the
+// tests can read the stream back and assert on it. Lines are appended here
+// (newline-separated) and also teed to stderr so the CI log still shows the
+// playthrough.
+static char log_buf[1 << 16];
+static size_t log_len = 0;
 
 // ── lifecycle ────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,6 @@ void harness_shutdown(void) {
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
-  remove(CAPTURE_PATH);
 }
 
 bool harness_start_game(void) {
@@ -207,44 +207,49 @@ bool harness_frame_has_variation(void) {
   return false;
 }
 
-bool harness_capture_begin(void) {
-  if (freopen(CAPTURE_PATH, "w", stdout) == NULL) {
-    fprintf(stderr, "harness: could not redirect stdout to %s\n", CAPTURE_PATH);
-    return false;
+// SDL log sink: append each message to log_buf (newline-separated) and tee it
+// to stderr so the CI log still shows the run. The tee — and the harness's own
+// OK/MISS/PASS reporting — use fprintf on purpose, not SDL_Log: routing them
+// through SDL_Log would recurse back into this sink and pollute the captured
+// buffer the assertions read.
+static void SDLCALL capture_log(void *userdata, int category,
+                                SDL_LogPriority priority, const char *message) {
+  (void)userdata;
+  (void)category;
+  (void)priority;
+  size_t mlen = strlen(message);
+  if (log_len + mlen + 2 < sizeof(log_buf)) {
+    memcpy(log_buf + log_len, message, mlen);
+    log_len += mlen;
+    log_buf[log_len++] = '\n';
+    log_buf[log_len] = '\0';
   }
+  fprintf(stderr, "%s\n", message);
+}
+
+bool harness_capture_begin(void) {
+  // Capture everything the app logs; dialogue is logged at INFO (the default
+  // for SDL_LOG_CATEGORY_APPLICATION, set explicitly here so it can't be
+  // filtered).
+  SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+  SDL_LogSetOutputFunction(capture_log, NULL);
   return true;
 }
 
-// Read the captured dialogue so far into buf (NUL-terminated).
-static void read_capture(char *buf, size_t cap) {
-  fflush(stdout);
-  buf[0] = '\0';
-  FILE *f = fopen(CAPTURE_PATH, "r");
-  if (f == NULL) {
-    return;
-  }
-  size_t n = fread(buf, 1, cap - 1, f);
-  buf[n] = '\0';
-  fclose(f);
-}
-
 int harness_check_lines_in_order(const char *const *expected, size_t count) {
-  static char captured[1 << 16];
-  read_capture(captured, sizeof(captured));
-
   int missing = 0;
   size_t offset = 0; // enforce order: each match must come after the previous
   for (size_t i = 0; i < count; i++) {
-    const char *hit = strstr(captured + offset, expected[i]);
+    const char *hit = strstr(log_buf + offset, expected[i]);
     if (hit == NULL) {
       // Distinguish "missing" from merely "out of order" in the report.
-      bool anywhere = strstr(captured, expected[i]) != NULL;
+      bool anywhere = strstr(log_buf, expected[i]) != NULL;
       fprintf(stderr, "MISS%s  %s\n", anywhere ? " (out of order)" : "",
               expected[i]);
       missing++;
     } else {
       fprintf(stderr, "OK    %s\n", expected[i]);
-      offset = (size_t)(hit - captured) + strlen(expected[i]);
+      offset = (size_t)(hit - log_buf) + strlen(expected[i]);
     }
   }
   return missing;

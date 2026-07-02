@@ -3,7 +3,7 @@
 // It runs the game with no display server or audio hardware (offscreen SDL
 // video driver + software renderer + dummy audio — the same trick the terminal
 // build uses), drives it with scripted mouse events pushed onto SDL's own
-// queue, and captures the dialogue the game prints so tests can assert on it.
+// queue, and captures the game's SDL_Log output so tests can assert on it.
 //
 // A play-test (e.g. play_gina) uses these primitives to script an adventure;
 // main_test wires the harness up and runs the play-tests.
@@ -21,7 +21,7 @@
 // the image/mixer subsystems. Returns false on failure.
 bool harness_init(void);
 
-// Tear down media and SDL, and remove the capture file.
+// Tear down media and SDL.
 void harness_shutdown(void);
 
 // Register the adventures, initialise the game, load all media, and activate
@@ -53,13 +53,13 @@ void harness_click(double fx, double fy);
 // pixels.
 bool harness_frame_has_variation(void);
 
-// Redirect the game's stdout (all dialogue) to a capture file so tests can
-// assert on it. Call once, before starting the game. Returns false on failure.
+// Install an SDL_Log sink that captures the game's log output (all dialogue) so
+// tests can assert on it. Call once, before starting the game. Returns true.
 bool harness_capture_begin(void);
 
-// Check that each expected substring appears, in order, in the captured
-// dialogue. Prints an OK/MISS line per expectation to stderr. Returns the
-// number of missing expectations (0 = all present).
+// Check that each expected substring appears, in order, in the captured log.
+// Prints an OK/MISS line per expectation to stderr. Returns the number of
+// missing expectations (0 = all present).
 int harness_check_lines_in_order(const char *const *expected, size_t count);
 
 #endif /* test_harness_h */
