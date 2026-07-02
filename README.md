@@ -45,6 +45,8 @@ Needs the SDL2 / SDL2_image / SDL2_mixer dev libraries (resolved via
 
 - [`CLAUDE.md`](CLAUDE.md) — build/run, repo map and conventions (for contributors
   and AI agents).
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — the engine design in depth.
-- [`BACKLOG.md`](BACKLOG.md) — queued work.
-- [`MOVEMENT.md`](MOVEMENT.md), [`TERMINAL_PLAN.md`](TERMINAL_PLAN.md) — focused notes.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — the engine design in depth (including the
+  terminal and headless-test backends).
+- [`MOVEMENT.md`](MOVEMENT.md) — focused notes on the movement limitation.
+- Queued work lives in [GitHub issues](https://github.com/potomak/VaniaVolpe/issues)
+  (label `backlog`).

@@ -359,6 +359,28 @@ Scene resources are allocated per-scene and freed when the scene is deinitialize
 
 ---
 
+## Terminal & Headless Backends
+
+Both the terminal renderer and the automated test reuse one trick: before `SDL_Init`, set `SDL_VIDEODRIVER=offscreen` and create a **software** renderer, so the game runs and draws into an ordinary RGBA buffer with no display server, GPU, or sound card (audio uses the `dummy` driver). The scene / actor / game code is identical across every backend.
+
+### Terminal backend (`make terminal`)
+
+`main_terminal.c` + `terminal.{c,h}` render the game as coloured ASCII art with [libcaca](http://caca.zoy.org/wiki/libcaca):
+
+- **Output:** each frame, `SDL_RenderReadPixels` copies the 800×600 frame into an RGBA buffer that `caca_dither_bitmap` dithers onto the libcaca canvas. `caca_set_display_time` caps the terminal refresh at ~10 fps while game logic runs at full speed.
+- **Input:** libcaca mouse/keyboard events are translated into `SDL_MOUSEBUTTONDOWN` / `SDL_MOUSEMOTION` / `SDL_KEYDOWN` events and pushed onto SDL's queue, with character-cell coordinates scaled back into 800×600 game space — so `game_process_input` is unchanged.
+- **Running:** `./vaniavolpe_terminal`; `ESC` / `q` (or Ctrl+C / Ctrl+D) quits, `d` toggles the debug overlay. Inside tmux, add `set -g mouse on` to `~/.tmux.conf`, or tmux eats the mouse events before the game sees them.
+
+### Headless test target (`make test`)
+
+`test/` builds `vaniavolpe_test`: the same offscreen game, no libcaca. It pushes a **scripted** sequence of mouse events (`test/play_gina.c`) through a reusable harness (`test/harness.{c,h}`) and asserts the adventure ran correctly — the native analog of the browser `scratchpad/gina_smoke.js`:
+
+- **Assertions on behaviour, not pixels.** Dialogue and messages go through `SDL_Log`; the harness installs an `SDL_LogSetOutputFunction` sink, captures that stream, and checks the expected lines appear in order. A `SDL_RenderReadPixels` "frame isn't a single flat colour" check guards against a blank-screen / missing-texture regression. The binary exits non-zero on any miss.
+- **CI:** `.github/workflows/test.yml` builds and runs it on every push / PR, gating merges the way the web build does.
+- **Limitation:** the run is real wall-clock time (animation and talk-duration timing read `SDL_GetTicks()` directly), so a full playthrough takes ~45 s; a fixed-step clock is a possible future refinement.
+
+---
+
 ## Known Limitations & TODOs
 
 - No back-navigation between scenes; revisiting a scene resets its puzzle state.
