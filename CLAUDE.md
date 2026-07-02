@@ -17,6 +17,10 @@ All source is in `src/`. Build via `make`:
   SDL2_mixer dev libraries (resolved via `pkg-config`).
 - `make terminal` — libcaca renderer → `./vaniavolpe_terminal` (no display
   server needed). Also needs `caca`.
+- `make test` — headless scripted playthrough → `./vaniavolpe_test` (offscreen
+  renderer + dummy audio, no display server). Asserts the adventure's dialogue
+  and exits non-zero on a regression. See ARCHITECTURE.md → *Terminal & Headless
+  Backends*.
 - `make web` — WebAssembly → `build/web/index.{html,js,wasm,data}`. Needs the
   **Emscripten SDK** (`emcc` on `PATH`); run `make web` after
   `source /path/to/emsdk/emsdk_env.sh`. Also emits the **asset catalog** —
@@ -30,13 +34,18 @@ All source is in `src/`. Build via `make`:
 `build/` is git-ignored; never commit generated web artifacts.
 
 ## Testing
-There is **no automated test suite** — compiling is the gate. Before pushing:
+`make test` runs a **headless scripted playthrough** (`test/`) that asserts the
+adventure's dialogue in order — the gate for gameplay regressions. Before pushing:
 
 - Build the relevant target (at minimum `make web`, which CI also runs).
+- Run `make test` if you touched engine/gameplay code.
 - Play-test the interaction you changed (desktop, or the deployed web build).
 
-The GitHub Actions workflow `.github/workflows/deploy-pages.yml` compiles the web
-target on every push to `main` and deploys it to GitHub Pages.
+CI on every push/PR: `.github/workflows/test.yml` runs the headless playthrough
+(gating) and `.github/workflows/lint.yml` runs clang-format/clang-tidy (advisory).
+`.github/workflows/deploy-pages.yml` compiles the web target on pushes to `main`
+and deploys it to GitHub Pages. See ARCHITECTURE.md → *Terminal & Headless
+Backends* for how the test harness works.
 
 ## Repo map
 - `src/` — **common engine / app shell**: `main.c` (desktop entry + game loop),
@@ -54,9 +63,11 @@ target on every push to `main` and deploys it to GitHub Pages.
   and its `assets/` subtree, split into `common/` (shared) and one dir per locale
   (`it_IT/`, `en_US/`); each holds the scene subdirs (`intro/ playground/ …`).
 - `include/` — bundled SDL_image / SDL_mixer forwarding headers (native build).
-- Docs: `ARCHITECTURE.md` (deep design), `MOVEMENT.md` (movement limitation +
-  future pathfinding), `TERMINAL_PLAN.md`. The queued work lives in **GitHub
-  issues** (label `backlog`), not a file.
+- `test/` — headless test harness (`harness.{c,h}`), the scripted play-tests
+  (`play_gina.c`, …), and the `main_test.c` entry point (`make test`).
+- Docs: `ARCHITECTURE.md` (deep design, incl. the terminal & headless-test
+  backends), `MOVEMENT.md` (movement limitation + future pathfinding). The queued
+  work lives in **GitHub issues** (label `backlog`), not a file.
 
 ## How it works (quick)
 Scene-based: `Game` runs the current `Adventure` (an ordered scene table); each
