@@ -28,7 +28,7 @@ jobs:
             libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libcaca-dev
 
       - name: Generate compile_commands.json
-        run: bear -- make all terminal
+        run: bear -- make all terminal test
 
       - name: Run clang-format and clang-tidy
         uses: cpp-linter/cpp-linter-action@v2

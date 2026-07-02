@@ -46,10 +46,10 @@ TERMINAL_SRCS = src/main_terminal.c src/terminal.c $(GAME_SRCS)
 TERMINAL_OBJS = $(patsubst %.c,%.terminal.o,$(TERMINAL_SRCS))
 
 TARGET_TEST = vaniavolpe_test
-# Headless smoke test: the game plus a scripted-playthrough entry point. No
+# Headless smoke test: the game plus a scripted-playthrough harness (test/). No
 # libcaca — it renders offscreen and reads pixels back instead of drawing to a
 # terminal. The .test.o suffix keeps its objects separate from the other builds.
-TEST_SRCS = src/main_test.c $(GAME_SRCS)
+TEST_SRCS = test/main_test.c test/harness.c test/play_gina.c $(GAME_SRCS)
 TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))
 
 # ── default target (SDL window) ───────────────────────────────────────────────
@@ -80,7 +80,7 @@ $(TARGET_TEST): $(TEST_OBJS)
 	$(CC) $(TEST_OBJS) $(LDFLAGS) -o $@
 
 %.test.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -Itest -c $< -o $@
 
 # Build and run the smoke test (offscreen video + dummy audio are set by the
 # binary itself). Exits non-zero if the playthrough regresses.
@@ -138,7 +138,7 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
 CLANG_FORMAT ?= clang-format
 # All first-party C sources/headers; the bundled SDL shims under
 # src/emscripten/compat/ and include/ are intentionally left alone.
-FORMAT_SRCS = $(shell find src \( -name '*.c' -o -name '*.h' \) \
+FORMAT_SRCS = $(shell find src test \( -name '*.c' -o -name '*.h' \) \
                 -not -path 'src/emscripten/compat/*')
 
 # Rewrite sources in place to match .clang-format.
