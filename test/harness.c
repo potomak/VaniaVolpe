@@ -208,7 +208,10 @@ bool harness_frame_has_variation(void) {
 }
 
 // SDL log sink: append each message to log_buf (newline-separated) and tee it
-// to stderr so the CI log still shows the run.
+// to stderr so the CI log still shows the run. The tee — and the harness's own
+// OK/MISS/PASS reporting — use fprintf on purpose, not SDL_Log: routing them
+// through SDL_Log would recurse back into this sink and pollute the captured
+// buffer the assertions read.
 static void SDLCALL capture_log(void *userdata, int category,
                                 SDL_LogPriority priority, const char *message) {
   (void)userdata;
