@@ -1,7 +1,6 @@
 #include <SDL2/SDL.h>
 #include <caca.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "constants.h"
@@ -24,21 +23,24 @@ bool terminal_init(SDL_Renderer *renderer) {
   pitch = WINDOW_WIDTH * 4; // 4 bytes per pixel (RGBA32)
   pixels = malloc((size_t)WINDOW_HEIGHT * pitch);
   if (!pixels) {
-    fprintf(stderr, "terminal: failed to allocate pixel buffer\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "terminal: failed to allocate pixel buffer");
     return false;
   }
 
   cv = caca_create_canvas(0, 0);
   if (!cv) {
-    fprintf(stderr, "terminal: failed to create caca canvas\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "terminal: failed to create caca canvas");
     free(pixels);
     return false;
   }
 
   dp = caca_create_display(cv);
   if (!dp) {
-    fprintf(stderr, "terminal: failed to create caca display\n");
-    fprintf(stderr, "terminal: is TERM set and is a tty attached?\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "terminal: failed to create caca display; is TERM set and a "
+                 "tty attached?");
     caca_free_canvas(cv);
     cv = NULL;
     free(pixels);
@@ -57,7 +59,8 @@ bool terminal_init(SDL_Renderer *renderer) {
   dither = caca_create_dither(32, WINDOW_WIDTH, WINDOW_HEIGHT, pitch, RMASK,
                               GMASK, BMASK, AMASK);
   if (!dither) {
-    fprintf(stderr, "terminal: failed to create caca dither\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "terminal: failed to create caca dither");
     caca_free_display(dp);
     caca_free_canvas(cv);
     dp = NULL;
@@ -76,8 +79,8 @@ void terminal_present(SDL_Renderer *renderer) {
 
   if (SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA32, pixels,
                            pitch) != 0) {
-    fprintf(stderr, "terminal: SDL_RenderReadPixels failed: %s\n",
-            SDL_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "terminal: SDL_RenderReadPixels failed: %s", SDL_GetError());
     return;
   }
 

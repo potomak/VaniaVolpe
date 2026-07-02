@@ -8,7 +8,6 @@
 #include <SDL2_mixer/SDL_mixer.h>
 #include <math.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "actor.h"
 #include "constants.h"
@@ -86,8 +85,9 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
                             .filename = anim->data_filename,
                             .directory = spec->assets_dir,
                         })) {
-      fprintf(stderr, "Failed to load %s animation %s!\n", spec->id,
-              anim->sprite_filename);
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                   "Failed to load %s animation %s", spec->id,
+                   anim->sprite_filename);
       return false;
     }
   }
@@ -102,8 +102,9 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
         move_sound_path, sizeof(move_sound_path));
     actor->move_sound = Mix_LoadWAV(move_sound_path);
     if (actor->move_sound == NULL) {
-      fprintf(stderr, "Failed to load %s move sound! SDL_mixer Error: %s\n",
-              spec->id, Mix_GetError());
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                   "Failed to load %s move sound: %s", spec->id,
+                   Mix_GetError());
       return false;
     }
     Mix_VolumeChunk(actor->move_sound, spec->move_sound_volume);

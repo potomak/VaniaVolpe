@@ -2,7 +2,7 @@
 //  gina_state.c
 //
 
-#include <stdio.h>
+#include <SDL2/SDL.h>
 
 #include "gina_state.h"
 
@@ -18,6 +18,6 @@ void gina_state_reset(void) {
 }
 
 void gina_say(Hen *gina, const char *line, Mix_Chunk *voice) {
-  fprintf(stdout, "Gina: %s\n", line);
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Gina: %s", line);
   hen_talk(gina, voice);
 }

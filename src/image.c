@@ -71,8 +71,8 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
       image_path, sizeof(image_path));
   SDL_Surface *loaded_surface = IMG_Load(image_path);
   if (loaded_surface == NULL) {
-    fprintf(stderr, "Unable to load image %s! SDL_image Error: %s\n",
-            image_path, IMG_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to load image %s: %s",
+                 image_path, IMG_GetError());
     return false;
   }
 
@@ -84,8 +84,9 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
   // Create texture from surface pixels
   image->texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
   if (image->texture == NULL) {
-    fprintf(stderr, "Unable to create texture from %s! SDL Error: %s\n",
-            image_path, SDL_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Unable to create texture from %s: %s", image_path,
+                 SDL_GetError());
     return false;
   }
   // Enable alpha blending so transparent-background PNGs (alpha, not just the
@@ -112,7 +113,8 @@ static bool load_animation_data(AnimationData *animation, const char *path) {
   size_t size;
   char *data = SDL_LoadFile(path, &size);
   if (data == NULL) {
-    fprintf(stderr, "Failed to load data!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Failed to load animation data %s", path);
     return false;
   }
 
@@ -152,7 +154,8 @@ bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
   animation->image.filename = sprite_asset.filename;
   animation->image.directory = sprite_asset.directory;
   if (!load_image(renderer, &animation->image)) {
-    fprintf(stderr, "Failed to load walking animation texture!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Failed to load animation texture %s", sprite_asset.filename);
     return false;
   }
 

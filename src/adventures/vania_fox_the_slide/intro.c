@@ -68,7 +68,7 @@ static bool load_media(SDL_Renderer *renderer) {
                           .filename = "play_button.anim",
                           .directory = "intro",
                       })) {
-    fprintf(stderr, "Failed to load play button!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load play button");
     return false;
   }
 
@@ -81,12 +81,12 @@ static bool load_media(SDL_Renderer *renderer) {
                           .filename = "exit_button.anim",
                           .directory = "intro",
                       })) {
-    fprintf(stderr, "Failed to load exit button!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load exit button");
     return false;
   }
 
   if (!fox_load_media(fox, renderer)) {
-    fprintf(stderr, "Failed to load fox!\n");
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load fox");
     return false;
   }
 
@@ -100,8 +100,8 @@ static bool load_media(SDL_Renderer *renderer) {
       music_path, sizeof(music_path));
   music = Mix_LoadMUS(music_path);
   if (music == NULL) {
-    fprintf(stderr, "Failed to load music! SDL_mixer Error: %s\n",
-            Mix_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",
+                 Mix_GetError());
     return false;
   }
 

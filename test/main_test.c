@@ -13,8 +13,8 @@
 #include "play_gina.h"
 
 int main(void) {
-  // Redirect dialogue (stdout) to the capture file before anything prints; the
-  // run's own OK/MISS/summary lines go to stderr and stay visible.
+  // Install the log-capture sink before anything logs; the run's own
+  // OK/MISS/summary lines go to stderr and stay visible.
   if (!harness_capture_begin()) {
     return 1;
   }
