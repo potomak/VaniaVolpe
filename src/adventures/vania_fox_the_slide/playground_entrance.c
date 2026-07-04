@@ -66,9 +66,15 @@ static const SDL_Rect EXCAVATOR_HOTSPOT = {197, 338, 108, 72};
 static const SDL_Rect SHOVEL_HOTSPOT = {112, 378, 88, 72};
 static const SDL_Rect KEY_HOTSPOT = {9, 404, 75, 69};
 static const SDL_Rect SLIDE_HOTSPOT = {165, 47, 129, 107};
-static const SDL_Rect WALKABLE_HOTSPOT = {1, 312, 795, 286};
-static const SDL_Rect NON_WALKABLE_HOTSPOT = {80, 341, 250, 179};
-static SDL_Rect hotspots[7];
+static SDL_Rect hotspots[5];
+
+// Walk geometry: the ground below the horizon; the sandbox is blocked (the
+// shovel POI sits inside it on purpose — the walk's final approach is exempt).
+static const SDL_Rect WALKABLE_RECTS[] = {{1, 312, 795, 286}};
+static const SDL_Rect BLOCKED_RECTS[] = {{80, 341, 250, 179}};
+static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS),
+                                   BLOCKED_RECTS, LEN(BLOCKED_RECTS)};
+static WalkGrid walk_grid;
 
 // Points of interest
 static const SDL_Point GATE_POI = {554, 344};
@@ -94,14 +100,14 @@ static void init(void) {
 
   fox = make_fox((SDL_FPoint){580, 457});
 
+  walk_grid_build(&walk_grid, &WALK_AREA);
+
   int i = 0;
   hotspots[i++] = GATE_HOTSPOT;
   hotspots[i++] = EXCAVATOR_HOTSPOT;
   hotspots[i++] = SHOVEL_HOTSPOT;
   hotspots[i++] = KEY_HOTSPOT;
   hotspots[i++] = SLIDE_HOTSPOT;
-  hotspots[i++] = WALKABLE_HOTSPOT;
-  hotspots[i++] = NON_WALKABLE_HOTSPOT;
 
   i = 0;
   pois[i++] = GATE_POI;
@@ -225,7 +231,8 @@ static void process_input(SDL_Event *event) {
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &GATE_HOTSPOT)) {
       // Walk to gate
-      fox_walk_to(fox, (SDL_FPoint){GATE_POI.x, GATE_POI.y}, maybe_open_gate);
+      walk_actor_to(fox, &walk_grid, (SDL_FPoint){GATE_POI.x, GATE_POI.y}, true,
+                    maybe_open_gate);
       break;
     }
     if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
@@ -240,8 +247,8 @@ static void process_input(SDL_Event *event) {
     // If key has been revealed yet skip this case
     if (!has_key_been_revealed && SDL_PointInRect(&m_pos, &SHOVEL_HOTSPOT)) {
       // Walk to shovel
-      fox_walk_to(fox, (SDL_FPoint){SHOVEL_POI.x, SHOVEL_POI.y},
-                  maybe_dig_out_key);
+      walk_actor_to(fox, &walk_grid, (SDL_FPoint){SHOVEL_POI.x, SHOVEL_POI.y},
+                    true, maybe_dig_out_key);
       break;
     }
     // If key hasn't been revealed yet, or if key has been picked up already,
@@ -249,21 +256,19 @@ static void process_input(SDL_Event *event) {
     if (has_key_been_revealed && !has_key &&
         SDL_PointInRect(&m_pos, &KEY_HOTSPOT)) {
       // Walk to key
-      fox_walk_to(fox, (SDL_FPoint){KEY_POI.x, KEY_POI.y},
-                  add_key_to_inventory);
+      walk_actor_to(fox, &walk_grid, (SDL_FPoint){KEY_POI.x, KEY_POI.y}, true,
+                    add_key_to_inventory);
       break;
     }
     if (SDL_PointInRect(&m_pos, &SLIDE_HOTSPOT)) {
       // Walk to slide
-      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, examine_slide);
+      walk_actor_to(fox, &walk_grid, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y},
+                    true, examine_slide);
       break;
     }
-    // Walk to the clicked point, or to the nearest reachable point if it falls
-    // outside the walkable area (e.g. the sandbox).
-    fox_walk_to(fox,
-                nearest_walkable_point(m_pos, &WALKABLE_HOTSPOT, 1,
-                                       NON_WALKABLE_HOTSPOT),
-                NULL);
+    // Walk to the clicked point (routed around the sandbox), or to the
+    // nearest reachable point if the click is outside the walkable area.
+    walk_actor_to(fox, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false, NULL);
     break;
   }
 }
@@ -323,6 +328,7 @@ Scene playground_entrance_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .walk_grid = &walk_grid,
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,

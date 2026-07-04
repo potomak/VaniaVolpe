@@ -69,11 +69,19 @@ static const SDL_Rect SQUIRREL_HOTSPOT = {70, 147, 113, 97};
 static const SDL_Rect ACORNS_TREE_HOTSPOT = {668, 201, 126, 118};
 static const SDL_Rect ACORNS_FLOOR_HOTSPOT = {667, 500, 105, 98};
 static const SDL_Rect PEG_HOTSPOT = {83, 460, 91, 94};
-static const SDL_Rect WALKABLE_HOTSPOT_1 = {63, 333, 645, 262};
-static const SDL_Rect WALKABLE_HOTSPOT_2 = {707, 491, 88, 105};
-static const SDL_Rect WALKABLE_HOTSPOT_3 = {4, 531, 68, 63};
-static const SDL_Rect NON_WALKABLE_HOTSPOT = {236, 131, 403, 312};
-static SDL_Rect hotspots[9];
+static SDL_Rect hotspots[5];
+
+// Walk geometry: the ground strip plus two side pockets; the slide/sandbox
+// structure in the middle is blocked.
+static const SDL_Rect WALKABLE_RECTS[] = {
+    {63, 333, 645, 262},
+    {707, 491, 88, 105},
+    {4, 531, 68, 63},
+};
+static const SDL_Rect BLOCKED_RECTS[] = {{236, 131, 403, 312}};
+static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS),
+                                   BLOCKED_RECTS, LEN(BLOCKED_RECTS)};
+static WalkGrid walk_grid;
 
 // Points of interest
 static const SDL_Point SLIDE_POI = {276, 454};
@@ -104,16 +112,14 @@ static int slides_count;
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
 
+  walk_grid_build(&walk_grid, &WALK_AREA);
+
   int i = 0;
   hotspots[i++] = SLIDE_HOTSPOT;
   hotspots[i++] = SQUIRREL_HOTSPOT;
   hotspots[i++] = ACORNS_TREE_HOTSPOT;
   hotspots[i++] = ACORNS_FLOOR_HOTSPOT;
   hotspots[i++] = PEG_HOTSPOT;
-  hotspots[i++] = WALKABLE_HOTSPOT_1;
-  hotspots[i++] = WALKABLE_HOTSPOT_2;
-  hotspots[i++] = WALKABLE_HOTSPOT_3;
-  hotspots[i++] = NON_WALKABLE_HOTSPOT;
 
   i = 0;
   pois[i++] = SLIDE_POI;
@@ -215,21 +221,23 @@ static void process_input(SDL_Event *event) {
     }
     if (SDL_PointInRect(&m_pos, &SLIDE_HOTSPOT)) {
       // Walk to slide
-      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, maybe_use_slide);
+      walk_actor_to(fox, &walk_grid, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y},
+                    true, maybe_use_slide);
       break;
     }
     // If the squirrel already dropped the peg skip this case
     if (!has_peg_been_dropped && SDL_PointInRect(&m_pos, &SQUIRREL_HOTSPOT)) {
       // Walk to squirrel
-      fox_walk_to(fox, (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y},
-                  maybe_get_peg);
+      walk_actor_to(fox, &walk_grid,
+                    (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y}, true,
+                    maybe_get_peg);
       break;
     }
     // If the acorns have already fallen skip this case
     if (!have_acorns_fallen && SDL_PointInRect(&m_pos, &ACORNS_TREE_HOTSPOT)) {
       // Walk to acorns
-      fox_walk_to(fox, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y},
-                  make_acorns_fall);
+      walk_actor_to(fox, &walk_grid, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y},
+                    true, make_acorns_fall);
       break;
     }
     // If the acorns haven't fallen yet, or if fox has acorns, or if acorns have
@@ -237,7 +245,8 @@ static void process_input(SDL_Event *event) {
     if (have_acorns_fallen && !has_acorns && !has_peg_been_dropped &&
         SDL_PointInRect(&m_pos, &ACORNS_FLOOR_HOTSPOT)) {
       // Walk to acorns
-      fox_walk_to(fox, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y}, pickup_acorns);
+      walk_actor_to(fox, &walk_grid, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y},
+                    true, pickup_acorns);
       break;
     }
     // If the peg hasn't been dropped yet, or if fox has the peg, or if the
@@ -245,20 +254,14 @@ static void process_input(SDL_Event *event) {
     if (has_peg_been_dropped && !has_peg && !has_slide_been_fixed &&
         SDL_PointInRect(&m_pos, &PEG_HOTSPOT)) {
       // Walk to peg
-      fox_walk_to(fox, (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y},
-                  pickup_peg);
+      walk_actor_to(fox, &walk_grid,
+                    (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y}, true,
+                    pickup_peg);
       break;
     }
-    // Walk to the clicked point, or to the nearest reachable point if it falls
-    // outside the walkable area (e.g. the sandbox).
-    {
-      const SDL_Rect walkables[] = {WALKABLE_HOTSPOT_1, WALKABLE_HOTSPOT_2,
-                                    WALKABLE_HOTSPOT_3};
-      fox_walk_to(fox,
-                  nearest_walkable_point(m_pos, walkables, LEN(walkables),
-                                         NON_WALKABLE_HOTSPOT),
-                  NULL);
-    }
+    // Walk to the clicked point (routed around the blocked area), or to the
+    // nearest reachable point if the click is outside the walkable area.
+    walk_actor_to(fox, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false, NULL);
     break;
   }
 }
@@ -284,7 +287,10 @@ static void update(float delta_time) {
       slide_x = 0;
       has_started_sliding = false;
       slides_count++;
-      fox_walk_to(fox, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y}, NULL);
+      // The slide drops the fox inside the blocked structure; the router
+      // snaps the start point and walks her back out legally.
+      walk_actor_to(fox, &walk_grid, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y},
+                    true, NULL);
     }
   }
 }
@@ -368,6 +374,7 @@ Scene playground_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .walk_grid = &walk_grid,
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,

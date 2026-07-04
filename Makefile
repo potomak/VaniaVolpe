@@ -18,6 +18,7 @@ GAME_SRCS = \
 	src/adventure.c \
 	src/hub.c \
 	src/scene.c \
+	src/walk.c \
 	src/actor.c \
 	src/image.c \
 	src/sound.c \
@@ -50,6 +51,7 @@ TARGET_TEST = vaniavolpe_test
 # libcaca — it renders offscreen and reads pixels back instead of drawing to a
 # terminal. The .test.o suffix keeps its objects separate from the other builds.
 TEST_SRCS = test/main_test.c test/harness.c test/script.c test/play_gina.c \
+            test/test_walk.c \
             $(GAME_SRCS)
 TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))
 

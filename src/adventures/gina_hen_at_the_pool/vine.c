@@ -41,8 +41,13 @@ static const SDL_Point GRAPES_AT = {350, 180};
 static const SDL_Rect GRAPES_HOTSPOT = {350, 180, 100, 120};
 static const SDL_Rect TREE_NAV_HOTSPOT = {0, 200, 30, 250};
 static const SDL_Rect POOL_NAV_HOTSPOT = {770, 200, 30, 250};
-static const SDL_Rect WALKABLE_HOTSPOT = {20, 430, 760, 150};
-static SDL_Rect hotspots[4];
+static SDL_Rect hotspots[3];
+
+// Walk geometry: the ground strip along the vineyard; no blocked areas.
+static const SDL_Rect WALKABLE_RECTS[] = {{20, 430, 760, 150}};
+static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS), NULL,
+                                   0};
+static WalkGrid walk_grid;
 
 static const SDL_Point GRAPES_POI = {400, 470};
 static SDL_Point pois[1];
@@ -50,11 +55,12 @@ static SDL_Point pois[1];
 static void init(void) {
   gina = make_hen(HEN_START);
 
+  walk_grid_build(&walk_grid, &WALK_AREA);
+
   int i = 0;
   hotspots[i++] = GRAPES_HOTSPOT;
   hotspots[i++] = TREE_NAV_HOTSPOT;
   hotspots[i++] = POOL_NAV_HOTSPOT;
-  hotspots[i++] = WALKABLE_HOTSPOT;
 
   pois[0] = GRAPES_POI;
 }
@@ -83,7 +89,8 @@ static void process_input(SDL_Event *event) {
     break;
   case SDL_MOUSEBUTTONDOWN:
     if (SDL_PointInRect(&m_pos, &GRAPES_HOTSPOT)) {
-      hen_walk_to(gina, (SDL_FPoint){GRAPES_POI.x, GRAPES_POI.y}, pick_grapes);
+      walk_actor_to(gina, &walk_grid, (SDL_FPoint){GRAPES_POI.x, GRAPES_POI.y},
+                    true, pick_grapes);
       break;
     }
     if (SDL_PointInRect(&m_pos, &TREE_NAV_HOTSPOT)) {
@@ -94,10 +101,8 @@ static void process_input(SDL_Event *event) {
       set_active_scene(POOL);
       break;
     }
-    hen_walk_to(gina,
-                nearest_walkable_point(m_pos, &WALKABLE_HOTSPOT, 1,
-                                       (SDL_Rect){0, 0, 0, 0}),
-                NULL);
+    walk_actor_to(gina, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false,
+                  NULL);
     break;
   }
 }
@@ -132,6 +137,7 @@ Scene vine_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .walk_grid = &walk_grid,
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,
