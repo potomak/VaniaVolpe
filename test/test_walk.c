@@ -52,6 +52,16 @@ static const SDL_Rect ISLAND_WALKABLES[] = {{0, 0, 100, 100},
 static const WalkArea ISLAND_AREA = {ISLAND_WALKABLES, LEN(ISLAND_WALKABLES),
                                      NULL, 0};
 
+// Mirrors src/adventures/gina_hen_at_the_pool/pool.c, where the walkable area
+// is a function of game state (umbrella shade before the sunscreen, the whole
+// poolside strip after).
+static const SDL_Rect POOL_POOLSIDE_RECTS[] = {{20, 430, 760, 150}};
+static const SDL_Rect POOL_SHADE_RECTS[] = {{60, 430, 200, 150}};
+static const WalkArea POOL_POOLSIDE_AREA = {POOL_POOLSIDE_RECTS,
+                                            LEN(POOL_POOLSIDE_RECTS), NULL, 0};
+static const WalkArea POOL_SHADE_AREA = {POOL_SHADE_RECTS,
+                                         LEN(POOL_SHADE_RECTS), NULL, 0};
+
 // Same sampling rule as the smoother in walk.c: every point along the
 // segment (5 px apart) must sit in a walkable cell.
 static bool segment_clear(const WalkGrid *grid, SDL_FPoint a, SDL_FPoint b) {
@@ -154,6 +164,38 @@ static void test_best_effort(void) {
         "unreachable goal routes to the nearest reachable point");
 }
 
+static void test_pool_state_switch(void) {
+  // The same grid rebuilt from the state-appropriate area, as pool.c does.
+  WalkGrid grid;
+  SDL_Point hen_start = {150, 480};
+  SDL_Point sunscreen_poi = {150, 545};
+  SDL_Point float_poi = {600, 545};
+
+  walk_grid_build(&grid, &POOL_SHADE_AREA);
+  check(walk_grid_contains(&grid, hen_start) &&
+            walk_grid_contains(&grid, sunscreen_poi) &&
+            !walk_grid_contains(&grid, float_poi),
+        "shade grid: umbrella walkable, poolside not");
+
+  // A pre-sunscreen walk toward the pool stays under the umbrella
+  // (best-effort routing to the nearest reachable point).
+  SDL_FPoint path[ACTOR_MAX_WAYPOINTS];
+  int count = walk_grid_find_path(&grid, (SDL_FPoint){150, 480},
+                                  (SDL_FPoint){600, 545}, path, LEN(path));
+  bool inside_shade = count >= 1;
+  for (int i = 0; i < count; i++) {
+    SDL_Point p = {(int)path[i].x, (int)path[i].y};
+    if (!walk_grid_contains(&grid, p)) {
+      inside_shade = false;
+    }
+  }
+  check(inside_shade, "shade grid keeps walks under the umbrella");
+
+  walk_grid_build(&grid, &POOL_POOLSIDE_AREA);
+  check(walk_grid_contains(&grid, float_poi),
+        "poolside grid unlocks the pool area");
+}
+
 // Minimal texture-less actor for simulating walks headlessly.
 static const ActorAnimSpec TEST_ANIMS[] = {
     {WALKING, "walking.png", "walking.anim", 1, LOOP, 0},
@@ -248,6 +290,7 @@ int test_walk(void) {
   test_playground_routing(&playground_grid);
   test_determinism(&playground_grid);
   test_best_effort();
+  test_pool_state_switch();
   test_exact_goal_walk(&entrance_grid);
   test_stale_callback_cancelled(&playground_grid);
 
