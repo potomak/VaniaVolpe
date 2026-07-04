@@ -17,14 +17,15 @@
 #define WALK_COST_STRAIGHT 10
 #define WALK_COST_DIAGONAL 14
 
-// Distance between line-of-sight samples, in px.
-#define WALK_SAMPLE_STEP (WALK_CELL_SIZE / 2)
+// Distance between line-of-sight samples, in px (half a cell).
+#define WALK_SAMPLE_STEP (WALK_CELL_SIZE / 2.0F)
 
 static int cell_index(int cx, int cy) { return cy * WALK_GRID_W + cx; }
 
 static SDL_FPoint cell_center(int cx, int cy) {
-  return (SDL_FPoint){cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2,
-                      cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2};
+  int x = cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2;
+  int y = cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2;
+  return (SDL_FPoint){x, y};
 }
 
 static bool cell_walkable(const WalkGrid *grid, int cx, int cy) {

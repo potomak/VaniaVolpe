@@ -67,7 +67,7 @@ static const WalkArea POOL_SHADE_AREA = {POOL_SHADE_RECTS,
 static bool segment_clear(const WalkGrid *grid, SDL_FPoint a, SDL_FPoint b) {
   float dx = b.x - a.x;
   float dy = b.y - a.y;
-  int steps = (int)(sqrtf(dx * dx + dy * dy) / (WALK_CELL_SIZE / 2)) + 1;
+  int steps = (int)(sqrtf(dx * dx + dy * dy) / (WALK_CELL_SIZE / 2.0F)) + 1;
   for (int i = 0; i <= steps; i++) {
     float t = (float)i / (float)steps;
     SDL_Point p = {(int)(a.x + dx * t), (int)(a.y + dy * t)};
@@ -220,7 +220,7 @@ static void on_stale(void) { stale_fired = true; }
 // Step the actor until it goes IDLE (or the frame budget runs out).
 static void run_to_idle(Actor *actor) {
   for (int i = 0; i < 3000 && actor->state == WALKING; i++) {
-    actor_update(actor, 1.0f / 30.0f);
+    actor_update(actor, 1.0F / 30.0F);
   }
 }
 
@@ -269,7 +269,7 @@ static void test_stale_callback_cancelled(const WalkGrid *grid) {
         "tap on the actor cancels the walk");
 
   for (int i = 0; i < 30; i++) {
-    actor_update(actor, 1.0f / 30.0f);
+    actor_update(actor, 1.0F / 30.0F);
   }
   check(!stale_fired, "cancelled walk never fires its stale callback");
 
