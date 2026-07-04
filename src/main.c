@@ -117,7 +117,7 @@ void update(void) {
   // Read the tick count once and use it for both the delta and the next frame's
   // baseline, so the two can't drift.
   Uint32 now = SDL_GetTicks();
-  float delta_time = (now - last_frame_time) / 1000.0f;
+  float delta_time = (now - last_frame_time) / 1000.0F;
   last_frame_time = now;
 
   game_update(delta_time);
