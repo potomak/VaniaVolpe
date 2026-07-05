@@ -19,10 +19,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build web target with Emscripten
+        # Pinned to match deploy-pages.yml — keep the two in lockstep so the
+        # tested toolchain is the deployed toolchain.
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git ~/emsdk
-          ~/emsdk/emsdk install latest
-          ~/emsdk/emsdk activate latest
+          ~/emsdk/emsdk install 6.0.2
+          ~/emsdk/emsdk activate 6.0.2
           source ~/emsdk/emsdk_env.sh
           make web
 

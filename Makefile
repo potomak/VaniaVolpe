@@ -125,8 +125,17 @@ EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
              --preload-file $(GINA_DIR)/assets/it_IT \
              --preload-file $(GINA_DIR)/assets/en_US
 EM_SHELL   = src/emscripten/shell.html
-EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 -lm $(EM_PRELOAD) \
-             --shell-file $(EM_SHELL)
+# -sGROWABLE_ARRAYBUFFERS=0: Emscripten >= 6 defaults this to auto-detect, and
+# when the browser has WebAssembly.Memory.toResizableBuffer the heap becomes a
+# resizable ArrayBuffer — WebKit/Safari then rejects heap-backed typed-array
+# views in WebGL/WebAudio calls ("TypeError: Resizable ArrayBuffer is not
+# allowed"), a black screen at boot. Chromium accepts them, so CI's browser
+# test can't catch it. -sMIN_SAFARI_VERSION pins the compatibility floor
+# (Safari/iOS 14.1) explicitly instead of drifting with emcc defaults, which
+# had silently raised it to Safari 15 (ES2020 output).
+EM_COMPAT  = -sGROWABLE_ARRAYBUFFERS=0 -sMIN_SAFARI_VERSION=140100
+EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 $(EM_COMPAT) -lm \
+             $(EM_PRELOAD) --shell-file $(EM_SHELL)
 # Every file packed into index.data; listing them makes the bundle rebuild when
 # art/audio changes (the sources alone wouldn't trigger it).
 WEB_ASSETS = $(shell find $(VFTS_DIR)/assets $(GINA_DIR)/assets -type f)
