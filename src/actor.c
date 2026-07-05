@@ -359,8 +359,10 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
     return;
   }
 
-  const char *line =
-      text != NULL ? text : (dialog != NULL ? dialog->text : NULL);
+  const char *line = text;
+  if (line == NULL && dialog != NULL) {
+    line = dialog->text;
+  }
   Mix_Chunk *chunk = dialog != NULL ? dialog->chunk : NULL;
   if (chunk == NULL && line == NULL) {
     return;
