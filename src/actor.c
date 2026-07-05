@@ -386,9 +386,10 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
   }
 
   if (chunk != NULL) {
-    // Halt whatever line is still playing so a new one interrupts instead of
-    // overlapping it or being dropped for lack of a free channel.
-    Mix_HaltChannel(DIALOG_CHANNEL);
+    // Playing on this fixed, reserved channel halts whatever line is still
+    // playing there and takes its place, so a new line interrupts the
+    // current one instead of overlapping it or being dropped for lack of a
+    // free channel.
     actor->voice_channel = Mix_PlayChannel(DIALOG_CHANNEL, chunk, 0);
   } else {
     actor->voice_channel = -1;
