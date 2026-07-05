@@ -26,7 +26,7 @@ void fox_free(Fox *fox);
 
 void fox_walk_to(Fox *fox, SDL_FPoint position, void (*on_end)(void));
 
-void fox_talk(Fox *fox, Mix_Chunk *dialog);
+void fox_talk(Fox *fox, const ChunkData *dialog);
 
 void fox_sit(Fox *fox);
 

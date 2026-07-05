@@ -26,6 +26,6 @@ void hen_free(Hen *hen);
 
 void hen_walk_to(Hen *hen, SDL_FPoint position, void (*on_end)(void));
 
-void hen_talk(Hen *hen, Mix_Chunk *dialog);
+void hen_talk(Hen *hen, const ChunkData *dialog);
 
 #endif /* hen_h */

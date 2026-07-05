@@ -11,6 +11,7 @@
 
 #include "harness.h"
 #include "play_gina.h"
+#include "test_lipsync.h"
 #include "test_walk.h"
 
 int main(void) {
@@ -32,9 +33,10 @@ int main(void) {
   int failures = play_gina();
   // Future play-tests (e.g. play_vania) are added here.
 
-  // Pure-geometry unit tests (no window/assets; run after the playthrough so
-  // its captured log stays contiguous).
+  // Pure unit tests (no window/assets; run after the playthrough so its
+  // captured log stays contiguous).
   failures += test_walk();
+  failures += test_lipsync();
 
   harness_shutdown();
 

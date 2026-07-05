@@ -13,6 +13,8 @@
 #include <stdbool.h>
 
 #include "image.h"
+#include "lipsync.h"
+#include "sound.h"
 
 typedef enum horizontal_orientation {
   WEST = -1,
@@ -46,6 +48,7 @@ typedef struct actor_anim_spec {
 // Static description of a character. Two characters differ only by their spec.
 typedef struct actor_spec {
   const char *id;
+  const char *display_name;        // "Vania", "Gina" — dialogue log prefix
   const char *assets_dir;          // e.g. "fox"
   float velocity;                  // walking speed, px/s
   const char *move_sound_filename; // looped while walking; NULL for none
@@ -54,6 +57,10 @@ typedef struct actor_spec {
   ActorState move_state; // animation shown while WALKING
   const ActorAnimSpec *anims;
   int anims_length;
+  // MOUTH_SHAPE_COUNT: the TALKING sheet has one frame per mouth shape in
+  // canonical order (X A B C D E F) and lines with .cues sidecars drive it.
+  // 0: classic looping talking animation (see SPEECH.md).
+  int talk_shape_frames;
 } ActorSpec;
 
 typedef struct actor {
@@ -73,6 +80,11 @@ typedef struct actor {
   ActorState state;
   Uint32 started_talking_at;
   Uint32 talking_duration;
+  // Cue-driven talking (see SPEECH.md): the active line's mouth cues, or
+  // NULL for the classic looping animation. cue_cursor caches the scan
+  // position for lipsync_shape_at.
+  const MouthCues *talking_cues;
+  int cue_cursor;
   // Fired once when the current walk reaches its target; per-instance so two
   // actors walking at once don't clobber each other's callback. NULL when idle.
   void (*on_end_walking)(void);
@@ -98,7 +110,12 @@ void actor_walk_to(Actor *actor, SDL_FPoint position, void (*on_end)(void));
 void actor_walk_path(Actor *actor, const SDL_FPoint *points, int points_length,
                      void (*on_end)(void));
 
-void actor_talk(Actor *actor, Mix_Chunk *dialog);
+// Speak a line. `dialog` carries the audio and its optional sidecars (text,
+// mouth cues, word timings); `text` overrides the sidecar transcript (used
+// while a line's audio is still a placeholder). Either may be NULL, but not
+// both. With no audio the talking duration is estimated from the text. The
+// spoken line is logged as "<display_name>: <text>".
+void actor_talk(Actor *actor, const ChunkData *dialog, const char *text);
 
 // Play a one-off state animation (e.g. SITTING, WAVING) and hold it.
 void actor_play_state(Actor *actor, ActorState state);
