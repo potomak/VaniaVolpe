@@ -106,9 +106,13 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
 // Load animation sprite clips
 //
 // Data format:
-// * One sprite clip per row
-// * Rows are delimited by '\n'
-// * Sprite clip components are delimited by ','
+// * One sprite clip per row: "x,y,w,h"
+// * Rows are delimited by '\n' (a trailing '\r' is tolerated)
+// * Exactly `animation->frames` rows, no more, no less
+//
+// Strict on purpose: a malformed .anim (stray field, too many digits, wrong
+// row/field count, garbage byte) rejects the whole file loudly instead of
+// silently overflowing `num`/`rect`/`sprite_clips` or half-working.
 static bool load_animation_data(AnimationData *animation, const char *path) {
   size_t size;
   char *data = SDL_LoadFile(path, &size);
@@ -118,20 +122,32 @@ static bool load_animation_data(AnimationData *animation, const char *path) {
     return false;
   }
 
-  // Support coordinates up to 99999
+  // Support coordinates up to 99999 (5 digits + NUL).
   char num[6];
-  char c;
   int rect[4];
   int row = 0;
   int num_i = 0;
   int rect_i = 0;
-  for (int i = 0; i < size; i++) {
-    c = data[i];
+  bool ok = true;
+
+  for (size_t i = 0; i < size && ok; i++) {
+    char c = data[i];
+    if (c == '\r') {
+      continue;
+    }
     if (c == ',' || c == '\n') {
+      if (num_i == 0 || rect_i >= 4) {
+        ok = false;
+        break;
+      }
       num[num_i] = '\0';
       rect[rect_i++] = atoi(num);
       num_i = 0;
       if (c == '\n') {
+        if (rect_i != 4 || row >= animation->frames) {
+          ok = false;
+          break;
+        }
         animation->sprite_clips[row++] = (SDL_Rect){
             .x = rect[0],
             .y = rect[1],
@@ -140,12 +156,45 @@ static bool load_animation_data(AnimationData *animation, const char *path) {
         };
         rect_i = 0;
       }
-    } else {
+    } else if (c >= '0' && c <= '9') {
+      if (num_i >= (int)sizeof(num) - 1) {
+        ok = false;
+        break;
+      }
       num[num_i++] = c;
+    } else {
+      ok = false;
+      break;
+    }
+  }
+
+  // Flush a final row with no trailing newline.
+  if (ok && num_i > 0) {
+    if (rect_i >= 4) {
+      ok = false;
+    } else {
+      num[num_i] = '\0';
+      rect[rect_i++] = atoi(num);
+      if (rect_i != 4 || row >= animation->frames) {
+        ok = false;
+      } else {
+        animation->sprite_clips[row++] = (SDL_Rect){
+            .x = rect[0],
+            .y = rect[1],
+            .w = rect[2],
+            .h = rect[3],
+        };
+      }
     }
   }
 
   SDL_free(data);
+
+  if (!ok || row != animation->frames) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Malformed animation data %s",
+                 path);
+    return false;
+  }
   return true;
 }
 
