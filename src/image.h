@@ -53,6 +53,11 @@ typedef struct animation_data {
   SDL_Rect *sprite_clips;
   ImageData image;
   SDL_RendererFlip flip;
+  // Fired once when the animation stops (a ONE_SHOT reaching its loop count,
+  // or an explicit stop_animation call); per-instance so starting one
+  // animation can't clobber another's pending callback. Cleared before
+  // firing. NULL for none.
+  void (*on_end)(void);
 } AnimationData;
 
 AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style);

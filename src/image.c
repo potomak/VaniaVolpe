@@ -11,8 +11,6 @@
 
 #include "image.h"
 
-static void (*on_animation_playback_end)(void);
-
 AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   AnimationData *animation = malloc(sizeof(AnimationData));
   if (animation == NULL) {
@@ -34,6 +32,7 @@ AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
   animation->sprite_clips = sprite_clips;
   animation->image = (ImageData){NULL, 0, 0};
   animation->flip = SDL_FLIP_NONE;
+  animation->on_end = NULL;
   return animation;
 }
 
@@ -226,7 +225,7 @@ void play_animation(AnimationData *animation, void (*on_end)(void)) {
   animation->current_frame = 0;
   animation->is_playing = true;
   animation->start_time = SDL_GetTicks();
-  on_animation_playback_end = on_end;
+  animation->on_end = on_end;
 }
 
 void stop_animation(AnimationData *animation) {
@@ -237,8 +236,10 @@ void stop_animation(AnimationData *animation) {
   animation->is_playing = false;
   animation->start_time = 0;
   animation->current_frame = 0;
-  if (on_animation_playback_end != NULL) {
-    on_animation_playback_end();
+  void (*on_end)(void) = animation->on_end;
+  animation->on_end = NULL;
+  if (on_end != NULL) {
+    on_end();
   }
 }
 
