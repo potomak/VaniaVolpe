@@ -22,8 +22,8 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
   asset_set_root(adventure->assets_root);
 
   for (int i = 0; i < adventure->scenes_length; i++) {
-    Scene scene = adventure->scenes[i];
-    if (!scene.load_media(renderer)) {
+    Scene *scene = &adventure->scenes[i];
+    if (!scene->load_media(renderer)) {
       return false;
     }
     if (!load_scene_images(scene, renderer)) {
@@ -38,8 +38,8 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
 
 void adventure_deinit(const Adventure *adventure) {
   for (int i = 0; i < adventure->scenes_length; i++) {
-    Scene scene = adventure->scenes[i];
-    scene.deinit();
+    Scene *scene = &adventure->scenes[i];
+    scene->deinit();
     free_scene_images(scene);
     free_scene_chunks(scene);
     free_scene_animations(scene);

@@ -7,9 +7,13 @@
 
 #include "scene.h"
 
-bool load_scene_images(Scene scene, SDL_Renderer *renderer) {
-  for (int i = 0; i < scene.images_length; i++) {
-    if (!load_image(renderer, &scene.images[i])) {
+bool load_scene_images(Scene *scene, SDL_Renderer *renderer) {
+  for (int i = 0; i < scene->images_length; i++) {
+    if (!load_image(renderer, &scene->images[i])) {
+      // Unwind: free the images that did load before this failure.
+      for (int j = 0; j < i; j++) {
+        free_image_texture(&scene->images[j]);
+      }
       return false;
     }
   }
@@ -73,22 +77,39 @@ static void load_chunk_sidecars(ChunkData *chunk) {
   }
 }
 
-bool load_scene_chunks(Scene scene) {
-  for (int i = 0; i < scene.chunks_length; i++) {
+// Free one chunk's WAV and dialogue sidecars, leaving it safe to free again.
+static void free_chunk_data(ChunkData *chunk) {
+  if (chunk->chunk != NULL) {
+    Mix_FreeChunk(chunk->chunk);
+    chunk->chunk = NULL;
+  }
+  SDL_free(chunk->text);
+  chunk->text = NULL;
+  lipsync_free(&chunk->cues);
+  lipsync_free_words(&chunk->words);
+}
+
+bool load_scene_chunks(Scene *scene) {
+  for (int i = 0; i < scene->chunks_length; i++) {
     char path[ASSET_PATH_MAX];
     asset_resolve(
         (Asset){
-            .filename = scene.chunks[i].filename,
-            .directory = scene.chunks[i].directory,
+            .filename = scene->chunks[i].filename,
+            .directory = scene->chunks[i].directory,
         },
         path, sizeof(path));
-    scene.chunks[i].chunk = Mix_LoadWAV(path);
-    if (scene.chunks[i].chunk == NULL) {
+    scene->chunks[i].chunk = Mix_LoadWAV(path);
+    if (scene->chunks[i].chunk == NULL) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load %s: %s", path,
                    Mix_GetError());
+      // Unwind: free the chunks (and sidecars) that did load before this
+      // failure.
+      for (int j = 0; j < i; j++) {
+        free_chunk_data(&scene->chunks[j]);
+      }
       return false;
     }
-    load_chunk_sidecars(&scene.chunks[i]);
+    load_chunk_sidecars(&scene->chunks[i]);
   }
 
   return true;
@@ -102,26 +123,22 @@ void update_scene_animations(Scene scene, int now_ms) {
   }
 }
 
-void free_scene_images(Scene scene) {
-  for (int i = 0; i < scene.images_length; i++) {
-    free_image_texture(&scene.images[i]);
+void free_scene_images(Scene *scene) {
+  for (int i = 0; i < scene->images_length; i++) {
+    free_image_texture(&scene->images[i]);
   }
 }
 
-void free_scene_chunks(Scene scene) {
-  for (int i = 0; i < scene.chunks_length; i++) {
-    Mix_FreeChunk(scene.chunks[i].chunk);
-    SDL_free(scene.chunks[i].text);
-    scene.chunks[i].text = NULL;
-    lipsync_free(&scene.chunks[i].cues);
-    lipsync_free_words(&scene.chunks[i].words);
+void free_scene_chunks(Scene *scene) {
+  for (int i = 0; i < scene->chunks_length; i++) {
+    free_chunk_data(&scene->chunks[i]);
   }
 }
 
-void free_scene_animations(Scene scene) {
-  for (int i = 0; i < scene.animations_length; i++) {
-    if (scene.animations[i] != NULL) {
-      free_animation(scene.animations[i]);
+void free_scene_animations(Scene *scene) {
+  for (int i = 0; i < scene->animations_length; i++) {
+    if (scene->animations[i] != NULL) {
+      free_animation(scene->animations[i]);
     }
   }
 }
