@@ -97,6 +97,7 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   }
   actor->move_sound = NULL;
   actor->move_sound_channel = -1;
+  actor->voice_channel = -1;
   actor->current_position = initial_position;
   actor->target_position = initial_position;
   actor->direction = (SDL_FPoint){0, 0};
@@ -162,6 +163,7 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
                    Mix_GetError());
       return false;
     }
+    SDL_assert(spec->move_sound_volume >= 0 && spec->move_sound_volume <= 128);
     Mix_VolumeChunk(actor->move_sound, spec->move_sound_volume);
   }
 
@@ -384,7 +386,12 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
   }
 
   if (chunk != NULL) {
-    Mix_PlayChannel(-1, chunk, 0);
+    // Halt whatever line is still playing so a new one interrupts instead of
+    // overlapping it or being dropped for lack of a free channel.
+    Mix_HaltChannel(DIALOG_CHANNEL);
+    actor->voice_channel = Mix_PlayChannel(DIALOG_CHANNEL, chunk, 0);
+  } else {
+    actor->voice_channel = -1;
   }
 
   // Cue mode needs cues and a canonical 7-frame talking sheet (validated in

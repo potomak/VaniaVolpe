@@ -69,6 +69,9 @@ typedef struct actor {
   AnimationData *animations[ACTOR_STATE_COUNT];
   Mix_Chunk *move_sound;
   int move_sound_channel;
+  // Channel dialogue last played on (DIALOG_CHANNEL when talking, -1
+  // otherwise); see actor_talk.
+  int voice_channel;
   SDL_FPoint current_position;
   // The current segment's target; the remaining segments of a multi-point
   // walk are waypoints[waypoint_index + 1 ..].
