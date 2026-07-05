@@ -85,8 +85,12 @@ bool init_window(void) {
                  Mix_GetError());
     return false;
   }
+  // Reserve channel 0 for dialogue so SFX can't steal or cut it off.
+  Mix_AllocateChannels(MIXER_CHANNEL_COUNT);
+  Mix_ReserveChannels(1);
+
   // Lower the music volume
-  Mix_VolumeMusic(30);
+  Mix_VolumeMusic(MUSIC_VOLUME);
 
   return true;
 }

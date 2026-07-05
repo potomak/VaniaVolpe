@@ -70,7 +70,11 @@ bool harness_init(void) {
                  Mix_GetError());
     return false;
   }
-  Mix_VolumeMusic(30);
+  // Reserve channel 0 for dialogue so SFX can't steal or cut it off.
+  Mix_AllocateChannels(MIXER_CHANNEL_COUNT);
+  Mix_ReserveChannels(1);
+
+  Mix_VolumeMusic(MUSIC_VOLUME);
 
   return true;
 }
