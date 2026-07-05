@@ -22,10 +22,14 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Build web target with Emscripten
+        # Pinned: "latest" silently changes the compiler under us (emsdk 6.0
+        # broke Safari via growable ArrayBuffers). Bump deliberately, and
+        # play-test the result in Safari — Chromium-based CI can't catch
+        # WebKit-only regressions.
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git ~/emsdk
-          ~/emsdk/emsdk install latest
-          ~/emsdk/emsdk activate latest
+          ~/emsdk/emsdk install 6.0.2
+          ~/emsdk/emsdk activate 6.0.2
           source ~/emsdk/emsdk_env.sh
           make web
       - name: Upload Pages artifact
