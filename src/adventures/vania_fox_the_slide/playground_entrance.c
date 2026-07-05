@@ -191,9 +191,9 @@ static void maybe_open_gate(void) {
 
   // Else give hint about where to find the key
   if (examine_gate_count < 1) {
-    fox_talk(fox, examine_gate_1->chunk);
+    fox_talk(fox, examine_gate_1);
   } else {
-    fox_talk(fox, examine_gate_2->chunk);
+    fox_talk(fox, examine_gate_2);
   }
   examine_gate_count++;
 }
@@ -218,7 +218,7 @@ static void maybe_dig_out_key(void) {
 
 static void examine_slide(void) {
   // Give hint about finding a key to open the gate
-  fox_talk(fox, examine_slide_from_outside->chunk);
+  fox_talk(fox, examine_slide_from_outside);
 }
 
 static void process_input(SDL_Event *event) {

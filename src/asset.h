@@ -28,6 +28,11 @@ typedef struct asset {
 // clobbering each other. Use a buffer of ASSET_PATH_MAX bytes.
 bool asset_resolve(Asset asset, char *buf, size_t n);
 
+// Like asset_resolve, but for optional files (e.g. dialogue sidecars): true
+// if the file exists in the locale or common layer (resolved path in buf),
+// false — silently, no error log — when absent in both.
+bool asset_try_resolve(Asset asset, char *buf, size_t n);
+
 // Set the base directory prepended to non-iOS asset paths (NULL to disable).
 // The pointer is stored, not copied, so the string must outlive the asset
 // system (true today: adventure roots are string literals).

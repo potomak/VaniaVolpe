@@ -7,13 +7,18 @@
 
 static const ActorAnimSpec FOX_ANIMS[] = {
     {WALKING, "walking.png", "walking.anim", 4, LOOP},
-    {TALKING, "talking.png", "talking.anim", 3, LOOP},
+    // Cue-driven talking sheet: one frame per canonical mouth shape
+    // (X A B C D E F, see SPEECH.md). The .anim maps the seven shapes onto
+    // the three drawn mouths (closed / open / small round) until per-shape
+    // art exists.
+    {TALKING, "talking.png", "talking.anim", MOUTH_SHAPE_COUNT, LOOP},
     {SITTING, "sitting.png", "sitting.anim", 3, LOOP},
     {WAVING, "waving.png", "waving.anim", 3, LOOP},
 };
 
 const ActorSpec FOX_SPEC = {
     .id = "fox",
+    .display_name = "Vania",
     .assets_dir = "fox",
     .velocity = 200,
     .move_sound_filename = "walking.wav",
@@ -22,6 +27,7 @@ const ActorSpec FOX_SPEC = {
     .move_state = WALKING,
     .anims = FOX_ANIMS,
     .anims_length = 4,
+    .talk_shape_frames = MOUTH_SHAPE_COUNT,
 };
 
 Fox *make_fox(SDL_FPoint initial_position) {
@@ -44,7 +50,9 @@ void fox_walk_to(Fox *fox, SDL_FPoint position, void (*on_end)(void)) {
   actor_walk_to(fox, position, on_end);
 }
 
-void fox_talk(Fox *fox, Mix_Chunk *dialog) { actor_talk(fox, dialog); }
+void fox_talk(Fox *fox, const ChunkData *dialog) {
+  actor_talk(fox, dialog, NULL);
+}
 
 void fox_sit(Fox *fox) { actor_play_state(fox, SITTING); }
 

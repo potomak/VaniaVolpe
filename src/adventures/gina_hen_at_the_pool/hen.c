@@ -13,6 +13,7 @@ static const ActorAnimSpec HEN_ANIMS[] = {
 
 const ActorSpec HEN_SPEC = {
     .id = "hen",
+    .display_name = "Gina",
     .assets_dir = "hen",
     .velocity = 200,
     .move_sound_filename = "walking.wav",
@@ -43,4 +44,6 @@ void hen_walk_to(Hen *hen, SDL_FPoint position, void (*on_end)(void)) {
   actor_walk_to(hen, position, on_end);
 }
 
-void hen_talk(Hen *hen, Mix_Chunk *dialog) { actor_talk(hen, dialog); }
+void hen_talk(Hen *hen, const ChunkData *dialog) {
+  actor_talk(hen, dialog, NULL);
+}

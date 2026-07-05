@@ -105,6 +105,8 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   actor->state = IDLE;
   actor->started_talking_at = 0;
   actor->talking_duration = 0;
+  actor->talking_cues = NULL;
+  actor->cue_cursor = 0;
   actor->on_end_walking = NULL;
   actor_face(actor, WEST);
   return actor;
@@ -112,6 +114,21 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
 
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
   const ActorSpec *spec = actor->spec;
+
+  // A cue-driven talking sheet must have exactly one frame per mouth shape
+  // (canonical order X A B C D E F) — enforce the contract loudly.
+  if (spec->talk_shape_frames == MOUTH_SHAPE_COUNT &&
+      (actor->animations[TALKING] == NULL ||
+       actor->animations[TALKING]->frames != MOUTH_SHAPE_COUNT)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "%s: talk_shape_frames is %d but the TALKING animation has "
+                 "%d frames",
+                 spec->id, MOUTH_SHAPE_COUNT,
+                 actor->animations[TALKING] ? actor->animations[TALKING]->frames
+                                            : 0);
+    return false;
+  }
+
   for (int i = 0; i < spec->anims_length; i++) {
     const ActorAnimSpec *anim = &spec->anims[i];
     if (!load_animation(renderer, actor->animations[anim->state],
@@ -217,8 +234,21 @@ void actor_update(Actor *actor, float delta_time) {
     break;
   }
   case TALKING:
+    // Cue-driven mouth: pick the frame for the active cue. The animation is
+    // never "playing" in this mode, so animation_update leaves the frame
+    // alone and no end callback is ever armed.
+    if (actor->talking_cues != NULL && actor->animations[TALKING] != NULL) {
+      actor->animations[TALKING]->current_frame = lipsync_shape_at(
+          actor->talking_cues, (Uint32)now - actor->started_talking_at,
+          &actor->cue_cursor);
+    }
     if (ticks - actor->started_talking_at >= actor->talking_duration) {
-      stop_animation(actor->animations[TALKING]);
+      if (actor->talking_cues != NULL) {
+        actor->animations[TALKING]->current_frame = MOUTH_X;
+        actor->talking_cues = NULL;
+      } else if (actor->animations[TALKING] != NULL) {
+        stop_animation(actor->animations[TALKING]);
+      }
       actor->state = IDLE;
     }
     break;
@@ -324,15 +354,51 @@ void actor_walk_to(Actor *actor, SDL_FPoint target_position,
   actor_walk_path(actor, &target_position, 1, on_end);
 }
 
-void actor_talk(Actor *actor, Mix_Chunk *dialog) {
-  if (actor->state == WALKING || dialog == NULL) {
+void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
+  if (actor->state == WALKING) {
     return;
   }
 
-  Uint32 talking_duration = get_chunk_time_ms(dialog);
+  const char *line =
+      text != NULL ? text : (dialog != NULL ? dialog->text : NULL);
+  Mix_Chunk *chunk = dialog != NULL ? dialog->chunk : NULL;
+  if (chunk == NULL && line == NULL) {
+    return;
+  }
 
-  Mix_PlayChannel(-1, dialog, 0);
-  play_animation(actor->animations[TALKING], NULL);
+  // With no audio the duration is estimated from the text (~12.5 chars/s;
+  // byte length slightly over-counts accented UTF-8, which is fine).
+  Uint32 talking_duration = chunk != NULL
+                                ? get_chunk_time_ms(chunk)
+                                : (Uint32)SDL_max(1500, 80 * SDL_strlen(line));
+  if (talking_duration == 0) {
+    return;
+  }
+
+  // The log line is part of the headless-test contract (harness_check_*).
+  if (line != NULL) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s: %s",
+                actor->spec->display_name, line);
+  }
+
+  if (chunk != NULL) {
+    Mix_PlayChannel(-1, chunk, 0);
+  }
+
+  // Cue mode needs cues and a canonical 7-frame talking sheet (validated in
+  // actor_load_media); everything else keeps the classic looping animation.
+  if (dialog != NULL && dialog->cues.length > 0 &&
+      actor->spec->talk_shape_frames == MOUTH_SHAPE_COUNT &&
+      actor->animations[TALKING] != NULL) {
+    actor->talking_cues = &dialog->cues;
+    actor->cue_cursor = 0;
+    actor->animations[TALKING]->current_frame = MOUTH_X;
+  } else {
+    actor->talking_cues = NULL;
+    if (actor->animations[TALKING] != NULL) {
+      play_animation(actor->animations[TALKING], NULL);
+    }
+  }
   actor->state = TALKING;
   actor->talking_duration = talking_duration;
   actor->started_talking_at = SDL_GetTicks();

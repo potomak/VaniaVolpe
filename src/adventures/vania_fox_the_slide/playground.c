@@ -158,23 +158,23 @@ static void maybe_use_slide(void) {
     has_slide_been_fixed = true;
     Mix_PlayChannel(-1, fix_slide_sound->chunk, 0);
     // TODO: Wait for sound effect to end before starting to talk
-    fox_talk(fox, examine_fixed_slide->chunk);
+    fox_talk(fox, examine_fixed_slide);
     return;
   }
 
   // Else if slide is working use: win the game
   if (has_slide_been_fixed) {
     fox->current_position = START_SLIDE_POS;
-    fox_talk(fox, sliding_down->chunk);
+    fox_talk(fox, sliding_down);
     has_started_sliding = true;
     return;
   }
 
   // Else give hint to fix the slide
   if (examine_slide_count < 1) {
-    fox_talk(fox, examine_slide_1->chunk);
+    fox_talk(fox, examine_slide_1);
   } else {
-    fox_talk(fox, examine_slide_2->chunk);
+    fox_talk(fox, examine_slide_2);
   }
   examine_slide_count++;
 }
@@ -190,9 +190,9 @@ static void maybe_get_peg(void) {
 
   // Else give hint to find acorns
   if (examine_squirrel_count < 1) {
-    fox_talk(fox, examine_squirrel_1->chunk);
+    fox_talk(fox, examine_squirrel_1);
   } else {
-    fox_talk(fox, examine_squirrel_2->chunk);
+    fox_talk(fox, examine_squirrel_2);
   }
   examine_squirrel_count++;
 }

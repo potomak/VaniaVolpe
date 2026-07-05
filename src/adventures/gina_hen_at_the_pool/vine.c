@@ -29,7 +29,7 @@ static const ImageData *grapes = &images[1];
 static ChunkData chunks[1] = {
     {NULL, "voice.wav", "vine"},
 };
-static Mix_Chunk *voice(void) { return chunks[0].chunk; }
+static const ChunkData *voice(void) { return &chunks[0]; }
 
 static SDL_Point m_pos;
 

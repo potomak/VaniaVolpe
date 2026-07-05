@@ -17,7 +17,7 @@ void gina_state_reset(void) {
   gina_state.examine_float_count = 0;
 }
 
-void gina_say(Hen *gina, const char *line, Mix_Chunk *voice) {
-  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Gina: %s", line);
-  hen_talk(gina, voice);
+void gina_say(Hen *gina, const char *line, const ChunkData *voice) {
+  // actor_talk logs the line ("Gina: ...") — the headless test's contract.
+  actor_talk(gina, voice, line);
 }

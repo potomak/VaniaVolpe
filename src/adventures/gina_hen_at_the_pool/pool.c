@@ -39,7 +39,7 @@ static ChunkData chunks[3] = {
     {NULL, "wind.wav", "pool"},
     {NULL, "splash.wav", "pool"},
 };
-static Mix_Chunk *voice(void) { return chunks[0].chunk; }
+static const ChunkData *voice(void) { return &chunks[0]; }
 
 static SDL_Point m_pos;
 

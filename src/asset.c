@@ -40,6 +40,16 @@ bool asset_resolve(Asset asset, char *buf, size_t n) {
   snprintf(buf, n, "%s", asset.filename);
   return false;
 }
+
+bool asset_try_resolve(Asset asset, char *buf, size_t n) {
+  snprintf(buf, n, "%s", asset.filename);
+  SDL_RWops *rw = SDL_RWFromFile(buf, "rb");
+  if (rw == NULL) {
+    return false;
+  }
+  SDL_RWclose(rw);
+  return true;
+}
 #else
 // Build "[root/]<layer>/<directory>/<filename>" into buf. Returns false (and
 // logs) if the path did not fit — snprintf would otherwise truncate silently,
@@ -71,6 +81,13 @@ static bool file_exists(const char *path) {
   }
   SDL_RWclose(rw);
   return true;
+}
+
+bool asset_try_resolve(Asset asset, char *buf, size_t n) {
+  if (build_path(buf, n, asset_locale, asset) && file_exists(buf)) {
+    return true;
+  }
+  return build_path(buf, n, ASSET_COMMON, asset) && file_exists(buf);
 }
 
 bool asset_resolve(Asset asset, char *buf, size_t n) {
