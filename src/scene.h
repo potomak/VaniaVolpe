@@ -56,18 +56,18 @@ typedef struct scene {
   int animations_length;
 } Scene;
 
-bool load_scene_images(Scene scene, SDL_Renderer *renderer);
+bool load_scene_images(Scene *scene, SDL_Renderer *renderer);
 
-bool load_scene_chunks(Scene scene);
+bool load_scene_chunks(Scene *scene);
 
 // Advance the scene's declared animations (called once per frame by the
 // engine).
 void update_scene_animations(Scene scene, int now_ms);
 
-void free_scene_images(Scene scene);
+void free_scene_images(Scene *scene);
 
-void free_scene_chunks(Scene scene);
+void free_scene_chunks(Scene *scene);
 
-void free_scene_animations(Scene scene);
+void free_scene_animations(Scene *scene);
 
 #endif /* scene_h */
