@@ -19,6 +19,9 @@ typedef enum horizontal_orientation {
   EAST = 1,
 } HorizontalOrientation;
 
+// Maximum points in one walk (a smoothed path is 2-4 points in practice).
+#define ACTOR_MAX_WAYPOINTS 8
+
 typedef enum actor_state {
   IDLE,
   WALKING,
@@ -60,8 +63,13 @@ typedef struct actor {
   Mix_Chunk *move_sound;
   int move_sound_channel;
   SDL_FPoint current_position;
+  // The current segment's target; the remaining segments of a multi-point
+  // walk are waypoints[waypoint_index + 1 ..].
   SDL_FPoint target_position;
   SDL_FPoint direction;
+  SDL_FPoint waypoints[ACTOR_MAX_WAYPOINTS];
+  int waypoints_length;
+  int waypoint_index;
   ActorState state;
   Uint32 started_talking_at;
   Uint32 talking_duration;
@@ -81,6 +89,14 @@ void actor_render(Actor *actor, SDL_Renderer *renderer);
 void actor_free(Actor *actor);
 
 void actor_walk_to(Actor *actor, SDL_FPoint position, void (*on_end)(void));
+
+// Walk through up to ACTOR_MAX_WAYPOINTS points in order (extra points are
+// dropped with a warning); on_end fires once, on reaching the last one.
+// Points the actor is already standing on are skipped; if nothing remains,
+// any in-flight walk is cancelled (dropping its pending callback, like any
+// interrupted walk) and on_end fires immediately.
+void actor_walk_path(Actor *actor, const SDL_FPoint *points, int points_length,
+                     void (*on_end)(void));
 
 void actor_talk(Actor *actor, Mix_Chunk *dialog);
 

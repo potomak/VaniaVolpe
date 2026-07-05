@@ -59,8 +59,27 @@ static const SDL_Rect GOGGLES_HOTSPOT = {330, 470, 60, 30};
 static const SDL_Rect FLOAT_HOTSPOT = {560, 470, 90, 60};
 static const SDL_Rect VINE_NAV_HOTSPOT = {0, 200, 30, 250};
 static const SDL_Rect TREE_NAV_HOTSPOT = {770, 200, 30, 250};
-static const SDL_Rect WALKABLE_HOTSPOT = {20, 430, 760, 150};
-static SDL_Rect hotspots[7];
+static SDL_Rect hotspots[6];
+
+// Walk geometry. Before the sunscreen is applied Gina refuses to leave the
+// umbrella's shadow, so the walkable area itself is a function of game state:
+// the shade patch first, the whole poolside strip afterwards. (The shade rect
+// is tuned to the current background art; toggle the debug overlay to see
+// whichever area is active.)
+static const SDL_Rect POOLSIDE_RECTS[] = {{20, 430, 760, 150}};
+static const SDL_Rect SHADE_RECTS[] = {{60, 430, 200, 150}};
+static const WalkArea POOLSIDE_AREA = {POOLSIDE_RECTS, LEN(POOLSIDE_RECTS),
+                                       NULL, 0};
+static const WalkArea SHADE_AREA = {SHADE_RECTS, LEN(SHADE_RECTS), NULL, 0};
+static WalkGrid walk_grid;
+
+// Rebuild the grid from the state-appropriate area. Called on scene entry and
+// after any in-scene state change that affects movement (the replay reset in
+// dive(); the sunscreen minigame re-enters through on_scene_active).
+static void rebuild_walk_grid(void) {
+  walk_grid_build(&walk_grid,
+                  gina_state.has_sunscreen ? &POOLSIDE_AREA : &SHADE_AREA);
+}
 
 // Points of interest (where Gina stands to interact)
 static const SDL_Point SUNSCREEN_POI = {150, 545};
@@ -72,6 +91,8 @@ static SDL_Point pois[4];
 static void init(void) {
   gina = make_hen(HEN_START);
 
+  rebuild_walk_grid();
+
   int i = 0;
   hotspots[i++] = POOL_WATER_HOTSPOT;
   hotspots[i++] = SUNSCREEN_HOTSPOT;
@@ -79,7 +100,6 @@ static void init(void) {
   hotspots[i++] = FLOAT_HOTSPOT;
   hotspots[i++] = VINE_NAV_HOTSPOT;
   hotspots[i++] = TREE_NAV_HOTSPOT;
-  hotspots[i++] = WALKABLE_HOTSPOT;
 
   i = 0;
   pois[i++] = SUNSCREEN_POI;
@@ -114,8 +134,11 @@ static void float_blows_away(void) {
 static void dive(void) {
   Mix_PlayChannel(-1, chunks[2].chunk, 0); // splash
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Gina: Che bello! Ancora!");
-  // Replay the adventure in place.
+  // Replay the adventure in place. The reset happens without leaving the
+  // scene (no on_scene_active), so the walkable area must be rebuilt here or
+  // Gina could roam the whole poolside before reapplying the sunscreen.
   gina_state_reset();
+  rebuild_walk_grid();
   gina->current_position = HEN_START;
   gina->target_position = HEN_START;
 }
@@ -146,12 +169,17 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
-    // Before sunscreen, the only thing Gina will do is reach for the lotion;
-    // she refuses to leave the shade for anything else.
+    // Before sunscreen the walk grid covers only the umbrella's shadow: Gina
+    // reaches for the lotion, wanders freely within the shade, and refuses
+    // anything beyond it.
     if (!gina_state.has_sunscreen) {
       if (SDL_PointInRect(&m_pos, &SUNSCREEN_HOTSPOT)) {
-        hen_walk_to(gina, (SDL_FPoint){SUNSCREEN_POI.x, SUNSCREEN_POI.y},
-                    open_sunscreen_minigame);
+        walk_actor_to(gina, &walk_grid,
+                      (SDL_FPoint){SUNSCREEN_POI.x, SUNSCREEN_POI.y}, true,
+                      open_sunscreen_minigame);
+      } else if (walk_grid_contains(&walk_grid, m_pos)) {
+        walk_actor_to(gina, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false,
+                      NULL);
       } else {
         gina_say(gina,
                  "Devo mettere la crema solare prima di uscire dall'ombra!",
@@ -166,19 +194,21 @@ static void process_input(SDL_Event *event) {
       break;
     }
     if (!gina_state.has_goggles && SDL_PointInRect(&m_pos, &GOGGLES_HOTSPOT)) {
-      hen_walk_to(gina, (SDL_FPoint){GOGGLES_POI.x, GOGGLES_POI.y},
-                  collect_goggles);
+      walk_actor_to(gina, &walk_grid,
+                    (SDL_FPoint){GOGGLES_POI.x, GOGGLES_POI.y}, true,
+                    collect_goggles);
       break;
     }
     if (gina_state.float_state == FLOAT_AT_POOL &&
         SDL_PointInRect(&m_pos, &FLOAT_HOTSPOT)) {
-      hen_walk_to(gina, (SDL_FPoint){FLOAT_POI.x, FLOAT_POI.y},
-                  float_blows_away);
+      walk_actor_to(gina, &walk_grid, (SDL_FPoint){FLOAT_POI.x, FLOAT_POI.y},
+                    true, float_blows_away);
       break;
     }
     if (SDL_PointInRect(&m_pos, &POOL_WATER_HOTSPOT)) {
-      hen_walk_to(gina, (SDL_FPoint){POOL_EDGE_POI.x, POOL_EDGE_POI.y},
-                  try_dive);
+      walk_actor_to(gina, &walk_grid,
+                    (SDL_FPoint){POOL_EDGE_POI.x, POOL_EDGE_POI.y}, true,
+                    try_dive);
       break;
     }
     if (SDL_PointInRect(&m_pos, &VINE_NAV_HOTSPOT)) {
@@ -190,10 +220,8 @@ static void process_input(SDL_Event *event) {
       break;
     }
     // Otherwise walk toward the click, clamped to the walkable strip.
-    hen_walk_to(gina,
-                nearest_walkable_point(m_pos, &WALKABLE_HOTSPOT, 1,
-                                       (SDL_Rect){0, 0, 0, 0}),
-                NULL);
+    walk_actor_to(gina, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false,
+                  NULL);
     break;
   }
 }
@@ -221,6 +249,9 @@ static void on_scene_active(void) {
   // tree or vine keeps the puzzle state.
   gina->current_position = HEN_START;
   gina->target_position = HEN_START;
+  // The sunscreen may have been applied since init (the minigame scene sets
+  // it, then control returns here): pick the state-appropriate walk area.
+  rebuild_walk_grid();
 }
 
 static void on_scene_inactive(void) {}
@@ -238,6 +269,7 @@ Scene pool_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .walk_grid = &walk_grid,
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,

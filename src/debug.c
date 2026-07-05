@@ -60,6 +60,24 @@ void debug_render(SDL_Renderer *renderer) {
                                             .h = m_pos_up.y - m_pos_down.y}));
 
   Scene current_scene = scene_instance(game.current_scene);
+
+  // Shade non-walkable cells so walk geometry is visible and clearly distinct
+  // from the cyan hotspot outlines.
+  if (current_scene.walk_grid != NULL) {
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(renderer, 0xFF, 0x33, 0x33, 0x50);
+    for (int cy = 0; cy < WALK_GRID_H; cy++) {
+      for (int cx = 0; cx < WALK_GRID_W; cx++) {
+        if (!current_scene.walk_grid->cells[cy][cx]) {
+          SDL_RenderFillRect(
+              renderer, &((SDL_Rect){cx * WALK_CELL_SIZE, cy * WALK_CELL_SIZE,
+                                     WALK_CELL_SIZE, WALK_CELL_SIZE}));
+        }
+      }
+    }
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+  }
+
   // Draw hotspots
   for (int i = 0; i < current_scene.hotspots_length; i++) {
     SDL_SetRenderDrawColor(renderer, 0xCC, 0xFF, 0x00, 0xFF);

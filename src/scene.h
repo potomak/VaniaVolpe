@@ -13,6 +13,7 @@
 
 #include "image.h"
 #include "sound.h"
+#include "walk.h"
 
 typedef struct scene {
   void (*init)(void);
@@ -35,6 +36,11 @@ typedef struct scene {
   SDL_Point *pois;
   int pois_length;
 
+  // Walkability grid (see walk.h); NULL for scenes with no player movement.
+  // Scenes build it once in init from their WalkArea rects; the debug overlay
+  // shades its non-walkable cells.
+  const WalkGrid *walk_grid;
+
   // Images
   ImageData *images;
   int images_length;
@@ -49,11 +55,6 @@ typedef struct scene {
   AnimationData **animations;
   int animations_length;
 } Scene;
-
-// Nearest point that is inside one of the walkable rects and outside the
-// non-walkable rect, to the given click.
-SDL_FPoint nearest_walkable_point(SDL_Point click, const SDL_Rect *walkables,
-                                  int walkables_length, SDL_Rect non_walkable);
 
 bool load_scene_images(Scene scene, SDL_Renderer *renderer);
 

@@ -41,6 +41,42 @@ static void actor_face(Actor *actor, HorizontalOrientation orientation) {
   }
 }
 
+// Begin moving toward `target`: face it and set the unit direction. A
+// zero-length segment leaves direction {0, 0}; the arrive test resolves it on
+// the next update.
+static void start_segment(Actor *actor, SDL_FPoint target) {
+  float dx = target.x - actor->current_position.x;
+  float dy = target.y - actor->current_position.y;
+  float dist = sqrtf(dx * dx + dy * dy);
+  actor->target_position = target;
+  if (dist < ACTOR_ARRIVE_EPSILON) {
+    actor->direction = (SDL_FPoint){0, 0};
+    return;
+  }
+  actor_face(actor, dx > 0 ? EAST : WEST);
+  actor->direction = (SDL_FPoint){dx / dist, dy / dist};
+}
+
+// Stop an in-flight walk without firing its callback: the pending callback is
+// dropped, exactly like a walk interrupted by a new destination.
+static void cancel_walk(Actor *actor) {
+  if (actor->state == WALKING) {
+    if (actor->animations[actor->spec->move_state]) {
+      stop_animation(actor->animations[actor->spec->move_state]);
+    }
+    actor->state = IDLE;
+    if (actor->move_sound_channel >= 0) {
+      Mix_HaltChannel(actor->move_sound_channel);
+      actor->move_sound_channel = -1;
+    }
+  }
+  actor->direction = (SDL_FPoint){0, 0};
+  actor->target_position = actor->current_position;
+  actor->waypoints_length = 0;
+  actor->waypoint_index = 0;
+  actor->on_end_walking = NULL;
+}
+
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   Actor *actor = malloc(sizeof(Actor));
   actor->spec = spec;
@@ -64,6 +100,8 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   actor->current_position = initial_position;
   actor->target_position = initial_position;
   actor->direction = (SDL_FPoint){0, 0};
+  actor->waypoints_length = 0;
+  actor->waypoint_index = 0;
   actor->state = IDLE;
   actor->started_talking_at = 0;
   actor->talking_duration = 0;
@@ -142,10 +180,19 @@ void actor_update(Actor *actor, float delta_time) {
         fabsf(dx) <= ACTOR_ARRIVE_EPSILON && fabsf(dy) <= ACTOR_ARRIVE_EPSILON;
     bool overshot = (actor->direction.x * dx + actor->direction.y * dy) <= 0;
     if (close_enough || overshot) {
+      actor->current_position = actor->target_position;
+      // More waypoints: continue into the next segment without stopping the
+      // walk animation or the move sound.
+      if (actor->waypoint_index + 1 < actor->waypoints_length) {
+        actor->waypoint_index++;
+        start_segment(actor, actor->waypoints[actor->waypoint_index]);
+        return;
+      }
       stop_animation(actor->animations[actor->spec->move_state]);
       actor->state = IDLE;
       actor->direction = (SDL_FPoint){0, 0};
-      actor->current_position = actor->target_position;
+      actor->waypoints_length = 0;
+      actor->waypoint_index = 0;
       // Only halt our own walk-sound channel; -1 would halt every channel
       // (dialogue and SFX included).
       if (actor->move_sound_channel >= 0) {
@@ -219,27 +266,47 @@ void actor_free(Actor *actor) {
   free(actor);
 }
 
-void actor_walk_to(Actor *actor, SDL_FPoint target_position,
-                   void (*on_end)(void)) {
+void actor_walk_path(Actor *actor, const SDL_FPoint *points, int points_length,
+                     void (*on_end)(void)) {
   if (actor->state == TALKING) {
     return;
   }
 
-  float dx = target_position.x - actor->current_position.x;
-  float dy = target_position.y - actor->current_position.y;
-  float dist = sqrtf(dx * dx + dy * dy);
+  if (points_length > ACTOR_MAX_WAYPOINTS) {
+    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                "actor_walk_path: %d waypoints truncated to %d", points_length,
+                ACTOR_MAX_WAYPOINTS);
+    points_length = ACTOR_MAX_WAYPOINTS;
+  }
 
-  // Tapping on (or right next to) the actor leaves dist ~= 0; dividing by it
-  // would make the direction NaN. There's nowhere to walk, so just "arrive".
-  if (dist < ACTOR_ARRIVE_EPSILON) {
-    actor->target_position = actor->current_position;
-    actor->direction = (SDL_FPoint){0, 0};
+  // Skip leading points the actor is already standing on (tapping on or right
+  // next to the actor; a normalised direction would be NaN there).
+  int first = 0;
+  while (first < points_length) {
+    float dx = points[first].x - actor->current_position.x;
+    float dy = points[first].y - actor->current_position.y;
+    if (fabsf(dx) > ACTOR_ARRIVE_EPSILON || fabsf(dy) > ACTOR_ARRIVE_EPSILON) {
+      break;
+    }
+    first++;
+  }
+
+  // Nowhere to walk: fully cancel any in-flight walk first — leaving it
+  // running would fire its stale callback on the next update ("use the
+  // slide" from anywhere) — then "arrive" immediately.
+  if (points_length <= 0 || first >= points_length) {
+    cancel_walk(actor);
     if (on_end != NULL) {
       on_end();
     }
     return;
   }
 
+  actor->waypoints_length = 0;
+  for (int i = first; i < points_length; i++) {
+    actor->waypoints[actor->waypoints_length++] = points[i];
+  }
+  actor->waypoint_index = 0;
   actor->on_end_walking = on_end;
 
   if (actor->state != WALKING && actor->move_sound) {
@@ -249,11 +316,12 @@ void actor_walk_to(Actor *actor, SDL_FPoint target_position,
 
   play_animation(actor->animations[actor->spec->move_state], NULL);
   actor->state = WALKING;
-  actor->target_position = target_position;
+  start_segment(actor, actor->waypoints[0]);
+}
 
-  actor_face(actor, dx > 0 ? EAST : WEST);
-
-  actor->direction = (SDL_FPoint){dx / dist, dy / dist};
+void actor_walk_to(Actor *actor, SDL_FPoint target_position,
+                   void (*on_end)(void)) {
+  actor_walk_path(actor, &target_position, 1, on_end);
 }
 
 void actor_talk(Actor *actor, Mix_Chunk *dialog) {
