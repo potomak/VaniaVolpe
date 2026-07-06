@@ -87,10 +87,9 @@ void debug_render(SDL_Renderer *renderer) {
   // Draw points of interest
   for (int i = 0; i < current_scene->pois_length; i++) {
     SDL_SetRenderDrawColor(renderer, 0xCC, 0x00, 0xFF, 0xFF);
-    SDL_RenderFillRect(
-        renderer, &((SDL_Rect){.x = current_scene->pois[i].x - 2,
-                               .y = current_scene->pois[i].y - 2,
-                               .w = 4,
-                               .h = 4}));
+    SDL_RenderFillRect(renderer, &((SDL_Rect){.x = current_scene->pois[i].x - 2,
+                                              .y = current_scene->pois[i].y - 2,
+                                              .w = 4,
+                                              .h = 4}));
   }
 }
