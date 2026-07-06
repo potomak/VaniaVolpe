@@ -48,4 +48,11 @@ void asset_set_locale(const char *locale);
 // The active locale.
 const char *asset_get_locale(void);
 
+// Derive a sibling filename by swapping the extension (the part after the
+// last '.'): "line.wav" + ".cues" -> "line.cues". False if filename has no
+// extension or the result doesn't fit. Used for dialogue sidecars, which sit
+// next to their WAV with the same base name.
+bool asset_swap_extension(const char *filename, const char *extension,
+                          char *out, size_t out_size);
+
 #endif /* asset_h */

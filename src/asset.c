@@ -31,6 +31,34 @@ void asset_set_locale(const char *locale) {
 
 const char *asset_get_locale(void) { return asset_locale; }
 
+// True if a file exists at path. Uses SDL_RWFromFile (the same mechanism the
+// loaders use) rather than POSIX access(): portable (no <unistd.h>, which
+// Windows lacks) and correct on Emscripten's virtual filesystem.
+static bool file_exists(const char *path) {
+  SDL_RWops *rw = SDL_RWFromFile(path, "rb");
+  if (rw == NULL) {
+    return false;
+  }
+  SDL_RWclose(rw);
+  return true;
+}
+
+bool asset_swap_extension(const char *filename, const char *extension,
+                          char *out, size_t out_size) {
+  const char *dot = SDL_strrchr(filename, '.');
+  if (dot == NULL || dot == filename) {
+    return false;
+  }
+  size_t base = (size_t)(dot - filename);
+  if (base + SDL_strlen(extension) + 1 > out_size) {
+    return false;
+  }
+  SDL_memcpy(out, filename, base);
+  out[base] = '\0';
+  SDL_strlcat(out, extension, out_size);
+  return true;
+}
+
 #if defined(__IPHONEOS__) || defined(__TVOS__)
 bool asset_resolve(Asset asset, char *buf, size_t n) {
   // iOS bundles assets flat (by filename). Localizing the iOS build needs
@@ -43,12 +71,7 @@ bool asset_resolve(Asset asset, char *buf, size_t n) {
 
 bool asset_try_resolve(Asset asset, char *buf, size_t n) {
   snprintf(buf, n, "%s", asset.filename);
-  SDL_RWops *rw = SDL_RWFromFile(buf, "rb");
-  if (rw == NULL) {
-    return false;
-  }
-  SDL_RWclose(rw);
-  return true;
+  return file_exists(buf);
 }
 #else
 // Build "[root/]<layer>/<directory>/<filename>" into buf. Returns false (and
@@ -68,18 +91,6 @@ static bool build_path(char *buf, size_t n, const char *layer, Asset asset) {
                  asset.directory, asset.filename);
     return false;
   }
-  return true;
-}
-
-// True if a file exists at path. Uses SDL_RWFromFile (the same mechanism the
-// loaders use) rather than POSIX access(): portable (no <unistd.h>, which
-// Windows lacks) and correct on Emscripten's virtual filesystem.
-static bool file_exists(const char *path) {
-  SDL_RWops *rw = SDL_RWFromFile(path, "rb");
-  if (rw == NULL) {
-    return false;
-  }
-  SDL_RWclose(rw);
   return true;
 }
 
