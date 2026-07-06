@@ -195,8 +195,7 @@ int SDL_main(int argc, char *argv[]) {
   for (int i = 0; i < (int)LEN(content); i++) {
     all[i + 1] = content[i];
   }
-  register_adventures(all, LEN(all));
-  set_current_adventure(&hub);
+  register_adventures(&hub, all, LEN(all));
 
   game_init();
 
@@ -207,8 +206,7 @@ int SDL_main(int argc, char *argv[]) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load media!");
   }
 
-  // Hack to execute lifecycle callbacks for the first scene
-  set_active_scene(hub.entry_scene);
+  adventure_switch_to(&hub);
 
   // Baseline the frame clock right before the loop so the first delta is ~0
   // instead of "time since SDL init" (which would teleport time-stepped

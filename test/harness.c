@@ -106,15 +106,14 @@ bool harness_start_game(void) {
   for (int i = 0; i < (int)LEN(content); i++) {
     all[i + 1] = content[i];
   }
-  register_adventures(all, LEN(all));
-  set_current_adventure(&hub);
+  register_adventures(&hub, all, LEN(all));
 
   game_init();
   if (!game_load_media(renderer)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "game_load_media failed");
     return false;
   }
-  set_active_scene(hub.entry_scene);
+  adventure_switch_to(&hub);
 
   game.is_running = true;
   last_frame_time = SDL_GetTicks();
