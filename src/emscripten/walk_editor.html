@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vania Volpe — walk-mask editor</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 1.5rem; max-width: 900px; }
+  h1 { font-size: 1.3rem; }
+  nav a { margin-right: 1rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .8rem 0; }
+  select, button { font: inherit; padding: .25rem .6rem; }
+  #stage { position: relative; width: 800px; max-width: 100%; }
+  #stage canvas { display: block; width: 100%; border: 1px solid #8886; }
+  #grid { position: absolute; inset: 0; cursor: crosshair; }
+  .hint { color: #888; font-size: .85rem; }
+  #status { min-height: 1.2em; font-size: .9rem; }
+</style>
+</head>
+<body>
+<nav><a href="tools.html">← dev tools</a><a href="catalog.html">asset catalog</a><a href="index.html">game</a></nav>
+<h1>Walk-mask editor</h1>
+<p class="hint">
+  The browser counterpart of the in-game paint mode (debug layer → <b>W</b>;
+  see <a href="https://github.com/potomak/VaniaVolpe/blob/main/TOOLS.md">TOOLS.md</a>).
+  Left-drag paints cells <b>walkable</b>, right-drag <b>blocks</b> them.
+  Export downloads a <code>walkable.walk</code> to commit under
+  <code>assets/common/&lt;scene&gt;/</code>.
+</p>
+<div class="bar">
+  <label>Background: <select id="scene"></select></label>
+  <button id="load-mask" disabled>Load committed mask</button>
+  <label><input type="file" id="load-file" accept=".walk" hidden><button id="load-file-btn">Load .walk file…</button></label>
+</div>
+<div class="bar">
+  <button id="fill">All walkable</button>
+  <button id="clear">All blocked</button>
+  <button id="export">Export walkable.walk</button>
+  <label><input type="checkbox" id="dim" checked> dim blocked cells</label>
+</div>
+<div id="stage">
+  <canvas id="bg" width="800" height="600"></canvas>
+  <canvas id="grid" width="800" height="600"></canvas>
+</div>
+<p id="status"></p>
+
+<script>
+const CELL = 10, W = 80, H = 60;
+let cells = new Uint8Array(W * H); // 1 = walkable
+let masks = {}; // scene key -> committed walkable.walk URL
+const bg = document.getElementById('bg').getContext('2d');
+const gridCanvas = document.getElementById('grid');
+const grid = gridCanvas.getContext('2d');
+const sceneSel = document.getElementById('scene');
+const status = (t) => document.getElementById('status').textContent = t;
+
+function redraw() {
+  grid.clearRect(0, 0, 800, 600);
+  if (!document.getElementById('dim').checked) return;
+  grid.fillStyle = 'rgba(220, 40, 40, 0.35)';
+  for (let cy = 0; cy < H; cy++)
+    for (let cx = 0; cx < W; cx++)
+      if (!cells[cy * W + cx])
+        grid.fillRect(cx * CELL, cy * CELL, CELL - 1, CELL - 1);
+}
+
+function serialize() {
+  let out = `walk ${W} ${H}\n`;
+  for (let cy = 0; cy < H; cy++) {
+    let row = '';
+    for (let cx = 0; cx < W; cx++) row += cells[cy * W + cx] ? '#' : '.';
+    out += row + '\n';
+  }
+  return out;
+}
+
+function parse(text) {
+  const lines = text.replace(/\r/g, '').split('\n').filter(l => l.length);
+  if (lines.length !== H + 1 || lines[0] !== `walk ${W} ${H}`) return null;
+  const parsed = new Uint8Array(W * H);
+  for (let cy = 0; cy < H; cy++) {
+    if (lines[cy + 1].length !== W) return null;
+    for (let cx = 0; cx < W; cx++) {
+      const c = lines[cy + 1][cx];
+      if (c !== '#' && c !== '.') return null;
+      parsed[cy * W + cx] = c === '#' ? 1 : 0;
+    }
+  }
+  return parsed;
+}
+
+async function loadCatalog() {
+  const manifest = await (await fetch('catalog.json')).json();
+  for (const adv of manifest.adventures) {
+    for (const layer of adv.layers) {
+      if (layer.name !== 'common') continue;
+      for (const scene of layer.scenes) {
+        for (const asset of scene.assets) {
+          const key = `${adv.id}/${scene.name}`;
+          if (asset.type === 'image' && asset.width === 800 && asset.height === 600) {
+            const option = document.createElement('option');
+            option.value = asset.path;
+            option.dataset.key = key;
+            option.textContent = `${adv.title} — ${scene.name} — ${asset.name}`;
+            sceneSel.appendChild(option);
+          }
+          if (asset.name === 'walkable.walk') masks[key] = asset.path;
+        }
+      }
+    }
+  }
+  if (sceneSel.options.length) loadBackground();
+}
+
+function loadBackground() {
+  const option = sceneSel.selectedOptions[0];
+  if (!option) return;
+  const img = new Image();
+  img.onload = () => { bg.clearRect(0, 0, 800, 600); bg.drawImage(img, 0, 0, 800, 600); };
+  img.src = option.value;
+  const mask = masks[option.dataset.key];
+  document.getElementById('load-mask').disabled = !mask;
+  status(mask ? 'This scene has a committed mask — "Load committed mask" to edit it.'
+              : 'No committed mask for this scene yet; painting from scratch.');
+}
+
+function cellAt(event) {
+  const rect = gridCanvas.getBoundingClientRect();
+  const x = (event.clientX - rect.left) * 800 / rect.width;
+  const y = (event.clientY - rect.top) * 600 / rect.height;
+  if (x < 0 || x >= 800 || y < 0 || y >= 600) return -1;
+  return Math.floor(y / CELL) * W + Math.floor(x / CELL);
+}
+
+let paint = -1; // 1 walkable, 0 blocked, -1 not painting
+gridCanvas.addEventListener('contextmenu', e => e.preventDefault());
+gridCanvas.addEventListener('pointerdown', e => {
+  paint = e.button === 2 ? 0 : 1;
+  const i = cellAt(e);
+  if (i >= 0) { cells[i] = paint; redraw(); }
+  gridCanvas.setPointerCapture(e.pointerId);
+});
+gridCanvas.addEventListener('pointermove', e => {
+  if (paint < 0) return;
+  const i = cellAt(e);
+  if (i >= 0) { cells[i] = paint; redraw(); }
+});
+addEventListener('pointerup', () => paint = -1);
+
+sceneSel.addEventListener('change', loadBackground);
+document.getElementById('fill').onclick = () => { cells.fill(1); redraw(); };
+document.getElementById('clear').onclick = () => { cells.fill(0); redraw(); };
+document.getElementById('load-mask').onclick = async () => {
+  const key = sceneSel.selectedOptions[0]?.dataset.key;
+  const parsed = parse(await (await fetch(masks[key])).text());
+  if (parsed) { cells = parsed; redraw(); status('Committed mask loaded.'); }
+  else status('Could not parse the committed mask.');
+};
+document.getElementById('load-file-btn').onclick = () => document.getElementById('load-file').click();
+document.getElementById('load-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const parsed = parse(await file.text());
+  if (parsed) { cells = parsed; redraw(); status(`Loaded ${file.name}.`); }
+  else status(`${file.name} is not a valid .walk file.`);
+});
+document.getElementById('export').onclick = () => {
+  const blob = new Blob([serialize()], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'walkable.walk';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  status('Exported — commit it under assets/common/<scene>/walkable.walk.');
+};
+document.getElementById('dim').addEventListener('change', redraw);
+
+cells.fill(1);
+redraw();
+loadCatalog().catch(() => status('Could not load catalog.json — build the site with `make web` first.'));
+</script>
+</body>
+</html>

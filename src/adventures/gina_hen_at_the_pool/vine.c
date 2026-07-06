@@ -55,7 +55,7 @@ static SDL_Point pois[1];
 static void init(void) {
   gina = make_hen(HEN_START);
 
-  walk_grid_build(&walk_grid, &WALK_AREA);
+  walk_grid_init(&walk_grid, &WALK_AREA, "vine");
 
   int i = 0;
   hotspots[i++] = GRAPES_HOTSPOT;
@@ -138,6 +138,7 @@ Scene vine_scene = {
     .pois = pois,
     .pois_length = LEN(pois),
     .walk_grid = &walk_grid,
+    .walk_mask_dir = "vine",
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,

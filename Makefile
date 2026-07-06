@@ -158,6 +158,9 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
 	# which the catalog can't read) and emit catalog.json describing them.
 	python3 tools/gen_asset_catalog.py --out $(WEB_DIR)
 	cp src/emscripten/catalog.html $(WEB_DIR)/catalog.html
+	# Dev-tools index + browser walk-mask editor (see TOOLS.md).
+	cp src/emscripten/tools.html $(WEB_DIR)/tools.html
+	cp src/emscripten/walk_editor.html $(WEB_DIR)/walk_editor.html
 
 # ── formatting (clang-format, LLVM style; see .clang-format) ──────────────────
 

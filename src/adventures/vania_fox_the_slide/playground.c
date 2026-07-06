@@ -112,7 +112,7 @@ static int slides_count;
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
 
-  walk_grid_build(&walk_grid, &WALK_AREA);
+  walk_grid_init(&walk_grid, &WALK_AREA, "playground");
 
   int i = 0;
   hotspots[i++] = SLIDE_HOTSPOT;
@@ -375,6 +375,7 @@ Scene playground_scene = {
     .pois = pois,
     .pois_length = LEN(pois),
     .walk_grid = &walk_grid,
+    .walk_mask_dir = "playground",
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,

@@ -8,6 +8,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
+#include "constants.h"
 #include "game.h"
 #include "scene.h"
 
@@ -22,9 +23,57 @@ static SDL_Point m_pos_down;
 // Mouse up position
 static SDL_Point m_pos_up;
 
-void debug_process_input(SDL_Event *event) {
+// Walk-mask paint mode (toggled with W while debugging; see TOOLS.md):
+// left-drag paints cells walkable, right-drag paints them blocked, S saves
+// the mask into the source tree. No undo and no brushes on purpose — cells
+// are 10x10 px and a wrong stroke is one opposite-drag away.
+static bool is_painting_walk = false;
+// Mouse button held while painting (0 = none).
+static Uint8 paint_button = 0;
+
+static void paint_cell(WalkGrid *grid, int x, int y, Uint8 walkable) {
+  if (x < 0 || x >= WINDOW_WIDTH || y < 0 || y >= WINDOW_HEIGHT) {
+    return;
+  }
+  grid->cells[y / WALK_CELL_SIZE][x / WALK_CELL_SIZE] = walkable;
+}
+
+bool debug_process_input(SDL_Event *event) {
+  WalkGrid *grid = scene_instance(game.current_scene)->walk_grid;
+
   switch (event->type) {
+  case SDL_KEYDOWN:
+    if (event->key.repeat) {
+      break;
+    }
+    switch (event->key.keysym.sym) {
+    case SDLK_w:
+      if (grid != NULL) {
+        is_painting_walk = !is_painting_walk;
+        paint_button = 0;
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Walk paint mode %s (left-drag: walkable, right-drag: "
+                    "blocked, S: save)",
+                    is_painting_walk ? "on" : "off");
+        return true;
+      }
+      break;
+    case SDLK_s:
+      if (is_painting_walk && grid != NULL) {
+        walk_grid_save(grid, scene_instance(game.current_scene)->walk_mask_dir);
+        return true;
+      }
+      break;
+    }
+    break;
   case SDL_MOUSEMOTION:
+    if (is_painting_walk) {
+      if (grid != NULL && paint_button != 0) {
+        paint_cell(grid, event->motion.x, event->motion.y,
+                   paint_button == SDL_BUTTON_LEFT ? 1 : 0);
+      }
+      return true;
+    }
     // Get mouse position
     if (is_m_down) {
       m_pos_up.x = event->motion.x;
@@ -35,23 +84,45 @@ void debug_process_input(SDL_Event *event) {
     }
     break;
   case SDL_MOUSEBUTTONDOWN:
+    if (is_painting_walk) {
+      if (grid != NULL) {
+        paint_button = event->button.button;
+        paint_cell(grid, event->button.x, event->button.y,
+                   paint_button == SDL_BUTTON_LEFT ? 1 : 0);
+      }
+      return true;
+    }
     is_m_down = true;
     m_pos_down = m_pos;
     m_pos_up = m_pos;
     break;
   case SDL_MOUSEBUTTONUP:
+    if (is_painting_walk) {
+      paint_button = 0;
+      return true;
+    }
     is_m_down = false;
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Rect: {%d, %d, %d, %d}",
                 m_pos_down.x, m_pos_down.y, m_pos_up.x - m_pos_down.x,
                 m_pos_up.y - m_pos_down.y);
     break;
   }
+  return false;
 }
 
 void debug_render(SDL_Renderer *renderer) {
   // Marker to show that the debugging layer is active
   SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
   SDL_RenderFillRect(renderer, &((SDL_Rect){0, 0, 10, 10}));
+
+  // Paint mode: a yellow marker next to the red one, and a yellow frame
+  // around the screen as an unmissable "you are editing" affordance.
+  if (is_painting_walk) {
+    SDL_SetRenderDrawColor(renderer, 0xFF, 0xDD, 0x00, 0xFF);
+    SDL_RenderFillRect(renderer, &((SDL_Rect){12, 0, 10, 10}));
+    SDL_RenderDrawRect(renderer,
+                       &((SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT}));
+  }
 
   SDL_SetRenderDrawColor(renderer, 0x00, 0xCC, 0xFF, 0xFF);
   SDL_RenderDrawRect(renderer, &((SDL_Rect){.x = m_pos_down.x,

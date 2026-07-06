@@ -100,7 +100,7 @@ static void init(void) {
 
   fox = make_fox((SDL_FPoint){580, 457});
 
-  walk_grid_build(&walk_grid, &WALK_AREA);
+  walk_grid_init(&walk_grid, &WALK_AREA, "playground_entrance");
 
   int i = 0;
   hotspots[i++] = GATE_HOTSPOT;
@@ -329,6 +329,7 @@ Scene playground_entrance_scene = {
     .pois = pois,
     .pois_length = LEN(pois),
     .walk_grid = &walk_grid,
+    .walk_mask_dir = "playground_entrance",
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,

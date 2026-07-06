@@ -74,7 +74,9 @@ Backends* for how the harnesses work.
   point (`make test`); `scripts/` holds the shared JSON playthroughs and `web/`
   the Puppeteer browser test that consumes them.
 - Docs: `ARCHITECTURE.md` (deep design, incl. the terminal & headless-test
-  backends), `MOVEMENT.md` (movement limitation + future pathfinding). The queued
+  backends), `MOVEMENT.md` (movement limitation + future pathfinding),
+  `TOOLS.md` (index of every dev tool: debug overlay & walk-mask paint mode,
+  browser tools, generator scripts, test harnesses). The queued
   work lives in **GitHub issues** (label `backlog`), not a file.
 
 ## How it works (quick)

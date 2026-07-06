@@ -38,6 +38,14 @@ bool asset_try_resolve(Asset asset, char *buf, size_t n);
 // system (true today: adventure roots are string literals).
 void asset_set_root(const char *root);
 
+// The active asset root (as set by asset_set_root; may be NULL).
+const char *asset_get_root(void);
+
+// Build the shared-layer path "<root>/common/<dir>/<file>" without checking
+// existence — for writers (e.g. the walk-mask save) that create the file.
+// False if the path doesn't fit.
+bool asset_common_path(Asset asset, char *buf, size_t n);
+
 // Set the active locale (e.g. "it_IT", "en_US"). Defaults to "it_IT". Lookups
 // try <root>/<locale>/<dir>/<file> first, then <root>/common/<dir>/<file>;
 // there is no cross-language fallback, so each locale must provide all of its

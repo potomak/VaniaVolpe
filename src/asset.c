@@ -23,6 +23,8 @@ static const char *asset_locale = "it_IT";
 
 void asset_set_root(const char *root) { asset_root = root; }
 
+const char *asset_get_root(void) { return asset_root; }
+
 void asset_set_locale(const char *locale) {
   if (locale != NULL) {
     asset_locale = locale;
@@ -73,6 +75,12 @@ bool asset_try_resolve(Asset asset, char *buf, size_t n) {
   snprintf(buf, n, "%s", asset.filename);
   return file_exists(buf);
 }
+
+bool asset_common_path(Asset asset, char *buf, size_t n) {
+  // iOS bundles assets flat; there is no common/ layer to address.
+  snprintf(buf, n, "%s", asset.filename);
+  return true;
+}
 #else
 // Build "[root/]<layer>/<directory>/<filename>" into buf. Returns false (and
 // logs) if the path did not fit — snprintf would otherwise truncate silently,
@@ -99,6 +107,10 @@ bool asset_try_resolve(Asset asset, char *buf, size_t n) {
     return true;
   }
   return build_path(buf, n, ASSET_COMMON, asset) && file_exists(buf);
+}
+
+bool asset_common_path(Asset asset, char *buf, size_t n) {
+  return build_path(buf, n, ASSET_COMMON, asset);
 }
 
 bool asset_resolve(Asset asset, char *buf, size_t n) {
