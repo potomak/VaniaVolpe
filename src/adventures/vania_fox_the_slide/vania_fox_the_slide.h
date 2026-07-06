@@ -19,7 +19,7 @@ enum vania_fox_the_slide_scene {
 
 extern Adventure vania_fox_the_slide;
 
-// Populate the adventure's scene table. Call once before set_current_adventure.
+// Populate the adventure's scene table. Call once before adventure_switch_to.
 void vania_fox_the_slide_register(void);
 
 #endif /* vania_fox_the_slide_h */

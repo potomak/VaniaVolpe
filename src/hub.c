@@ -55,7 +55,7 @@ static void process_input(SDL_Event *event) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Hub: starting adventure '%s'",
                     content_adventures[i]->title);
-        switch_to_adventure(content_adventures[i]);
+        adventure_switch_to(content_adventures[i]);
         break;
       }
     }
