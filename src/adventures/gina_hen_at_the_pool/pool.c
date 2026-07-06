@@ -76,6 +76,9 @@ static WalkGrid walk_grid;
 // Rebuild the grid from the state-appropriate area. Called on scene entry and
 // after any in-scene state change that affects movement (the replay reset in
 // dive(); the sunscreen minigame re-enters through on_scene_active).
+// State-switched areas stay rect-based: a walkable.walk mask describes one
+// fixed grid, so this scene has no walk_mask_dir and paint edits are
+// transient.
 static void rebuild_walk_grid(void) {
   walk_grid_build(&walk_grid,
                   gina_state.has_sunscreen ? &POOLSIDE_AREA : &SHADE_AREA);

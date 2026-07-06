@@ -100,8 +100,10 @@ void game_process_input(SDL_Event *event) {
     }
   }
 
-  if (game.is_debugging) {
-    debug_process_input(event);
+  // The debug layer may consume the event (walk-paint mode swallows mouse
+  // input so painting doesn't walk the actor).
+  if (game.is_debugging && debug_process_input(event)) {
+    return;
   }
 
   scene_instance(game.current_scene)->process_input(event);

@@ -37,6 +37,28 @@ typedef struct walk_grid {
 // no blocked rect.
 void walk_grid_build(WalkGrid *grid, const WalkArea *area);
 
+// Fill the grid from the scene's committed mask (<dir>/walkable.walk, painted
+// with the debug overlay's paint mode — see TOOLS.md) when one exists and
+// parses cleanly; else rasterise the rects. `dir` is the scene's asset
+// directory, e.g. "playground"; NULL skips straight to the rects.
+void walk_grid_init(WalkGrid *grid, const WalkArea *area, const char *dir);
+
+// Strict .walk parser (see MOVEMENT.md): a "walk <w> <h>" header matching the
+// engine's grid size, then <h> rows of <w> cells, '#' walkable / '.' blocked.
+// Tolerates \r and a missing final newline; anything else rejects the file.
+bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid);
+
+// Serialize the grid in the .walk format. Returns the byte length written
+// (excluding the NUL), or -1 if out_size is too small. WALK_FILE_MAX bytes
+// always suffice.
+#define WALK_FILE_MAX (32 + WALK_GRID_H * (WALK_GRID_W + 1))
+int walk_grid_serialize(const WalkGrid *grid, char *out, size_t out_size);
+
+// Write the grid to <asset root>/common/<dir>/walkable.walk (the source tree,
+// when running from the repo root). Native builds only; returns false (with a
+// log) on the web build or on I/O failure.
+bool walk_grid_save(const WalkGrid *grid, const char *dir);
+
 // Is the cell containing p walkable? False outside the screen.
 bool walk_grid_contains(const WalkGrid *grid, SDL_Point p);
 

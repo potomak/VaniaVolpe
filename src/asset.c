@@ -23,6 +23,8 @@ static const char *asset_locale = "it_IT";
 
 void asset_set_root(const char *root) { asset_root = root; }
 
+const char *asset_get_root(void) { return asset_root; }
+
 void asset_set_locale(const char *locale) {
   if (locale != NULL) {
     asset_locale = locale;
@@ -30,6 +32,34 @@ void asset_set_locale(const char *locale) {
 }
 
 const char *asset_get_locale(void) { return asset_locale; }
+
+// True if a file exists at path. Uses SDL_RWFromFile (the same mechanism the
+// loaders use) rather than POSIX access(): portable (no <unistd.h>, which
+// Windows lacks) and correct on Emscripten's virtual filesystem.
+static bool file_exists(const char *path) {
+  SDL_RWops *rw = SDL_RWFromFile(path, "rb");
+  if (rw == NULL) {
+    return false;
+  }
+  SDL_RWclose(rw);
+  return true;
+}
+
+bool asset_swap_extension(const char *filename, const char *extension,
+                          char *out, size_t out_size) {
+  const char *dot = SDL_strrchr(filename, '.');
+  if (dot == NULL || dot == filename) {
+    return false;
+  }
+  size_t base = (size_t)(dot - filename);
+  if (base + SDL_strlen(extension) + 1 > out_size) {
+    return false;
+  }
+  SDL_memcpy(out, filename, base);
+  out[base] = '\0';
+  SDL_strlcat(out, extension, out_size);
+  return true;
+}
 
 #if defined(__IPHONEOS__) || defined(__TVOS__)
 bool asset_resolve(Asset asset, char *buf, size_t n) {
@@ -43,11 +73,12 @@ bool asset_resolve(Asset asset, char *buf, size_t n) {
 
 bool asset_try_resolve(Asset asset, char *buf, size_t n) {
   snprintf(buf, n, "%s", asset.filename);
-  SDL_RWops *rw = SDL_RWFromFile(buf, "rb");
-  if (rw == NULL) {
-    return false;
-  }
-  SDL_RWclose(rw);
+  return file_exists(buf);
+}
+
+bool asset_common_path(Asset asset, char *buf, size_t n) {
+  // iOS bundles assets flat; there is no common/ layer to address.
+  snprintf(buf, n, "%s", asset.filename);
   return true;
 }
 #else
@@ -71,23 +102,15 @@ static bool build_path(char *buf, size_t n, const char *layer, Asset asset) {
   return true;
 }
 
-// True if a file exists at path. Uses SDL_RWFromFile (the same mechanism the
-// loaders use) rather than POSIX access(): portable (no <unistd.h>, which
-// Windows lacks) and correct on Emscripten's virtual filesystem.
-static bool file_exists(const char *path) {
-  SDL_RWops *rw = SDL_RWFromFile(path, "rb");
-  if (rw == NULL) {
-    return false;
-  }
-  SDL_RWclose(rw);
-  return true;
-}
-
 bool asset_try_resolve(Asset asset, char *buf, size_t n) {
   if (build_path(buf, n, asset_locale, asset) && file_exists(buf)) {
     return true;
   }
   return build_path(buf, n, ASSET_COMMON, asset) && file_exists(buf);
+}
+
+bool asset_common_path(Asset asset, char *buf, size_t n) {
+  return build_path(buf, n, ASSET_COMMON, asset);
 }
 
 bool asset_resolve(Asset asset, char *buf, size_t n) {

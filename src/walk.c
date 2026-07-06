@@ -59,6 +59,143 @@ void walk_grid_build(WalkGrid *grid, const WalkArea *area) {
   }
 }
 
+bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
+  // Header: "walk <w> <h>", matching this build's grid dimensions exactly.
+  char header[32];
+  int header_length =
+      snprintf(header, sizeof(header), "walk %d %d", WALK_GRID_W, WALK_GRID_H);
+  if (header_length < 0 || (size_t)header_length >= size ||
+      SDL_memcmp(data, header, (size_t)header_length) != 0) {
+    return false;
+  }
+  size_t i = (size_t)header_length;
+  if (i < size && data[i] == '\r') {
+    i++;
+  }
+  if (i >= size || data[i] != '\n') {
+    return false;
+  }
+  i++;
+
+  // Parse into a local grid so a mid-file failure leaves *grid untouched.
+  WalkGrid parsed;
+  for (int cy = 0; cy < WALK_GRID_H; cy++) {
+    for (int cx = 0; cx < WALK_GRID_W; cx++) {
+      if (i >= size) {
+        return false;
+      }
+      char c = data[i++];
+      if (c == '#') {
+        parsed.cells[cy][cx] = 1;
+      } else if (c == '.') {
+        parsed.cells[cy][cx] = 0;
+      } else {
+        return false;
+      }
+    }
+    if (i < size && data[i] == '\r') {
+      i++;
+    }
+    if (cy < WALK_GRID_H - 1) {
+      if (i >= size || data[i] != '\n') {
+        return false;
+      }
+      i++;
+    } else if (i < size && data[i] == '\n') {
+      i++; // the final newline is optional
+    }
+  }
+  if (i != size) {
+    return false; // trailing junk
+  }
+  *grid = parsed;
+  return true;
+}
+
+void walk_grid_init(WalkGrid *grid, const WalkArea *area, const char *dir) {
+  if (dir != NULL) {
+    char path[ASSET_PATH_MAX];
+    if (asset_try_resolve(
+            (Asset){.filename = "walkable.walk", .directory = dir}, path,
+            sizeof(path))) {
+      size_t size = 0;
+      char *data = SDL_LoadFile(path, &size);
+      if (data != NULL) {
+        bool ok = walk_grid_parse(data, size, grid);
+        SDL_free(data);
+        if (ok) {
+          return;
+        }
+      }
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                   "Malformed walk mask %s; falling back to the rects", path);
+    }
+  }
+  walk_grid_build(grid, area);
+}
+
+int walk_grid_serialize(const WalkGrid *grid, char *out, size_t out_size) {
+  int written =
+      snprintf(out, out_size, "walk %d %d\n", WALK_GRID_W, WALK_GRID_H);
+  if (written < 0 || (size_t)written >= out_size) {
+    return -1;
+  }
+  size_t at = (size_t)written;
+  if (at + (size_t)WALK_GRID_H * (WALK_GRID_W + 1) + 1 > out_size) {
+    return -1;
+  }
+  for (int cy = 0; cy < WALK_GRID_H; cy++) {
+    for (int cx = 0; cx < WALK_GRID_W; cx++) {
+      out[at++] = grid->cells[cy][cx] ? '#' : '.';
+    }
+    out[at++] = '\n';
+  }
+  out[at] = '\0';
+  return (int)at;
+}
+
+bool walk_grid_save(const WalkGrid *grid, const char *dir) {
+#ifdef __EMSCRIPTEN__
+  (void)grid;
+  (void)dir;
+  SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+              "walk_grid_save: not available on the web build (use the web "
+              "walk editor's export instead)");
+  return false;
+#else
+  if (dir == NULL) {
+    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                "walk_grid_save: this scene has no walk_mask_dir");
+    return false;
+  }
+  char path[ASSET_PATH_MAX];
+  if (!asset_common_path((Asset){.filename = "walkable.walk", .directory = dir},
+                         path, sizeof(path))) {
+    return false;
+  }
+  static char buffer[WALK_FILE_MAX];
+  int length = walk_grid_serialize(grid, buffer, sizeof(buffer));
+  if (length < 0) {
+    return false;
+  }
+  SDL_RWops *rw = SDL_RWFromFile(path, "wb");
+  if (rw == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "walk_grid_save: %s: %s", path,
+                 SDL_GetError());
+    return false;
+  }
+  bool ok = SDL_RWwrite(rw, buffer, 1, (size_t)length) == (size_t)length;
+  SDL_RWclose(rw);
+  if (ok) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Saved walk mask: %s", path);
+  } else {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "walk_grid_save: short write to %s", path);
+  }
+  return ok;
+#endif
+}
+
 bool walk_grid_contains(const WalkGrid *grid, SDL_Point p) {
   if (p.x < 0 || p.x >= WINDOW_WIDTH || p.y < 0 || p.y >= WINDOW_HEIGHT) {
     return false;

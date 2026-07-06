@@ -38,6 +38,14 @@ bool asset_try_resolve(Asset asset, char *buf, size_t n);
 // system (true today: adventure roots are string literals).
 void asset_set_root(const char *root);
 
+// The active asset root (as set by asset_set_root; may be NULL).
+const char *asset_get_root(void);
+
+// Build the shared-layer path "<root>/common/<dir>/<file>" without checking
+// existence — for writers (e.g. the walk-mask save) that create the file.
+// False if the path doesn't fit.
+bool asset_common_path(Asset asset, char *buf, size_t n);
+
 // Set the active locale (e.g. "it_IT", "en_US"). Defaults to "it_IT". Lookups
 // try <root>/<locale>/<dir>/<file> first, then <root>/common/<dir>/<file>;
 // there is no cross-language fallback, so each locale must provide all of its
@@ -47,5 +55,12 @@ void asset_set_locale(const char *locale);
 
 // The active locale.
 const char *asset_get_locale(void);
+
+// Derive a sibling filename by swapping the extension (the part after the
+// last '.'): "line.wav" + ".cues" -> "line.cues". False if filename has no
+// extension or the result doesn't fit. Used for dialogue sidecars, which sit
+// next to their WAV with the same base name.
+bool asset_swap_extension(const char *filename, const char *extension,
+                          char *out, size_t out_size);
 
 #endif /* asset_h */

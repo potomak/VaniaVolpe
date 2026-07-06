@@ -21,24 +21,6 @@ bool load_scene_images(Scene *scene, SDL_Renderer *renderer) {
   return true;
 }
 
-// Derive a sidecar filename from a chunk's "<name>.wav" (e.g. ".cues" for
-// suffix); false if the chunk filename has no .wav suffix or doesn't fit.
-static bool sidecar_filename(const char *wav_filename, const char *suffix,
-                             char *out, size_t out_size) {
-  size_t length = SDL_strlen(wav_filename);
-  if (length < 4 || SDL_strcmp(wav_filename + length - 4, ".wav") != 0) {
-    return false;
-  }
-  size_t base = length - 4;
-  if (base + SDL_strlen(suffix) + 1 > out_size) {
-    return false;
-  }
-  SDL_memcpy(out, wav_filename, base);
-  out[base] = '\0';
-  SDL_strlcat(out, suffix, out_size);
-  return true;
-}
-
 // Load the optional dialogue sidecars next to a chunk's WAV (see SPEECH.md).
 // Missing files are the normal case (SFX chunks have none).
 static void load_chunk_sidecars(ChunkData *chunk) {
@@ -47,7 +29,8 @@ static void load_chunk_sidecars(ChunkData *chunk) {
   chunk->words = (WordTimings){NULL, 0};
 
   char filename[ASSET_PATH_MAX];
-  if (sidecar_filename(chunk->filename, ".txt", filename, sizeof(filename))) {
+  if (asset_swap_extension(chunk->filename, ".txt", filename,
+                           sizeof(filename))) {
     char path[ASSET_PATH_MAX];
     if (asset_try_resolve(
             (Asset){.filename = filename, .directory = chunk->directory}, path,
@@ -66,11 +49,13 @@ static void load_chunk_sidecars(ChunkData *chunk) {
       }
     }
   }
-  if (sidecar_filename(chunk->filename, ".cues", filename, sizeof(filename))) {
+  if (asset_swap_extension(chunk->filename, ".cues", filename,
+                           sizeof(filename))) {
     lipsync_load((Asset){.filename = filename, .directory = chunk->directory},
                  &chunk->cues);
   }
-  if (sidecar_filename(chunk->filename, ".words", filename, sizeof(filename))) {
+  if (asset_swap_extension(chunk->filename, ".words", filename,
+                           sizeof(filename))) {
     lipsync_load_words(
         (Asset){.filename = filename, .directory = chunk->directory},
         &chunk->words);

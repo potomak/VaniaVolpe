@@ -323,14 +323,18 @@ scenes. Two parts: a tiny on-disk format, and an editor built into the debug
 overlay (the same place `debug.c` already prints drag-selected `SDL_Rect`s for
 authoring hotspots).
 
-**File format — `walkable.walk`:** plain text, 60 lines of 80 characters,
+**File format — `walkable.walk`** *(shipped)*: plain text — a `walk 80 60`
+header line (the grid dimensions, brought forward from the camera interlock
+below so the format never needs migrating), then 60 lines of 80 characters,
 `#` = walkable, `.` = blocked, newline-terminated. One character per grid
 cell, so the file *is* the grid — human-readable, git-diffable, and trivially
 parseable. Lives in the scene's asset dir under `common/` (masks are not
 localized), e.g.
 `src/adventures/vania_fox_the_slide/assets/common/playground/walkable.walk`.
 The web build picks it up automatically (the `common/` dirs are already
-`--preload-file`d).
+`--preload-file`d). A browser counterpart of the in-game editor lives at
+`walk_editor.html` on the deployed site; all the authoring tools are indexed
+in `TOOLS.md`.
 
 **Loading:** extend Phase 1's init to try the file first:
 

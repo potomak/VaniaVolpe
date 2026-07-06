@@ -9,6 +9,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "actor.h"
 #include "constants.h"
@@ -164,6 +165,46 @@ static void test_best_effort(void) {
         "unreachable goal routes to the nearest reachable point");
 }
 
+static void test_walk_mask_format(void) {
+  // Serialize -> parse round-trip on the real playground grid.
+  WalkGrid built;
+  walk_grid_build(&built, &PLAYGROUND_AREA);
+  static char buffer[WALK_FILE_MAX];
+  int length = walk_grid_serialize(&built, buffer, sizeof(buffer));
+  WalkGrid parsed;
+  check(length > 0 && walk_grid_parse(buffer, (size_t)length, &parsed) &&
+            memcmp(parsed.cells, built.cells, sizeof(parsed.cells)) == 0,
+        "walk mask serialize -> parse round-trips");
+
+  // Strict parser: each corruption rejects the whole file.
+  check(!walk_grid_parse("walk 80 59\n", 11, &parsed),
+        "a wrong header rejects");
+  buffer[length - 2] = 'x'; // a non-cell byte in the last row
+  check(!walk_grid_parse(buffer, (size_t)length, &parsed),
+        "a bad cell character rejects");
+  buffer[length - 2] = '#';
+  check(!walk_grid_parse(buffer, (size_t)length - 100, &parsed),
+        "a truncated file rejects");
+  buffer[length] = '#'; // junk beyond the final newline
+  check(!walk_grid_parse(buffer, (size_t)length + 1, &parsed),
+        "trailing junk rejects");
+
+  // The committed playground mask must equal the rect rasterisation while
+  // both exist, so the two sources can't drift apart silently.
+  FILE *mask = fopen("src/adventures/vania_fox_the_slide/assets/common/"
+                     "playground/walkable.walk",
+                     "rb");
+  bool matches = false;
+  if (mask != NULL) {
+    static char data[WALK_FILE_MAX];
+    size_t size = fread(data, 1, sizeof(data), mask);
+    fclose(mask);
+    matches = walk_grid_parse(data, size, &parsed) &&
+              memcmp(parsed.cells, built.cells, sizeof(parsed.cells)) == 0;
+  }
+  check(matches, "the committed playground mask matches its rects");
+}
+
 static void test_pool_state_switch(void) {
   // The same grid rebuilt from the state-appropriate area, as pool.c does.
   WalkGrid grid;
@@ -290,6 +331,7 @@ int test_walk(void) {
   test_playground_routing(&playground_grid);
   test_determinism(&playground_grid);
   test_best_effort();
+  test_walk_mask_format();
   test_pool_state_switch();
   test_exact_goal_walk(&entrance_grid);
   test_stale_callback_cancelled(&playground_grid);

@@ -37,9 +37,15 @@ typedef struct scene {
   int pois_length;
 
   // Walkability grid (see walk.h); NULL for scenes with no player movement.
-  // Scenes build it once in init from their WalkArea rects; the debug overlay
-  // shades its non-walkable cells.
-  const WalkGrid *walk_grid;
+  // Scenes fill it once in init — from a committed walkable.walk mask when
+  // one exists, else from their WalkArea rects (walk_grid_init). The debug
+  // overlay shades its non-walkable cells, and its paint mode (see TOOLS.md)
+  // edits the grid live, which is why the pointer is mutable.
+  WalkGrid *walk_grid;
+
+  // Asset directory the scene's walkable.walk mask lives in (under common/),
+  // e.g. "playground"; NULL disables mask loading and the paint-mode save.
+  const char *walk_mask_dir;
 
   // Images
   ImageData *images;
