@@ -65,11 +65,11 @@ int test_scene(void) {
   // ── actor_feet_y ──────────────────────────────────────────────────────────
 
   Actor *actor = make_actor(&BARE_SPEC, (SDL_FPoint){400, 450});
-  check(actor_feet_y(actor) == 450.0f,
+  check(actor_feet_y(actor) == 450.0F,
         "feet y falls back to the centre with no animation frames");
 
   give_reference_frame(actor, 240);
-  check(actor_feet_y(actor) == 450.0f + 120.0f,
+  check(actor_feet_y(actor) == 450.0F + 120.0F,
         "feet y is centre y + half the reference frame height");
 
   // ── action_layer_order ────────────────────────────────────────────────────

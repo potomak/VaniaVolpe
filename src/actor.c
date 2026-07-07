@@ -119,7 +119,7 @@ float actor_feet_y(const Actor *actor) {
   if (reference == NULL) {
     return actor->current_position.y;
   }
-  return actor->current_position.y + reference->sprite_clips[0].h / 2.0f;
+  return actor->current_position.y + reference->sprite_clips[0].h / 2.0F;
 }
 
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
