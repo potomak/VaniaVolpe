@@ -7,23 +7,22 @@
 
 #include "scene.h"
 
-// Ground-line sort key of drawable `index` (props first, then actors).
-static int drawable_key(const Prop *props, int props_length,
-                        Actor *const *actors, int index) {
-  return index < props_length ? props[index].baseline
-                              : (int)actor_feet_y(actors[index - props_length]);
-}
-
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length,
                        int *out_order) {
+  if (props_length + actors_length <= 0) {
+    return 0;
+  }
+  int keys[props_length + actors_length];
   int count = 0;
   for (int i = 0; i < props_length; i++) {
     if (props[i].visible) {
+      keys[count] = props[i].baseline;
       out_order[count++] = i;
     }
   }
   for (int i = 0; i < actors_length; i++) {
+    keys[count] = (int)actor_feet_y(actors[i]);
     out_order[count++] = props_length + i;
   }
 
@@ -31,14 +30,15 @@ int action_layer_order(const Prop *props, int props_length,
   // props (inserted first) draw before actors, and props keep their table
   // order among themselves.
   for (int i = 1; i < count; i++) {
+    int key = keys[i];
     int order = out_order[i];
-    int key = drawable_key(props, props_length, actors, order);
     int j = i - 1;
-    while (j >= 0 &&
-           drawable_key(props, props_length, actors, out_order[j]) > key) {
+    while (j >= 0 && keys[j] > key) {
+      keys[j + 1] = keys[j];
       out_order[j + 1] = out_order[j];
       j--;
     }
+    keys[j + 1] = key;
     out_order[j + 1] = order;
   }
   return count;
