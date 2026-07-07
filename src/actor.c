@@ -299,7 +299,9 @@ void actor_update(Actor *actor, float delta_time) {
     }
     if (ticks - actor->started_talking_at >= actor->talking_duration) {
       if (actor->talking_cues != NULL) {
-        talking->current_frame = MOUTH_X;
+        if (talking != NULL) {
+          talking->current_frame = MOUTH_X;
+        }
         actor->talking_cues = NULL;
       } else if (talking != NULL) {
         stop_animation(talking);
