@@ -7,6 +7,7 @@
 
 #include "asset.h"
 #include "constants.h"
+#include "depth_demo.h"
 #include "game.h"
 #include "gina_hen_at_the_pool.h"
 #include "hub.h"
@@ -96,9 +97,10 @@ bool harness_start_game(void) {
 
   vania_fox_the_slide_register();
   gina_hen_at_the_pool_register();
+  depth_demo_register();
 
   static const Adventure *content[] = {&vania_fox_the_slide,
-                                       &gina_hen_at_the_pool};
+                                       &gina_hen_at_the_pool, &depth_demo};
   hub_register(content, LEN(content));
 
   static const Adventure *all[1 + LEN(content)];

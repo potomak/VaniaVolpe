@@ -11,6 +11,12 @@ static const ActorAnimSpec HEN_ANIMS[] = {
     {TALKING, "talking.png", "talking.anim", 3, LOOP},
 };
 
+// One sprite set so far: the near variant. Far/mid depth variants (see
+// DEPTH_AND_CAMERA.md) slot in here as more entries.
+static const ActorVariantSpec HEN_VARIANTS[] = {
+    {.anims = HEN_ANIMS, .anims_length = 3, .speed_scale = 1.0F},
+};
+
 const ActorSpec HEN_SPEC = {
     .id = "hen",
     .display_name = "Gina",
@@ -20,8 +26,8 @@ const ActorSpec HEN_SPEC = {
     .move_sound_volume = 20,
     .idle_state = IDLE,
     .move_state = WALKING,
-    .anims = HEN_ANIMS,
-    .anims_length = 3,
+    .variants = HEN_VARIANTS,
+    .variants_length = 1,
 };
 
 Hen *make_hen(SDL_FPoint initial_position) {

@@ -2,8 +2,9 @@ CC      = gcc
 # Adventure module directories (each has its own sources, headers and assets).
 VFTS_DIR = src/adventures/vania_fox_the_slide
 GINA_DIR = src/adventures/gina_hen_at_the_pool
+DEMO_DIR = src/adventures/depth_demo
 CFLAGS  = -std=c99 -Wall $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer) \
-          -I./include -I./src -I$(VFTS_DIR) -I$(GINA_DIR)
+          -I./include -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR)
 LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image SDL2_mixer) -lm
 TARGET  = vaniavolpe
 
@@ -39,7 +40,9 @@ GAME_SRCS = \
 	$(GINA_DIR)/tree.c \
 	$(GINA_DIR)/vine.c \
 	$(GINA_DIR)/sunscreen_minigame.c \
-	$(GINA_DIR)/grapes_minigame.c
+	$(GINA_DIR)/grapes_minigame.c \
+	$(DEMO_DIR)/depth_demo.c \
+	$(DEMO_DIR)/field.c
 
 SRCS = src/main.c $(GAME_SRCS)
 OBJS = $(SRCS:.c=.o)
@@ -116,7 +119,7 @@ WEB_CACHE_BUST := $(shell git rev-parse --short HEAD 2>/dev/null || date +%s)
 EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
              -sUSE_SDL_MIXER=2
 EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./src/emscripten/compat \
-             -I./src -I$(VFTS_DIR) -I$(GINA_DIR)
+             -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR)
 # Preload each adventure's shared (common) layer plus every locale. Per-locale
 # web bundles (download only the chosen language) are a future optimisation.
 EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
@@ -124,7 +127,8 @@ EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
              --preload-file $(VFTS_DIR)/assets/en_US \
              --preload-file $(GINA_DIR)/assets/common \
              --preload-file $(GINA_DIR)/assets/it_IT \
-             --preload-file $(GINA_DIR)/assets/en_US
+             --preload-file $(GINA_DIR)/assets/en_US \
+             --preload-file $(DEMO_DIR)/assets/common
 EM_SHELL   = src/emscripten/shell.html
 # -sGROWABLE_ARRAYBUFFERS=0: Emscripten >= 6 defaults this to auto-detect, and
 # when the browser has WebAssembly.Memory.toResizableBuffer the heap becomes a

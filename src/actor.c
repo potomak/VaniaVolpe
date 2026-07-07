@@ -14,29 +14,40 @@
 #include "image.h"
 #include "sound.h"
 
+// The active variant's animation table, indexed by ActorState.
+static AnimationData **variant_animations(Actor *actor) {
+  return actor->animations[actor->variant];
+}
+
 // Animation used to centre the sprite on the actor's position. Assumes all of
-// an actor's frames share a size (as the original fox did).
+// an actor's frames share a size (as the original fox did) — per variant: a
+// far variant's smaller frames give correspondingly nearer feet.
 static AnimationData *reference_animation(Actor *actor) {
-  if (actor->animations[actor->spec->move_state]) {
-    return actor->animations[actor->spec->move_state];
+  AnimationData **animations = variant_animations(actor);
+  if (animations[actor->spec->move_state]) {
+    return animations[actor->spec->move_state];
   }
-  if (actor->animations[actor->spec->idle_state]) {
-    return actor->animations[actor->spec->idle_state];
+  if (animations[actor->spec->idle_state]) {
+    return animations[actor->spec->idle_state];
   }
   for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
-    if (actor->animations[i]) {
-      return actor->animations[i];
+    if (animations[i]) {
+      return animations[i];
     }
   }
   return NULL;
 }
 
+// Face every variant's animations, so a depth switch mid-walk keeps the
+// actor pointing the same way.
 static void actor_face(Actor *actor, HorizontalOrientation orientation) {
   SDL_RendererFlip flip =
       orientation == EAST ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-  for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
-    if (actor->animations[i]) {
-      actor->animations[i]->flip = flip;
+  for (int v = 0; v < actor->spec->variants_length; v++) {
+    for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
+      if (actor->animations[v][i]) {
+        actor->animations[v][i]->flip = flip;
+      }
     }
   }
 }
@@ -61,8 +72,8 @@ static void start_segment(Actor *actor, SDL_FPoint target) {
 // dropped, exactly like a walk interrupted by a new destination.
 static void cancel_walk(Actor *actor) {
   if (actor->state == WALKING) {
-    if (actor->animations[actor->spec->move_state]) {
-      stop_animation(actor->animations[actor->spec->move_state]);
+    if (variant_animations(actor)[actor->spec->move_state]) {
+      stop_animation(variant_animations(actor)[actor->spec->move_state]);
     }
     actor->state = IDLE;
     if (actor->move_sound_channel >= 0) {
@@ -80,20 +91,26 @@ static void cancel_walk(Actor *actor) {
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   Actor *actor = malloc(sizeof(Actor));
   actor->spec = spec;
-  for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
-    actor->animations[i] = NULL;
-  }
-  for (int i = 0; i < spec->anims_length; i++) {
-    const ActorAnimSpec *anim = &spec->anims[i];
-    AnimationData *animation = make_animation_data(anim->frames, anim->style);
-    if (animation != NULL && anim->ms_per_frame > 0) {
-      animation->ms_per_frame = anim->ms_per_frame;
+  actor->variant = 0;
+  for (int v = 0; v < ACTOR_MAX_VARIANTS; v++) {
+    for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
+      actor->animations[v][i] = NULL;
     }
-    actor->animations[anim->state] = animation;
+  }
+  for (int v = 0; v < spec->variants_length; v++) {
+    const ActorVariantSpec *variant = &spec->variants[v];
+    for (int i = 0; i < variant->anims_length; i++) {
+      const ActorAnimSpec *anim = &variant->anims[i];
+      AnimationData *animation = make_animation_data(anim->frames, anim->style);
+      if (animation != NULL && anim->ms_per_frame > 0) {
+        animation->ms_per_frame = anim->ms_per_frame;
+      }
+      actor->animations[v][anim->state] = animation;
+    }
   }
   // Play the idle animation by default; it is also used for the IDLE state.
-  if (actor->animations[spec->idle_state]) {
-    play_animation(actor->animations[spec->idle_state], NULL);
+  if (variant_animations(actor)[spec->idle_state]) {
+    play_animation(variant_animations(actor)[spec->idle_state], NULL);
   }
   actor->move_sound = NULL;
   actor->move_sound_channel = -1;
@@ -125,35 +142,54 @@ float actor_feet_y(const Actor *actor) {
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
   const ActorSpec *spec = actor->spec;
 
-  // A cue-driven talking sheet must have exactly one frame per mouth shape
-  // (canonical order X A B C D E F) — enforce the contract loudly.
-  if (spec->talk_shape_frames == MOUTH_SHAPE_COUNT &&
-      (actor->animations[TALKING] == NULL ||
-       actor->animations[TALKING]->frames != MOUTH_SHAPE_COUNT)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "%s: talk_shape_frames is %d but the TALKING animation has "
-                 "%d frames",
-                 spec->id, MOUTH_SHAPE_COUNT,
-                 actor->animations[TALKING] ? actor->animations[TALKING]->frames
-                                            : 0);
-    return false;
+  for (int v = 0; v < spec->variants_length; v++) {
+    // Every variant must provide the same set of states as variant 0, so
+    // reference_animation and the state fallbacks behave identically at any
+    // depth. Enforce loudly, before any file is touched.
+    for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
+      if ((actor->animations[v][i] == NULL) !=
+          (actor->animations[0][i] == NULL)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "%s: variant %d and variant 0 disagree on state %d",
+                     spec->id, v, i);
+        return false;
+      }
+    }
+
+    // A cue-driven talking sheet must have exactly one frame per mouth shape
+    // (canonical order X A B C D E F) — in every variant.
+    if (spec->talk_shape_frames == MOUTH_SHAPE_COUNT &&
+        (actor->animations[v][TALKING] == NULL ||
+         actor->animations[v][TALKING]->frames != MOUTH_SHAPE_COUNT)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                   "%s: talk_shape_frames is %d but variant %d's TALKING "
+                   "animation has %d frames",
+                   spec->id, MOUTH_SHAPE_COUNT, v,
+                   actor->animations[v][TALKING]
+                       ? actor->animations[v][TALKING]->frames
+                       : 0);
+      return false;
+    }
   }
 
-  for (int i = 0; i < spec->anims_length; i++) {
-    const ActorAnimSpec *anim = &spec->anims[i];
-    if (!load_animation(renderer, actor->animations[anim->state],
-                        (Asset){
-                            .filename = anim->sprite_filename,
-                            .directory = spec->assets_dir,
-                        },
-                        (Asset){
-                            .filename = anim->data_filename,
-                            .directory = spec->assets_dir,
-                        })) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                   "Failed to load %s animation %s", spec->id,
-                   anim->sprite_filename);
-      return false;
+  for (int v = 0; v < spec->variants_length; v++) {
+    const ActorVariantSpec *variant = &spec->variants[v];
+    for (int i = 0; i < variant->anims_length; i++) {
+      const ActorAnimSpec *anim = &variant->anims[i];
+      if (!load_animation(renderer, actor->animations[v][anim->state],
+                          (Asset){
+                              .filename = anim->sprite_filename,
+                              .directory = spec->assets_dir,
+                          },
+                          (Asset){
+                              .filename = anim->data_filename,
+                              .directory = spec->assets_dir,
+                          })) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to load %s animation %s", spec->id,
+                     anim->sprite_filename);
+        return false;
+      }
     }
   }
 
@@ -181,12 +217,15 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
 
 void actor_update(Actor *actor, float delta_time) {
   // Advance every playing animation each frame (timing lives here now, not in
-  // render). All actor animations loop with no end callback, so this never
-  // fires a stray callback.
+  // render). Only the active variant's animations ever play, but ticking all
+  // of them is a cheap no-op on the stopped ones. All actor animations loop
+  // with no end callback, so this never fires a stray callback.
   int now = SDL_GetTicks();
-  for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
-    if (actor->animations[i] != NULL) {
-      animation_update(actor->animations[i], now);
+  for (int v = 0; v < actor->spec->variants_length; v++) {
+    for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
+      if (actor->animations[v][i] != NULL) {
+        animation_update(actor->animations[v][i], now);
+      }
     }
   }
 
@@ -216,7 +255,7 @@ void actor_update(Actor *actor, float delta_time) {
         start_segment(actor, actor->waypoints[actor->waypoint_index]);
         return;
       }
-      stop_animation(actor->animations[actor->spec->move_state]);
+      stop_animation(variant_animations(actor)[actor->spec->move_state]);
       actor->state = IDLE;
       actor->direction = (SDL_FPoint){0, 0};
       actor->waypoints_length = 0;
@@ -237,32 +276,40 @@ void actor_update(Actor *actor, float delta_time) {
       return;
     }
 
-    actor->current_position = (SDL_FPoint){
-        .x = actor->current_position.x +
-             actor->direction.x * actor->spec->velocity * delta_time,
-        .y = actor->current_position.y +
-             actor->direction.y * actor->spec->velocity * delta_time};
+    // A far variant covers fewer scene px/s, so apparent speed stays
+    // natural across depth bands.
+    float velocity = actor->spec->velocity *
+                     actor->spec->variants[actor->variant].speed_scale;
+    actor->current_position =
+        (SDL_FPoint){.x = actor->current_position.x +
+                          actor->direction.x * velocity * delta_time,
+                     .y = actor->current_position.y +
+                          actor->direction.y * velocity * delta_time};
     break;
   }
-  case TALKING:
+  case TALKING: {
+    AnimationData *talking = variant_animations(actor)[TALKING];
     // Cue-driven mouth: pick the frame for the active cue. The animation is
     // never "playing" in this mode, so animation_update leaves the frame
     // alone and no end callback is ever armed.
-    if (actor->talking_cues != NULL && actor->animations[TALKING] != NULL) {
-      actor->animations[TALKING]->current_frame = lipsync_shape_at(
+    if (actor->talking_cues != NULL && talking != NULL) {
+      talking->current_frame = lipsync_shape_at(
           actor->talking_cues, (Uint32)now - actor->started_talking_at,
           &actor->cue_cursor);
     }
     if (ticks - actor->started_talking_at >= actor->talking_duration) {
       if (actor->talking_cues != NULL) {
-        actor->animations[TALKING]->current_frame = MOUTH_X;
+        if (talking != NULL) {
+          talking->current_frame = MOUTH_X;
+        }
         actor->talking_cues = NULL;
-      } else if (actor->animations[TALKING] != NULL) {
-        stop_animation(actor->animations[TALKING]);
+      } else if (talking != NULL) {
+        stop_animation(talking);
       }
       actor->state = IDLE;
     }
     break;
+  }
   }
 }
 
@@ -280,9 +327,9 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
   // IDLE renders the actor's idle animation (e.g. the fox's sitting sprite).
   ActorState state =
       actor->state == IDLE ? actor->spec->idle_state : actor->state;
-  AnimationData *animation = actor->animations[state];
+  AnimationData *animation = variant_animations(actor)[state];
   if (animation == NULL) {
-    animation = actor->animations[actor->spec->idle_state];
+    animation = variant_animations(actor)[actor->spec->idle_state];
   }
   if (animation == NULL) {
     animation = reference;
@@ -291,9 +338,11 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
 }
 
 void actor_free(Actor *actor) {
-  for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
-    if (actor->animations[i]) {
-      free_animation(actor->animations[i]);
+  for (int v = 0; v < actor->spec->variants_length; v++) {
+    for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
+      if (actor->animations[v][i]) {
+        free_animation(actor->animations[v][i]);
+      }
     }
   }
   if (actor->move_sound) {
@@ -355,9 +404,38 @@ void actor_walk_path(Actor *actor, const SDL_FPoint *points, int points_length,
     actor->move_sound_channel = Mix_PlayChannel(-1, actor->move_sound, -1);
   }
 
-  play_animation(actor->animations[actor->spec->move_state], NULL);
+  play_animation(variant_animations(actor)[actor->spec->move_state], NULL);
   actor->state = WALKING;
   start_segment(actor, actor->waypoints[0]);
+}
+
+void actor_set_variant(Actor *actor, int variant) {
+  if (variant == actor->variant || variant < 0 ||
+      variant >= actor->spec->variants_length) {
+    return;
+  }
+
+  // Hand the current state's animation over mid-cycle: the new variant's
+  // animation inherits the old one's timing, frame and facing, so a walk or
+  // talk continues mid-stride instead of restarting — that continuity is
+  // what hides the switch. The old animation is silenced directly rather
+  // than via stop_animation, which would fire its end callback (see #35).
+  ActorState state = actor->state;
+  if (state == IDLE) {
+    state = actor->spec->idle_state;
+  } else if (state == WALKING) {
+    state = actor->spec->move_state;
+  }
+  AnimationData *from = actor->animations[actor->variant][state];
+  AnimationData *to = actor->animations[variant][state];
+  if (from != NULL && to != NULL) {
+    to->is_playing = from->is_playing;
+    to->start_time = from->start_time;
+    to->current_frame = from->current_frame;
+    to->flip = from->flip;
+    from->is_playing = false;
+  }
+  actor->variant = variant;
 }
 
 void actor_walk_to(Actor *actor, SDL_FPoint target_position,
@@ -406,16 +484,16 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
 
   // Cue mode needs cues and a canonical 7-frame talking sheet (validated in
   // actor_load_media); everything else keeps the classic looping animation.
+  AnimationData *talking = variant_animations(actor)[TALKING];
   if (dialog != NULL && dialog->cues.length > 0 &&
-      actor->spec->talk_shape_frames == MOUTH_SHAPE_COUNT &&
-      actor->animations[TALKING] != NULL) {
+      actor->spec->talk_shape_frames == MOUTH_SHAPE_COUNT && talking != NULL) {
     actor->talking_cues = &dialog->cues;
     actor->cue_cursor = 0;
-    actor->animations[TALKING]->current_frame = MOUTH_X;
+    talking->current_frame = MOUTH_X;
   } else {
     actor->talking_cues = NULL;
-    if (actor->animations[TALKING] != NULL) {
-      play_animation(actor->animations[TALKING], NULL);
+    if (talking != NULL) {
+      play_animation(talking, NULL);
     }
   }
   actor->state = TALKING;
@@ -424,8 +502,8 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
 }
 
 void actor_play_state(Actor *actor, ActorState state) {
-  if (actor->animations[state]) {
-    play_animation(actor->animations[state], NULL);
+  if (variant_animations(actor)[state]) {
+    play_animation(variant_animations(actor)[state], NULL);
   }
   actor->state = state;
 }

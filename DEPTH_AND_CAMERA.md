@@ -154,7 +154,13 @@ fox above/below the acorn pile and see the overlap flip. Unit test
 (`test/test_scene.c` or alongside existing tests): synthetic props/actor
 lists assert the draw order, including the tie rule.
 
-### Phase 2 — depth bands + actor sprite variants
+### Phase 2 — depth bands + actor sprite variants *(shipped)*
+
+*Implementation notes: the same-states-as-variant-0 validation runs in
+`actor_load_media` (which already has the loud-failure path scenes check),
+not `make_actor`. Bands are per-scene data by construction — each scene
+declares its own `DepthBand` table and maps its floor onto the actor's
+variants however its art needs.*
 
 `actor.h`:
 

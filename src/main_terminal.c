@@ -5,6 +5,7 @@
 
 #include "asset.h"
 #include "constants.h"
+#include "depth_demo.h"
 #include "game.h"
 #include "gina_hen_at_the_pool.h"
 #include "hub.h"
@@ -152,12 +153,13 @@ int main(int argc, char *argv[]) {
   // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();
   gina_hen_at_the_pool_register();
+  depth_demo_register();
 
   // The content adventures, in menu order. This is the single source of truth:
   // the hub's list and the engine's full registry below both derive from it, so
   // adding an adventure is a one-line edit here.
   static const Adventure *content[] = {&vania_fox_the_slide,
-                                       &gina_hen_at_the_pool};
+                                       &gina_hen_at_the_pool, &depth_demo};
   hub_register(content, LEN(content));
 
   // Register the hub first (start screen + back-to-hub target), then content.

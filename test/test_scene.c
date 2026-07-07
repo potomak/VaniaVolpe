@@ -1,11 +1,13 @@
 //
 //  test_scene.c
-//  Unit tests for the y-sorted action layer (DEPTH_AND_CAMERA.md Phase 1):
-//  actor_feet_y and action_layer_order. Everything is synthetic — no window,
-//  renderer, or assets; actors get hand-built animation frames so the feet
-//  math has a frame height to work with.
+//  Unit tests for the y-sorted action layer (DEPTH_AND_CAMERA.md Phase 1) and
+//  the depth bands / actor variants (Phase 2): actor_feet_y,
+//  action_layer_order, depth_variant_for, actor_set_variant and the per-band
+//  speed scale. Everything is synthetic — no window, renderer, or assets;
+//  actors get hand-built animation frames where the checks need them.
 //
 
+#include <math.h>
 #include <stdio.h>
 
 #include "actor.h"
@@ -26,6 +28,9 @@ static void check(bool ok, const char *what) {
 
 // A spec with no animations: enough for make_actor, and the no-frames
 // fallback case for actor_feet_y.
+static const ActorVariantSpec BARE_VARIANTS[] = {
+    {.anims = NULL, .anims_length = 0, .speed_scale = 1.0F},
+};
 static const ActorSpec BARE_SPEC = {
     .id = "test_actor",
     .display_name = "Test",
@@ -33,8 +38,30 @@ static const ActorSpec BARE_SPEC = {
     .velocity = 100,
     .idle_state = IDLE,
     .move_state = WALKING,
-    .anims = NULL,
-    .anims_length = 0,
+    .variants = BARE_VARIANTS,
+    .variants_length = 1,
+};
+
+// A two-variant spec whose far variant moves at half speed. The animations
+// are never loaded from disk — make_actor builds their tables from the spec
+// alone, which is all walking and variant switching touch.
+static const ActorAnimSpec VARIANT_ANIMS[] = {
+    {IDLE, "idle.png", "idle.anim", 1, LOOP},
+    {WALKING, "walking.png", "walking.anim", 1, LOOP},
+};
+static const ActorVariantSpec TWO_VARIANTS[] = {
+    {.anims = VARIANT_ANIMS, .anims_length = 2, .speed_scale = 1.0F},
+    {.anims = VARIANT_ANIMS, .anims_length = 2, .speed_scale = 0.5F},
+};
+static const ActorSpec TWO_VARIANT_SPEC = {
+    .id = "test_two_variants",
+    .display_name = "Test",
+    .assets_dir = "test",
+    .velocity = 100,
+    .idle_state = IDLE,
+    .move_state = WALKING,
+    .variants = TWO_VARIANTS,
+    .variants_length = 2,
 };
 
 // Give an actor a WALKING animation with one frame_h-tall frame, so
@@ -42,7 +69,7 @@ static const ActorSpec BARE_SPEC = {
 static void give_reference_frame(Actor *actor, int frame_h) {
   AnimationData *animation = make_animation_data(1, LOOP);
   animation->sprite_clips[0] = (SDL_Rect){0, 0, 220, frame_h};
-  actor->animations[WALKING] = animation;
+  actor->animations[0][WALKING] = animation;
 }
 
 static bool order_is(const int *order, int count, const int *expected,
@@ -124,6 +151,54 @@ int test_scene(void) {
         "equal-baseline props keep declaration order");
 
   actor_free(actor);
+
+  // ── depth_variant_for ─────────────────────────────────────────────────────
+
+  // Mirrors the shape a scene would declare: near ground at the bottom,
+  // farther bands higher up (variant indices need not be ordered).
+  const DepthBand bands[] = {{0, 2}, {400, 1}, {520, 0}};
+  check(depth_variant_for(bands, 3, 120.0F) == 2,
+        "feet in the first band pick its variant");
+  check(depth_variant_for(bands, 3, 399.0F) == 2,
+        "feet just above a boundary stay in the earlier band");
+  check(depth_variant_for(bands, 3, 400.0F) == 1,
+        "feet exactly on a boundary enter the later band");
+  check(depth_variant_for(bands, 3, 700.0F) == 0,
+        "feet beyond the last band pick the last variant");
+  const DepthBand offset_bands[] = {{300, 1}};
+  check(depth_variant_for(offset_bands, 1, 100.0F) == 1,
+        "feet above every band fall back to the first band's variant");
+
+  // ── actor_set_variant + speed scale ───────────────────────────────────────
+
+  Actor *walker = make_actor(&TWO_VARIANT_SPEC, (SDL_FPoint){0, 0});
+  actor_walk_to(walker, (SDL_FPoint){100, 0}, NULL);
+  actor_update(walker, 0.1F);
+  check(fabsf(walker->current_position.x - 10.0F) < 0.001F,
+        "variant 0 walks at the spec velocity");
+
+  // Pin the live walking animation's timing and facing, then switch.
+  AnimationData *near_walk = walker->animations[0][WALKING];
+  AnimationData *far_walk = walker->animations[1][WALKING];
+  near_walk->start_time = 123;
+  near_walk->flip = SDL_FLIP_HORIZONTAL;
+  actor_set_variant(walker, 1);
+  check(walker->variant == 1 && far_walk->is_playing &&
+            far_walk->start_time == 123 &&
+            far_walk->flip == SDL_FLIP_HORIZONTAL,
+        "a variant switch hands the walk cycle over mid-stride");
+  check(!near_walk->is_playing,
+        "the old variant's animation stops without restarting anything");
+
+  actor_update(walker, 0.1F);
+  check(fabsf(walker->current_position.x - 15.0F) < 0.001F,
+        "the far variant's speed scale slows the walk");
+
+  actor_set_variant(walker, 5);
+  actor_set_variant(walker, -1);
+  check(walker->variant == 1, "out-of-range variants are ignored");
+
+  actor_free(walker);
 
   return failures;
 }

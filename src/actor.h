@@ -45,6 +45,20 @@ typedef struct actor_anim_spec {
   int ms_per_frame;
 } ActorAnimSpec;
 
+// Most sprite sets (depth variants) one actor can carry.
+#define ACTOR_MAX_VARIANTS 3
+
+// A full sprite set for one depth, plus how the actor moves at that depth
+// (DEPTH_AND_CAMERA.md Phase 2). Variant 0 is the nearest; every variant must
+// provide the same set of states as variant 0 (validated in
+// actor_load_media). Which variant is active at a given scene y is scene
+// data — see DepthBand in scene.h.
+typedef struct actor_variant_spec {
+  const ActorAnimSpec *anims;
+  int anims_length;
+  float speed_scale; // 1.0 = spec velocity; far variants use < 1.0
+} ActorVariantSpec;
+
 // Static description of a character. Two characters differ only by their spec.
 typedef struct actor_spec {
   const char *id;
@@ -53,10 +67,10 @@ typedef struct actor_spec {
   float velocity;                  // walking speed, px/s
   const char *move_sound_filename; // looped while walking; NULL for none
   int move_sound_volume;
-  ActorState idle_state; // animation shown while IDLE (e.g. SITTING)
-  ActorState move_state; // animation shown while WALKING
-  const ActorAnimSpec *anims;
-  int anims_length;
+  ActorState idle_state;            // animation shown while IDLE (e.g. SITTING)
+  ActorState move_state;            // animation shown while WALKING
+  const ActorVariantSpec *variants; // at least one (variant 0 = nearest)
+  int variants_length;              // 1..ACTOR_MAX_VARIANTS
   // MOUTH_SHAPE_COUNT: the TALKING sheet has one frame per mouth shape in
   // canonical order (X A B C D E F) and lines with .cues sidecars drive it.
   // 0: classic looping talking animation (see SPEECH.md).
@@ -65,8 +79,11 @@ typedef struct actor_spec {
 
 typedef struct actor {
   const ActorSpec *spec;
-  // Indexed by ActorState; entries the spec doesn't provide stay NULL.
-  AnimationData *animations[ACTOR_STATE_COUNT];
+  // Indexed by [variant][ActorState]; entries a variant's spec doesn't
+  // provide stay NULL.
+  AnimationData *animations[ACTOR_MAX_VARIANTS][ACTOR_STATE_COUNT];
+  // Active sprite set; 0 initially, switched by actor_set_variant.
+  int variant;
   Mix_Chunk *move_sound;
   int move_sound_channel;
   // Channel dialogue last played on (DIALOG_CHANNEL when talking, -1
@@ -118,6 +135,13 @@ void actor_walk_to(Actor *actor, SDL_FPoint position, void (*on_end)(void));
 // interrupted walk) and on_end fires immediately.
 void actor_walk_path(Actor *actor, const SDL_FPoint *points, int points_length,
                      void (*on_end)(void));
+
+// Switch the actor to another sprite set (depth variant). No-op if unchanged
+// or out of range. The current state's animation carries on mid-cycle — the
+// new variant's animation inherits the old one's timing, frame and facing —
+// which is what hides the switch. Scenes drive this once per frame from
+// their depth bands: see depth_variant_for in scene.h.
+void actor_set_variant(Actor *actor, int variant);
 
 // Speak a line. `dialog` carries the audio and its optional sidecars (text,
 // mouth cues, word timings); `text` overrides the sidecar transcript (used

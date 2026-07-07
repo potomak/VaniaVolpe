@@ -7,6 +7,16 @@
 
 #include "scene.h"
 
+int depth_variant_for(const DepthBand *bands, int bands_length, float feet_y) {
+  int variant = bands_length > 0 ? bands[0].variant : 0;
+  for (int i = 0; i < bands_length; i++) {
+    if (feet_y >= (float)bands[i].y_top) {
+      variant = bands[i].variant;
+    }
+  }
+  return variant;
+}
+
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length,
                        int *out_order) {
