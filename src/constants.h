@@ -4,6 +4,11 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
+// Largest scene a camera can scroll over (DEPTH_AND_CAMERA.md). Sizes the
+// walk layer's static arrays: 240x120 cells worst case, ~29 KB per grid.
+#define MAX_SCENE_W 2400
+#define MAX_SCENE_H 1200
+
 #define FPS 30
 #define FRAME_TARGET_TIME (1000 / FPS)
 

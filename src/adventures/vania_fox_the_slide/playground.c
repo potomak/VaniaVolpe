@@ -122,7 +122,8 @@ static int slides_count;
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
 
-  walk_grid_init(&walk_grid, &WALK_AREA, "playground");
+  walk_grid_init(&walk_grid, &WALK_AREA,
+                 (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "playground");
 
   // Baselines are set in on_scene_active, once the image heights are known
   // (the ground line is the bottom edge of each sprite).
@@ -231,6 +232,11 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
+    // Hit-test the click's own coordinates (#64): the cached motion position
+    // can be stale — e.g. a repeated tap with no motion in between while the
+    // camera moved.
+    m_pos.x = event->button.x;
+    m_pos.y = event->button.y;
     // If has already slid three or more times go to outro
     if (slides_count > 2) {
       set_active_scene(OUTRO);

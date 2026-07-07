@@ -118,13 +118,14 @@ typedef struct walk_grid {
 } WalkGrid;
 ```
 
-> **Scrollable scenes** (`DEPTH_AND_CAMERA.md`, #67) make the grid
-> *scene*-sized rather than window-sized: dimensions become `WalkGrid` fields
-> derived from the scene size (static maximums `MAX_SCENE_W`/`MAX_SCENE_H`),
-> the A* cost array becomes `Uint32`, and the `.walk` format gains a
-> `walk <w> <h>` header line. See that spec's *Interlocks with the movement
-> plan* for the exact deltas; if this plan is implemented after camera
-> support lands, build it scene-sized from the start.
+> **Scrollable scenes** (`DEPTH_AND_CAMERA.md`, #67) made the grid
+> *scene*-sized rather than window-sized *(shipped in Phase 3 of that spec)*:
+> `WalkGrid` now carries `w`/`h` fields derived from the scene size (bounded
+> by `MAX_SCENE_W`/`MAX_SCENE_H`), `walk_grid_build`/`walk_grid_init` take a
+> `scene_size`, the A* cost array is `Uint32`, and the `.walk` header
+> (already `walk <w> <h>`) is read back as the grid's real dimensions and
+> checked against the scene. All the algorithms below were already written
+> against the grid's dimensions, so none of them changed.
 
 ```c
 

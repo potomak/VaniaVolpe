@@ -12,6 +12,7 @@
 #include <stdbool.h>
 
 #include "actor.h"
+#include "camera.h"
 #include "image.h"
 #include "sound.h"
 #include "walk.h"
@@ -62,6 +63,12 @@ typedef struct scene {
   // Asset directory the scene's walkable.walk mask lives in (under common/),
   // e.g. "playground"; NULL disables mask loading and the paint-mode save.
   const char *walk_mask_dir;
+
+  // Camera for scenes larger than the window (see camera.h); NULL for static
+  // scenes. A scrolling scene owns a static Camera, calls camera_init in its
+  // init, and points this at it — the engine does everything else (snap on
+  // entry, update after the scene's update, input conversion, render offset).
+  Camera *camera;
 
   // Images
   ImageData *images;

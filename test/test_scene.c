@@ -200,5 +200,31 @@ int test_scene(void) {
 
   actor_free(walker);
 
+  // Variants whose frame counts disagree with variant 0 would make the
+  // mid-cycle handover glitch; actor_load_media must reject them before it
+  // ever touches a file (so no renderer or assets are needed here).
+  static const ActorAnimSpec MISMATCHED_ANIMS[] = {
+      {IDLE, "idle.png", "idle.anim", 1, LOOP},
+      {WALKING, "walking.png", "walking.anim", 3, LOOP}, // variant 0 has 1
+  };
+  static const ActorVariantSpec MISMATCHED_VARIANTS[] = {
+      {.anims = VARIANT_ANIMS, .anims_length = 2, .speed_scale = 1.0F},
+      {.anims = MISMATCHED_ANIMS, .anims_length = 2, .speed_scale = 0.6F},
+  };
+  static const ActorSpec MISMATCHED_SPEC = {
+      .id = "test_mismatch",
+      .display_name = "Test",
+      .assets_dir = "test",
+      .velocity = 100,
+      .idle_state = IDLE,
+      .move_state = WALKING,
+      .variants = MISMATCHED_VARIANTS,
+      .variants_length = 2,
+  };
+  Actor *mismatched = make_actor(&MISMATCHED_SPEC, (SDL_FPoint){0, 0});
+  check(!actor_load_media(mismatched, NULL),
+        "variants with mismatched frame counts fail loudly at load");
+  actor_free(mismatched);
+
   return failures;
 }

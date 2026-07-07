@@ -24,34 +24,45 @@ typedef struct walk_area {
 } WalkArea;
 
 #define WALK_CELL_SIZE 10
-#define WALK_GRID_W (WINDOW_WIDTH / WALK_CELL_SIZE)  // 80
-#define WALK_GRID_H (WINDOW_HEIGHT / WALK_CELL_SIZE) // 60
+// Grids are scene-sized (scene_size / WALK_CELL_SIZE); these bound the static
+// storage for the largest scrollable scene (240x120 cells).
+#define WALK_GRID_MAX_W (MAX_SCENE_W / WALK_CELL_SIZE)
+#define WALK_GRID_MAX_H (MAX_SCENE_H / WALK_CELL_SIZE)
 
-// Runtime format: 1 byte per cell, 1 = walkable.
+// Runtime format: 1 byte per cell, 1 = walkable. w x h cells are in use;
+// storage is sized for the largest scene.
 typedef struct walk_grid {
-  Uint8 cells[WALK_GRID_H][WALK_GRID_W];
+  int w;
+  int h;
+  Uint8 cells[WALK_GRID_MAX_H][WALK_GRID_MAX_W];
 } WalkGrid;
 
 // Rasterise the rects into the grid (called once from the scene's init). A
 // cell is walkable iff its centre point is inside a walkable rect and inside
-// no blocked rect.
-void walk_grid_build(WalkGrid *grid, const WalkArea *area);
+// no blocked rect. scene_size is the scene's world size in px — for every
+// static scene, {WINDOW_WIDTH, WINDOW_HEIGHT}.
+void walk_grid_build(WalkGrid *grid, const WalkArea *area,
+                     SDL_Point scene_size);
 
 // Fill the grid from the scene's committed mask (<dir>/walkable.walk, painted
-// with the debug overlay's paint mode — see TOOLS.md) when one exists and
-// parses cleanly; else rasterise the rects. `dir` is the scene's asset
-// directory, e.g. "playground"; NULL skips straight to the rects.
-void walk_grid_init(WalkGrid *grid, const WalkArea *area, const char *dir);
+// with the debug overlay's paint mode — see TOOLS.md) when one exists, parses
+// cleanly, and matches the scene's grid size; else rasterise the rects. `dir`
+// is the scene's asset directory, e.g. "playground"; NULL skips straight to
+// the rects.
+void walk_grid_init(WalkGrid *grid, const WalkArea *area, SDL_Point scene_size,
+                    const char *dir);
 
-// Strict .walk parser (see MOVEMENT.md): a "walk <w> <h>" header matching the
-// engine's grid size, then <h> rows of <w> cells, '#' walkable / '.' blocked.
-// Tolerates \r and a missing final newline; anything else rejects the file.
+// Strict .walk parser (see MOVEMENT.md): a "walk <w> <h>" header (dimensions
+// within the maximums above), then <h> rows of <w> cells, '#' walkable / '.'
+// blocked. Tolerates \r and a missing final newline; anything else rejects
+// the file. The grid takes its dimensions from the header; callers loading a
+// scene's mask check them against the scene (see walk_grid_init).
 bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid);
 
 // Serialize the grid in the .walk format. Returns the byte length written
 // (excluding the NUL), or -1 if out_size is too small. WALK_FILE_MAX bytes
 // always suffice.
-#define WALK_FILE_MAX (32 + WALK_GRID_H * (WALK_GRID_W + 1))
+#define WALK_FILE_MAX (32 + WALK_GRID_MAX_H * (WALK_GRID_MAX_W + 1))
 int walk_grid_serialize(const WalkGrid *grid, char *out, size_t out_size);
 
 // Write the grid to <asset root>/common/<dir>/walkable.walk (the source tree,
@@ -59,7 +70,7 @@ int walk_grid_serialize(const WalkGrid *grid, char *out, size_t out_size);
 // log) on the web build or on I/O failure.
 bool walk_grid_save(const WalkGrid *grid, const char *dir);
 
-// Is the cell containing p walkable? False outside the screen.
+// Is the cell containing p walkable? False outside the scene.
 bool walk_grid_contains(const WalkGrid *grid, SDL_Point p);
 
 // Nearest legal point to p: p itself if its cell is walkable, else the centre

@@ -81,7 +81,8 @@ static WalkGrid walk_grid;
 // transient.
 static void rebuild_walk_grid(void) {
   walk_grid_build(&walk_grid,
-                  gina_state.has_sunscreen ? &POOLSIDE_AREA : &SHADE_AREA);
+                  gina_state.has_sunscreen ? &POOLSIDE_AREA : &SHADE_AREA,
+                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT});
 }
 
 // Points of interest (where Gina stands to interact)
@@ -172,6 +173,11 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
+    // Hit-test the click's own coordinates (#64): the cached motion position
+    // can be stale — e.g. a repeated tap with no motion in between while the
+    // camera moved.
+    m_pos.x = event->button.x;
+    m_pos.y = event->button.y;
     // Before sunscreen the walk grid covers only the umbrella's shadow: Gina
     // reaches for the lotion, wanders freely within the shade, and refuses
     // anything beyond it.

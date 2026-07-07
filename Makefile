@@ -20,6 +20,7 @@ GAME_SRCS = \
 	src/hub.c \
 	src/scene.c \
 	src/walk.c \
+	src/camera.c \
 	src/actor.c \
 	src/image.c \
 	src/sound.c \
@@ -56,6 +57,7 @@ TARGET_TEST = vaniavolpe_test
 # terminal. The .test.o suffix keeps its objects separate from the other builds.
 TEST_SRCS = test/main_test.c test/harness.c test/script.c test/play_gina.c \
             test/test_walk.c test/test_lipsync.c test/test_scene.c \
+            test/test_camera.c \
             $(GAME_SRCS)
 TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))
 

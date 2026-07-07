@@ -19,6 +19,22 @@
 
 static int failures;
 
+// Every fixture is a window-sized (800x600) scene.
+static const SDL_Point WINDOW_SIZE = {WINDOW_WIDTH, WINDOW_HEIGHT};
+
+// Compare only the used w x h cells: the storage beyond them is uninitialised.
+static bool grids_equal(const WalkGrid *a, const WalkGrid *b) {
+  if (a->w != b->w || a->h != b->h) {
+    return false;
+  }
+  for (int cy = 0; cy < a->h; cy++) {
+    if (memcmp(a->cells[cy], b->cells[cy], (size_t)a->w) != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static void check(bool ok, const char *what) {
   if (ok) {
     fprintf(stderr, "OK    %s\n", what);
@@ -153,7 +169,7 @@ static void test_determinism(const WalkGrid *grid) {
 
 static void test_best_effort(void) {
   WalkGrid grid;
-  walk_grid_build(&grid, &ISLAND_AREA);
+  walk_grid_build(&grid, &ISLAND_AREA, WINDOW_SIZE);
   SDL_FPoint path[ACTOR_MAX_WAYPOINTS];
   int count = walk_grid_find_path(&grid, (SDL_FPoint){50, 50},
                                   (SDL_FPoint){350, 350}, path, LEN(path));
@@ -168,17 +184,19 @@ static void test_best_effort(void) {
 static void test_walk_mask_format(void) {
   // Serialize -> parse round-trip on the real playground grid.
   WalkGrid built;
-  walk_grid_build(&built, &PLAYGROUND_AREA);
+  walk_grid_build(&built, &PLAYGROUND_AREA, WINDOW_SIZE);
   static char buffer[WALK_FILE_MAX];
   int length = walk_grid_serialize(&built, buffer, sizeof(buffer));
   WalkGrid parsed;
   check(length > 0 && walk_grid_parse(buffer, (size_t)length, &parsed) &&
-            memcmp(parsed.cells, built.cells, sizeof(parsed.cells)) == 0,
+            grids_equal(&parsed, &built),
         "walk mask serialize -> parse round-trips");
 
   // Strict parser: each corruption rejects the whole file.
   check(!walk_grid_parse("walk 80 59\n", 11, &parsed),
-        "a wrong header rejects");
+        "a header promising missing rows rejects");
+  check(!walk_grid_parse("walk 999 60\n#\n", 14, &parsed),
+        "grid dimensions beyond the scene maximum reject");
   buffer[length - 2] = 'x'; // a non-cell byte in the last row
   check(!walk_grid_parse(buffer, (size_t)length, &parsed),
         "a bad cell character rejects");
@@ -199,8 +217,8 @@ static void test_walk_mask_format(void) {
     static char data[WALK_FILE_MAX];
     size_t size = fread(data, 1, sizeof(data), mask);
     fclose(mask);
-    matches = walk_grid_parse(data, size, &parsed) &&
-              memcmp(parsed.cells, built.cells, sizeof(parsed.cells)) == 0;
+    matches =
+        walk_grid_parse(data, size, &parsed) && grids_equal(&parsed, &built);
   }
   check(matches, "the committed playground mask matches its rects");
 }
@@ -212,7 +230,7 @@ static void test_pool_state_switch(void) {
   SDL_Point sunscreen_poi = {150, 545};
   SDL_Point float_poi = {600, 545};
 
-  walk_grid_build(&grid, &POOL_SHADE_AREA);
+  walk_grid_build(&grid, &POOL_SHADE_AREA, WINDOW_SIZE);
   check(walk_grid_contains(&grid, hen_start) &&
             walk_grid_contains(&grid, sunscreen_poi) &&
             !walk_grid_contains(&grid, float_poi),
@@ -232,7 +250,7 @@ static void test_pool_state_switch(void) {
   }
   check(inside_shade, "shade grid keeps walks under the umbrella");
 
-  walk_grid_build(&grid, &POOL_POOLSIDE_AREA);
+  walk_grid_build(&grid, &POOL_POOLSIDE_AREA, WINDOW_SIZE);
   check(walk_grid_contains(&grid, float_poi),
         "poolside grid unlocks the pool area");
 }
@@ -320,14 +338,43 @@ static void test_stale_callback_cancelled(const WalkGrid *grid) {
   actor_free(actor);
 }
 
+// A scrolling scene's grid (mirrors the depth demo's 1600x600 field): the
+// walk layer must work identically beyond the window's edge.
+static void test_wide_scene(void) {
+  static const SDL_Rect WIDE_RECTS[] = {{40, 260, 1520, 300}};
+  static const WalkArea WIDE_AREA = {WIDE_RECTS, 1, NULL, 0};
+  static WalkGrid grid;
+  walk_grid_build(&grid, &WIDE_AREA, (SDL_Point){1600, 600});
+  check(grid.w == 160 && grid.h == 60, "a wide scene gets a wide grid");
+  check(walk_grid_contains(&grid, (SDL_Point){1500, 400}) &&
+            !walk_grid_contains(&grid, (SDL_Point){1500, 100}) &&
+            !walk_grid_contains(&grid, (SDL_Point){1620, 400}),
+        "walkability works beyond the window's edge");
+
+  SDL_FPoint path[ACTOR_MAX_WAYPOINTS];
+  int count = walk_grid_find_path(&grid, (SDL_FPoint){100, 400},
+                                  (SDL_FPoint){1500, 400}, path, LEN(path));
+  check(count >= 1 && (int)path[count - 1].x == 1500 &&
+            (int)path[count - 1].y == 400,
+        "a walk crosses the whole wide scene");
+
+  static char buffer[WALK_FILE_MAX];
+  int length = walk_grid_serialize(&grid, buffer, sizeof(buffer));
+  static WalkGrid parsed;
+  check(length > 0 && strncmp(buffer, "walk 160 60\n", 12) == 0 &&
+            walk_grid_parse(buffer, (size_t)length, &parsed) &&
+            grids_equal(&parsed, &grid),
+        "a wide mask is self-describing and round-trips");
+}
+
 int test_walk(void) {
   failures = 0;
   fprintf(stderr, "\n-- walk geometry unit tests --\n");
 
   static WalkGrid playground_grid;
   static WalkGrid entrance_grid;
-  walk_grid_build(&playground_grid, &PLAYGROUND_AREA);
-  walk_grid_build(&entrance_grid, &ENTRANCE_AREA);
+  walk_grid_build(&playground_grid, &PLAYGROUND_AREA, WINDOW_SIZE);
+  walk_grid_build(&entrance_grid, &ENTRANCE_AREA, WINDOW_SIZE);
 
   test_nearest_postcondition(&playground_grid);
   test_nearest_postcondition(&entrance_grid);
@@ -335,6 +382,7 @@ int test_walk(void) {
   test_determinism(&playground_grid);
   test_best_effort();
   test_walk_mask_format();
+  test_wide_scene();
   test_pool_state_switch();
   test_exact_goal_walk(&entrance_grid);
   test_stale_callback_cancelled(&playground_grid);

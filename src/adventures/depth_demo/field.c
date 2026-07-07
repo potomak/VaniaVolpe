@@ -1,8 +1,8 @@
 //
 //  field.c
 //  Developer demo & reference implementation for the depth features
-//  (DEPTH_AND_CAMERA.md): a single field where clicking walks a two-variant
-//  fox around two bushes.
+//  (DEPTH_AND_CAMERA.md): a 1600x600 field where clicking walks a
+//  two-variant fox around three bushes, with a camera following her.
 //
 //  - Phase 1, y-sorted action layer: the bushes are Props drawn by
 //    render_action_layer, so the fox passes behind or in front of each one
@@ -11,6 +11,11 @@
 //    DepthBands; when the fox's feet cross y = 480 she switches between the
 //    hand-drawn near set and a generated 0.6x far set (placeholders from
 //    tools/gen_depth_variants.py), and her walking speed scales to match.
+//  - Phase 3, camera + scene coordinates: the scene is twice the window's
+//    width. Everything here is authored in scene coordinates — the Camera
+//    handed to the engine below is the only camera-related line in the
+//    scene, and clicking near a screen edge walks the fox toward ground the
+//    camera then scrolls into view.
 //
 //  Toggle the debug overlay (D) to see the walk grid; the band boundary is
 //  where the far lawn meets the near lawn in the background art.
@@ -62,9 +67,13 @@ static const ActorSpec DEMO_FOX_SPEC = {
 static Actor *fox;
 static const SDL_FPoint FOX_START = {600, 500};
 
+// ── a scrolling scene: twice the window wide, camera follows the fox ─────────
+static const SDL_Point SCENE_SIZE = {1600, 600};
+static Camera camera;
+
 // ── walk geometry: one open strip, nothing blocked
 // ────────────────────────────
-static const SDL_Rect WALKABLE_RECTS[] = {{40, 260, 720, 300}};
+static const SDL_Rect WALKABLE_RECTS[] = {{40, 260, 1520, 300}};
 static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS), NULL,
                                    0};
 static WalkGrid walk_grid;
@@ -76,24 +85,28 @@ static const DepthBand DEPTH_BANDS[] = {
     {480, 0}, // feet at or below 480: variant 0, the near set
 };
 
-// ── props: one bush per band, so occlusion shows at both depths
-// ───────────────
-static Prop props[2];
+// ── props: bushes at both depths and both scene halves
+// ────────────────────────
+static Prop props[3];
 static const SDL_Point FAR_BUSH_POS = {310, 310};
 static const SDL_Point NEAR_BUSH_POS = {430, 460};
+static const SDL_Point EAST_BUSH_POS = {1250, 420};
 
 static SDL_Point m_pos;
 
 static void init(void) {
   fox = make_actor(&DEMO_FOX_SPEC, FOX_START);
 
-  walk_grid_init(&walk_grid, &WALK_AREA, NULL);
+  camera_init(&camera, SCENE_SIZE, fox);
+
+  walk_grid_init(&walk_grid, &WALK_AREA, SCENE_SIZE, NULL);
 
   // Baselines are set in on_scene_active, once the image heights are known
-  // (the ground line is the bottom edge of each sprite). Both props share one
+  // (the ground line is the bottom edge of each sprite). The props share one
   // ImageData — a Prop points into the images table, it doesn't own a copy.
   props[0] = (Prop){.image = &images[1], .pos = FAR_BUSH_POS, .visible = true};
   props[1] = (Prop){.image = &images[1], .pos = NEAR_BUSH_POS, .visible = true};
+  props[2] = (Prop){.image = &images[1], .pos = EAST_BUSH_POS, .visible = true};
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -107,6 +120,11 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
+    // Hit-test the click's own coordinates (#64): the cached motion position
+    // can be stale — e.g. a repeated tap with no motion in between while the
+    // camera moved.
+    m_pos.x = event->button.x;
+    m_pos.y = event->button.y;
     // Walk toward the click, clamped to the walkable strip.
     walk_actor_to(fox, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false, NULL);
     break;
@@ -153,6 +171,7 @@ Scene field_scene = {
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .walk_grid = &walk_grid,
+    .camera = &camera,
     .images = images,
     .images_length = LEN(images),
 };

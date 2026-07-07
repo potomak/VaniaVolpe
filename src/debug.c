@@ -32,7 +32,10 @@ static bool is_painting_walk = false;
 static Uint8 paint_button = 0;
 
 static void paint_cell(WalkGrid *grid, int x, int y, Uint8 walkable) {
-  if (x < 0 || x >= WINDOW_WIDTH || y < 0 || y >= WINDOW_HEIGHT) {
+  // Coordinates arrive in scene space (the engine converts a camera scene's
+  // input), so the bounds are the scene-sized grid's, not the window's.
+  if (x < 0 || x >= grid->w * WALK_CELL_SIZE || y < 0 ||
+      y >= grid->h * WALK_CELL_SIZE) {
     return;
   }
   grid->cells[y / WALK_CELL_SIZE][x / WALK_CELL_SIZE] = walkable;
@@ -124,9 +127,14 @@ void debug_render(SDL_Renderer *renderer) {
                        &((SDL_Rect){0, 0, WINDOW_WIDTH, WINDOW_HEIGHT}));
   }
 
+  // Everything below is scene geometry drawn through raw SDL rects — which
+  // the render offset in image.c doesn't touch — so the camera shift is
+  // applied here explicitly. Zero for static scenes.
+  SDL_Point off = render_get_offset();
+
   SDL_SetRenderDrawColor(renderer, 0x00, 0xCC, 0xFF, 0xFF);
-  SDL_RenderDrawRect(renderer, &((SDL_Rect){.x = m_pos_down.x,
-                                            .y = m_pos_down.y,
+  SDL_RenderDrawRect(renderer, &((SDL_Rect){.x = m_pos_down.x + off.x,
+                                            .y = m_pos_down.y + off.y,
                                             .w = m_pos_up.x - m_pos_down.x,
                                             .h = m_pos_up.y - m_pos_down.y}));
 
@@ -135,14 +143,16 @@ void debug_render(SDL_Renderer *renderer) {
   // Shade non-walkable cells so walk geometry is visible and clearly distinct
   // from the cyan hotspot outlines.
   if (current_scene->walk_grid != NULL) {
+    const WalkGrid *grid = current_scene->walk_grid;
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     SDL_SetRenderDrawColor(renderer, 0xFF, 0x33, 0x33, 0x50);
-    for (int cy = 0; cy < WALK_GRID_H; cy++) {
-      for (int cx = 0; cx < WALK_GRID_W; cx++) {
-        if (!current_scene->walk_grid->cells[cy][cx]) {
-          SDL_RenderFillRect(
-              renderer, &((SDL_Rect){cx * WALK_CELL_SIZE, cy * WALK_CELL_SIZE,
-                                     WALK_CELL_SIZE, WALK_CELL_SIZE}));
+    for (int cy = 0; cy < grid->h; cy++) {
+      for (int cx = 0; cx < grid->w; cx++) {
+        if (!grid->cells[cy][cx]) {
+          SDL_RenderFillRect(renderer,
+                             &((SDL_Rect){cx * WALK_CELL_SIZE + off.x,
+                                          cy * WALK_CELL_SIZE + off.y,
+                                          WALK_CELL_SIZE, WALK_CELL_SIZE}));
         }
       }
     }
@@ -152,15 +162,19 @@ void debug_render(SDL_Renderer *renderer) {
   // Draw hotspots
   for (int i = 0; i < current_scene->hotspots_length; i++) {
     SDL_SetRenderDrawColor(renderer, 0xCC, 0xFF, 0x00, 0xFF);
-    SDL_RenderDrawRect(renderer, &current_scene->hotspots[i]);
+    SDL_Rect hotspot = current_scene->hotspots[i];
+    hotspot.x += off.x;
+    hotspot.y += off.y;
+    SDL_RenderDrawRect(renderer, &hotspot);
   }
 
   // Draw points of interest
   for (int i = 0; i < current_scene->pois_length; i++) {
     SDL_SetRenderDrawColor(renderer, 0xCC, 0x00, 0xFF, 0xFF);
-    SDL_RenderFillRect(renderer, &((SDL_Rect){.x = current_scene->pois[i].x - 2,
-                                              .y = current_scene->pois[i].y - 2,
-                                              .w = 4,
-                                              .h = 4}));
+    SDL_RenderFillRect(renderer,
+                       &((SDL_Rect){.x = current_scene->pois[i].x - 2 + off.x,
+                                    .y = current_scene->pois[i].y - 2 + off.y,
+                                    .w = 4,
+                                    .h = 4}));
   }
 }
