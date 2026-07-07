@@ -16,6 +16,12 @@ static const ActorAnimSpec FOX_ANIMS[] = {
     {WAVING, "waving.png", "waving.anim", 3, LOOP},
 };
 
+// One sprite set so far: the near variant. Far/mid depth variants (see
+// DEPTH_AND_CAMERA.md) slot in here as more entries.
+static const ActorVariantSpec FOX_VARIANTS[] = {
+    {.anims = FOX_ANIMS, .anims_length = 4, .speed_scale = 1.0F},
+};
+
 const ActorSpec FOX_SPEC = {
     .id = "fox",
     .display_name = "Vania",
@@ -25,8 +31,8 @@ const ActorSpec FOX_SPEC = {
     .move_sound_volume = 20,
     .idle_state = SITTING,
     .move_state = WALKING,
-    .anims = FOX_ANIMS,
-    .anims_length = 4,
+    .variants = FOX_VARIANTS,
+    .variants_length = 1,
     .talk_shape_frames = MOUTH_SHAPE_COUNT,
 };
 

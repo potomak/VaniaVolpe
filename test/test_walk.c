@@ -241,6 +241,9 @@ static void test_pool_state_switch(void) {
 static const ActorAnimSpec TEST_ANIMS[] = {
     {WALKING, "walking.png", "walking.anim", 1, LOOP, 0},
 };
+static const ActorVariantSpec TEST_VARIANTS[] = {
+    {.anims = TEST_ANIMS, .anims_length = LEN(TEST_ANIMS), .speed_scale = 1.0F},
+};
 static const ActorSpec TEST_SPEC = {
     .id = "test",
     .assets_dir = "test",
@@ -249,8 +252,8 @@ static const ActorSpec TEST_SPEC = {
     .move_sound_volume = 0,
     .idle_state = WALKING,
     .move_state = WALKING,
-    .anims = TEST_ANIMS,
-    .anims_length = LEN(TEST_ANIMS),
+    .variants = TEST_VARIANTS,
+    .variants_length = 1,
 };
 
 static bool arrived;

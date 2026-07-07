@@ -78,6 +78,25 @@ typedef struct scene {
   int animations_length;
 } Scene;
 
+// One horizontal depth band of a scene's floor (DEPTH_AND_CAMERA.md
+// Phase 2): while the actor's feet are at or below y_top (and above the next
+// band's y_top), the scene shows this sprite variant. Bands are scene data —
+// each scene declares its own table, sorted by ascending y_top with band 0
+// starting at 0 — so different scenes map their floors onto an actor's
+// variants however their art needs; scenes without bands never switch and
+// stay on variant 0.
+typedef struct depth_band {
+  int y_top;   // scene y where this band starts
+  int variant; // sprite set to show (index into the actor's variants)
+} DepthBand;
+
+// The variant for the band containing feet_y: the last band whose y_top is
+// <= feet_y, or the first band's variant above them all. Scenes that opt in
+// call this once per frame in update, before the actor's own update:
+//   actor_set_variant(fox, depth_variant_for(BANDS, LEN(BANDS),
+//                                            actor_feet_y(fox)));
+int depth_variant_for(const DepthBand *bands, int bands_length, float feet_y);
+
 // Back-to-front draw order of the action layer: visible props and actors
 // sorted by ascending baseline / feet y. On ties props draw first, so an
 // actor standing exactly on a prop's ground line renders in front of it.
