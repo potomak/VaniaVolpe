@@ -34,6 +34,14 @@ static const ImageData *acorns = &images[4];
 
 static Fox *fox;
 
+// Props the fox can stand behind or in front of (drawn y-sorted with the fox
+// by render_action_layer; visibility mirrors the scene state each frame in
+// render). The other peg/acorn placements (in the tree, carried, on the
+// slide) never overlap the fox on the ground and stay manual draws.
+static Prop props[2];
+static Prop *acorn_pile_prop = &props[0];  // fallen acorns, on the ground
+static Prop *dropped_peg_prop = &props[1]; // peg the squirrel dropped
+
 // Music
 static Mix_Music *music = NULL;
 
@@ -91,6 +99,8 @@ static SDL_Point pois[3];
 
 // Objects position
 static const SDL_FPoint START_SLIDE_POS = (SDL_FPoint){326, 142};
+static const SDL_Point ACORN_PILE_POS = {687, 503};
+static const SDL_Point DROPPED_PEG_POS = {109, 474};
 
 // Other constants
 static const float SLIDE_SIGMOID_HEIGHT = 240;
@@ -113,6 +123,13 @@ static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
 
   walk_grid_init(&walk_grid, &WALK_AREA, "playground");
+
+  // Baselines are set in on_scene_active, once the image heights are known
+  // (the ground line is the bottom edge of each sprite).
+  *acorn_pile_prop =
+      (Prop){.image = &images[4] /* acorns */, .pos = ACORN_PILE_POS};
+  *dropped_peg_prop =
+      (Prop){.image = &images[2] /* peg */, .pos = DROPPED_PEG_POS};
 
   int i = 0;
   hotspots[i++] = SLIDE_HOTSPOT;
@@ -299,17 +316,20 @@ static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
   render_image(renderer, squirrel, (SDL_Point){85, 160});
 
+  // The on-the-ground placements are props (y-sorted with the fox below);
+  // every other placement never overlaps the fox and stays a manual draw.
+  dropped_peg_prop->visible =
+      has_peg_been_dropped && !has_peg && !has_slide_been_fixed;
+  acorn_pile_prop->visible =
+      have_acorns_fallen && !has_acorns && !has_peg_been_dropped;
+
   if (has_peg_been_dropped) {
     if (has_peg) {
       render_image(renderer, peg,
                    (SDL_Point){fox->current_position.x - 20,
                                fox->current_position.y - 100});
-    } else {
-      if (has_slide_been_fixed) {
-        render_image(renderer, fixed_peg, (SDL_Point){267, 263});
-      } else {
-        render_image(renderer, peg, (SDL_Point){109, 474});
-      }
+    } else if (has_slide_been_fixed) {
+      render_image(renderer, fixed_peg, (SDL_Point){267, 263});
     }
   } else {
     render_image(renderer, peg, (SDL_Point){127, 175});
@@ -320,18 +340,14 @@ static void render(SDL_Renderer *renderer) {
       render_image(renderer, acorns,
                    (SDL_Point){fox->current_position.x - 50,
                                fox->current_position.y - 100});
-    } else {
-      if (has_peg_been_dropped) {
-        render_image(renderer, acorns, (SDL_Point){137, 135});
-      } else {
-        render_image(renderer, acorns, (SDL_Point){687, 503});
-      }
+    } else if (has_peg_been_dropped) {
+      render_image(renderer, acorns, (SDL_Point){137, 135});
     }
   } else {
     render_image(renderer, acorns, (SDL_Point){698, 225});
   }
 
-  fox_render(fox, renderer);
+  render_action_layer(renderer, props, LEN(props), (Actor *[]){fox}, 1);
 }
 
 static void deinit(void) {
@@ -343,6 +359,13 @@ static void deinit(void) {
 
 static void on_scene_active(void) {
   Mix_PlayMusic(music, -1);
+
+  // Anchor each prop's ground line to its sprite's bottom edge. Image sizes
+  // are known here: the framework loads scene images right after load_media,
+  // long before any scene becomes active.
+  for (int i = 0; i < (int)LEN(props); i++) {
+    props[i].baseline = props[i].pos.y + props[i].image->height;
+  }
 
   // Initialize scene state
   has_slide_been_fixed = false;

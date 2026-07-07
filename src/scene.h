@@ -11,9 +11,25 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 
+#include "actor.h"
 #include "image.h"
 #include "sound.h"
 #include "walk.h"
+
+// A prop the actor can walk behind or in front of (DEPTH_AND_CAMERA.md
+// Phase 1). Props live in scene-local tables and are drawn, y-sorted with the
+// actors, by render_action_layer.
+typedef struct prop {
+  // Exactly one of image / animation is non-NULL. Both point into the scene's
+  // existing images/animations tables, so loading/freeing is unchanged.
+  ImageData *image;
+  AnimationData *animation;
+  SDL_Point pos; // top-left, scene coordinates
+  // Scene y of the ground-contact line; the actor renders behind the prop
+  // while actor_feet_y < baseline.
+  int baseline;
+  bool visible; // scenes toggle this (e.g. a picked-up item)
+} Prop;
 
 typedef struct scene {
   void (*init)(void);
@@ -61,6 +77,22 @@ typedef struct scene {
   AnimationData **animations;
   int animations_length;
 } Scene;
+
+// Back-to-front draw order of the action layer: visible props and actors
+// sorted by ascending baseline / feet y. On ties props draw first, so an
+// actor standing exactly on a prop's ground line renders in front of it.
+// out_order must hold props_length + actors_length entries and receives
+// drawable indices: 0..props_length-1 name props, props_length + i names
+// actors[i]. Returns how many entries were written. Split from
+// render_action_layer so tests can assert the ordering without a renderer.
+int action_layer_order(const Prop *props, int props_length,
+                       Actor *const *actors, int actors_length, int *out_order);
+
+// Draw visible props and actors in y-order (see action_layer_order). Scenes
+// call this once instead of hand-ordering "props, then the actor last";
+// backgrounds and draws that never overlap an actor stay manual.
+void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
+                         Actor **actors, int actors_length);
 
 bool load_scene_images(Scene *scene, SDL_Renderer *renderer);
 
