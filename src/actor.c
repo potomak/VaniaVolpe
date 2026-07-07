@@ -113,6 +113,15 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   return actor;
 }
 
+float actor_feet_y(const Actor *actor) {
+  // reference_animation doesn't mutate; it just returns a mutable animation.
+  AnimationData *reference = reference_animation((Actor *)actor);
+  if (reference == NULL) {
+    return actor->current_position.y;
+  }
+  return actor->current_position.y + reference->sprite_clips[0].h / 2.0f;
+}
+
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
   const ActorSpec *spec = actor->spec;
 

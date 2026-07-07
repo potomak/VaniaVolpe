@@ -7,6 +7,68 @@
 
 #include "scene.h"
 
+int action_layer_order(const Prop *props, int props_length,
+                       Actor *const *actors, int actors_length,
+                       int out_order[ACTION_LAYER_MAX]) {
+  int keys[ACTION_LAYER_MAX];
+  int count = 0;
+  for (int i = 0; i < props_length; i++) {
+    if (!props[i].visible) {
+      continue;
+    }
+    SDL_assert(count < ACTION_LAYER_MAX);
+    if (count >= ACTION_LAYER_MAX) {
+      break;
+    }
+    keys[count] = props[i].baseline;
+    out_order[count++] = i;
+  }
+  for (int i = 0; i < actors_length; i++) {
+    SDL_assert(count < ACTION_LAYER_MAX);
+    if (count >= ACTION_LAYER_MAX) {
+      break;
+    }
+    keys[count] = (int)actor_feet_y(actors[i]);
+    out_order[count++] = props_length + i;
+  }
+
+  // Insertion sort, ascending. Stable, so equal keys keep insertion order:
+  // props (inserted first) draw before actors, and props keep their table
+  // order among themselves.
+  for (int i = 1; i < count; i++) {
+    int key = keys[i];
+    int order = out_order[i];
+    int j = i - 1;
+    while (j >= 0 && keys[j] > key) {
+      keys[j + 1] = keys[j];
+      out_order[j + 1] = out_order[j];
+      j--;
+    }
+    keys[j + 1] = key;
+    out_order[j + 1] = order;
+  }
+  return count;
+}
+
+void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
+                         Actor **actors, int actors_length) {
+  int order[ACTION_LAYER_MAX];
+  int count =
+      action_layer_order(props, props_length, actors, actors_length, order);
+  for (int i = 0; i < count; i++) {
+    if (order[i] < props_length) {
+      Prop *prop = &props[order[i]];
+      if (prop->animation != NULL) {
+        render_animation(renderer, prop->animation, prop->pos);
+      } else {
+        render_image(renderer, prop->image, prop->pos);
+      }
+    } else {
+      actor_render(actors[order[i] - props_length], renderer);
+    }
+  }
+}
+
 bool load_scene_images(Scene *scene, SDL_Renderer *renderer) {
   for (int i = 0; i < scene->images_length; i++) {
     if (!load_image(renderer, &scene->images[i])) {

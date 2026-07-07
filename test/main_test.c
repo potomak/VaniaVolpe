@@ -12,6 +12,7 @@
 #include "harness.h"
 #include "play_gina.h"
 #include "test_lipsync.h"
+#include "test_scene.h"
 #include "test_walk.h"
 
 int main(void) {
@@ -37,6 +38,7 @@ int main(void) {
   // captured log stays contiguous).
   failures += test_walk();
   failures += test_lipsync();
+  failures += test_scene();
 
   harness_shutdown();
 

@@ -100,7 +100,11 @@ Phases 1–3 are code-only and independently useful; Phase 4 depends on Phase 3
 (and on Phase 1 for correct layering). Suggested order above front-loads the
 phases that need no new art.
 
-### Phase 1 — y-sorted action layer (walk-behind props)
+### Phase 1 — y-sorted action layer (walk-behind props) *(shipped)*
+
+*Implementation note: the sort is split out as `action_layer_order()`
+(`scene.h`) so the unit tests assert draw order without a renderer;
+`render_action_layer` draws whatever order it returns.*
 
 New type in `scene.h` (or `src/prop.h` if `scene.h` gets crowded):
 

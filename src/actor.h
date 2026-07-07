@@ -95,6 +95,12 @@ typedef struct actor {
 
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);
 
+// Scene y of the actor's ground-contact point. current_position is the sprite
+// *centre* (all walk data is authored against it); y-sorting and depth bands
+// need the feet instead: centre y + half the reference frame height. See
+// DEPTH_AND_CAMERA.md.
+float actor_feet_y(const Actor *actor);
+
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer);
 
 void actor_update(Actor *actor, float delta_time);
