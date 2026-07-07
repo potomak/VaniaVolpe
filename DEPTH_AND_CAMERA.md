@@ -104,7 +104,9 @@ phases that need no new art.
 
 *Implementation note: the sort is split out as `action_layer_order()`
 (`scene.h`) so the unit tests assert draw order without a renderer;
-`render_action_layer` draws whatever order it returns.*
+`render_action_layer` draws whatever order it returns. The spec'd cap of 16
+was dropped in review: sort keys are computed on the fly and the order buffer
+is sized `props_length + actors_length`, so there is nothing to overflow.*
 
 New type in `scene.h` (or `src/prop.h` if `scene.h` gets crowded):
 

@@ -80,7 +80,7 @@ int test_scene(void) {
       {.image = &image, .pos = {109, 474}, .baseline = 541, .visible = true},
       {.image = &image, .pos = {0, 0}, .baseline = 10, .visible = false},
   };
-  int order[ACTION_LAYER_MAX];
+  int order[4]; // 3 props + 1 actor: the largest set below
 
   // Fox feet at 570 + 120 = 690: below (in front of) both props.
   actor->current_position = (SDL_FPoint){400, 570};

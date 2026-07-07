@@ -31,9 +31,6 @@ typedef struct prop {
   bool visible; // scenes toggle this (e.g. a picked-up item)
 } Prop;
 
-// Most drawables render_action_layer can sort in one call.
-#define ACTION_LAYER_MAX 16
-
 typedef struct scene {
   void (*init)(void);
   bool (*load_media)(SDL_Renderer *renderer);
@@ -84,13 +81,12 @@ typedef struct scene {
 // Back-to-front draw order of the action layer: visible props and actors
 // sorted by ascending baseline / feet y. On ties props draw first, so an
 // actor standing exactly on a prop's ground line renders in front of it.
-// out_order receives drawable indices: 0..props_length-1 name props,
-// props_length + i names actors[i]. Returns how many entries were written.
-// Split from render_action_layer so tests can assert the ordering without a
-// renderer.
+// out_order must hold props_length + actors_length entries and receives
+// drawable indices: 0..props_length-1 name props, props_length + i names
+// actors[i]. Returns how many entries were written. Split from
+// render_action_layer so tests can assert the ordering without a renderer.
 int action_layer_order(const Prop *props, int props_length,
-                       Actor *const *actors, int actors_length,
-                       int out_order[ACTION_LAYER_MAX]);
+                       Actor *const *actors, int actors_length, int *out_order);
 
 // Draw visible props and actors in y-order (see action_layer_order). Scenes
 // call this once instead of hand-ordering "props, then the actor last";
