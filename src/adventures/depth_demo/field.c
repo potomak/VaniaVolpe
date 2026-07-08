@@ -16,9 +16,13 @@
 //    handed to the engine below is the only camera-related line in the
 //    scene, and clicking near a screen edge walks the fox toward ground the
 //    camera then scrolls into view.
+//  - Phase 4, planes + parallax: the field is built from planes instead of one
+//    background — a fixed sky (parallax 0), hills that drift slowly (0.4), the
+//    ground the fox walks on (1), and a foreground bush strip (1.15) she
+//    passes behind. The engine draws them; the scene only declares the tables.
 //
 //  Toggle the debug overlay (D) to see the walk grid; the band boundary is
-//  where the far lawn meets the near lawn in the background art.
+//  where the far lawn meets the near lawn in the ground plane.
 //
 
 #include <SDL2/SDL.h>
@@ -30,11 +34,28 @@
 
 #include "field.h"
 
-static ImageData images[2] = {
-    {NULL, "background.png", "field", 0, 0},
+// The depth-band bushes (Phase 1/2 props) are the only scene image; the field
+// itself is planes (below).
+static ImageData images[1] = {
     {NULL, "bush.png", "field", 0, 0},
 };
-static const ImageData *background = &images[0];
+
+// Parallax layers, back to front. The engine draws bg_planes behind the action
+// layer and fg_planes in front, each shifted by origin - camera * parallax.
+// The coverage rule (image must span WINDOW + parallax * (scene - WINDOW))
+// sets each image's width: sky 800, hills 1120, ground 1600, bushes 1720.
+static Plane bg_planes[3] = {
+    {.image = {NULL, "sky.png", "field", 0, 0}, .parallax = 0.0F},
+    {.image = {NULL, "hills.png", "field", 0, 0}, .parallax = 0.4F},
+    {.image = {NULL, "ground.png", "field", 0, 0}, .parallax = 1.0F},
+};
+static Plane fg_planes[1] = {
+    // A parallax > 1 strip along the bottom: a walk-behind foreground with no
+    // prop needed. origin.y drops it to the bottom of the window.
+    {.image = {NULL, "bushes.png", "field", 0, 0},
+     .parallax = 1.15F,
+     .origin = {0, 460}},
+};
 
 // ── the demo actor: the fox in two depth variants ────────────────────────────
 // The near set is the fox's own art; the far set is generated from it at 0.6
@@ -104,9 +125,9 @@ static void init(void) {
   // Baselines are set in on_scene_active, once the image heights are known
   // (the ground line is the bottom edge of each sprite). The props share one
   // ImageData — a Prop points into the images table, it doesn't own a copy.
-  props[0] = (Prop){.image = &images[1], .pos = FAR_BUSH_POS, .visible = true};
-  props[1] = (Prop){.image = &images[1], .pos = NEAR_BUSH_POS, .visible = true};
-  props[2] = (Prop){.image = &images[1], .pos = EAST_BUSH_POS, .visible = true};
+  props[0] = (Prop){.image = &images[0], .pos = FAR_BUSH_POS, .visible = true};
+  props[1] = (Prop){.image = &images[0], .pos = NEAR_BUSH_POS, .visible = true};
+  props[2] = (Prop){.image = &images[0], .pos = EAST_BUSH_POS, .visible = true};
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -140,8 +161,9 @@ static void update(float delta_time) {
 }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
-  // The whole Phase 1 opt-in: props and actor draw y-sorted in one call.
+  // Just the action layer: the engine draws the sky/hills/ground planes behind
+  // this and the foreground bush strip in front. The whole Phase 1 opt-in:
+  // props and actor draw y-sorted in one call.
   render_action_layer(renderer, props, LEN(props), (Actor *[]){fox}, 1);
 }
 
@@ -174,4 +196,8 @@ Scene field_scene = {
     .camera = &camera,
     .images = images,
     .images_length = LEN(images),
+    .bg_planes = bg_planes,
+    .bg_planes_length = LEN(bg_planes),
+    .fg_planes = fg_planes,
+    .fg_planes_length = LEN(fg_planes),
 };

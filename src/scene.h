@@ -32,6 +32,25 @@ typedef struct prop {
   bool visible; // scenes toggle this (e.g. a picked-up item)
 } Prop;
 
+// A background/foreground layer that scrolls at its own parallax factor
+// (DEPTH_AND_CAMERA.md Phase 4). Planes are drawn by the engine, not by the
+// scene's render, each at origin - camera.pos * parallax — so a distant plane
+// (small parallax) barely moves and a foreground plane (parallax > 1) slides
+// past faster than the action layer. The scene framework loads and frees a
+// plane's image like a scene image.
+typedef struct plane {
+  ImageData image;
+  // 0 = fixed (sky), 1 = scene-locked (the ground the actor walks on),
+  // > 1 = nearer than the action layer (foreground; only meaningful for
+  // fg_planes). Must be >= 0. Background planes are validated to cover the
+  // whole view (load_scene_planes); foreground planes are decorative overlays
+  // and may be partial strips.
+  float parallax;
+  // Scene-coord position of the image's top-left when the camera is at (0,0);
+  // usually {0, 0}.
+  SDL_Point origin;
+} Plane;
+
 typedef struct scene {
   void (*init)(void);
   bool (*load_media)(SDL_Renderer *renderer);
@@ -83,6 +102,15 @@ typedef struct scene {
   // they don't call animation_update. (An actor ticks its own animations.)
   AnimationData **animations;
   int animations_length;
+
+  // Parallax planes (see Plane), drawn by the engine in array order: bg_planes
+  // behind the scene's render (the action layer), fg_planes in front of it.
+  // The framework loads and frees their images. NULL/0 for scenes with no
+  // planes — every static scene draws its own background in render() as before.
+  Plane *bg_planes;
+  int bg_planes_length;
+  Plane *fg_planes;
+  int fg_planes_length;
 } Scene;
 
 // One horizontal depth band of a scene's floor (DEPTH_AND_CAMERA.md
@@ -121,6 +149,29 @@ void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
                          Actor **actors, int actors_length);
 
 bool load_scene_images(Scene *scene, SDL_Renderer *renderer);
+
+// Screen position of a plane given a camera position (or {0,0} for a static
+// scene): origin - camera * parallax, cast to int. Split out so the parallax
+// math can be tested without a renderer.
+SDL_Point plane_screen_pos(const Plane *plane, SDL_FPoint camera_pos);
+
+// Does the plane's image cover the whole window across the camera's travel?
+// image dimension >= WINDOW + parallax * (scene - WINDOW), per axis. Used by
+// load_scene_planes to warn about a plane that would expose the background.
+bool plane_covers_view(const Plane *plane, SDL_Point scene_size);
+
+// Load (and validate the coverage of) every bg/fg plane's image. Unwinds on
+// failure like load_scene_images. camera-less scenes are treated as
+// window-sized for the coverage check.
+bool load_scene_planes(Scene *scene, SDL_Renderer *renderer);
+
+// Draw a plane table in array order, each shifted by its own parallax offset
+// (the render offset must be {0,0} — planes carry their own). Called by the
+// engine, not by scenes.
+void render_scene_planes(SDL_Renderer *renderer, const Plane *planes,
+                         int planes_length, const Camera *camera);
+
+void free_scene_planes(Scene *scene);
 
 bool load_scene_chunks(Scene *scene);
 
