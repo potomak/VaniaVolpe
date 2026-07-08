@@ -34,6 +34,16 @@ void register_adventures(const Adventure *hub, const Adventure **registered,
   hub_adventure = hub;
 }
 
+// A newly active scene's camera snaps straight onto its target (no easing
+// across the scene on entry). After on_scene_active, which may reposition the
+// followed actor.
+static void snap_scene_camera(void) {
+  Camera *camera = scene_instance(game.current_scene)->camera;
+  if (camera != NULL) {
+    camera_snap(camera);
+  }
+}
+
 void adventure_switch_to(const Adventure *adventure) {
   if (game.current_adventure != NULL) {
     scene_instance(game.current_scene)->on_scene_inactive();
@@ -45,6 +55,7 @@ void adventure_switch_to(const Adventure *adventure) {
     adventure->on_enter();
   }
   scene_instance(game.current_scene)->on_scene_active();
+  snap_scene_camera();
 }
 
 const Scene *scene_instance(int scene) {
@@ -58,6 +69,7 @@ void set_active_scene(int scene) {
   scene_instance(game.current_scene)->on_scene_inactive();
   game.current_scene = scene;
   scene_instance(game.current_scene)->on_scene_active();
+  snap_scene_camera();
 }
 
 void exit_game(void) { game.is_running = false; }
@@ -90,13 +102,34 @@ void game_process_input(SDL_Event *event) {
     break;
   }
 
-  // The back-to-hub button takes priority over scene input, except in the hub.
+  // The back-to-hub button takes priority over scene input, except in the
+  // hub. It lives in screen space, so it is tested before any camera
+  // conversion.
   if (event->type == SDL_MOUSEBUTTONDOWN && hub_adventure != NULL &&
       game.current_adventure != hub_adventure) {
     SDL_Point point = {event->button.x, event->button.y};
     if (SDL_PointInRect(&point, &HUB_BUTTON)) {
       adventure_switch_to(hub_adventure);
       return;
+    }
+  }
+
+  // Scrolling scenes get their mouse events converted to scene coordinates in
+  // place, so every hotspot test, POI walk and debug rect downstream operates
+  // in scene coordinates without knowing a camera exists (R4). The cast
+  // matches the render offset's, so input and drawing can't disagree.
+  const Camera *camera = scene_instance(game.current_scene)->camera;
+  if (camera != NULL) {
+    switch (event->type) {
+    case SDL_MOUSEMOTION:
+      event->motion.x += (int)camera->pos.x;
+      event->motion.y += (int)camera->pos.y;
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP:
+      event->button.x += (int)camera->pos.x;
+      event->button.y += (int)camera->pos.y;
+      break;
     }
   }
 
@@ -115,10 +148,31 @@ void game_update(float delta_time) {
   // update() call (same re-entrancy as a scene switch from process_input).
   update_scene_animations(*scene_instance(game.current_scene), SDL_GetTicks());
   scene_instance(game.current_scene)->update(delta_time);
+
+  // The camera eases after the scene has moved its actor, so it follows this
+  // frame's position. Re-fetch: the update may have switched scene (a fresh
+  // scene's camera was already snapped by the switch).
+  Camera *camera = scene_instance(game.current_scene)->camera;
+  if (camera != NULL) {
+    camera_update(camera, delta_time);
+  }
 }
 
 void game_render(SDL_Renderer *renderer) {
+  // Scene content (and the debug overlay over it) draws shifted by the
+  // camera; the cast to int happens once so every draw shares the same
+  // offset. Screen-space UI (the hub button) draws after the reset.
+  const Camera *camera = scene_instance(game.current_scene)->camera;
+  if (camera != NULL) {
+    render_set_offset((SDL_Point){-(int)camera->pos.x, -(int)camera->pos.y});
+  }
   scene_instance(game.current_scene)->render(renderer);
+
+  if (game.is_debugging) {
+    debug_render(renderer);
+  }
+
+  render_set_offset((SDL_Point){0, 0});
 
   // Draw the back-to-hub button over any non-hub adventure.
   if (hub_adventure != NULL && game.current_adventure != hub_adventure) {
@@ -126,10 +180,6 @@ void game_render(SDL_Renderer *renderer) {
     SDL_RenderFillRect(renderer, &HUB_BUTTON);
     SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
     SDL_RenderDrawRect(renderer, &HUB_BUTTON);
-  }
-
-  if (game.is_debugging) {
-    debug_render(renderer);
   }
 }
 

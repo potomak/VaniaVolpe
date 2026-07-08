@@ -64,7 +64,8 @@ static SDL_Point pois[2];
 static void init(void) {
   gina = make_hen(HEN_START);
 
-  walk_grid_init(&walk_grid, &WALK_AREA, "tree");
+  walk_grid_init(&walk_grid, &WALK_AREA,
+                 (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
   int i = 0;
   hotspots[i++] = FLOAT_HOTSPOT;
@@ -130,6 +131,11 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
+    // Hit-test the click's own coordinates (#64): the cached motion position
+    // can be stale — e.g. a repeated tap with no motion in between while the
+    // camera moved.
+    m_pos.x = event->button.x;
+    m_pos.y = event->button.y;
     if (gina_state.float_state == FLOAT_STUCK_IN_TREE &&
         SDL_PointInRect(&m_pos, &FLOAT_HOTSPOT)) {
       walk_actor_to(gina, &walk_grid,

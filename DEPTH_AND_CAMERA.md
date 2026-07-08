@@ -244,7 +244,15 @@ mid-walk without animation restart. Unit tests: `depth_variant_for` band
 selection (below first band, exact boundary, beyond last), and a walk-distance
 test asserting `speed_scale` is applied.
 
-### Phase 3 — camera + scene coordinates
+### Phase 3 — camera + scene coordinates *(shipped)*
+
+*Implementation notes: input conversion also folds in #64 — every scene reads
+the click's own `event->button.x/y` on `SDL_MOUSEBUTTONDOWN` rather than a
+cached motion position, so a repeated same-spot tap still routes correctly
+while the camera moves. The debug overlay draws raw SDL rects (not through
+the image offset), so it applies `render_get_offset()` to its scene-space
+drawing explicitly. The depth demo field is now 1600×600 with a following
+camera as the committed example.*
 
 New files `src/camera.{c,h}` (add `camera.c` to `GAME_SRCS`):
 

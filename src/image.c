@@ -262,6 +262,14 @@ void animation_update(AnimationData *animation, int now_ms) {
   }
 }
 
+// Camera scroll offset (see image.h). One integer offset shared by every
+// draw in a frame, so a scrolling scene can't jitter between images.
+static SDL_Point render_offset = {0, 0};
+
+void render_set_offset(SDL_Point offset) { render_offset = offset; }
+
+SDL_Point render_get_offset(void) { return render_offset; }
+
 void render_animation(SDL_Renderer *renderer, AnimationData *animation,
                       SDL_Point point) {
   // Failed/!loaded animations have no texture; skip them instead of asking SDL
@@ -273,16 +281,15 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
   // Pure draw: blit the frame chosen by animation_update. No timing here, so
   // playback speed is independent of how often the scene is rendered.
   SDL_Rect *clip = &animation->sprite_clips[animation->current_frame];
-  SDL_Rect render_quad = {point.x, point.y, clip->w, clip->h};
+  SDL_Rect render_quad = {point.x + render_offset.x, point.y + render_offset.y,
+                          clip->w, clip->h};
   SDL_RenderCopyEx(renderer, animation->image.texture, clip, &render_quad, 0,
                    NULL, animation->flip);
 }
 
 void render_image(SDL_Renderer *renderer, const ImageData *image,
                   SDL_Point point) {
-  // Set rendering space and render to screen
-  SDL_Rect render_quad = {point.x, point.y, image->width, image->height};
-
-  // Render to screen
+  SDL_Rect render_quad = {point.x + render_offset.x, point.y + render_offset.y,
+                          image->width, image->height};
   SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
 }

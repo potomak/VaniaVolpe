@@ -87,4 +87,11 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
 void render_image(SDL_Renderer *renderer, const ImageData *image,
                   SDL_Point point);
 
+// Camera scroll offset, applied to every render_image / render_animation
+// draw. Engine-only (game_render sets it around a scrolling scene's render
+// pass and resets it for screen-space UI); scenes never call these — they
+// keep drawing in scene coordinates. See DEPTH_AND_CAMERA.md.
+void render_set_offset(SDL_Point offset);
+SDL_Point render_get_offset(void);
+
 #endif /* image_h */

@@ -3,7 +3,9 @@
 //  Walkability grid + A* pathfinding (see MOVEMENT.md). Everything is
 //  fixed-size and allocation-free: the grid is one byte per 10x10-px cell,
 //  A* runs over static work arrays once per click, and paths are smoothed
-//  with a line-of-sight pass so actors walk a few straight segments.
+//  with a line-of-sight pass so actors walk a few straight segments. Grids
+//  are scene-sized (DEPTH_AND_CAMERA.md); the static arrays are sized for
+//  the largest scrollable scene.
 //
 
 #include <math.h>
@@ -11,7 +13,7 @@
 
 #include "walk.h"
 
-#define GRID_CELLS (WALK_GRID_W * WALK_GRID_H)
+#define GRID_CELLS_MAX (WALK_GRID_MAX_W * WALK_GRID_MAX_H)
 
 // Costs for A* steps (x10 so diagonals can be 14 ~= 10 * sqrt(2)).
 #define WALK_COST_STRAIGHT 10
@@ -20,7 +22,9 @@
 // Distance between line-of-sight samples, in px (half a cell).
 #define WALK_SAMPLE_STEP (WALK_CELL_SIZE / 2.0F)
 
-static int cell_index(int cx, int cy) { return cy * WALK_GRID_W + cx; }
+static int cell_index(const WalkGrid *grid, int cx, int cy) {
+  return cy * grid->w + cx;
+}
 
 static SDL_FPoint cell_center(int cx, int cy) {
   int x = cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2;
@@ -29,15 +33,20 @@ static SDL_FPoint cell_center(int cx, int cy) {
 }
 
 static bool cell_walkable(const WalkGrid *grid, int cx, int cy) {
-  if (cx < 0 || cx >= WALK_GRID_W || cy < 0 || cy >= WALK_GRID_H) {
+  if (cx < 0 || cx >= grid->w || cy < 0 || cy >= grid->h) {
     return false;
   }
   return grid->cells[cy][cx] != 0;
 }
 
-void walk_grid_build(WalkGrid *grid, const WalkArea *area) {
-  for (int cy = 0; cy < WALK_GRID_H; cy++) {
-    for (int cx = 0; cx < WALK_GRID_W; cx++) {
+void walk_grid_build(WalkGrid *grid, const WalkArea *area,
+                     SDL_Point scene_size) {
+  grid->w = scene_size.x / WALK_CELL_SIZE;
+  grid->h = scene_size.y / WALK_CELL_SIZE;
+  SDL_assert(grid->w > 0 && grid->w <= WALK_GRID_MAX_W);
+  SDL_assert(grid->h > 0 && grid->h <= WALK_GRID_MAX_H);
+  for (int cy = 0; cy < grid->h; cy++) {
+    for (int cx = 0; cx < grid->w; cx++) {
       // Centre sampling keeps 1-px overlap seams between adjacent walkable
       // rects connected (see MOVEMENT.md).
       SDL_Point center = {cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2,
@@ -60,12 +69,21 @@ void walk_grid_build(WalkGrid *grid, const WalkArea *area) {
 }
 
 bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
-  // Header: "walk <w> <h>", matching this build's grid dimensions exactly.
+  // Header: "walk <w> <h>" — the mask is self-describing, so a scene-sized
+  // grid can be checked against the scene it is loaded for. Scan a bounded,
+  // NUL-terminated copy: `data` need not be NUL-terminated.
   char header[32];
-  int header_length =
-      snprintf(header, sizeof(header), "walk %d %d", WALK_GRID_W, WALK_GRID_H);
-  if (header_length < 0 || (size_t)header_length >= size ||
-      SDL_memcmp(data, header, (size_t)header_length) != 0) {
+  size_t header_max = size < sizeof(header) - 1 ? size : sizeof(header) - 1;
+  SDL_memcpy(header, data, header_max);
+  header[header_max] = '\0';
+  int w = 0;
+  int h = 0;
+  int header_length = 0;
+  if (sscanf(header, "walk %d %d%n", &w, &h, &header_length) != 2 ||
+      header_length <= 0 || (size_t)header_length > size) {
+    return false;
+  }
+  if (w <= 0 || w > WALK_GRID_MAX_W || h <= 0 || h > WALK_GRID_MAX_H) {
     return false;
   }
   size_t i = (size_t)header_length;
@@ -77,10 +95,13 @@ bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
   }
   i++;
 
-  // Parse into a local grid so a mid-file failure leaves *grid untouched.
-  WalkGrid parsed;
-  for (int cy = 0; cy < WALK_GRID_H; cy++) {
-    for (int cx = 0; cx < WALK_GRID_W; cx++) {
+  // Parse into a scratch grid so a mid-file failure leaves *grid untouched
+  // (static: a WalkGrid is too large for comfort on the wasm stack).
+  static WalkGrid parsed;
+  parsed.w = w;
+  parsed.h = h;
+  for (int cy = 0; cy < h; cy++) {
+    for (int cx = 0; cx < w; cx++) {
       if (i >= size) {
         return false;
       }
@@ -96,7 +117,7 @@ bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
     if (i < size && data[i] == '\r') {
       i++;
     }
-    if (cy < WALK_GRID_H - 1) {
+    if (cy < h - 1) {
       if (i >= size || data[i] != '\n') {
         return false;
       }
@@ -112,7 +133,8 @@ bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
   return true;
 }
 
-void walk_grid_init(WalkGrid *grid, const WalkArea *area, const char *dir) {
+void walk_grid_init(WalkGrid *grid, const WalkArea *area, SDL_Point scene_size,
+                    const char *dir) {
   if (dir != NULL) {
     char path[ASSET_PATH_MAX];
     if (asset_try_resolve(
@@ -121,31 +143,34 @@ void walk_grid_init(WalkGrid *grid, const WalkArea *area, const char *dir) {
       size_t size = 0;
       char *data = SDL_LoadFile(path, &size);
       if (data != NULL) {
-        bool ok = walk_grid_parse(data, size, grid);
+        bool ok = walk_grid_parse(data, size, grid) &&
+                  grid->w == scene_size.x / WALK_CELL_SIZE &&
+                  grid->h == scene_size.y / WALK_CELL_SIZE;
         SDL_free(data);
         if (ok) {
           return;
         }
       }
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                   "Malformed walk mask %s; falling back to the rects", path);
+                   "Malformed or wrong-size walk mask %s; falling back to "
+                   "the rects",
+                   path);
     }
   }
-  walk_grid_build(grid, area);
+  walk_grid_build(grid, area, scene_size);
 }
 
 int walk_grid_serialize(const WalkGrid *grid, char *out, size_t out_size) {
-  int written =
-      snprintf(out, out_size, "walk %d %d\n", WALK_GRID_W, WALK_GRID_H);
+  int written = snprintf(out, out_size, "walk %d %d\n", grid->w, grid->h);
   if (written < 0 || (size_t)written >= out_size) {
     return -1;
   }
   size_t at = (size_t)written;
-  if (at + (size_t)WALK_GRID_H * (WALK_GRID_W + 1) + 1 > out_size) {
+  if (at + (size_t)grid->h * (grid->w + 1) + 1 > out_size) {
     return -1;
   }
-  for (int cy = 0; cy < WALK_GRID_H; cy++) {
-    for (int cx = 0; cx < WALK_GRID_W; cx++) {
+  for (int cy = 0; cy < grid->h; cy++) {
+    for (int cx = 0; cx < grid->w; cx++) {
       out[at++] = grid->cells[cy][cx] ? '#' : '.';
     }
     out[at++] = '\n';
@@ -197,7 +222,8 @@ bool walk_grid_save(const WalkGrid *grid, const char *dir) {
 }
 
 bool walk_grid_contains(const WalkGrid *grid, SDL_Point p) {
-  if (p.x < 0 || p.x >= WINDOW_WIDTH || p.y < 0 || p.y >= WINDOW_HEIGHT) {
+  if (p.x < 0 || p.x >= grid->w * WALK_CELL_SIZE || p.y < 0 ||
+      p.y >= grid->h * WALK_CELL_SIZE) {
     return false;
   }
   return cell_walkable(grid, p.x / WALK_CELL_SIZE, p.y / WALK_CELL_SIZE);
@@ -222,21 +248,21 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
   // Breadth-first search outward from p's cell; the first walkable cell found
   // is (approximately) the nearest. Fixed neighbour order keeps results
   // deterministic.
-  static Uint16 queue[GRID_CELLS];
-  static Uint8 visited[GRID_CELLS];
+  static Uint16 queue[GRID_CELLS_MAX];
+  static Uint8 visited[GRID_CELLS_MAX];
   SDL_memset(visited, 0, sizeof(visited));
 
-  int start_cx = clampi(p.x / WALK_CELL_SIZE, 0, WALK_GRID_W - 1);
-  int start_cy = clampi(p.y / WALK_CELL_SIZE, 0, WALK_GRID_H - 1);
+  int start_cx = clampi(p.x / WALK_CELL_SIZE, 0, grid->w - 1);
+  int start_cy = clampi(p.y / WALK_CELL_SIZE, 0, grid->h - 1);
   int head = 0;
   int tail = 0;
-  queue[tail++] = (Uint16)cell_index(start_cx, start_cy);
-  visited[cell_index(start_cx, start_cy)] = 1;
+  queue[tail++] = (Uint16)cell_index(grid, start_cx, start_cy);
+  visited[cell_index(grid, start_cx, start_cy)] = 1;
 
   while (head < tail) {
     int idx = queue[head++];
-    int cx = idx % WALK_GRID_W;
-    int cy = idx / WALK_GRID_W;
+    int cx = idx % grid->w;
+    int cy = idx / grid->w;
     if (cell_walkable(grid, cx, cy)) {
       return cell_center(cx, cy);
     }
@@ -244,11 +270,11 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
       for (int dx = -1; dx <= 1; dx++) {
         int nx = cx + dx;
         int ny = cy + dy;
-        if ((dx == 0 && dy == 0) || nx < 0 || nx >= WALK_GRID_W || ny < 0 ||
-            ny >= WALK_GRID_H) {
+        if ((dx == 0 && dy == 0) || nx < 0 || nx >= grid->w || ny < 0 ||
+            ny >= grid->h) {
           continue;
         }
-        int nidx = cell_index(nx, ny);
+        int nidx = cell_index(grid, nx, ny);
         if (!visited[nidx]) {
           visited[nidx] = 1;
           queue[tail++] = (Uint16)nidx;
@@ -307,27 +333,28 @@ int walk_grid_find_path(const WalkGrid *grid, SDL_FPoint from, SDL_FPoint to,
     return 1;
   }
 
-  int start =
-      cell_index((int)from2.x / WALK_CELL_SIZE, (int)from2.y / WALK_CELL_SIZE);
-  int goal =
-      cell_index((int)to2.x / WALK_CELL_SIZE, (int)to2.y / WALK_CELL_SIZE);
+  int start = cell_index(grid, (int)from2.x / WALK_CELL_SIZE,
+                         (int)from2.y / WALK_CELL_SIZE);
+  int goal = cell_index(grid, (int)to2.x / WALK_CELL_SIZE,
+                        (int)to2.y / WALK_CELL_SIZE);
   if (start == goal) {
     out[0] = to2;
     return 1;
   }
 
   // A* over the grid, 8-connected, no corner cutting. The open "list" is a
-  // plain scan: this runs once per click, not per frame, so worst case over
-  // 4800 cells is still trivial.
-  static Uint32 g_cost[GRID_CELLS];
-  static Uint16 came_from[GRID_CELLS];
-  static Uint8 in_open[GRID_CELLS];
-  static Uint8 closed[GRID_CELLS];
-  SDL_memset(in_open, 0, sizeof(in_open));
-  SDL_memset(closed, 0, sizeof(closed));
+  // plain scan: this runs once per click, not per frame, so the worst case
+  // (28,800 cells in the largest scrollable scene) is still trivial.
+  static Uint32 g_cost[GRID_CELLS_MAX];
+  static Uint16 came_from[GRID_CELLS_MAX];
+  static Uint8 in_open[GRID_CELLS_MAX];
+  static Uint8 closed[GRID_CELLS_MAX];
+  int cells = grid->w * grid->h;
+  SDL_memset(in_open, 0, (size_t)cells);
+  SDL_memset(closed, 0, (size_t)cells);
 
-  int gx = goal % WALK_GRID_W;
-  int gy = goal / WALK_GRID_W;
+  int gx = goal % grid->w;
+  int gy = goal / grid->w;
   g_cost[start] = 0;
   came_from[start] = (Uint16)start;
   in_open[start] = 1;
@@ -335,19 +362,18 @@ int walk_grid_find_path(const WalkGrid *grid, SDL_FPoint from, SDL_FPoint to,
   // Best-effort target: the visited cell closest (by heuristic) to the goal,
   // so an unreachable goal still routes as near as possible.
   int best = start;
-  Uint32 best_h = heuristic(start % WALK_GRID_W, start / WALK_GRID_W, gx, gy);
+  Uint32 best_h = heuristic(start % grid->w, start / grid->w, gx, gy);
   bool reached = false;
 
   for (;;) {
     // Pop the open node with the lowest f = g + h.
     int current = -1;
     Uint32 current_f = 0;
-    for (int i = 0; i < GRID_CELLS; i++) {
+    for (int i = 0; i < cells; i++) {
       if (!in_open[i]) {
         continue;
       }
-      Uint32 f =
-          g_cost[i] + heuristic(i % WALK_GRID_W, i / WALK_GRID_W, gx, gy);
+      Uint32 f = g_cost[i] + heuristic(i % grid->w, i / grid->w, gx, gy);
       if (current < 0 || f < current_f) {
         current = i;
         current_f = f;
@@ -359,8 +385,8 @@ int walk_grid_find_path(const WalkGrid *grid, SDL_FPoint from, SDL_FPoint to,
     in_open[current] = 0;
     closed[current] = 1;
 
-    int cx = current % WALK_GRID_W;
-    int cy = current / WALK_GRID_W;
+    int cx = current % grid->w;
+    int cy = current / grid->w;
     Uint32 h = heuristic(cx, cy, gx, gy);
     if (h < best_h) {
       best_h = h;
@@ -388,7 +414,7 @@ int walk_grid_find_path(const WalkGrid *grid, SDL_FPoint from, SDL_FPoint to,
              !cell_walkable(grid, cx, cy + dy))) {
           continue;
         }
-        int nidx = cell_index(nx, ny);
+        int nidx = cell_index(grid, nx, ny);
         if (closed[nidx]) {
           continue;
         }
@@ -415,18 +441,18 @@ int walk_grid_find_path(const WalkGrid *grid, SDL_FPoint from, SDL_FPoint to,
 
   // Reconstruct the cell path start..end, then convert to points: the exact
   // start, the intermediate cell centres, and the exact goal when reached.
-  static Uint16 cells_reversed[GRID_CELLS];
+  static Uint16 cells_reversed[GRID_CELLS_MAX];
   int cells_length = 0;
   for (int idx = end; idx != start; idx = came_from[idx]) {
     cells_reversed[cells_length++] = (Uint16)idx;
   }
 
-  static SDL_FPoint pts[GRID_CELLS + 1];
+  static SDL_FPoint pts[GRID_CELLS_MAX + 1];
   int pts_length = 0;
   pts[pts_length++] = from2;
   for (int i = cells_length - 1; i >= 0; i--) {
     int idx = cells_reversed[i];
-    pts[pts_length++] = cell_center(idx % WALK_GRID_W, idx / WALK_GRID_W);
+    pts[pts_length++] = cell_center(idx % grid->w, idx / grid->w);
   }
   if (reached) {
     pts[pts_length - 1] = to2;

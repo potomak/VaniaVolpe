@@ -100,7 +100,9 @@ static void init(void) {
 
   fox = make_fox((SDL_FPoint){580, 457});
 
-  walk_grid_init(&walk_grid, &WALK_AREA, "playground_entrance");
+  walk_grid_init(&walk_grid, &WALK_AREA,
+                 (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT},
+                 "playground_entrance");
 
   int i = 0;
   hotspots[i++] = GATE_HOTSPOT;
@@ -229,6 +231,11 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
+    // Hit-test the click's own coordinates (#64): the cached motion position
+    // can be stale — e.g. a repeated tap with no motion in between while the
+    // camera moved.
+    m_pos.x = event->button.x;
+    m_pos.y = event->button.y;
     if (SDL_PointInRect(&m_pos, &GATE_HOTSPOT)) {
       // Walk to gate
       walk_actor_to(fox, &walk_grid, (SDL_FPoint){GATE_POI.x, GATE_POI.y}, true,
