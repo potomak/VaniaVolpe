@@ -143,28 +143,15 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
   const ActorSpec *spec = actor->spec;
 
   for (int v = 0; v < spec->variants_length; v++) {
-    // Every variant must provide the same set of states as variant 0, with
-    // the same frame count and timing per state: reference_animation and the
-    // state fallbacks then behave identically at any depth, and
-    // actor_set_variant's mid-cycle handover is well-defined (the same
-    // start_time and frame index mean the same pose in every variant).
-    // Enforce loudly, before any file is touched.
+    // Every variant must provide the same set of states as variant 0, so
+    // reference_animation and the state fallbacks behave identically at any
+    // depth. Enforce loudly, before any file is touched.
     for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
-      AnimationData *anim = actor->animations[v][i];
-      AnimationData *reference = actor->animations[0][i];
-      if ((anim == NULL) != (reference == NULL)) {
+      if ((actor->animations[v][i] == NULL) !=
+          (actor->animations[0][i] == NULL)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "%s: variant %d and variant 0 disagree on state %d",
                      spec->id, v, i);
-        return false;
-      }
-      if (anim != NULL && (anim->frames != reference->frames ||
-                           anim->ms_per_frame != reference->ms_per_frame)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "%s: variant %d's state %d has %d frames @ %d ms but "
-                     "variant 0 has %d @ %d — depth switches would glitch",
-                     spec->id, v, i, anim->frames, anim->ms_per_frame,
-                     reference->frames, reference->ms_per_frame);
         return false;
       }
     }
@@ -229,15 +216,16 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
 }
 
 void actor_update(Actor *actor, float delta_time) {
-  // Advance the active variant's playing animations each frame (timing lives
-  // here now, not in render). Inactive variants never have a playing
-  // animation — actor_set_variant hands the cycle over and silences the old
-  // one — so only the active set is ticked. All actor animations loop with
-  // no end callback, so this never fires a stray callback.
+  // Advance every playing animation each frame (timing lives here now, not in
+  // render). Only the active variant's animations ever play, but ticking all
+  // of them is a cheap no-op on the stopped ones. All actor animations loop
+  // with no end callback, so this never fires a stray callback.
   int now = SDL_GetTicks();
-  for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
-    if (variant_animations(actor)[i] != NULL) {
-      animation_update(variant_animations(actor)[i], now);
+  for (int v = 0; v < actor->spec->variants_length; v++) {
+    for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
+      if (actor->animations[v][i] != NULL) {
+        animation_update(actor->animations[v][i], now);
+      }
     }
   }
 
