@@ -90,6 +90,93 @@ bool load_scene_images(Scene *scene, SDL_Renderer *renderer) {
   return true;
 }
 
+SDL_Point plane_screen_pos(const Plane *plane, SDL_FPoint camera_pos) {
+  return (SDL_Point){plane->origin.x - (int)(camera_pos.x * plane->parallax),
+                     plane->origin.y - (int)(camera_pos.y * plane->parallax)};
+}
+
+bool plane_covers_view(const Plane *plane, SDL_Point scene_size) {
+  float need_w = WINDOW_WIDTH + plane->parallax * (scene_size.x - WINDOW_WIDTH);
+  float need_h =
+      WINDOW_HEIGHT + plane->parallax * (scene_size.y - WINDOW_HEIGHT);
+  return plane->image.width >= (int)need_w &&
+         plane->image.height >= (int)need_h;
+}
+
+// Load one bank of planes; on any image failure, unwind this bank and return
+// false. `check_coverage` warns when a plane doesn't span the whole view —
+// meaningful only for background layers, which must be opaque backdrops;
+// foreground planes are decorative overlays (a fence, a bush row) with
+// intentional transparent gaps, so the rule doesn't apply to them.
+static bool load_plane_bank(Plane *planes, int length, SDL_Point scene_size,
+                            bool check_coverage, SDL_Renderer *renderer) {
+  for (int i = 0; i < length; i++) {
+    if (planes[i].parallax < 0.0F) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                   "Plane %s has a negative parallax %.2f",
+                   planes[i].image.filename, planes[i].parallax);
+      for (int j = 0; j < i; j++) {
+        free_image_texture(&planes[j].image);
+      }
+      return false;
+    }
+    if (!load_image(renderer, &planes[i].image)) {
+      for (int j = 0; j < i; j++) {
+        free_image_texture(&planes[j].image);
+      }
+      return false;
+    }
+    // A background plane that doesn't cover the view exposes the clear colour
+    // at the edges — a load-time diagnostic, not a hard failure.
+    if (check_coverage && !plane_covers_view(&planes[i], scene_size)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                   "Background plane %s (%dx%d, parallax %.2f) does not cover "
+                   "the view over a %dx%d scene",
+                   planes[i].image.filename, planes[i].image.width,
+                   planes[i].image.height, planes[i].parallax, scene_size.x,
+                   scene_size.y);
+    }
+  }
+  return true;
+}
+
+bool load_scene_planes(Scene *scene, SDL_Renderer *renderer) {
+  SDL_Point scene_size = scene->camera != NULL
+                             ? scene->camera->scene_size
+                             : (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT};
+  if (!load_plane_bank(scene->bg_planes, scene->bg_planes_length, scene_size,
+                       true, renderer)) {
+    return false;
+  }
+  if (!load_plane_bank(scene->fg_planes, scene->fg_planes_length, scene_size,
+                       false, renderer)) {
+    // Unwind the bg bank that already loaded.
+    for (int i = 0; i < scene->bg_planes_length; i++) {
+      free_image_texture(&scene->bg_planes[i].image);
+    }
+    return false;
+  }
+  return true;
+}
+
+void render_scene_planes(SDL_Renderer *renderer, const Plane *planes,
+                         int planes_length, const Camera *camera) {
+  SDL_FPoint camera_pos = camera != NULL ? camera->pos : (SDL_FPoint){0, 0};
+  for (int i = 0; i < planes_length; i++) {
+    render_image(renderer, &planes[i].image,
+                 plane_screen_pos(&planes[i], camera_pos));
+  }
+}
+
+void free_scene_planes(Scene *scene) {
+  for (int i = 0; i < scene->bg_planes_length; i++) {
+    free_image_texture(&scene->bg_planes[i].image);
+  }
+  for (int i = 0; i < scene->fg_planes_length; i++) {
+    free_image_texture(&scene->fg_planes[i].image);
+  }
+}
+
 // Load the optional dialogue sidecars next to a chunk's WAV (see SPEECH.md).
 // Missing files are the normal case (SFX chunks have none).
 static void load_chunk_sidecars(ChunkData *chunk) {

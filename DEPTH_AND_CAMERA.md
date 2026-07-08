@@ -315,7 +315,20 @@ monotonically toward a fixed target and never overshoots
 check: with a fake 1600×600 scene, feed actor positions and assert the camera
 follows and clamps.
 
-### Phase 4 — planes & parallax + the first scrolling scene
+### Phase 4 — planes & parallax + the first scrolling scene *(shipped)*
+
+*Implementation notes: `Plane` and the `bg_planes`/`fg_planes` tables live in
+`scene.h`; `load_scene_planes` / `render_scene_planes` / `free_scene_planes`
+mirror the image path (wired into `adventure.c` next to the images). The
+parallax math is split into `plane_screen_pos` and the coverage check into
+`plane_covers_view` so both are unit-tested without a renderer; coverage
+violations `SDL_LogError` but don't fail the load. `game_render` draws bg
+planes (offset 0), the action layer (camera offset), fg planes (offset 0),
+then the debug overlay (camera offset) and the hub button (screen space).
+The committed first scrolling scene is the depth demo field, rebuilt from a
+single background into sky/hills/ground bg planes + a foreground bush strip.
+A dedicated art-authored Gina/Vania location can follow as its own
+`needs-art` issue.*
 
 New type (in `scene.h`, next to the images table it mirrors):
 

@@ -200,5 +200,43 @@ int test_scene(void) {
 
   actor_free(walker);
 
+  // ── planes: parallax offset + coverage ────────────────────────────────────
+
+  const SDL_Point wide = {1600, 600};
+
+  // A fixed plane (parallax 0) never moves with the camera.
+  Plane sky = {.image = {NULL, "sky.png", "field", 800, 600}, .parallax = 0.0F};
+  SDL_Point at = plane_screen_pos(&sky, (SDL_FPoint){500, 0});
+  check(at.x == 0 && at.y == 0, "a parallax-0 plane stays fixed");
+
+  // A scene-locked plane (parallax 1) tracks the camera one-to-one.
+  Plane ground = {.image = {NULL, "ground.png", "field", 1600, 600},
+                  .parallax = 1.0F};
+  at = plane_screen_pos(&ground, (SDL_FPoint){500, 0});
+  check(at.x == -500, "a parallax-1 plane moves with the camera");
+
+  // A foreground plane (parallax > 1) slides past faster, and its origin
+  // offsets the screen position.
+  Plane bushes = {.image = {NULL, "bushes.png", "field", 1720, 140},
+                  .parallax = 1.5F,
+                  .origin = {0, 460}};
+  at = plane_screen_pos(&bushes, (SDL_FPoint){200, 0});
+  check(at.x == -300 && at.y == 460,
+        "a foreground plane slides faster than the camera, from its origin");
+
+  // Coverage: the image must span WINDOW + parallax * (scene - WINDOW).
+  // ground at 1600 wide exactly covers a 1600-wide scene at parallax 1.
+  check(plane_covers_view(&ground, wide), "a 1600px parallax-1 plane covers");
+  check(plane_covers_view(&sky, wide), "an 800px parallax-0 plane covers");
+  Plane narrow = {.image = {NULL, "narrow.png", "field", 1000, 600},
+                  .parallax = 1.0F};
+  check(!plane_covers_view(&narrow, wide),
+        "a too-narrow parallax-1 plane fails coverage");
+  // hills at 1120 exactly meet 800 + 0.4 * 800 = 1120.
+  Plane hills = {.image = {NULL, "hills.png", "field", 1120, 600},
+                 .parallax = 0.4F};
+  check(plane_covers_view(&hills, wide),
+        "a 1120px parallax-0.4 plane exactly covers");
+
   return failures;
 }

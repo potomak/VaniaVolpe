@@ -159,22 +159,38 @@ void game_update(float delta_time) {
 }
 
 void game_render(SDL_Renderer *renderer) {
+  const Scene *scene = scene_instance(game.current_scene);
+  const Camera *camera = scene->camera;
   // Scene content (and the debug overlay over it) draws shifted by the
   // camera; the cast to int happens once so every draw shares the same
-  // offset. Screen-space UI (the hub button) draws after the reset.
-  const Camera *camera = scene_instance(game.current_scene)->camera;
-  if (camera != NULL) {
-    render_set_offset((SDL_Point){-(int)camera->pos.x, -(int)camera->pos.y});
-  }
-  scene_instance(game.current_scene)->render(renderer);
+  // offset. Parallax planes and screen-space UI carry their own offsets, so
+  // they draw with the render offset reset to zero.
+  const SDL_Point camera_offset =
+      camera != NULL ? (SDL_Point){-(int)camera->pos.x, -(int)camera->pos.y}
+                     : (SDL_Point){0, 0};
 
-  if (game.is_debugging) {
-    debug_render(renderer);
-  }
+  // Background planes (behind the action layer), each at its own parallax.
+  render_scene_planes(renderer, scene->bg_planes, scene->bg_planes_length,
+                      camera);
 
+  // The action layer, in scene coordinates.
+  render_set_offset(camera_offset);
+  scene->render(renderer);
   render_set_offset((SDL_Point){0, 0});
 
-  // Draw the back-to-hub button over any non-hub adventure.
+  // Foreground planes (in front of the action layer): a parallax > 1 strip
+  // is a cheap walk-behind with no prop needed.
+  render_scene_planes(renderer, scene->fg_planes, scene->fg_planes_length,
+                      camera);
+
+  // The debug overlay draws over everything, in scene coordinates.
+  if (game.is_debugging) {
+    render_set_offset(camera_offset);
+    debug_render(renderer);
+    render_set_offset((SDL_Point){0, 0});
+  }
+
+  // Draw the back-to-hub button over any non-hub adventure (screen space).
   if (hub_adventure != NULL && game.current_adventure != hub_adventure) {
     SDL_SetRenderDrawColor(renderer, 0x33, 0x33, 0x33, 0xFF);
     SDL_RenderFillRect(renderer, &HUB_BUTTON);
