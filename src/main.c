@@ -11,6 +11,7 @@
 #include "hub.h"
 #include "image.h"
 #include "locale.h"
+#include "subtitle.h"
 #include "vania_fox_the_slide.h"
 
 #ifdef __EMSCRIPTEN__
@@ -176,6 +177,10 @@ int SDL_main(int argc, char *argv[]) {
   // the active locale).
   asset_set_locale(detect_locale(argc, argv));
 
+  // Dialogue text overlay (SPEECH.md): reads --subtitles=/$VANIA_SUBTITLES and
+  // loads the bundled font. A failure logs and disables subtitles, no more.
+  subtitle_init(argc, argv, renderer);
+
   // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();
   gina_hen_at_the_pool_register();
@@ -228,6 +233,7 @@ int SDL_main(int argc, char *argv[]) {
 
   // Tear down in reverse-init order: audio, then image, then renderer/window
   // (destroy_window calls SDL_Quit last).
+  subtitle_deinit();
   destroy_sound();
   destroy_image();
   destroy_window();

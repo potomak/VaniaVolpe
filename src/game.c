@@ -12,6 +12,8 @@
 #include "constants.h"
 // Features for debugging the game
 #include "debug.h"
+// Dialogue text overlay (SPEECH.md Part 3)
+#include "subtitle.h"
 
 Game game = {
     .is_running = false,
@@ -48,6 +50,8 @@ void adventure_switch_to(const Adventure *adventure) {
   if (game.current_adventure != NULL) {
     scene_instance(game.current_scene)->on_scene_inactive();
   }
+  // A line spoken in the old adventure must not linger over the new one.
+  subtitle_clear();
   game.current_adventure = adventure;
   game.current_scene = adventure->entry_scene;
   asset_set_root(adventure->assets_root);
@@ -67,6 +71,7 @@ const Scene *scene_instance(int scene) {
 // Sets a new scene as the current scene
 void set_active_scene(int scene) {
   scene_instance(game.current_scene)->on_scene_inactive();
+  subtitle_clear();
   game.current_scene = scene;
   scene_instance(game.current_scene)->on_scene_active();
   snap_scene_camera();
@@ -197,6 +202,9 @@ void game_render(SDL_Renderer *renderer) {
     SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
     SDL_RenderDrawRect(renderer, &HUB_BUTTON);
   }
+
+  // The dialogue text overlay is screen-space UI, over everything.
+  subtitle_render(renderer);
 }
 
 void game_deinit(void) {

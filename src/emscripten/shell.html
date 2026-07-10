@@ -34,8 +34,12 @@
     // ("en-US" -> en_US) and defaults to it_IT.
     var LANG_PREF =
       new URLSearchParams(location.search).get('lang') || navigator.language || '';
+    // Subtitles: on by default; ?subtitles=0 disables the dialogue overlay.
+    var SUBTITLES_PREF = new URLSearchParams(location.search).get('subtitles');
+    var GAME_ARGS = LANG_PREF ? ['--locale=' + LANG_PREF] : [];
+    if (SUBTITLES_PREF !== null) GAME_ARGS.push('--subtitles=' + SUBTITLES_PREF);
     var Module = {
-      arguments: LANG_PREF ? ['--locale=' + LANG_PREF] : [],
+      arguments: GAME_ARGS,
       canvas: (function () { return document.getElementById('canvas'); })(),
       locateFile: function (path) {
         return /\.(wasm|data)$/.test(path) ? path + '?v=' + CACHE_BUST : path;

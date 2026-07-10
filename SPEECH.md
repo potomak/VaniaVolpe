@@ -376,7 +376,13 @@ variant's TALKING `.anim` must have exactly `MOUTH_SHAPE_COUNT` frames —
 `SDL_LogError` and fail `actor_load_media` otherwise (this is the `.anim` ↔
 spec frame-count contract, enforced loudly).
 
-## Part 3 — text overlays: subtitles & read-along highlighting
+## Part 3 — text overlays: subtitles & read-along highlighting *(shipped)*
+
+*Implementation notes: `subtitle_show` takes an explicit `force` flag (true
+when the line has no audio chunk) instead of checking the chunk itself; the
+engine clears the overlay on scene/adventure switches so a line never lingers
+across scenes; the bundled face is Atkinson Hyperlegible Regular
+(`assets/fonts/`, OFL). Everything else landed as specified below.*
 
 ### Text rendering (trade-offs)
 
