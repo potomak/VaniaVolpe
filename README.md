@@ -16,12 +16,14 @@ Both are launched from a simple in-app hub:
   goggles, a float the wind steals away, Carla the crow, and a grape-picking
   trade to get it back. Currently uses placeholder art.
 
-Dialogue is **audio-only** — there is no on-screen text, so the games suit
-pre-readers.
+Dialogue is spoken Italian with lip-synced mouths, plus **read-along
+subtitles**: the line appears on screen with the currently spoken word
+highlighted karaoke-style — an accessibility layer and a gentle learn-to-read
+aid (add `?subtitles=0` to the URL to turn it off).
 
 ## Build & run
 
-Needs the SDL2 / SDL2_image / SDL2_mixer dev libraries (resolved via
+Needs the SDL2 / SDL2_image / SDL2_mixer / SDL2_ttf dev libraries (resolved via
 `pkg-config`). Build with `make`:
 
 | Command | Output | Notes |
@@ -38,8 +40,8 @@ Needs the SDL2 / SDL2_image / SDL2_mixer dev libraries (resolved via
   `Actor`, image/sound/asset handling, and the adventure hub.
 - `src/adventures/<name>/` — one self-contained adventure per directory (its
   scenes, actor spec, module, and `assets/`).
-- `include/` — bundled SDL_image / SDL_mixer forwarding headers for the native
-  build.
+- `include/` — bundled SDL_image / SDL_mixer / SDL_ttf forwarding headers for
+  the native build.
 
 ## More docs
 
@@ -47,6 +49,10 @@ Needs the SDL2 / SDL2_image / SDL2_mixer dev libraries (resolved via
   and AI agents).
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — the engine design in depth (including the
   terminal and headless-test backends).
-- [`MOVEMENT.md`](MOVEMENT.md) — focused notes on the movement limitation.
+- [`MOVEMENT.md`](MOVEMENT.md) — the walkability grid and A* pathfinding design.
+- [`DEPTH_AND_CAMERA.md`](DEPTH_AND_CAMERA.md) — walk-behind props, depth
+  variants, the scrolling camera and parallax planes.
+- [`SPEECH.md`](SPEECH.md) — lip-sync cues and the read-along subtitles.
+- [`TOOLS.md`](TOOLS.md) — every internal dev tool, in one place.
 - Queued work lives in [GitHub issues](https://github.com/potomak/VaniaVolpe/issues)
   (label `backlog`).
