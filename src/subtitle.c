@@ -140,7 +140,7 @@ void subtitle_show(const char *text, const WordTimings *words,
   // Split on spaces and render each word twice (normal + highlighted),
   // assigning wrap rows as we go. box.x is the offset within its row for
   // now; rows are centred below once their widths are known.
-  int rows[LIPSYNC_MAX_WORDS]; // row index per word
+  int rows[LIPSYNC_MAX_WORDS] = {0}; // row index per word
   int row_width[LIPSYNC_MAX_WORDS] = {0};
   int row = 0;
   int x = 0;
