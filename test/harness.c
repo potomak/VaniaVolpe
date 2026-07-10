@@ -12,6 +12,7 @@
 #include "gina_hen_at_the_pool.h"
 #include "hub.h"
 #include "image.h"
+#include "subtitle.h"
 #include "vania_fox_the_slide.h"
 
 static SDL_Window *window = NULL;
@@ -77,11 +78,16 @@ bool harness_init(void) {
 
   Mix_VolumeMusic(MUSIC_VOLUME);
 
+  // Subtitles render offscreen like everything else; the overlay path runs
+  // in the playthroughs too (default setting: on).
+  subtitle_init(0, NULL, renderer);
+
   return true;
 }
 
 void harness_shutdown(void) {
   game_deinit();
+  subtitle_deinit();
   Mix_CloseAudio();
   Mix_Quit();
   IMG_Quit();

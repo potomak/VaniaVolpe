@@ -13,6 +13,7 @@
 #include "constants.h"
 #include "image.h"
 #include "sound.h"
+#include "subtitle.h"
 
 // The active variant's animation table, indexed by ActorState.
 static AnimationData **variant_animations(Actor *actor) {
@@ -470,6 +471,10 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
   if (line != NULL) {
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s: %s",
                 actor->spec->display_name, line);
+    // Read-along overlay (SPEECH.md Part 3). Shown per the subtitles setting;
+    // a line with no audio at all is always shown — the text is all there is.
+    subtitle_show(line, dialog != NULL ? &dialog->words : NULL,
+                  talking_duration, chunk == NULL);
   }
 
   if (chunk != NULL) {

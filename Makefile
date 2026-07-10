@@ -3,9 +3,9 @@ CC      = gcc
 VFTS_DIR = src/adventures/vania_fox_the_slide
 GINA_DIR = src/adventures/gina_hen_at_the_pool
 DEMO_DIR = src/adventures/depth_demo
-CFLAGS  = -std=c99 -Wall $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer) \
+CFLAGS  = -std=c99 -Wall $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer SDL2_ttf) \
           -I./include -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR)
-LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image SDL2_mixer) -lm
+LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image SDL2_mixer SDL2_ttf) -lm
 TARGET  = vaniavolpe
 
 CACA_CFLAGS = $(shell pkg-config --cflags caca)
@@ -25,6 +25,7 @@ GAME_SRCS = \
 	src/image.c \
 	src/sound.c \
 	src/lipsync.c \
+	src/subtitle.c \
 	src/asset.c \
 	src/locale.c \
 	src/debug.c \
@@ -119,7 +120,7 @@ WEB_TARGET = $(WEB_DIR)/index.html
 # build does; fall back to a timestamp outside a git checkout.
 WEB_CACHE_BUST := $(shell git rev-parse --short HEAD 2>/dev/null || date +%s)
 EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
-             -sUSE_SDL_MIXER=2
+             -sUSE_SDL_MIXER=2 -sUSE_SDL_TTF=2
 EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./src/emscripten/compat \
              -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR)
 # Preload each adventure's shared (common) layer plus every locale. Per-locale
@@ -130,7 +131,8 @@ EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
              --preload-file $(GINA_DIR)/assets/common \
              --preload-file $(GINA_DIR)/assets/it_IT \
              --preload-file $(GINA_DIR)/assets/en_US \
-             --preload-file $(DEMO_DIR)/assets/common
+             --preload-file $(DEMO_DIR)/assets/common \
+             --preload-file assets/fonts
 EM_SHELL   = src/emscripten/shell.html
 # -sGROWABLE_ARRAYBUFFERS=0: Emscripten >= 6 defaults this to auto-detect, and
 # when the browser has WebAssembly.Memory.toResizableBuffer the heap becomes a

@@ -98,7 +98,9 @@ See `ARCHITECTURE.md` for the full design.
   Voice/dialog WAVs and text-bearing images (intro/outro, labelled buttons) go
   under the locale; sprites, music, SFX and plain backgrounds go under `common/`.
   The active locale comes from `--locale=` / `$VANIA_LOCALE` / `$LANG` (web: the
-  browser language, or `?lang=`); default `it_IT`. `tools/gen_en_us_placeholders.sh`
+  browser language, or `?lang=`); default `it_IT`. Dialogue **subtitles** (with
+  the read-along word highlight, see `SPEECH.md`) are on by default;
+  `--subtitles=0` / `$VANIA_SUBTITLES=0` / web `?subtitles=0` disable them. `tools/gen_en_us_placeholders.sh`
   scaffolds a complete `en_US` from `it_IT`.
 - **Assets in the web build** must live under a `--preload-file` dir in the
   `Makefile` (now `assets/common` + each `assets/<locale>` per adventure); files
