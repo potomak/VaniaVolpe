@@ -4,7 +4,8 @@ Guidance for AI agents (and humans) working in this repo.
 
 ## What this is
 **Vania Volpe – Lo Scivolo**: a small Italian point-and-click adventure game in
-**C99 + SDL2** (SDL2, SDL2_image for PNG, SDL2_mixer for WAV). The same code
+**C99 + SDL2** (SDL2, SDL2_image for PNG, SDL2_mixer for WAV, SDL2_ttf for the
+subtitle text). The same code
 builds three ways: a desktop SDL window, a terminal (libcaca) renderer, and a
 **WebAssembly** build (Emscripten) deployed to GitHub Pages.
 
@@ -14,7 +15,7 @@ Live web build: https://potomak.github.io/VaniaVolpe/
 All source is in `src/`. Build via `make`:
 
 - `make` — desktop SDL window → `./vaniavolpe`. Needs the SDL2 / SDL2_image /
-  SDL2_mixer dev libraries (resolved via `pkg-config`).
+  SDL2_mixer / SDL2_ttf dev libraries (resolved via `pkg-config`).
 - `make terminal` — libcaca renderer → `./vaniavolpe_terminal` (no display
   server needed). Also needs `caca`.
 - `make test` — headless scripted playthrough → `./vaniavolpe_test` (offscreen
@@ -56,9 +57,13 @@ Backends* for how the harnesses work.
 ## Repo map
 - `src/` — **common engine / app shell**: `main.c` (desktop entry + game loop),
   `main_terminal.c` + `terminal.c` (libcaca entry), `game.c` + `adventure.h`
-  (adventure registry), `scene.{c,h}` (scene framework), `actor.{c,h}` (generic
-  character engine), `image.c` (sprite/animation engine), `sound.c`, `asset.c`
-  (locale-aware path resolution) + `locale.c` (locale selection), `debug.c`.
+  (adventure registry), `scene.{c,h}` (scene framework: scenes, props, depth
+  bands, parallax planes), `actor.{c,h}` (generic character engine + depth
+  variants), `walk.{c,h}` (walkability grid + A*), `camera.{c,h}` (scrolling
+  scenes), `image.c` (sprite/animation engine + render offset), `sound.c`,
+  `lipsync.c` (mouth-cue & word-timing sidecars), `subtitle.c` (dialogue
+  overlay + read-along highlight), `asset.c` (locale-aware path resolution) +
+  `locale.c` (locale selection), `debug.c`.
   - `emscripten/compat/` — header shims so `<SDL2/...>` includes resolve under
     Emscripten; `emscripten/shell.html` — custom web page (canvas + iOS audio
     unlock).
@@ -68,13 +73,19 @@ Backends* for how the harnesses work.
   `playground.c`, `outro.c`), its actor (`fox.{c,h}` — the fox spec),
   and its `assets/` subtree, split into `common/` (shared) and one dir per locale
   (`it_IT/`, `en_US/`); each holds the scene subdirs (`intro/ playground/ …`).
-- `include/` — bundled SDL_image / SDL_mixer forwarding headers (native build).
+  `src/adventures/depth_demo/` is a one-scene **developer demo**: the reference
+  implementation for props, depth bands, camera and parallax (third hub entry).
+- `assets/fonts/` — the engine-level subtitle font (Atkinson Hyperlegible, OFL).
+- `include/` — bundled SDL_image / SDL_mixer / SDL_ttf forwarding headers
+  (native build).
 - `test/` — headless test harness (`harness.{c,h}`), the script interpreter
   (`script.{c,h}`), the play-tests (`play_gina.c`, …) and `main_test.c` entry
   point (`make test`); `scripts/` holds the shared JSON playthroughs and `web/`
   the Puppeteer browser test that consumes them.
 - Docs: `ARCHITECTURE.md` (deep design, incl. the terminal & headless-test
-  backends), `MOVEMENT.md` (movement limitation + future pathfinding),
+  backends), `MOVEMENT.md` (walkability grid + A* pathfinding; shipped),
+  `DEPTH_AND_CAMERA.md` (props, depth variants, camera, parallax; shipped),
+  `SPEECH.md` (lip-sync cues + read-along subtitles; code phases shipped),
   `TOOLS.md` (index of every dev tool: debug overlay & walk-mask paint mode,
   browser tools, generator scripts, test harnesses). The queued
   work lives in **GitHub issues** (label `backlog`), not a file.
@@ -84,11 +95,14 @@ Scene-based: `Game` runs the current `Adventure` (an ordered scene table); each
 scene implements the `Scene` callback struct (`init` / `load_media` /
 `process_input` / `update` / `render` / …) in `scene.h`. The playable character is
 a generic `Actor` (the fox is an `ActorSpec`): a small state machine (IDLE /
-WALKING / TALKING / …); clicks hit-test `hotspots` and walk to `pois` via
-`actor_walk_to`. Animations are sprite sheets + a CSV `.anim` file (`x,y,w,h` per
-frame, 12 FPS). Dialogue is **audio-only** (no on-screen text) via `actor_talk`.
-Each adventure declares an `assets_root` so `asset_resolve()` resolves its assets.
-See `ARCHITECTURE.md` for the full design.
+WALKING / TALKING / …); clicks are routed around blocked ground via
+`walk_actor_to` (grid + A*, see `MOVEMENT.md`). Animations are sprite sheets + a
+CSV `.anim` file (`x,y,w,h` per frame, 12 FPS). Dialogue is spoken audio via
+`actor_talk`, with cue-driven mouth frames and an on-screen **subtitle overlay**
+whose currently spoken word is highlighted (see `SPEECH.md`). Scenes may be
+larger than the window with a following camera and parallax planes (see
+`DEPTH_AND_CAMERA.md`). Each adventure declares an `assets_root` so
+`asset_resolve()` resolves its assets. See `ARCHITECTURE.md` for the full design.
 
 ## Gotchas
 - **Assets are localized.** Each adventure's `assets/` splits into `common/`
