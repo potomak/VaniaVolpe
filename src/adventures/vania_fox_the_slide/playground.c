@@ -77,7 +77,7 @@ static const SDL_Rect SQUIRREL_HOTSPOT = {70, 147, 113, 97};
 static const SDL_Rect ACORNS_TREE_HOTSPOT = {668, 201, 126, 118};
 static const SDL_Rect ACORNS_FLOOR_HOTSPOT = {667, 500, 105, 98};
 static const SDL_Rect PEG_HOTSPOT = {83, 460, 91, 94};
-static SDL_Rect hotspots[5];
+static Hotspot hotspots[5];
 
 // Walk geometry: the ground strip plus two side pockets; the slide/sandbox
 // structure in the middle is blocked.
@@ -119,6 +119,26 @@ static int examine_slide_count;
 static int examine_squirrel_count;
 static int slides_count;
 
+// Interactions (bodies below the loaders).
+static void maybe_use_slide(void);
+static void maybe_get_peg(void);
+static void make_acorns_fall(void);
+static void pickup_acorns(void);
+static void pickup_peg(void);
+
+// Hotspot gating (see the table in init).
+static bool squirrel_has_the_peg(void) { return !has_peg_been_dropped; }
+
+static bool acorns_in_the_tree(void) { return !have_acorns_fallen; }
+
+static bool acorns_on_the_ground(void) {
+  return have_acorns_fallen && !has_acorns && !has_peg_been_dropped;
+}
+
+static bool peg_on_the_ground(void) {
+  return has_peg_been_dropped && !has_peg && !has_slide_been_fixed;
+}
+
 static void init(void) {
   fox = make_fox((SDL_FPoint){580, 457});
 
@@ -133,11 +153,25 @@ static void init(void) {
       (Prop){.image = &images[2] /* peg */, .pos = DROPPED_PEG_POS};
 
   int i = 0;
-  hotspots[i++] = SLIDE_HOTSPOT;
-  hotspots[i++] = SQUIRREL_HOTSPOT;
-  hotspots[i++] = ACORNS_TREE_HOTSPOT;
-  hotspots[i++] = ACORNS_FLOOR_HOTSPOT;
-  hotspots[i++] = PEG_HOTSPOT;
+  hotspots[i++] = (Hotspot){
+      .rect = SLIDE_HOTSPOT, .poi = SLIDE_POI, .on_arrive = maybe_use_slide};
+  hotspots[i++] = (Hotspot){.rect = SQUIRREL_HOTSPOT,
+                            .enabled = squirrel_has_the_peg,
+                            .poi = SQUIRREL_POI,
+                            .on_arrive = maybe_get_peg};
+  hotspots[i++] = (Hotspot){.rect = ACORNS_TREE_HOTSPOT,
+                            .enabled = acorns_in_the_tree,
+                            .poi = ACORNS_POI,
+                            .on_arrive = make_acorns_fall};
+  hotspots[i++] = (Hotspot){.rect = ACORNS_FLOOR_HOTSPOT,
+                            .enabled = acorns_on_the_ground,
+                            .poi = ACORNS_POI,
+                            .on_arrive = pickup_acorns};
+  // The peg fell next to the squirrel's tree, so the walk target is the same.
+  hotspots[i++] = (Hotspot){.rect = PEG_HOTSPOT,
+                            .enabled = peg_on_the_ground,
+                            .poi = SQUIRREL_POI,
+                            .on_arrive = pickup_peg};
 
   i = 0;
   pois[i++] = SLIDE_POI;
@@ -242,48 +276,13 @@ static void process_input(SDL_Event *event) {
       set_active_scene(OUTRO);
       break;
     }
-    if (SDL_PointInRect(&m_pos, &SLIDE_HOTSPOT)) {
-      // Walk to slide
-      walk_actor_to(fox, &walk_grid, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y},
-                    true, maybe_use_slide);
-      break;
-    }
-    // If the squirrel already dropped the peg skip this case
-    if (!has_peg_been_dropped && SDL_PointInRect(&m_pos, &SQUIRREL_HOTSPOT)) {
-      // Walk to squirrel
-      walk_actor_to(fox, &walk_grid,
-                    (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y}, true,
-                    maybe_get_peg);
-      break;
-    }
-    // If the acorns have already fallen skip this case
-    if (!have_acorns_fallen && SDL_PointInRect(&m_pos, &ACORNS_TREE_HOTSPOT)) {
-      // Walk to acorns
-      walk_actor_to(fox, &walk_grid, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y},
-                    true, make_acorns_fall);
-      break;
-    }
-    // If the acorns haven't fallen yet, or if fox has acorns, or if acorns have
-    // been exchanged for the peg, skip this case
-    if (have_acorns_fallen && !has_acorns && !has_peg_been_dropped &&
-        SDL_PointInRect(&m_pos, &ACORNS_FLOOR_HOTSPOT)) {
-      // Walk to acorns
-      walk_actor_to(fox, &walk_grid, (SDL_FPoint){ACORNS_POI.x, ACORNS_POI.y},
-                    true, pickup_acorns);
-      break;
-    }
-    // If the peg hasn't been dropped yet, or if fox has the peg, or if the
-    // slide has been fixed already, skip this case
-    if (has_peg_been_dropped && !has_peg && !has_slide_been_fixed &&
-        SDL_PointInRect(&m_pos, &PEG_HOTSPOT)) {
-      // Walk to peg
-      walk_actor_to(fox, &walk_grid,
-                    (SDL_FPoint){SQUIRREL_POI.x, SQUIRREL_POI.y}, true,
-                    pickup_peg);
-      break;
-    }
-    // Walk to the clicked point (routed around the blocked area), or to the
+    // The hotspot table says what each region does (see init). Otherwise:
+    // walk to the clicked point (routed around the blocked area), or to the
     // nearest reachable point if the click is outside the walkable area.
+    if (hotspots_handle_click(hotspots, LEN(hotspots), fox, &walk_grid,
+                              m_pos)) {
+      break;
+    }
     walk_actor_to(fox, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false, NULL);
     break;
   }

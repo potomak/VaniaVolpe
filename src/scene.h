@@ -51,6 +51,24 @@ typedef struct plane {
   SDL_Point origin;
 } Plane;
 
+// A clickable scene region and what it does — the single source of truth for
+// scene interactions (drawn by the debug overlay, dispatched by
+// hotspots_handle_click). Declared per scene as data, so a scene's table
+// reads like its description: "tapping the shovel digs".
+typedef struct hotspot {
+  SDL_Rect rect;
+  // NULL = always active; else gates the hotspot on scene state (a disabled
+  // hotspot lets the click fall through to the ones below / the walk).
+  bool (*enabled)(void);
+  // Where the actor walks before acting (exact goal, so a POI on blocked
+  // ground is legal — see walk_actor_to). Ignored when immediate.
+  SDL_Point poi;
+  // true: fire on_arrive on the click itself, with no walk (navigation
+  // arrows, "already done" lines, buttons).
+  bool immediate;
+  void (*on_arrive)(void);
+} Hotspot;
+
 typedef struct scene {
   void (*init)(void);
   bool (*load_media)(SDL_Renderer *renderer);
@@ -64,8 +82,8 @@ typedef struct scene {
   // Called before the scene is unset as the current scene
   void (*on_scene_inactive)(void);
 
-  // Hotspots in the scene
-  SDL_Rect *hotspots;
+  // Hotspots in the scene (see Hotspot above)
+  Hotspot *hotspots;
   int hotspots_length;
 
   // Points of interest in the scene
@@ -147,6 +165,15 @@ int action_layer_order(const Prop *props, int props_length,
 // backgrounds and draws that never overlap an actor stay manual.
 void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
                          Actor **actors, int actors_length);
+
+// Dispatch a click at p (scene coordinates) against a hotspot table: the
+// first enabled hotspot containing p wins — the actor walks to its poi and
+// on_arrive fires on arrival (or immediately, for immediate hotspots).
+// Returns false when no hotspot claimed the click, so the scene can fall
+// through to its default (usually: walk to the click). Scenes with only
+// immediate hotspots may pass actor/grid as NULL.
+bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
+                           Actor *actor, const WalkGrid *grid, SDL_Point p);
 
 bool load_scene_images(Scene *scene, SDL_Renderer *renderer);
 

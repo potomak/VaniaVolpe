@@ -59,7 +59,7 @@ static const SDL_Rect GOGGLES_HOTSPOT = {330, 470, 60, 30};
 static const SDL_Rect FLOAT_HOTSPOT = {560, 470, 90, 60};
 static const SDL_Rect VINE_NAV_HOTSPOT = {0, 200, 30, 250};
 static const SDL_Rect TREE_NAV_HOTSPOT = {770, 200, 30, 250};
-static SDL_Rect hotspots[6];
+static Hotspot hotspots[7];
 
 // Walk geometry. Before the sunscreen is applied Gina refuses to leave the
 // umbrella's shadow, so the walkable area itself is a function of game state:
@@ -92,18 +92,56 @@ static const SDL_Point FLOAT_POI = {600, 545};
 static const SDL_Point POOL_EDGE_POI = {400, 460};
 static SDL_Point pois[4];
 
+// Interactions and hotspot gating (bodies below the loaders). Before the
+// sunscreen only the lotion is tappable; everything else unlocks after it.
+static bool before_sunscreen(void);
+static bool after_sunscreen(void);
+static bool goggles_to_collect(void);
+static bool float_at_the_pool(void);
+static void open_sunscreen_minigame(void);
+static void say_sunscreen_done(void);
+static void collect_goggles(void);
+static void float_blows_away(void);
+static void try_dive(void);
+static void go_to_vine(void);
+static void go_to_tree(void);
+
 static void init(void) {
   gina = make_hen(HEN_START);
 
   rebuild_walk_grid();
 
   int i = 0;
-  hotspots[i++] = POOL_WATER_HOTSPOT;
-  hotspots[i++] = SUNSCREEN_HOTSPOT;
-  hotspots[i++] = GOGGLES_HOTSPOT;
-  hotspots[i++] = FLOAT_HOTSPOT;
-  hotspots[i++] = VINE_NAV_HOTSPOT;
-  hotspots[i++] = TREE_NAV_HOTSPOT;
+  // The same bottle, two behaviours: reach for it before the sunscreen, a
+  // gentle "already done" afterwards.
+  hotspots[i++] = (Hotspot){.rect = SUNSCREEN_HOTSPOT,
+                            .enabled = before_sunscreen,
+                            .poi = SUNSCREEN_POI,
+                            .on_arrive = open_sunscreen_minigame};
+  hotspots[i++] = (Hotspot){.rect = SUNSCREEN_HOTSPOT,
+                            .enabled = after_sunscreen,
+                            .immediate = true,
+                            .on_arrive = say_sunscreen_done};
+  hotspots[i++] = (Hotspot){.rect = GOGGLES_HOTSPOT,
+                            .enabled = goggles_to_collect,
+                            .poi = GOGGLES_POI,
+                            .on_arrive = collect_goggles};
+  hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
+                            .enabled = float_at_the_pool,
+                            .poi = FLOAT_POI,
+                            .on_arrive = float_blows_away};
+  hotspots[i++] = (Hotspot){.rect = POOL_WATER_HOTSPOT,
+                            .enabled = after_sunscreen,
+                            .poi = POOL_EDGE_POI,
+                            .on_arrive = try_dive};
+  hotspots[i++] = (Hotspot){.rect = VINE_NAV_HOTSPOT,
+                            .enabled = after_sunscreen,
+                            .immediate = true,
+                            .on_arrive = go_to_vine};
+  hotspots[i++] = (Hotspot){.rect = TREE_NAV_HOTSPOT,
+                            .enabled = after_sunscreen,
+                            .immediate = true,
+                            .on_arrive = go_to_tree};
 
   i = 0;
   pois[i++] = SUNSCREEN_POI;
@@ -119,9 +157,29 @@ static bool load_media(SDL_Renderer *renderer) {
 // ── interactions
 // ──────────────────────────────────────────────────────────────
 
+static bool before_sunscreen(void) { return !gina_state.has_sunscreen; }
+
+static bool after_sunscreen(void) { return gina_state.has_sunscreen; }
+
+static bool goggles_to_collect(void) {
+  return gina_state.has_sunscreen && !gina_state.has_goggles;
+}
+
+static bool float_at_the_pool(void) {
+  return gina_state.has_sunscreen && gina_state.float_state == FLOAT_AT_POOL;
+}
+
 static void open_sunscreen_minigame(void) {
   set_active_scene(SUNSCREEN_MINIGAME);
 }
+
+static void say_sunscreen_done(void) {
+  gina_say(gina, "Ho gia' messo la crema.", voice());
+}
+
+static void go_to_vine(void) { set_active_scene(VINE); }
+
+static void go_to_tree(void) { set_active_scene(TREE); }
 
 static void collect_goggles(void) {
   gina_state.has_goggles = true;
@@ -178,54 +236,16 @@ static void process_input(SDL_Event *event) {
     // camera moved.
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
-    // Before sunscreen the walk grid covers only the umbrella's shadow: Gina
-    // reaches for the lotion, wanders freely within the shade, and refuses
-    // anything beyond it.
-    if (!gina_state.has_sunscreen) {
-      if (SDL_PointInRect(&m_pos, &SUNSCREEN_HOTSPOT)) {
-        walk_actor_to(gina, &walk_grid,
-                      (SDL_FPoint){SUNSCREEN_POI.x, SUNSCREEN_POI.y}, true,
-                      open_sunscreen_minigame);
-      } else if (walk_grid_contains(&walk_grid, m_pos)) {
-        walk_actor_to(gina, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false,
-                      NULL);
-      } else {
-        gina_say(gina,
-                 "Devo mettere la crema solare prima di uscire dall'ombra!",
-                 voice());
-      }
+    // The hotspot table says what each region does (see init).
+    if (hotspots_handle_click(hotspots, LEN(hotspots), gina, &walk_grid,
+                              m_pos)) {
       break;
     }
-
-    // Sunscreen applied: Gina can move and interact freely.
-    if (SDL_PointInRect(&m_pos, &SUNSCREEN_HOTSPOT)) {
-      gina_say(gina, "Ho gia' messo la crema.", voice());
-      break;
-    }
-    if (!gina_state.has_goggles && SDL_PointInRect(&m_pos, &GOGGLES_HOTSPOT)) {
-      walk_actor_to(gina, &walk_grid,
-                    (SDL_FPoint){GOGGLES_POI.x, GOGGLES_POI.y}, true,
-                    collect_goggles);
-      break;
-    }
-    if (gina_state.float_state == FLOAT_AT_POOL &&
-        SDL_PointInRect(&m_pos, &FLOAT_HOTSPOT)) {
-      walk_actor_to(gina, &walk_grid, (SDL_FPoint){FLOAT_POI.x, FLOAT_POI.y},
-                    true, float_blows_away);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &POOL_WATER_HOTSPOT)) {
-      walk_actor_to(gina, &walk_grid,
-                    (SDL_FPoint){POOL_EDGE_POI.x, POOL_EDGE_POI.y}, true,
-                    try_dive);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &VINE_NAV_HOTSPOT)) {
-      set_active_scene(VINE);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &TREE_NAV_HOTSPOT)) {
-      set_active_scene(TREE);
+    // Before the sunscreen the walk grid covers only the umbrella's shadow:
+    // Gina wanders freely within the shade and refuses anything beyond it.
+    if (!gina_state.has_sunscreen && !walk_grid_contains(&walk_grid, m_pos)) {
+      gina_say(gina, "Devo mettere la crema solare prima di uscire dall'ombra!",
+               voice());
       break;
     }
     // Otherwise walk toward the click, clamped to the walkable strip.

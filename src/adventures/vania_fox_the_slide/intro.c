@@ -45,7 +45,9 @@ static SDL_Point m_pos;
 // Hotspots
 static const SDL_Rect PLAY_BUTTON_HOTSPOT = {443, 285, 268, 118};
 static const SDL_Rect EXIT_BUTTON_HOTSPOT = {436, 430, 277, 103};
-static SDL_Rect hotspots[2];
+static Hotspot hotspots[2];
+
+static void start_playing(void) { set_active_scene(PLAYGROUND_ENTRANCE); }
 
 static void init(void) {
   play_button = animations[0] = make_animation_data(3, LOOP);
@@ -54,8 +56,11 @@ static void init(void) {
   fox = make_fox((SDL_FPoint){322, 317});
   fox_sit(fox);
 
-  hotspots[0] = PLAY_BUTTON_HOTSPOT;
-  hotspots[1] = EXIT_BUTTON_HOTSPOT;
+  hotspots[0] = (Hotspot){.rect = PLAY_BUTTON_HOTSPOT,
+                          .immediate = true,
+                          .on_arrive = start_playing};
+  hotspots[1] = (Hotspot){
+      .rect = EXIT_BUTTON_HOTSPOT, .immediate = true, .on_arrive = exit_game};
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -131,12 +136,8 @@ static void process_input(SDL_Event *event) {
     // camera moved.
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
-    if (SDL_PointInRect(&m_pos, &PLAY_BUTTON_HOTSPOT)) {
-      set_active_scene(PLAYGROUND_ENTRANCE);
-    }
-    if (SDL_PointInRect(&m_pos, &EXIT_BUTTON_HOTSPOT)) {
-      exit_game();
-    }
+    // Both buttons are immediate hotspots (no actor walk in the intro).
+    hotspots_handle_click(hotspots, LEN(hotspots), NULL, NULL, m_pos);
     break;
   }
 }

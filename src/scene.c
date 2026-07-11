@@ -17,6 +17,29 @@ int depth_variant_for(const DepthBand *bands, int bands_length, float feet_y) {
   return variant;
 }
 
+bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
+                           Actor *actor, const WalkGrid *grid, SDL_Point p) {
+  for (int i = 0; i < hotspots_length; i++) {
+    const Hotspot *hotspot = &hotspots[i];
+    if (hotspot->enabled != NULL && !hotspot->enabled()) {
+      continue;
+    }
+    if (!SDL_PointInRect(&p, &hotspot->rect)) {
+      continue;
+    }
+    if (hotspot->immediate) {
+      if (hotspot->on_arrive != NULL) {
+        hotspot->on_arrive();
+      }
+    } else {
+      walk_actor_to(actor, grid, (SDL_FPoint){hotspot->poi.x, hotspot->poi.y},
+                    true, hotspot->on_arrive);
+    }
+    return true;
+  }
+  return false;
+}
+
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length,
                        int *out_order) {
