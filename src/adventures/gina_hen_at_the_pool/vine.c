@@ -41,7 +41,7 @@ static const SDL_Point GRAPES_AT = {350, 180};
 static const SDL_Rect GRAPES_HOTSPOT = {350, 180, 100, 120};
 static const SDL_Rect TREE_NAV_HOTSPOT = {0, 200, 30, 250};
 static const SDL_Rect POOL_NAV_HOTSPOT = {770, 200, 30, 250};
-static SDL_Rect hotspots[3];
+static Hotspot hotspots[3];
 
 // Walk geometry: the ground strip along the vineyard; no blocked areas.
 static const SDL_Rect WALKABLE_RECTS[] = {{20, 430, 760, 150}};
@@ -52,6 +52,11 @@ static WalkGrid walk_grid;
 static const SDL_Point GRAPES_POI = {400, 470};
 static SDL_Point pois[1];
 
+// Interactions (bodies below the loaders).
+static void pick_grapes(void);
+static void go_to_tree(void);
+static void go_to_pool(void);
+
 static void init(void) {
   gina = make_hen(HEN_START);
 
@@ -59,9 +64,12 @@ static void init(void) {
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "vine");
 
   int i = 0;
-  hotspots[i++] = GRAPES_HOTSPOT;
-  hotspots[i++] = TREE_NAV_HOTSPOT;
-  hotspots[i++] = POOL_NAV_HOTSPOT;
+  hotspots[i++] = (Hotspot){
+      .rect = GRAPES_HOTSPOT, .poi = GRAPES_POI, .on_arrive = pick_grapes};
+  hotspots[i++] = (Hotspot){
+      .rect = TREE_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_tree};
+  hotspots[i++] = (Hotspot){
+      .rect = POOL_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_pool};
 
   pois[0] = GRAPES_POI;
 }
@@ -69,6 +77,10 @@ static void init(void) {
 static bool load_media(SDL_Renderer *renderer) {
   return hen_load_media(gina, renderer);
 }
+
+static void go_to_tree(void) { set_active_scene(TREE); }
+
+static void go_to_pool(void) { set_active_scene(POOL); }
 
 static void pick_grapes(void) {
   if (gina_state.has_grapes) {
@@ -94,17 +106,10 @@ static void process_input(SDL_Event *event) {
     // camera moved.
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
-    if (SDL_PointInRect(&m_pos, &GRAPES_HOTSPOT)) {
-      walk_actor_to(gina, &walk_grid, (SDL_FPoint){GRAPES_POI.x, GRAPES_POI.y},
-                    true, pick_grapes);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &TREE_NAV_HOTSPOT)) {
-      set_active_scene(TREE);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &POOL_NAV_HOTSPOT)) {
-      set_active_scene(POOL);
+    // The hotspot table says what each region does (see init); anything else
+    // is a walk toward the click.
+    if (hotspots_handle_click(hotspots, LEN(hotspots), gina, &walk_grid,
+                              m_pos)) {
       break;
     }
     walk_actor_to(gina, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false,

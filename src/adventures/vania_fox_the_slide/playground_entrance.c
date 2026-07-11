@@ -66,7 +66,7 @@ static const SDL_Rect EXCAVATOR_HOTSPOT = {197, 338, 108, 72};
 static const SDL_Rect SHOVEL_HOTSPOT = {112, 378, 88, 72};
 static const SDL_Rect KEY_HOTSPOT = {9, 404, 75, 69};
 static const SDL_Rect SLIDE_HOTSPOT = {165, 47, 129, 107};
-static SDL_Rect hotspots[5];
+static Hotspot hotspots[5];
 
 // Walk geometry: the ground below the horizon; the sandbox is blocked (the
 // shovel POI sits inside it on purpose — the walk's final approach is exempt).
@@ -89,6 +89,27 @@ static bool has_key_been_revealed;
 static bool has_key;
 static int examine_gate_count;
 
+// Interactions (bodies below the loaders).
+static void maybe_open_gate(void);
+static void maybe_dig_out_key(void);
+static void add_key_to_inventory(void);
+static void examine_slide(void);
+
+// Hotspot gating (see the table in init).
+static bool key_still_buried(void) { return !has_key_been_revealed; }
+
+static bool key_on_the_ground(void) {
+  return has_key_been_revealed && !has_key;
+}
+
+static void run_excavator(void) {
+  play_animation(excavator, NULL);
+  if (excavator_sound_channel > -1) {
+    Mix_HaltChannel(excavator_sound_channel);
+  }
+  excavator_sound_channel = Mix_PlayChannel(-1, excavator_sound->chunk, 0);
+}
+
 static void init(void) {
   excavator = animations[0] = make_animation_data(4, ONE_SHOT);
   // Loop the animation 6 times before stopping
@@ -105,11 +126,20 @@ static void init(void) {
                  "playground_entrance");
 
   int i = 0;
-  hotspots[i++] = GATE_HOTSPOT;
-  hotspots[i++] = EXCAVATOR_HOTSPOT;
-  hotspots[i++] = SHOVEL_HOTSPOT;
-  hotspots[i++] = KEY_HOTSPOT;
-  hotspots[i++] = SLIDE_HOTSPOT;
+  hotspots[i++] = (Hotspot){
+      .rect = GATE_HOTSPOT, .poi = GATE_POI, .on_arrive = maybe_open_gate};
+  hotspots[i++] = (Hotspot){
+      .rect = EXCAVATOR_HOTSPOT, .immediate = true, .on_arrive = run_excavator};
+  hotspots[i++] = (Hotspot){.rect = SHOVEL_HOTSPOT,
+                            .enabled = key_still_buried,
+                            .poi = SHOVEL_POI,
+                            .on_arrive = maybe_dig_out_key};
+  hotspots[i++] = (Hotspot){.rect = KEY_HOTSPOT,
+                            .enabled = key_on_the_ground,
+                            .poi = KEY_POI,
+                            .on_arrive = add_key_to_inventory};
+  hotspots[i++] = (Hotspot){
+      .rect = SLIDE_HOTSPOT, .poi = SLIDE_POI, .on_arrive = examine_slide};
 
   i = 0;
   pois[i++] = GATE_POI;
@@ -236,45 +266,13 @@ static void process_input(SDL_Event *event) {
     // camera moved.
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
-    if (SDL_PointInRect(&m_pos, &GATE_HOTSPOT)) {
-      // Walk to gate
-      walk_actor_to(fox, &walk_grid, (SDL_FPoint){GATE_POI.x, GATE_POI.y}, true,
-                    maybe_open_gate);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &EXCAVATOR_HOTSPOT)) {
-      // Play excavator animation
-      play_animation(excavator, NULL);
-      if (excavator_sound_channel > -1) {
-        Mix_HaltChannel(excavator_sound_channel);
-      }
-      excavator_sound_channel = Mix_PlayChannel(-1, excavator_sound->chunk, 0);
-      break;
-    }
-    // If key has been revealed yet skip this case
-    if (!has_key_been_revealed && SDL_PointInRect(&m_pos, &SHOVEL_HOTSPOT)) {
-      // Walk to shovel
-      walk_actor_to(fox, &walk_grid, (SDL_FPoint){SHOVEL_POI.x, SHOVEL_POI.y},
-                    true, maybe_dig_out_key);
-      break;
-    }
-    // If key hasn't been revealed yet, or if key has been picked up already,
-    // then skip this case
-    if (has_key_been_revealed && !has_key &&
-        SDL_PointInRect(&m_pos, &KEY_HOTSPOT)) {
-      // Walk to key
-      walk_actor_to(fox, &walk_grid, (SDL_FPoint){KEY_POI.x, KEY_POI.y}, true,
-                    add_key_to_inventory);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &SLIDE_HOTSPOT)) {
-      // Walk to slide
-      walk_actor_to(fox, &walk_grid, (SDL_FPoint){SLIDE_POI.x, SLIDE_POI.y},
-                    true, examine_slide);
-      break;
-    }
-    // Walk to the clicked point (routed around the sandbox), or to the
+    // The hotspot table says what each region does (see init). Otherwise:
+    // walk to the clicked point (routed around the sandbox), or to the
     // nearest reachable point if the click is outside the walkable area.
+    if (hotspots_handle_click(hotspots, LEN(hotspots), fox, &walk_grid,
+                              m_pos)) {
+      break;
+    }
     walk_actor_to(fox, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false, NULL);
     break;
   }

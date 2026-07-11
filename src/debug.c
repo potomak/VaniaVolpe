@@ -159,13 +159,20 @@ void debug_render(SDL_Renderer *renderer) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
   }
 
-  // Draw hotspots
+  // Draw hotspots: enabled ones bright, gated-off ones dimmed, so the
+  // overlay shows what a click would actually hit right now.
   for (int i = 0; i < current_scene->hotspots_length; i++) {
-    SDL_SetRenderDrawColor(renderer, 0xCC, 0xFF, 0x00, 0xFF);
-    SDL_Rect hotspot = current_scene->hotspots[i];
-    hotspot.x += off.x;
-    hotspot.y += off.y;
-    SDL_RenderDrawRect(renderer, &hotspot);
+    const Hotspot *hotspot = &current_scene->hotspots[i];
+    bool is_enabled = hotspot->enabled == NULL || hotspot->enabled();
+    if (is_enabled) {
+      SDL_SetRenderDrawColor(renderer, 0xCC, 0xFF, 0x00, 0xFF);
+    } else {
+      SDL_SetRenderDrawColor(renderer, 0x55, 0x66, 0x00, 0xFF);
+    }
+    SDL_Rect rect = hotspot->rect;
+    rect.x += off.x;
+    rect.y += off.y;
+    SDL_RenderDrawRect(renderer, &rect);
   }
 
   // Draw points of interest

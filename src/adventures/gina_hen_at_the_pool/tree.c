@@ -49,7 +49,7 @@ static const SDL_Rect FLOAT_HOTSPOT = {500, 70, 90, 60};
 static const SDL_Rect CARLA_HOTSPOT = {360, 150, 70, 70};
 static const SDL_Rect POOL_NAV_HOTSPOT = {0, 200, 30, 250};
 static const SDL_Rect VINE_NAV_HOTSPOT = {770, 200, 30, 250};
-static SDL_Rect hotspots[4];
+static Hotspot hotspots[4];
 
 // Walk geometry: the ground strip under the tree; no blocked areas.
 static const SDL_Rect WALKABLE_RECTS[] = {{20, 430, 760, 150}};
@@ -61,6 +61,13 @@ static const SDL_Point FLOAT_LOOK_POI = {500, 470};
 static const SDL_Point CARLA_POI = {400, 470};
 static SDL_Point pois[2];
 
+// Interactions and hotspot gating (bodies below the loaders).
+static bool float_is_stuck(void);
+static void examine_float(void);
+static void talk_to_carla(void);
+static void go_to_pool(void);
+static void go_to_vine(void);
+
 static void init(void) {
   gina = make_hen(HEN_START);
 
@@ -68,10 +75,16 @@ static void init(void) {
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
   int i = 0;
-  hotspots[i++] = FLOAT_HOTSPOT;
-  hotspots[i++] = CARLA_HOTSPOT;
-  hotspots[i++] = POOL_NAV_HOTSPOT;
-  hotspots[i++] = VINE_NAV_HOTSPOT;
+  hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
+                            .enabled = float_is_stuck,
+                            .poi = FLOAT_LOOK_POI,
+                            .on_arrive = examine_float};
+  hotspots[i++] = (Hotspot){
+      .rect = CARLA_HOTSPOT, .poi = CARLA_POI, .on_arrive = talk_to_carla};
+  hotspots[i++] = (Hotspot){
+      .rect = POOL_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_pool};
+  hotspots[i++] = (Hotspot){
+      .rect = VINE_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_vine};
 
   i = 0;
   pois[i++] = FLOAT_LOOK_POI;
@@ -84,6 +97,14 @@ static bool load_media(SDL_Renderer *renderer) {
 
 // ── interactions
 // ──────────────────────────────────────────────────────────────
+
+static bool float_is_stuck(void) {
+  return gina_state.float_state == FLOAT_STUCK_IN_TREE;
+}
+
+static void go_to_pool(void) { set_active_scene(POOL); }
+
+static void go_to_vine(void) { set_active_scene(VINE); }
 
 static void examine_float(void) {
   switch (gina_state.examine_float_count) {
@@ -136,24 +157,10 @@ static void process_input(SDL_Event *event) {
     // camera moved.
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
-    if (gina_state.float_state == FLOAT_STUCK_IN_TREE &&
-        SDL_PointInRect(&m_pos, &FLOAT_HOTSPOT)) {
-      walk_actor_to(gina, &walk_grid,
-                    (SDL_FPoint){FLOAT_LOOK_POI.x, FLOAT_LOOK_POI.y}, true,
-                    examine_float);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &CARLA_HOTSPOT)) {
-      walk_actor_to(gina, &walk_grid, (SDL_FPoint){CARLA_POI.x, CARLA_POI.y},
-                    true, talk_to_carla);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &POOL_NAV_HOTSPOT)) {
-      set_active_scene(POOL);
-      break;
-    }
-    if (SDL_PointInRect(&m_pos, &VINE_NAV_HOTSPOT)) {
-      set_active_scene(VINE);
+    // The hotspot table says what each region does (see init); anything else
+    // is a walk toward the click.
+    if (hotspots_handle_click(hotspots, LEN(hotspots), gina, &walk_grid,
+                              m_pos)) {
       break;
     }
     walk_actor_to(gina, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false,
