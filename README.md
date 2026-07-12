@@ -55,8 +55,7 @@ Needs the SDL2 / SDL2_image / SDL2_mixer / SDL2_ttf dev libraries (resolved via
 - [`SPEECH.md`](SPEECH.md) — lip-sync cues and the read-along subtitles.
 - [`LIVELINESS.md`](LIVELINESS.md) — idle fidgets, dragging the actor, and
   boiling (squiggly) hotspots.
-- [`TOOLS.md`](TOOLS.md) — every internal dev tool, in one place.
-- [`ASSETS_TODO.md`](ASSETS_TODO.md) — the real art & voice still to author
-  per adventure, with one-click GitHub upload links (generated).
+- [`TOOLS.md`](TOOLS.md) — every internal dev tool, in one place (including the
+  asset pipeline and the *Assets to author* page).
 - Queued work lives in [GitHub issues](https://github.com/potomak/VaniaVolpe/issues)
   (label `backlog`).

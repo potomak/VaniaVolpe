@@ -64,10 +64,10 @@ them.
   writes the committed `.cues` / `.words` sidecars that drive the talking
   animation (see `SPEECH.md`). Needs the Rhubarb CLI on `PATH` or
   `$RHUBARB`; idempotent by mtime, `--force` regenerates.
-- **`gen_asset_tasks.py`** — the asset pipeline's front end (see below): turns
-  each adventure's `assets/tasks.json` into [`ASSETS_TODO.md`](ASSETS_TODO.md)
-  and the drop-box directories, and (`--web`) the `asset_tasks.json` behind the
-  browser page. Stdlib only.
+- **`gen_asset_tasks.py`** — the asset pipeline's front end (see below): from
+  each adventure's `assets/tasks.json` it refreshes the `_inbox/<id>/` drop-box
+  directories and (`--web`) emits the `asset_tasks.json` behind the *Assets to
+  author* page. Stdlib only.
 - **`consolidate_assets.py`** — the asset pipeline's back end: folds uploaded
   raw files from the `_inbox/<id>/` drop-boxes into the real asset files
   (stitching animation frames into a sprite sheet, moving WAVs and PNGs into
@@ -89,10 +89,11 @@ session can pick up uploads with no other context. Each adventure declares the
 assets it still needs in `src/adventures/<adv>/assets/tasks.json`; every task
 has a stable **id** (`<type>-<dir>-<name>`) that names its directories.
 
-1. **List** — `tools/gen_asset_tasks.py` writes [`ASSETS_TODO.md`](ASSETS_TODO.md)
-   (and the browser *Assets to author* page) and scaffolds a self-describing
-   drop-box `<assets_root>/_inbox/<id>/` (a `README.md` stating what to upload)
-   for every outstanding task.
+1. **List** — `tools/gen_asset_tasks.py` renders the browser
+   [*Assets to author*](https://potomak.github.io/VaniaVolpe/asset_tasks.html)
+   page (via `asset_tasks.json`) and scaffolds a self-describing drop-box
+   `<assets_root>/_inbox/<id>/` (a `README.md` stating what to upload) for every
+   outstanding task.
 2. **Upload** — the artist clicks a task's **Upload here** link and drops the
    raw files straight into that `_inbox/<id>/` on GitHub. The directory *is* the
    task identity, so the upload is unambiguous no matter what the files are
