@@ -59,6 +59,13 @@ them.
   writes the committed `.cues` / `.words` sidecars that drive the talking
   animation (see `SPEECH.md`). Needs the Rhubarb CLI on `PATH` or
   `$RHUBARB`; idempotent by mtime, `--force` regenerates.
+- **`gen_asset_tasks.py`** — turns a per-adventure asset manifest
+  (`src/adventures/<adv>/assets/tasks.json`) into
+  [`ASSETS_TODO.md`](ASSETS_TODO.md): a grouped, checkbox to-do list of every
+  animation, voice line and still image still to author, each with a GitHub
+  **upload** link that lands in the right directory for the raw files, and a
+  status read live from the repo (frames uploaded / WAV recorded / image
+  uploaded). Re-run after an upload to refresh the boxes. Stdlib only.
 - **`gen_en_us_placeholders.sh`** — scaffolds a complete `en_US` locale from
   `it_IT` (silent WAVs, copied images) so the strict locale lookup never
   misses while real translations are pending.
