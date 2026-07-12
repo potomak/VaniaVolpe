@@ -43,6 +43,11 @@ the game; the entry point is
   from the catalog, paint the 80×60 grid over it (left: walkable, right:
   blocked), load an existing committed mask or a local `.walk` file, and
   export a `walkable.walk` to commit. Useful when no native build is at hand.
+- **Assets to author** — [`asset_tasks.html`](https://potomak.github.io/VaniaVolpe/asset_tasks.html):
+  the per-adventure checklist of real art & voice still to make, with a
+  one-click GitHub **upload** link per task (see the asset pipeline below).
+  Renders `asset_tasks.json`, emitted from each adventure's
+  `assets/tasks.json` by `tools/gen_asset_tasks.py` during `make web`.
 
 ## Generator scripts (`tools/`)
 
@@ -59,6 +64,14 @@ them.
   writes the committed `.cues` / `.words` sidecars that drive the talking
   animation (see `SPEECH.md`). Needs the Rhubarb CLI on `PATH` or
   `$RHUBARB`; idempotent by mtime, `--force` regenerates.
+- **`gen_asset_tasks.py`** — the asset pipeline's front end (see below): emits
+  the `asset_tasks.json` (from each adventure's `assets/tasks.json`, with live
+  status) behind the *Assets to author* page. Run by `make web`; stdlib only.
+- **`consolidate_assets.py`** — the asset pipeline's back end: folds uploaded
+  raw files from the `_inbox/<id>/` drop-boxes into the real asset files
+  (stitching animation frames into a sprite sheet, moving WAVs and PNGs into
+  place) and archives the sources under `_sources/<id>/`. Idempotent;
+  `--dry-run` reports only. Needs Pillow.
 - **`gen_en_us_placeholders.sh`** — scaffolds a complete `en_US` locale from
   `it_IT` (silent WAVs, copied images) so the strict locale lookup never
   misses while real translations are pending.
@@ -67,6 +80,37 @@ them.
   downscaled by `--scale` (nearest-neighbour), repacked vertically with a
   matching `.anim`. Placeholders to develop depth bands against; real art
   replaces them file-for-file. Needs Pillow.
+
+## Asset pipeline
+
+How placeholder art and silent voice lines become real assets, and how a fresh
+session can pick up uploads with no other context. Each adventure declares the
+assets it still needs in `src/adventures/<adv>/assets/tasks.json`; every task
+has a stable **id** (`<type>-<dir>-<name>`) that names its directories.
+
+1. **List** — `tools/gen_asset_tasks.py --out` (run by `make web`) renders the
+   browser [*Assets to author*](https://potomak.github.io/VaniaVolpe/asset_tasks.html)
+   page from `asset_tasks.json`: every outstanding task with what to make and an
+   **Upload here** link. Run with no `--out`, it refreshes the premade
+   `<assets_root>/_inbox/<id>/` drop-box folders (an empty `.gitkeep` per
+   outstanding task) and prunes the done ones.
+2. **Upload** — the artist clicks **Upload here** and drops the raw files
+   straight into that task's `_inbox/<id>/` folder on GitHub. The folder name
+   *is* the task identity, so the upload is unambiguous no matter what the files
+   are named (for animations, filenames only set frame order). The one
+   `_inbox/README.md` explains the convention.
+3. **Consolidate** — `tools/consolidate_assets.py` scans the drop-boxes,
+   stitches animation frames into `<name>.png` + `<name>.anim`, moves voice
+   WAVs and still PNGs to their real paths, and archives the raw inputs under
+   `<assets_root>/_sources/<id>/` (the done-record and re-stitch source). Then
+   re-run `gen_asset_tasks.py` to tick the boxes. For new voice lines, follow
+   with `gen_lipsync.py` to regenerate the `.cues` / `.words` sidecars.
+
+Status is derived from the tree, so **"check and consolidate the assets I
+uploaded" needs nothing but the repo**: a task is done when `_sources/<id>/`
+exists, uploaded-but-pending when `_inbox/<id>/` holds files, else to do. The
+`_inbox` / `_sources` directories sit beside `common/` and the locales but are
+never shipped (the web preload and the asset catalog skip `_`-prefixed dirs).
 
 ## Test harnesses
 

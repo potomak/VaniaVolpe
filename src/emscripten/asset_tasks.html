@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vania Volpe — Assets to author</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9; --panel: #fff; --ink: #1d2530; --muted: #6b7685;
+    --line: #e2e6ec; --accent: #7a3cc0;
+    --done: #1e8e3e; --wait: #b06000; --todo: #94a0ad;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151a; --panel: #1b1f26; --ink: #e7ebf0; --muted: #9aa6b2;
+      --line: #2a2f38; --accent: #c39bff;
+      --done: #5bd07f; --wait: #e0a24a; --todo: #6b7685;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink); padding: 0 1rem 3rem;
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  main { max-width: 780px; margin: 0 auto; }
+  a { color: var(--accent); }
+  h1 { font-size: 1.35rem; }
+  .lead { color: var(--muted); }
+  .adv { margin: 1.6rem 0; }
+  .adv > h2 { font-size: 1.15rem; margin: 0 0 .2rem; }
+  .bar { height: 8px; border-radius: 5px; background: var(--line); overflow: hidden; margin: .4rem 0 1rem; }
+  .bar > span { display: block; height: 100%; background: var(--done); }
+  .group { margin: 1rem 0; }
+  .group > h3 { font-size: .95rem; color: var(--muted); margin: 0 0 .5rem; text-transform: uppercase; letter-spacing: .03em; }
+  .task { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: .6rem .8rem; margin: .5rem 0; }
+  .task .top { display: flex; align-items: baseline; gap: .5rem; }
+  .task .name { font-weight: 600; }
+  .task .desc { margin: .15rem 0; }
+  .task .meta, .task .stat { color: var(--muted); font-size: .87rem; }
+  .task .line { font-style: italic; color: var(--muted); margin: .15rem 0; }
+  .badge { font-size: .72rem; font-weight: 700; padding: .08rem .45rem; border-radius: 999px; white-space: nowrap; }
+  .badge.done { color: #fff; background: var(--done); }
+  .badge.uploaded { color: #fff; background: var(--wait); }
+  .badge.todo { color: var(--ink); border: 1px solid var(--todo); }
+  .up { display: inline-block; margin-top: .35rem; font-size: .9rem; }
+  .up .hint { color: var(--muted); }
+  #err { color: #c5221f; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Assets to author</h1>
+  <p class="lead">The real art &amp; voice still to make, per adventure. Click
+  <b>Upload here</b> on a task to drop the raw files straight into its GitHub
+  drop-box, then a maintainer runs <code>tools/consolidate_assets.py</code> to
+  stitch/place them. ✅ done · 🟨 uploaded · ⬜ to&nbsp;do. See
+  <a href="tools.html">all dev tools</a>.</p>
+  <p id="err"></p>
+  <div id="root"></div>
+</main>
+<script>
+const BADGE = { done: "✅", uploaded: "🟨", todo: "⬜" };
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+function renderTask(t) {
+  const card = el("div", "task");
+  const top = el("div", "top");
+  top.appendChild(el("span", "badge " + t.status, BADGE[t.status] + " " +
+    (t.status === "uploaded" ? "uploaded" : t.status)));
+  top.appendChild(el("span", "name", t.name));
+  card.appendChild(top);
+  card.appendChild(el("div", "desc", t.description));
+  if (t.meta) card.appendChild(el("div", "meta", t.meta));
+  if (t.line) card.appendChild(el("div", "line", "“" + t.line + "”"));
+  card.appendChild(el("div", "stat", "Status: " + t.status_label));
+  if (t.status !== "done") {
+    const wrap = el("div", "up");
+    const a = el("a", null, "Upload here");
+    a.href = t.upload_url; a.target = "_blank"; a.rel = "noopener";
+    wrap.appendChild(a);
+    wrap.appendChild(el("span", "hint", " — " + t.upload_hint));
+    card.appendChild(wrap);
+  }
+  return card;
+}
+
+function renderAdventure(adv) {
+  const box = el("div", "adv");
+  box.appendChild(el("h2", null, adv.title));
+  box.appendChild(el("div", "meta", adv.done + " / " + adv.total + " authored"));
+  const bar = el("div", "bar");
+  const fill = el("span");
+  fill.style.width = (adv.total ? (100 * adv.done / adv.total) : 0) + "%";
+  bar.appendChild(fill);
+  box.appendChild(bar);
+  for (const g of adv.groups) {
+    const group = el("div", "group");
+    group.appendChild(el("h3", null, g.name + " (" + g.done + "/" + g.total + ")"));
+    for (const t of g.tasks) group.appendChild(renderTask(t));
+    box.appendChild(group);
+  }
+  return box;
+}
+
+fetch("./asset_tasks.json")
+  .then(r => r.json())
+  .then(data => {
+    const root = document.getElementById("root");
+    for (const adv of data.adventures) root.appendChild(renderAdventure(adv));
+  })
+  .catch(e => {
+    document.getElementById("err").textContent =
+      "Could not load asset_tasks.json — run `make web` to generate it. (" +
+      e.message + ")";
+  });
+</script>
+</body>
+</html>

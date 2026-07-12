@@ -1,0 +1,315 @@
+{
+  "adventure": "gina_hen_at_the_pool",
+  "title": "Gina la Gallina in Piscina",
+  "assets_root": "src/adventures/gina_hen_at_the_pool/assets",
+  "reference_locale": "it_IT",
+  "tasks": [
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "idle",
+      "frames": 2,
+      "size": "120x120",
+      "description": "Gina standing, gentle idle (breathing / small bob)."
+    },
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "walking",
+      "frames": 4,
+      "size": "120x120",
+      "description": "Gina walking cycle, side view (faces east; the engine mirrors it for west)."
+    },
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "talking",
+      "frames": 3,
+      "size": "120x120",
+      "description": "Gina's beak-moving talk loop. For read-along lip-sync this can grow to a 7-frame mouth-shape sheet (X A B C D E F, see SPEECH.md); 3 frames stay fine as a classic loop."
+    },
+
+    {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "shade_reminder",
+      "text": "Devo mettere la crema solare prima di uscire dall'ombra!",
+      "description": "Refuses to leave the umbrella's shade before sunscreen."
+    },
+    {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "sunscreen_done",
+      "text": "Ho gia' messo la crema.",
+      "description": "Taps the bottle again after applying sunscreen."
+    },
+    {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "got_goggles",
+      "text": "Ho preso gli occhialini!",
+      "description": "Collects the goggles."
+    },
+    {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "float_blows_away",
+      "text": "Oh no! Il vento ha portato il salvagente sull'albero!",
+      "description": "A gust carries the pool float into the tree."
+    },
+    {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "need_goggles",
+      "text": "Mi servono gli occhialini per tuffarmi.",
+      "description": "Tries to dive without the goggles."
+    },
+    {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "float_by_pool",
+      "text": "Mi serve il salvagente: e' li' vicino alla piscina.",
+      "description": "Tries to dive while the float is still by the pool."
+    },
+    {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "float_in_tree",
+      "text": "Il salvagente e' sull'albero! Devo recuperarlo.",
+      "description": "Tries to dive while the float is stuck in the tree."
+    },
+    {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "dive_again",
+      "text": "Che bello! Ancora!",
+      "description": "Splashes in and wants to go again (adventure replays)."
+    },
+
+    {
+      "group": "Voice — Tree",
+      "type": "voice",
+      "dir": "tree/dialog",
+      "name": "cant_reach",
+      "text": "Non ci arrivo!",
+      "description": "Looks at the float stuck in the branches."
+    },
+    {
+      "group": "Voice — Tree",
+      "type": "voice",
+      "dir": "tree/dialog",
+      "name": "need_help",
+      "text": "Mi serve aiuto...",
+      "description": "Second look at the stuck float."
+    },
+    {
+      "group": "Voice — Tree",
+      "type": "voice",
+      "dir": "tree/dialog",
+      "name": "ask_carla",
+      "text": "Potrei chiedere a Carla.",
+      "description": "Third look — thinks of asking Carla the crow."
+    },
+    {
+      "group": "Voice — Tree",
+      "type": "voice",
+      "dir": "tree/dialog",
+      "name": "hi_carla",
+      "text": "Ciao Carla!",
+      "description": "Greets Carla when the float is not stuck."
+    },
+    {
+      "group": "Voice — Tree",
+      "type": "voice",
+      "dir": "tree/dialog",
+      "name": "carla_offer",
+      "text": "Ti aiuto se mi porti dell'uva. Prendi questo cestino!",
+      "description": "Carla's deal, in Gina's voice: grapes for the float, here's a basket."
+    },
+    {
+      "group": "Voice — Tree",
+      "type": "voice",
+      "dir": "tree/dialog",
+      "name": "carla_reminder",
+      "text": "Hai gia' il cestino? Portami l'uva dalla vigna!",
+      "description": "Carla reminds Gina to bring grapes."
+    },
+    {
+      "group": "Voice — Tree",
+      "type": "voice",
+      "dir": "tree/dialog",
+      "name": "carla_thanks",
+      "text": "Mmm, che uva buona! Ecco il tuo salvagente!",
+      "description": "Carla takes the grapes and returns the float."
+    },
+
+    {
+      "group": "Voice — Vine",
+      "type": "voice",
+      "dir": "vine/dialog",
+      "name": "already_grapes",
+      "text": "Ho gia' l'uva nel cestino.",
+      "description": "The basket already holds grapes."
+    },
+    {
+      "group": "Voice — Vine",
+      "type": "voice",
+      "dir": "vine/dialog",
+      "name": "nothing_to_pick",
+      "text": "Non ho niente per raccoglierle.",
+      "description": "No basket yet, so nothing to gather grapes with."
+    },
+
+    {
+      "group": "Voice — Minigames",
+      "type": "voice",
+      "dir": "sunscreen/dialog",
+      "name": "ready",
+      "text": "Pronta! Ora posso uscire al sole!",
+      "description": "Finishes rubbing in the sunscreen."
+    },
+    {
+      "group": "Voice — Minigames",
+      "type": "voice",
+      "dir": "grapes/dialog",
+      "name": "basket_full",
+      "text": "Cestino pieno d'uva! Ora torno da Carla.",
+      "description": "Fills the basket with grapes."
+    },
+
+    {
+      "group": "Art — Poolside",
+      "type": "art",
+      "dir": "common/pool",
+      "name": "background",
+      "size": "800x600",
+      "description": "Poolside scene backdrop."
+    },
+    {
+      "group": "Art — Poolside",
+      "type": "art",
+      "dir": "common/pool",
+      "name": "water",
+      "size": "460x180",
+      "description": "The pool's water surface."
+    },
+    {
+      "group": "Art — Poolside",
+      "type": "art",
+      "dir": "common/pool",
+      "name": "sunscreen",
+      "size": "40x60",
+      "description": "The sunscreen bottle."
+    },
+    {
+      "group": "Art — Poolside",
+      "type": "art",
+      "dir": "common/pool",
+      "name": "goggles",
+      "size": "60x30",
+      "description": "The swimming goggles."
+    },
+    {
+      "group": "Art — Poolside",
+      "type": "art",
+      "dir": "common/pool",
+      "name": "float",
+      "size": "90x60",
+      "description": "The pool float / ring."
+    },
+
+    {
+      "group": "Art — Tree",
+      "type": "art",
+      "dir": "common/tree",
+      "name": "background",
+      "size": "800x600",
+      "description": "The tree scene backdrop."
+    },
+    {
+      "group": "Art — Tree",
+      "type": "art",
+      "dir": "common/tree",
+      "name": "carla",
+      "size": "70x70",
+      "description": "Carla the crow, perched in the tree."
+    },
+    {
+      "group": "Art — Tree",
+      "type": "art",
+      "dir": "common/tree",
+      "name": "float",
+      "size": "90x60",
+      "description": "The float, caught in the branches."
+    },
+    {
+      "group": "Art — Tree",
+      "type": "art",
+      "dir": "common/tree",
+      "name": "basket",
+      "size": "50x40",
+      "description": "The basket Carla hands over (Gina carries it)."
+    },
+
+    {
+      "group": "Art — Vine",
+      "type": "art",
+      "dir": "common/vine",
+      "name": "background",
+      "size": "800x600",
+      "description": "The vineyard backdrop."
+    },
+    {
+      "group": "Art — Vine",
+      "type": "art",
+      "dir": "common/vine",
+      "name": "grapes",
+      "size": "100x120",
+      "description": "The grape bunch on the vine."
+    },
+
+    {
+      "group": "Art — Minigames",
+      "type": "art",
+      "dir": "common/sunscreen",
+      "name": "background",
+      "size": "800x600",
+      "description": "Sunscreen minigame backdrop."
+    },
+    {
+      "group": "Art — Minigames",
+      "type": "art",
+      "dir": "common/sunscreen",
+      "name": "gina",
+      "size": "240x240",
+      "description": "Close-up of Gina for the sunscreen minigame."
+    },
+    {
+      "group": "Art — Minigames",
+      "type": "art",
+      "dir": "common/grapes",
+      "name": "background",
+      "size": "800x600",
+      "description": "Grape-picking minigame backdrop."
+    },
+    {
+      "group": "Art — Minigames",
+      "type": "art",
+      "dir": "common/grapes",
+      "name": "grape",
+      "size": "40x40",
+      "description": "A single grape for the picking minigame."
+    }
+  ]
+}

@@ -152,7 +152,9 @@ WEB_ASSETS = $(shell find $(VFTS_DIR)/assets $(GINA_DIR)/assets -type f)
 web: $(WEB_TARGET)
 
 $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
-               src/emscripten/catalog.html tools/gen_asset_catalog.py
+               src/emscripten/catalog.html tools/gen_asset_catalog.py \
+               src/emscripten/asset_tasks.html tools/gen_asset_tasks.py \
+               $(wildcard src/adventures/*/assets/tasks.json)
 	mkdir -p $(WEB_DIR)
 	$(EMCC) $(EM_CFLAGS) $(SRCS) $(EM_LDFLAGS) -o $(WEB_TARGET)
 	# Stamp the per-build id: replace the shell's __CACHE_BUST__ placeholder (used
@@ -166,6 +168,10 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
 	# which the catalog can't read) and emit catalog.json describing them.
 	python3 tools/gen_asset_catalog.py --out $(WEB_DIR)
 	cp src/emscripten/catalog.html $(WEB_DIR)/catalog.html
+	# Asset to-do page (build/web/asset_tasks.html): emit the task data with live
+	# status; the page renders it. Writes only JSON, never the source tree.
+	python3 tools/gen_asset_tasks.py --out $(WEB_DIR)
+	cp src/emscripten/asset_tasks.html $(WEB_DIR)/asset_tasks.html
 	# Dev-tools index + browser walk-mask editor (see TOOLS.md).
 	cp src/emscripten/tools.html $(WEB_DIR)/tools.html
 	cp src/emscripten/walk_editor.html $(WEB_DIR)/walk_editor.html

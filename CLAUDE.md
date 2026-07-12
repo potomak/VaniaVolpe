@@ -117,6 +117,14 @@ larger than the window with a following camera and parallax planes (see
   the read-along word highlight, see `SPEECH.md`) are on by default;
   `--subtitles=0` / `$VANIA_SUBTITLES=0` / web `?subtitles=0` disable them. `tools/gen_en_us_placeholders.sh`
   scaffolds a complete `en_US` from `it_IT`.
+- **Placeholder art & voice have a pipeline.** Each adventure lists the real
+  assets it still needs in `assets/tasks.json`; artists upload raw files into
+  per-task drop-boxes `<assets_root>/_inbox/<id>/`. To ingest uploads ("check
+  and consolidate the assets I uploaded"), run `tools/consolidate_assets.py`
+  (stitches frames → sprite sheet, moves WAVs/PNGs into place, archives sources
+  under `_sources/<id>/`); the *Assets to author* page refreshes on the next
+  `make web`. The `_inbox` / `_sources` dirs are never shipped. Full flow:
+  `TOOLS.md` → *Asset pipeline*.
 - **Assets in the web build** must live under a `--preload-file` dir in the
   `Makefile` (now `assets/common` + each `assets/<locale>` per adventure); files
   elsewhere won't exist in the browser's virtual filesystem. An adventure's

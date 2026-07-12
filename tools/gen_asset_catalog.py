@@ -85,7 +85,10 @@ def list_layers(assets_dir):
     entries = sorted(
         name
         for name in os.listdir(assets_dir)
+        # Skip the asset-pipeline drop-boxes (_inbox / _sources): they hold raw
+        # uploads, not shippable layers, and must not be mistaken for locales.
         if os.path.isdir(os.path.join(assets_dir, name))
+        and not name.startswith("_")
     )
     locales = [name for name in entries if name != COMMON_LAYER]
     layers = ([COMMON_LAYER] if COMMON_LAYER in entries else []) + locales
