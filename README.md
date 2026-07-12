@@ -53,6 +53,8 @@ Needs the SDL2 / SDL2_image / SDL2_mixer / SDL2_ttf dev libraries (resolved via
 - [`DEPTH_AND_CAMERA.md`](DEPTH_AND_CAMERA.md) — walk-behind props, depth
   variants, the scrolling camera and parallax planes.
 - [`SPEECH.md`](SPEECH.md) — lip-sync cues and the read-along subtitles.
+- [`LIVELINESS.md`](LIVELINESS.md) — idle fidgets, dragging the actor, and
+  boiling (squiggly) hotspots.
 - [`TOOLS.md`](TOOLS.md) — every internal dev tool, in one place.
 - Queued work lives in [GitHub issues](https://github.com/potomak/VaniaVolpe/issues)
   (label `backlog`).
