@@ -64,10 +64,9 @@ them.
   writes the committed `.cues` / `.words` sidecars that drive the talking
   animation (see `SPEECH.md`). Needs the Rhubarb CLI on `PATH` or
   `$RHUBARB`; idempotent by mtime, `--force` regenerates.
-- **`gen_asset_tasks.py`** — the asset pipeline's front end (see below): from
-  each adventure's `assets/tasks.json` it refreshes the `_inbox/<id>/` drop-box
-  directories and (`--web`) emits the `asset_tasks.json` behind the *Assets to
-  author* page. Stdlib only.
+- **`gen_asset_tasks.py`** — the asset pipeline's front end (see below): emits
+  the `asset_tasks.json` (from each adventure's `assets/tasks.json`, with live
+  status) behind the *Assets to author* page. Run by `make web`; stdlib only.
 - **`consolidate_assets.py`** — the asset pipeline's back end: folds uploaded
   raw files from the `_inbox/<id>/` drop-boxes into the real asset files
   (stitching animation frames into a sprite sheet, moving WAVs and PNGs into
@@ -89,13 +88,13 @@ session can pick up uploads with no other context. Each adventure declares the
 assets it still needs in `src/adventures/<adv>/assets/tasks.json`; every task
 has a stable **id** (`<type>-<dir>-<name>`) that names its directories.
 
-1. **List** — `tools/gen_asset_tasks.py` renders the browser
+1. **List** — `tools/gen_asset_tasks.py` (run by `make web`) renders the browser
    [*Assets to author*](https://potomak.github.io/VaniaVolpe/asset_tasks.html)
-   page (via `asset_tasks.json`) and scaffolds a self-describing drop-box
-   `<assets_root>/_inbox/<id>/` (a `README.md` stating what to upload) for every
-   outstanding task.
-2. **Upload** — the artist clicks a task's **Upload here** link and drops the
-   raw files straight into that `_inbox/<id>/` on GitHub. The directory *is* the
+   page from `asset_tasks.json`: every outstanding task with what to make and an
+   **Upload here** link.
+2. **Upload** — the artist drops the raw files into a folder
+   `<assets_root>/_inbox/<id>/` on GitHub (the page names the `<id>/` folder;
+   the one `_inbox/README.md` explains the convention). The folder name *is* the
    task identity, so the upload is unambiguous no matter what the files are
    named (for animations, filenames only set frame order).
 3. **Consolidate** — `tools/consolidate_assets.py` scans the drop-boxes,

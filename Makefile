@@ -169,8 +169,8 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
 	python3 tools/gen_asset_catalog.py --out $(WEB_DIR)
 	cp src/emscripten/catalog.html $(WEB_DIR)/catalog.html
 	# Asset to-do page (build/web/asset_tasks.html): emit the task data with live
-	# status; the page renders it. --web writes only JSON, never the source tree.
-	python3 tools/gen_asset_tasks.py --web $(WEB_DIR)
+	# status; the page renders it. Writes only JSON, never the source tree.
+	python3 tools/gen_asset_tasks.py --out $(WEB_DIR)
 	cp src/emscripten/asset_tasks.html $(WEB_DIR)/asset_tasks.html
 	# Dev-tools index + browser walk-mask editor (see TOOLS.md).
 	cp src/emscripten/tools.html $(WEB_DIR)/tools.html

@@ -2,32 +2,31 @@
 """Generate the asset to-do list for every adventure (LIVELINESS.md aside).
 
 The game ships with placeholder art and silent voice lines; this turns a
-per-adventure manifest of the *real* assets still to author into a grouped
-to-do list — every animation, voice line and still image — where each task
-carries what to make (frame count, sprite size, the Italian line to record)
-and a GitHub **upload link** that lands in that task's drop-box directory.
+per-adventure manifest of the *real* assets still to author into the data
+behind the browser *Assets to author* page — every animation, voice line and
+still image, with what to make (frame count, sprite size, the Italian line to
+record) and a GitHub **upload link**.
 
 Drop-box convention (per adventure, under <assets_root>/)
 --------------------------------------------------------
 Every task has a stable **id** (`<type>-<dir>-<name>`). Uploads for a task go
-into `_inbox/<id>/` — the directory name identifies the task no matter what
-the uploaded files are called. `tools/consolidate_assets.py` then stitches /
-moves them to the real asset path and archives the raw inputs under
-`_sources/<id>/`, which is the done-record. So status is:
+into a folder `_inbox/<id>/` — the folder name identifies the task no matter
+what the uploaded files are called (see `_inbox/README.md`).
+`tools/consolidate_assets.py` then stitches / moves them to the real asset
+path and archives the raw inputs under `_sources/<id>/`, the done-record. So
+status is:
 
 - done ✅      — `_sources/<id>/` holds files (consolidated);
 - uploaded 🟨  — `_inbox/<id>/` holds raw files (awaiting consolidation);
 - to do ⬜     — neither.
 
-This tool (default mode) scaffolds an `_inbox/<id>/` drop directory (with a
-README describing the task) for every outstanding task, pruning the ones that
-are done. `--web DIR` writes `DIR/asset_tasks.json` for the browser tools page
-— the human-facing checklist — and touches nothing in the source tree.
+This tool writes `<out>/asset_tasks.json` (default `build/web/`) for the page;
+`make web` runs it. It touches nothing in the source tree — the `_inbox`
+folders are created by the uploads themselves, not scaffolded.
 
 Usage:
-  tools/gen_asset_tasks.py                    # refresh the drop-boxes
-  tools/gen_asset_tasks.py --web build/web    # asset_tasks.json for the page
-  tools/gen_asset_tasks.py --branch main
+  tools/gen_asset_tasks.py                     # -> build/web/asset_tasks.json
+  tools/gen_asset_tasks.py --out build/web --branch main
 
 Stdlib only.
 """
@@ -102,13 +101,8 @@ def upload_url(branch, rel_dir):
             f"{branch}/{quote(rel_dir)}")
 
 
-def tree_url(branch, rel_path):
-    return (f"https://github.com/{REPO_OWNER}/{REPO_NAME}/tree/"
-            f"{branch}/{quote(rel_path)}")
-
-
-# What the artist drops into the task's _inbox dir.
-def upload_hint(task):
+# What the artist drops into the task's _inbox/<id>/ folder.
+def drop_desc(task):
     if task["type"] == "animation":
         size = f" ({task['size']})" if task.get("size") else ""
         return (f"the {task['frames']} frame PNGs{size}, in order — filenames "
@@ -134,8 +128,12 @@ def meta_line(task):
 
 def task_view(root, manifest, branch, task):
     state, label = status(root, manifest, task)
+    tid = task_id(task)
+    # Uploads land in a per-task folder under the adventure's one _inbox/; the
+    # folder name is the identity. Link to _inbox/ (it exists — see its README)
+    # and tell the artist which folder to drop into.
     return {
-        "id": task_id(task),
+        "id": tid,
         "name": task["name"],
         "type": task["type"],
         "description": task["description"],
@@ -144,8 +142,8 @@ def task_view(root, manifest, branch, task):
         "target": target_rel(manifest, task)[0],
         "status": state,
         "status_label": label,
-        "upload_url": upload_url(branch, inbox_rel(manifest, task)),
-        "upload_hint": upload_hint(task),
+        "upload_url": upload_url(branch, f"{manifest['assets_root']}/_inbox"),
+        "upload_hint": f"into a folder named {tid}/ — {drop_desc(task)}",
     }
 
 
@@ -165,51 +163,6 @@ def manifest_view(root, manifest, branch):
             "groups": groups}
 
 
-# ── drop-box scaffolding ─────────────────────────────────────────────────────
-
-def readme_text(view):
-    lines = [f"# Upload: {view['name']}", "",
-             f"- Task id: `{view['id']}`",
-             f"- Type: {view['type']}",
-             f"- {view['description']}"]
-    if view["meta"]:
-        lines.append(f"- {view['meta']}")
-    if view["line"]:
-        lines.append(f'- Line to record: "{view["line"]}"')
-    lines += ["",
-              f"**Drop here:** {view['upload_hint']}", "",
-              f"Then run `tools/consolidate_assets.py` — it moves the files to "
-              f"`{view['target']}` and archives the raw inputs under "
-              f"`_sources/{view['id']}/`.", ""]
-    return "\n".join(lines)
-
-
-# Keep <assets>/_inbox holding exactly the outstanding tasks: a self-describing
-# drop directory per to-do/uploaded task, and none for the done ones.
-def scaffold_inbox(root, manifest, views):
-    by_id = {v["id"]: v for v in views}
-    for v in views:
-        rel = f"{manifest['assets_root']}/_inbox/{v['id']}"
-        d = os.path.join(root, rel)
-        if v["status"] == "done":
-            # Consolidated: drop the (now empty) scaffold if only our files remain.
-            if os.path.isdir(d) and not uploaded_files(root, rel):
-                for name in SCAFFOLD_FILES:
-                    p = os.path.join(d, name)
-                    if os.path.isfile(p):
-                        os.remove(p)
-                if not os.listdir(d):
-                    os.rmdir(d)
-            continue
-        os.makedirs(d, exist_ok=True)
-        with open(os.path.join(d, "README.md"), "w") as f:
-            f.write(readme_text(v))
-    # Tidy an empty _inbox root.
-    inbox_root = os.path.join(root, manifest["assets_root"], "_inbox")
-    if os.path.isdir(inbox_root) and not os.listdir(inbox_root):
-        os.rmdir(inbox_root)
-
-
 def load_manifests(root, paths):
     manifests = []
     for path in paths:
@@ -222,8 +175,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("manifests", nargs="*",
                         help="tasks.json files (default: every adventure's)")
-    parser.add_argument("--web", metavar="DIR",
-                        help="write DIR/asset_tasks.json instead; no scaffolding")
+    parser.add_argument("--out", metavar="DIR", default="build/web",
+                        help="directory for asset_tasks.json (default build/web)")
     parser.add_argument("--branch", default="main",
                         help="branch the upload links target (default main)")
     args = parser.parse_args()
@@ -235,20 +188,12 @@ def main():
         parser.error("no tasks.json manifests found")
     manifests = load_manifests(root, paths)
 
-    if args.web:
-        views = [manifest_view(root, m, args.branch) for m in manifests]
-        os.makedirs(args.web, exist_ok=True)
-        out = os.path.join(args.web, "asset_tasks.json")
-        with open(out, "w") as f:
-            json.dump({"branch": args.branch, "adventures": views}, f, indent=1)
-        print(f"asset_tasks.json: {len(manifests)} adventure(s) -> {out}")
-        return
-
-    for manifest in manifests:
-        views = [task_view(root, manifest, args.branch, t)
-                 for t in manifest["tasks"]]
-        scaffold_inbox(root, manifest, views)
-    print(f"drop-boxes refreshed: {len(manifests)} adventure(s)")
+    views = [manifest_view(root, m, args.branch) for m in manifests]
+    os.makedirs(args.out, exist_ok=True)
+    out = os.path.join(args.out, "asset_tasks.json")
+    with open(out, "w") as f:
+        json.dump({"branch": args.branch, "adventures": views}, f, indent=1)
+    print(f"asset_tasks.json: {len(manifests)} adventure(s) -> {out}")
 
 
 if __name__ == "__main__":

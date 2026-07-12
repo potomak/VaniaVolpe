@@ -122,8 +122,9 @@ larger than the window with a following camera and parallax planes (see
   per-task drop-boxes `<assets_root>/_inbox/<id>/`. To ingest uploads ("check
   and consolidate the assets I uploaded"), run `tools/consolidate_assets.py`
   (stitches frames → sprite sheet, moves WAVs/PNGs into place, archives sources
-  under `_sources/<id>/`) then `tools/gen_asset_tasks.py`. The `_inbox` /
-  `_sources` dirs are never shipped. Full flow: `TOOLS.md` → *Asset pipeline*.
+  under `_sources/<id>/`); the *Assets to author* page refreshes on the next
+  `make web`. The `_inbox` / `_sources` dirs are never shipped. Full flow:
+  `TOOLS.md` → *Asset pipeline*.
 - **Assets in the web build** must live under a `--preload-file` dir in the
   `Makefile` (now `assets/common` + each `assets/<locale>` per adventure); files
   elsewhere won't exist in the browser's virtual filesystem. An adventure's
