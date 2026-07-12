@@ -1,20 +1,20 @@
 # Asset upload drop-box
 
-Raw asset files waiting to be folded into the game go here, one folder per
-task, named by the task **id** shown on the *Assets to author* page
-([`asset_tasks.html`](https://potomak.github.io/VaniaVolpe/asset_tasks.html),
-also under Tools). The folder name is the whole identity — filenames don't
-matter (for animations they only set frame order).
+One premade folder per outstanding asset, named by its task **id** (the same id
+shown on the *Assets to author* page —
+[`asset_tasks.html`](https://potomak.github.io/VaniaVolpe/asset_tasks.html), or
+Tools). Drop the raw files into the matching folder; the folder name is the
+whole identity, so filenames don't matter (for animations they only set frame
+order, e.g. `01.png`, `02.png`…). Each page card's **Upload here** link lands
+straight in the right folder.
 
-- **animation** → `_inbox/<id>/` with the frame PNGs, e.g. `01.png`, `02.png`…
-- **voice** → `_inbox/<id>/` with the recorded WAV
-- **art** → `_inbox/<id>/` with the finished PNG
+- **animation** → the frame PNGs
+- **voice** → the recorded WAV
+- **art** → the finished PNG
 
-Each task's page card has an **Upload here** link and says which `<id>/` folder
-and what to drop.
-
-Then a maintainer runs `tools/consolidate_assets.py`, which stitches/moves the
+A maintainer then runs `tools/consolidate_assets.py`, which stitches/moves the
 files into their real asset paths and archives the raw inputs under
-`_sources/<id>/` (the done-record and re-stitch source). Full flow:
-`TOOLS.md` → *Asset pipeline*. Nothing under `_inbox/` or `_sources/` is
-shipped in the game or the web build.
+`_sources/<id>/` (the done-record and re-stitch source), then removes the
+folder here. `tools/gen_asset_tasks.py` refreshes these folders when the task
+list changes. Full flow: `TOOLS.md` → *Asset pipeline*. Nothing under `_inbox/`
+or `_sources/` is shipped in the game or the web build.

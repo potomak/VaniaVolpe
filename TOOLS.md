@@ -88,15 +88,17 @@ session can pick up uploads with no other context. Each adventure declares the
 assets it still needs in `src/adventures/<adv>/assets/tasks.json`; every task
 has a stable **id** (`<type>-<dir>-<name>`) that names its directories.
 
-1. **List** — `tools/gen_asset_tasks.py` (run by `make web`) renders the browser
-   [*Assets to author*](https://potomak.github.io/VaniaVolpe/asset_tasks.html)
+1. **List** — `tools/gen_asset_tasks.py --out` (run by `make web`) renders the
+   browser [*Assets to author*](https://potomak.github.io/VaniaVolpe/asset_tasks.html)
    page from `asset_tasks.json`: every outstanding task with what to make and an
-   **Upload here** link.
-2. **Upload** — the artist drops the raw files into a folder
-   `<assets_root>/_inbox/<id>/` on GitHub (the page names the `<id>/` folder;
-   the one `_inbox/README.md` explains the convention). The folder name *is* the
-   task identity, so the upload is unambiguous no matter what the files are
-   named (for animations, filenames only set frame order).
+   **Upload here** link. Run with no `--out`, it refreshes the premade
+   `<assets_root>/_inbox/<id>/` drop-box folders (an empty `.gitkeep` per
+   outstanding task) and prunes the done ones.
+2. **Upload** — the artist clicks **Upload here** and drops the raw files
+   straight into that task's `_inbox/<id>/` folder on GitHub. The folder name
+   *is* the task identity, so the upload is unambiguous no matter what the files
+   are named (for animations, filenames only set frame order). The one
+   `_inbox/README.md` explains the convention.
 3. **Consolidate** — `tools/consolidate_assets.py` scans the drop-boxes,
    stitches animation frames into `<name>.png` + `<name>.anim`, moves voice
    WAVs and still PNGs to their real paths, and archives the raw inputs under

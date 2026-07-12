@@ -20,13 +20,16 @@ status is:
 - uploaded 🟨  — `_inbox/<id>/` holds raw files (awaiting consolidation);
 - to do ⬜     — neither.
 
-This tool writes `<out>/asset_tasks.json` (default `build/web/`) for the page;
-`make web` runs it. It touches nothing in the source tree — the `_inbox`
-folders are created by the uploads themselves, not scaffolded.
+Two jobs, one per mode:
+- `--out DIR` writes `DIR/asset_tasks.json` for the page (`make web` runs this);
+- with no `--out`, it refreshes the premade `_inbox/<id>/` drop-box folders —
+  an empty `.gitkeep` per outstanding task so the folder is in git and the
+  Upload here link resolves, pruning folders whose task is done. Run this after
+  editing a manifest and commit the result.
 
 Usage:
-  tools/gen_asset_tasks.py                     # -> build/web/asset_tasks.json
-  tools/gen_asset_tasks.py --out build/web --branch main
+  tools/gen_asset_tasks.py                     # refresh _inbox drop-boxes
+  tools/gen_asset_tasks.py --out build/web     # asset_tasks.json for the page
 
 Stdlib only.
 """
@@ -35,6 +38,7 @@ import argparse
 import glob
 import json
 import os
+import shutil
 from urllib.parse import quote
 
 REPO_OWNER = "potomak"
@@ -128,12 +132,10 @@ def meta_line(task):
 
 def task_view(root, manifest, branch, task):
     state, label = status(root, manifest, task)
-    tid = task_id(task)
-    # Uploads land in a per-task folder under the adventure's one _inbox/; the
-    # folder name is the identity. Link to _inbox/ (it exists — see its README)
-    # and tell the artist which folder to drop into.
+    # Each task has a premade drop-box folder `_inbox/<id>/` (kept in git by a
+    # .gitkeep), so Upload here lands straight in it — one click, no typing.
     return {
-        "id": tid,
+        "id": task_id(task),
         "name": task["name"],
         "type": task["type"],
         "description": task["description"],
@@ -142,8 +144,8 @@ def task_view(root, manifest, branch, task):
         "target": target_rel(manifest, task)[0],
         "status": state,
         "status_label": label,
-        "upload_url": upload_url(branch, f"{manifest['assets_root']}/_inbox"),
-        "upload_hint": f"into a folder named {tid}/ — {drop_desc(task)}",
+        "upload_url": upload_url(branch, inbox_rel(manifest, task)),
+        "upload_hint": drop_desc(task),
     }
 
 
@@ -171,12 +173,30 @@ def load_manifests(root, paths):
     return manifests
 
 
+# Keep <assets>/_inbox holding a premade, empty drop-box folder (a .gitkeep, so
+# git tracks it and the Upload here link resolves) for exactly the outstanding
+# tasks — and none for the done ones.
+def scaffold_inbox(root, manifest):
+    for task in manifest["tasks"]:
+        rel = inbox_rel(manifest, task)
+        d = os.path.join(root, rel)
+        done = uploaded_files(root, sources_rel(manifest, task))
+        if done:
+            # Consolidated: drop the now-stale empty folder (only .gitkeep left).
+            if os.path.isdir(d) and not uploaded_files(root, rel):
+                shutil.rmtree(d)
+            continue
+        os.makedirs(d, exist_ok=True)
+        open(os.path.join(d, ".gitkeep"), "a").close()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("manifests", nargs="*",
                         help="tasks.json files (default: every adventure's)")
-    parser.add_argument("--out", metavar="DIR", default="build/web",
-                        help="directory for asset_tasks.json (default build/web)")
+    parser.add_argument("--out", metavar="DIR",
+                        help="write DIR/asset_tasks.json for the page; without "
+                             "it, refresh the _inbox drop-box folders instead")
     parser.add_argument("--branch", default="main",
                         help="branch the upload links target (default main)")
     args = parser.parse_args()
@@ -188,12 +208,18 @@ def main():
         parser.error("no tasks.json manifests found")
     manifests = load_manifests(root, paths)
 
-    views = [manifest_view(root, m, args.branch) for m in manifests]
-    os.makedirs(args.out, exist_ok=True)
-    out = os.path.join(args.out, "asset_tasks.json")
-    with open(out, "w") as f:
-        json.dump({"branch": args.branch, "adventures": views}, f, indent=1)
-    print(f"asset_tasks.json: {len(manifests)} adventure(s) -> {out}")
+    if args.out:
+        views = [manifest_view(root, m, args.branch) for m in manifests]
+        os.makedirs(args.out, exist_ok=True)
+        out = os.path.join(args.out, "asset_tasks.json")
+        with open(out, "w") as f:
+            json.dump({"branch": args.branch, "adventures": views}, f, indent=1)
+        print(f"asset_tasks.json: {len(manifests)} adventure(s) -> {out}")
+        return
+
+    for manifest in manifests:
+        scaffold_inbox(root, manifest)
+    print(f"drop-box folders refreshed: {len(manifests)} adventure(s)")
 
 
 if __name__ == "__main__":
