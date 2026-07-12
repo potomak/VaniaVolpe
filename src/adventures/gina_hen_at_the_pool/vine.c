@@ -67,7 +67,6 @@ static void init(void) {
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "vine");
 
   grapes_boil = animations[0] = make_animation_data(3, LOOP);
-  grapes_boil->ms_per_frame = BOIL_MS_PER_FRAME;
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = GRAPES_HOTSPOT,

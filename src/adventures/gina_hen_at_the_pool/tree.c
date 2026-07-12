@@ -79,8 +79,6 @@ static void init(void) {
 
   float_boil = animations[0] = make_animation_data(3, LOOP);
   carla_boil = animations[1] = make_animation_data(3, LOOP);
-  float_boil->ms_per_frame = BOIL_MS_PER_FRAME;
-  carla_boil->ms_per_frame = BOIL_MS_PER_FRAME;
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,

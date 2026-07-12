@@ -26,11 +26,6 @@
 // arrived. Also the "tap landed on the actor" threshold in actor_walk_to.
 #define ACTOR_ARRIVE_EPSILON 2.0f
 
-// Hotspot "boil" hints (LIVELINESS.md Part 3) cycle slowly — a squiggle reads
-// as living texture, not motion — well under the 12 FPS animation default
-// (DEFAULT_MS_PER_FRAME). ~6 FPS.
-#define BOIL_MS_PER_FRAME 170
-
 #define LEN(x) (sizeof(x) / sizeof((x)[0]))
 
 #endif

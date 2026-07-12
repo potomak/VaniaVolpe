@@ -120,9 +120,6 @@ static void init(void) {
   sunscreen_boil = animations[0] = make_animation_data(3, LOOP);
   goggles_boil = animations[1] = make_animation_data(3, LOOP);
   float_boil = animations[2] = make_animation_data(3, LOOP);
-  sunscreen_boil->ms_per_frame = BOIL_MS_PER_FRAME;
-  goggles_boil->ms_per_frame = BOIL_MS_PER_FRAME;
-  float_boil->ms_per_frame = BOIL_MS_PER_FRAME;
 
   int i = 0;
   // The same bottle, two behaviours: reach for it before the sunscreen, a
