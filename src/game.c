@@ -148,9 +148,12 @@ void game_process_input(SDL_Event *event) {
 }
 
 void game_update(float delta_time) {
-  // Advance the active scene's animations before its own update. A ONE_SHOT end
-  // callback fired here may switch scene, so re-fetch the current scene for the
-  // update() call (same re-entrancy as a scene switch from process_input).
+  // Match the hotspot boil hints to their enabled state, then advance the
+  // active scene's animations (which ticks any hint now playing) before its own
+  // update. A ONE_SHOT end callback fired here may switch scene, so re-fetch
+  // the current scene for the update() call (same re-entrancy as a scene switch
+  // from process_input).
+  sync_hotspot_hints(scene_instance(game.current_scene));
   update_scene_animations(*scene_instance(game.current_scene), SDL_GetTicks());
   scene_instance(game.current_scene)->update(delta_time);
 

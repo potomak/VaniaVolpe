@@ -21,17 +21,23 @@
 #include "hen.h"
 #include "pool.h"
 
-// Images (background + objects), auto-loaded from the scene's images table.
-static ImageData images[5] = {
-    {NULL, "background.png", "pool", 0, 0}, {NULL, "water.png", "pool", 0, 0},
-    {NULL, "sunscreen.png", "pool", 0, 0},  {NULL, "goggles.png", "pool", 0, 0},
-    {NULL, "float.png", "pool", 0, 0},
+// Backdrops, auto-loaded from the scene's images table.
+static ImageData images[2] = {
+    {NULL, "background.png", "pool", 0, 0},
+    {NULL, "water.png", "pool", 0, 0},
 };
 static const ImageData *background = &images[0];
 static const ImageData *water = &images[1];
-static const ImageData *sunscreen = &images[2];
-static const ImageData *goggles = &images[3];
-static const ImageData *pool_float = &images[4];
+
+// The tappable objects boil (LIVELINESS.md Part 3): the engine plays each
+// while its hotspot is enabled (see the hints wired in init) and freezes it
+// otherwise, so what squiggles is what a tap would hit. Declared here so the
+// framework ticks and frees them; each is the same size as the old still PNG,
+// so the render positions below are unchanged.
+static AnimationData *sunscreen_boil;
+static AnimationData *goggles_boil;
+static AnimationData *float_boil;
+static AnimationData *animations[3];
 
 // Sound effects and dialog (silent placeholders; lines are logged to stdout).
 static ChunkData chunks[3] = {
@@ -111,25 +117,37 @@ static void init(void) {
 
   rebuild_walk_grid();
 
+  sunscreen_boil = animations[0] = make_animation_data(3, LOOP);
+  goggles_boil = animations[1] = make_animation_data(3, LOOP);
+  float_boil = animations[2] = make_animation_data(3, LOOP);
+  sunscreen_boil->ms_per_frame = BOIL_MS_PER_FRAME;
+  goggles_boil->ms_per_frame = BOIL_MS_PER_FRAME;
+  float_boil->ms_per_frame = BOIL_MS_PER_FRAME;
+
   int i = 0;
   // The same bottle, two behaviours: reach for it before the sunscreen, a
-  // gentle "already done" afterwards.
+  // gentle "already done" afterwards. Both carry the bottle's boil, so it
+  // squiggles throughout (the sync ORs their enabled states).
   hotspots[i++] = (Hotspot){.rect = SUNSCREEN_HOTSPOT,
                             .enabled = before_sunscreen,
                             .poi = SUNSCREEN_POI,
-                            .on_arrive = open_sunscreen_minigame};
+                            .on_arrive = open_sunscreen_minigame,
+                            .hint = sunscreen_boil};
   hotspots[i++] = (Hotspot){.rect = SUNSCREEN_HOTSPOT,
                             .enabled = after_sunscreen,
                             .immediate = true,
-                            .on_arrive = say_sunscreen_done};
+                            .on_arrive = say_sunscreen_done,
+                            .hint = sunscreen_boil};
   hotspots[i++] = (Hotspot){.rect = GOGGLES_HOTSPOT,
                             .enabled = goggles_to_collect,
                             .poi = GOGGLES_POI,
-                            .on_arrive = collect_goggles};
+                            .on_arrive = collect_goggles,
+                            .hint = goggles_boil};
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
                             .enabled = float_at_the_pool,
                             .poi = FLOAT_POI,
-                            .on_arrive = float_blows_away};
+                            .on_arrive = float_blows_away,
+                            .hint = float_boil};
   hotspots[i++] = (Hotspot){.rect = POOL_WATER_HOTSPOT,
                             .enabled = after_sunscreen,
                             .poi = POOL_EDGE_POI,
@@ -151,7 +169,17 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  return hen_load_media(gina, renderer);
+  if (!hen_load_media(gina, renderer)) {
+    return false;
+  }
+  return load_animation(renderer, sunscreen_boil,
+                        (Asset){"sunscreen_boil.png", "pool"},
+                        (Asset){"sunscreen_boil.anim", "pool"}) &&
+         load_animation(renderer, goggles_boil,
+                        (Asset){"goggles_boil.png", "pool"},
+                        (Asset){"goggles_boil.anim", "pool"}) &&
+         load_animation(renderer, float_boil, (Asset){"float_boil.png", "pool"},
+                        (Asset){"float_boil.anim", "pool"});
 }
 
 // ── interactions
@@ -260,12 +288,12 @@ static void update(float delta_time) { hen_update(gina, delta_time); }
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
   render_image(renderer, water, WATER_AT);
-  render_image(renderer, sunscreen, SUNSCREEN_AT);
+  render_animation(renderer, sunscreen_boil, SUNSCREEN_AT);
   if (!gina_state.has_goggles) {
-    render_image(renderer, goggles, GOGGLES_AT);
+    render_animation(renderer, goggles_boil, GOGGLES_AT);
   }
   if (gina_state.float_state == FLOAT_AT_POOL) {
-    render_image(renderer, pool_float, FLOAT_AT);
+    render_animation(renderer, float_boil, FLOAT_AT);
   }
   hen_render(gina, renderer);
 }
@@ -301,6 +329,8 @@ Scene pool_scene = {
     .walk_grid = &walk_grid,
     .images = images,
     .images_length = LEN(images),
+    .animations = animations,
+    .animations_length = LEN(animations),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
 };
