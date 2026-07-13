@@ -154,6 +154,7 @@ web: $(WEB_TARGET)
 $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
                src/emscripten/catalog.html tools/gen_asset_catalog.py \
                src/emscripten/asset_tasks.html tools/gen_asset_tasks.py \
+               src/emscripten/cost_estimate.html \
                $(wildcard src/adventures/*/assets/tasks.json)
 	mkdir -p $(WEB_DIR)
 	$(EMCC) $(EM_CFLAGS) $(SRCS) $(EM_LDFLAGS) -o $(WEB_TARGET)
@@ -172,9 +173,10 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
 	# status; the page renders it. Writes only JSON, never the source tree.
 	python3 tools/gen_asset_tasks.py --out $(WEB_DIR)
 	cp src/emscripten/asset_tasks.html $(WEB_DIR)/asset_tasks.html
-	# Dev-tools index + browser walk-mask editor (see TOOLS.md).
+	# Dev-tools index + browser walk-mask editor + art cost estimate (see TOOLS.md).
 	cp src/emscripten/tools.html $(WEB_DIR)/tools.html
 	cp src/emscripten/walk_editor.html $(WEB_DIR)/walk_editor.html
+	cp src/emscripten/cost_estimate.html $(WEB_DIR)/cost_estimate.html
 
 # ── formatting (clang-format, LLVM style; see .clang-format) ──────────────────
 

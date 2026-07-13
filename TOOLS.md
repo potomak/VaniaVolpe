@@ -48,6 +48,13 @@ the game; the entry point is
   one-click GitHub **upload** link per task (see the asset pipeline below).
   Renders `asset_tasks.json`, emitted from each adventure's
   `assets/tasks.json` by `tools/gen_asset_tasks.py` during `make web`.
+- **Art cost estimate** — [`cost_estimate.html`](https://potomak.github.io/VaniaVolpe/cost_estimate.html):
+  a live, tweakable planning estimate for commissioning all of Gina's image
+  assets (backgrounds, props, animation frames) from a professional
+  illustrator — hourly rate, hours per asset, revision rounds and overhead are
+  all editable, and the total updates as you change them. Self-contained
+  (opens as a plain file too); asset-count defaults match `assets/tasks.json`.
+  Excludes voice/audio. A planning aid, not a quote.
 
 ## Generator scripts (`tools/`)
 

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vania Volpe — Art cost estimate</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9; --panel: #fff; --ink: #1d2530; --muted: #6b7685;
+    --line: #e2e6ec; --accent: #7a3cc0; --field: #fff; --total: #1e8e3e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151a; --panel: #1b1f26; --ink: #e7ebf0; --muted: #9aa6b2;
+      --line: #2a2f38; --accent: #c39bff; --field: #12151a; --total: #5bd07f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink); padding: 0 1rem 3rem;
+    font: 15px/1.55 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  main { max-width: 800px; margin: 0 auto; }
+  a { color: var(--accent); }
+  h1 { font-size: 1.4rem; margin: 1.2rem 0 .2rem; }
+  h2 { font-size: 1.05rem; margin: 1.4rem 0 .5rem; }
+  .lead { color: var(--muted); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+  fieldset {
+    border: 1px solid var(--line); border-radius: 10px; padding: .4rem .9rem .8rem;
+    background: var(--panel); margin: 0;
+  }
+  legend { font-weight: 600; padding: 0 .35rem; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin: .5rem 0; }
+  .row label { color: var(--ink); flex: 1; }
+  .row .sub { color: var(--muted); font-size: .82rem; display: block; }
+  input[type=number] {
+    width: 6.5rem; text-align: right; padding: .3rem .45rem;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--field); color: var(--ink); font: inherit;
+  }
+  table { width: 100%; border-collapse: collapse; margin-top: .6rem; }
+  th, td { text-align: right; padding: .45rem .3rem; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  tr.total td { border-top: 2px solid var(--line); border-bottom: none; font-weight: 700; font-size: 1.05rem; padding-top: .6rem; }
+  tr.total td.money { color: var(--total); }
+  .grand {
+    margin-top: 1rem; padding: .9rem 1.1rem; border-radius: 10px;
+    background: var(--panel); border: 1px solid var(--line);
+    display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .3rem;
+  }
+  .grand .amount { font-size: 1.9rem; font-weight: 800; color: var(--total); }
+  .grand .hrs { color: var(--muted); }
+  .note { color: var(--muted); font-size: .9rem; }
+  .note ul { padding-left: 1.1rem; }
+  code { background: var(--line); padding: 0 .25rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Art cost estimate — Gina</h1>
+  <p class="lead">A rough planning estimate for commissioning <b>all of Gina's
+  image assets</b> — the scene backgrounds, the props/objects, and the
+  character animation frames — from a professional illustrator. Every number
+  below is an editable assumption; the total updates as you tweak them. Voice
+  and audio are out of scope. This is a planning aid, not a quote.</p>
+
+  <div class="cols">
+    <fieldset>
+      <legend>Rates &amp; effort</legend>
+      <div class="row">
+        <label>Hourly rate ($/hr)
+          <span class="sub">NA freelance illustrator: ~$45 junior · ~$65 mid · ~$95 senior</span></label>
+        <input type="number" id="rate" value="65" min="0" step="5">
+      </div>
+      <div class="row">
+        <label>Style &amp; character design (hrs)
+          <span class="sub">one-time: style guide, palette, Gina's turnaround</span></label>
+        <input type="number" id="style" value="12" min="0" step="1">
+      </div>
+      <div class="row">
+        <label>Hours per background
+          <span class="sub">a full 800×600 scene backdrop</span></label>
+        <input type="number" id="hpb" value="5" min="0" step="0.5">
+      </div>
+      <div class="row">
+        <label>Hours per prop / object
+          <span class="sub">bottle, goggles, float, basket…</span></label>
+        <input type="number" id="hpo" value="1.5" min="0" step="0.5">
+      </div>
+      <div class="row">
+        <label>Hours per animation frame
+          <span class="sub">averaged over keys &amp; in-betweens</span></label>
+        <input type="number" id="hpf" value="1" min="0" step="0.25">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Revisions &amp; overhead</legend>
+      <div class="row">
+        <label>Revision rounds per asset
+          <span class="sub">review passes after the first draft</span></label>
+        <input type="number" id="rounds" value="2" min="0" step="1">
+      </div>
+      <div class="row">
+        <label>Cost of one revision round (%)
+          <span class="sub">of an asset's base production time</span></label>
+        <input type="number" id="revpct" value="25" min="0" step="5">
+      </div>
+      <div class="row">
+        <label>Overhead / project mgmt (%)
+          <span class="sub">briefs, calls, file wrangling, delivery</span></label>
+        <input type="number" id="ovh" value="15" min="0" step="5">
+      </div>
+
+      <legend style="margin-top:.6rem">Asset counts</legend>
+      <div class="row">
+        <label>Backgrounds</label>
+        <input type="number" id="bg" value="5" min="0" step="1">
+      </div>
+      <div class="row">
+        <label>Props / objects</label>
+        <input type="number" id="obj" value="10" min="0" step="1">
+      </div>
+      <div class="row">
+        <label>Animation frames
+          <span class="sub">Gina: idle 2 + walking 4 + talking 3 = 9</span></label>
+        <input type="number" id="frames" value="9" min="0" step="1">
+      </div>
+    </fieldset>
+  </div>
+
+  <h2>Breakdown</h2>
+  <table>
+    <thead><tr><th>Line item</th><th>Hours</th><th>Cost</th></tr></thead>
+    <tbody id="rows"></tbody>
+    <tfoot>
+      <tr class="total"><td>Total</td><td id="totHrs"></td><td class="money" id="totCost"></td></tr>
+    </tfoot>
+  </table>
+
+  <div class="grand">
+    <span>Estimated total</span>
+    <span><span class="amount" id="grand"></span> <span class="hrs" id="grandHrs"></span></span>
+  </div>
+
+  <h2>Basis for the defaults</h2>
+  <div class="note">
+    <ul>
+      <li><b>Rate.</b> North-American freelance illustration in 2025 spans
+      roughly $45/hr (emerging) to $95+/hr (senior / specialised children's &amp;
+      game art). $65 is a mid-professional midpoint — bump it up for a
+      sought-after artist.</li>
+      <li><b>Backgrounds</b> are the heaviest line (full painted scenes), props
+      are quick, and animation frames are cheap <em>per frame</em> once Gina's
+      design exists — which is why that one-time design cost is separate.</li>
+      <li><b>Revisions</b> are modelled as extra passes costing a fraction of an
+      asset's base time; two rounds at 25% ≈ +50% on production.</li>
+      <li>Counts default to Gina's current placeholder inventory
+      (<code>assets/tasks.json</code>): 5 backgrounds, 10 props, 3 animations /
+      9 frames. Edit them to price a different scope.</li>
+      <li>Excludes voice/audio, in-engine integration (stitching sheets is
+      automated — see the asset pipeline), and any licensing/rush premiums.</li>
+    </ul>
+    <p>See <a href="tools.html">all dev tools</a> and the
+    <a href="asset_tasks.html">Assets to author</a> checklist.</p>
+  </div>
+</main>
+
+<script>
+const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const num = id => parseFloat(document.getElementById(id).value) || 0;
+const hrs = h => (Math.round(h * 10) / 10).toLocaleString();
+
+function recompute() {
+  const rate = num("rate");
+  const style = num("style");
+  const hpb = num("hpb"), hpo = num("hpo"), hpf = num("hpf");
+  const rounds = num("rounds"), revpct = num("revpct") / 100, ovh = num("ovh") / 100;
+  const bg = num("bg"), obj = num("obj"), frames = num("frames");
+
+  const bgH = bg * hpb, objH = obj * hpo, frH = frames * hpf;
+  const production = bgH + objH + frH;
+  const revision = production * rounds * revpct;
+  const subtotal = style + production + revision;
+  const overhead = subtotal * ovh;
+  const total = subtotal + overhead;
+
+  const lines = [
+    ["Style & character design", style],
+    ["Backgrounds", bgH],
+    ["Props / objects", objH],
+    ["Animation frames", frH],
+    ["Revisions", revision],
+    ["Overhead", overhead],
+  ];
+  document.getElementById("rows").innerHTML = lines.map(([name, h]) =>
+    `<tr><td>${name}</td><td>${hrs(h)}</td><td>${usd.format(h * rate)}</td></tr>`
+  ).join("");
+  document.getElementById("totHrs").textContent = hrs(total);
+  document.getElementById("totCost").textContent = usd.format(total * rate);
+  document.getElementById("grand").textContent = usd.format(total * rate);
+  document.getElementById("grandHrs").textContent = "· " + hrs(total) + " hours";
+}
+
+document.querySelectorAll("input").forEach(el => el.addEventListener("input", recompute));
+recompute();
+</script>
+</body>
+</html>
