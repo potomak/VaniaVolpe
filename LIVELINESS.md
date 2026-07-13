@@ -243,10 +243,12 @@ placeholders file-for-file. The design as built:
 Gina's art style is hand-drawn with squiggly lines. In that style, the
 classic way to say "this object is alive" is the **boil**: the same
 drawing traced 2–3 times, cycled slowly, so the lines wobble while the
-object stays put. The rule for the player (R4): **what squiggles is
-tappable right now.** Objects whose hotspot is gated off hold still —
-the same information the debug overlay's dimmed rects (#94) show
-developers, delivered diegetically.
+object stays put. *("Boil", or line boil, is the traditional hand-drawn
+animation term for that re-traced-outline shimmer — as in Squigglevision;
+"boiling hotspots" pairs it with this engine's hotspots.)* The rule for the
+player (R4): **what squiggles is tappable right now.** Objects whose
+hotspot is gated off hold still — the same information the debug overlay's
+dimmed rects (#94) show developers, delivered diegetically.
 
 Everything needed nearly exists: scenes already declare animations the
 framework ticks, so a boil is just another looping scene animation at the
