@@ -72,7 +72,7 @@ static void give_reference_frame(Actor *actor, int frame_h) {
   actor->animations[0][WALKING] = animation;
 }
 
-// Toggleable predicates for the boil-hint sync test below.
+// Toggleable predicates for the hotspot active-animation sync test below.
 static bool pred_a_on;
 static bool pred_b_on;
 static bool pred_a(void) { return pred_a_on; }
@@ -244,18 +244,18 @@ int test_scene(void) {
   check(plane_covers_view(&hills, wide),
         "a 1120px parallax-0.4 plane exactly covers");
 
-  // ── boiling hotspots: sync_hotspot_hints ──────────────────────────────────
+  // ── boiling hotspots: sync_hotspot_active_anims ───────────────────────────
 
   fprintf(stderr, "\nboiling hotspots:\n");
 
   AnimationData *boil_a = make_animation_data(3, LOOP);
   AnimationData *boil_b = make_animation_data(3, LOOP);
   // Two hotspots share boil_a (an object with a before/after pair); a third
-  // always-on hotspot carries boil_b. A fourth hotspot has no hint.
+  // always-on hotspot carries boil_b. A fourth hotspot has no active_anim.
   Hotspot hs[4] = {
-      {.rect = {0, 0, 10, 10}, .enabled = pred_a, .hint = boil_a},
-      {.rect = {0, 0, 10, 10}, .enabled = pred_b, .hint = boil_a},
-      {.rect = {0, 0, 10, 10}, .hint = boil_b},
+      {.rect = {0, 0, 10, 10}, .enabled = pred_a, .active_anim = boil_a},
+      {.rect = {0, 0, 10, 10}, .enabled = pred_b, .active_anim = boil_a},
+      {.rect = {0, 0, 10, 10}, .active_anim = boil_b},
       {.rect = {0, 0, 10, 10}, .enabled = pred_a},
   };
   Scene s = {0};
@@ -264,23 +264,23 @@ int test_scene(void) {
 
   pred_a_on = false;
   pred_b_on = false;
-  sync_hotspot_hints(&s);
+  sync_hotspot_active_anims(&s);
   check(!boil_a->is_playing,
-        "a shared hint freezes when neither carrier is enabled");
-  check(boil_b->is_playing, "an always-enabled hotspot's hint boils");
+        "a shared boil freezes when neither carrier is enabled");
+  check(boil_b->is_playing, "an always-enabled hotspot's boil plays");
 
   pred_b_on = true;
-  sync_hotspot_hints(&s);
+  sync_hotspot_active_anims(&s);
   check(boil_a->is_playing,
-        "a shared hint boils when either carrier is enabled (OR)");
+        "a shared boil plays when either carrier is enabled (OR)");
 
   pred_a_on = true;
   pred_b_on = false;
-  sync_hotspot_hints(&s);
-  check(boil_a->is_playing, "and boils on the other carrier alone");
+  sync_hotspot_active_anims(&s);
+  check(boil_a->is_playing, "and plays on the other carrier alone");
 
   pred_a_on = false;
-  sync_hotspot_hints(&s);
+  sync_hotspot_active_anims(&s);
   check(!boil_a->is_playing, "and refreezes once every carrier is disabled");
 
   free_animation(boil_a);

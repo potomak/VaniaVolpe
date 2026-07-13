@@ -67,13 +67,14 @@ typedef struct hotspot {
   // arrows, "already done" lines, buttons).
   bool immediate;
   void (*on_arrive)(void);
-  // Optional "boil" loop for the hotspot's object (LIVELINESS.md Part 3): the
-  // engine plays it while the hotspot is enabled and freezes it while gated
-  // off, so what squiggles on screen is what a tap would hit right now.
+  // Optional animation played while the hotspot is enabled and frozen while it
+  // is gated off (LIVELINESS.md Part 3) — Gina's objects use it for their
+  // "boil", so what squiggles on screen is what a tap would hit right now.
   // Borrowed from the scene's animations table (the scene loads, ticks and
-  // frees it); NULL = the object stays static. Hotspots sharing one hint boil
-  // if ANY of them is enabled (e.g. an object with a before/after pair).
-  AnimationData *hint;
+  // frees it); NULL = the object stays static. Hotspots sharing one active_anim
+  // play it if ANY of them is enabled (e.g. an object with a before/after
+  // pair).
+  AnimationData *active_anim;
 } Hotspot;
 
 typedef struct scene {
@@ -182,12 +183,13 @@ void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
 bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
                            Actor *actor, const WalkGrid *grid, SDL_Point p);
 
-// Sync every hotspot's boil hint to its enabled state (LIVELINESS.md Part 3):
-// a hint plays while any hotspot carrying it is enabled and freezes (current
-// frame held, no callback) otherwise. Called once per frame by the engine,
-// before the scene's animations are ticked. Hotspots with no hint are skipped;
-// a hint shared by several hotspots is handled once, ORing their states.
-void sync_hotspot_hints(const Scene *scene);
+// Sync every hotspot's active_anim to its enabled state (LIVELINESS.md
+// Part 3): it plays while any hotspot carrying it is enabled and freezes
+// (current frame held, no callback) otherwise. Called once per frame by the
+// engine, before the scene's animations are ticked. Hotspots with no
+// active_anim are skipped; one shared by several hotspots is handled once,
+// ORing their states.
+void sync_hotspot_active_anims(const Scene *scene);
 
 bool load_scene_images(Scene *scene, SDL_Renderer *renderer);
 

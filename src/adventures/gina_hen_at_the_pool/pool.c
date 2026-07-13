@@ -30,8 +30,8 @@ static const ImageData *background = &images[0];
 static const ImageData *water = &images[1];
 
 // The tappable objects boil (LIVELINESS.md Part 3): the engine plays each
-// while its hotspot is enabled (see the hints wired in init) and freezes it
-// otherwise, so what squiggles is what a tap would hit. Declared here so the
+// while its hotspot is enabled (see the active_anim wired in init) and freezes
+// it otherwise, so what squiggles is what a tap would hit. Declared here so the
 // framework ticks and frees them; each is the same size as the old still PNG,
 // so the render positions below are unchanged.
 static AnimationData *sunscreen_boil;
@@ -129,22 +129,22 @@ static void init(void) {
                             .enabled = before_sunscreen,
                             .poi = SUNSCREEN_POI,
                             .on_arrive = open_sunscreen_minigame,
-                            .hint = sunscreen_boil};
+                            .active_anim = sunscreen_boil};
   hotspots[i++] = (Hotspot){.rect = SUNSCREEN_HOTSPOT,
                             .enabled = after_sunscreen,
                             .immediate = true,
                             .on_arrive = say_sunscreen_done,
-                            .hint = sunscreen_boil};
+                            .active_anim = sunscreen_boil};
   hotspots[i++] = (Hotspot){.rect = GOGGLES_HOTSPOT,
                             .enabled = goggles_to_collect,
                             .poi = GOGGLES_POI,
                             .on_arrive = collect_goggles,
-                            .hint = goggles_boil};
+                            .active_anim = goggles_boil};
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
                             .enabled = float_at_the_pool,
                             .poi = FLOAT_POI,
                             .on_arrive = float_blows_away,
-                            .hint = float_boil};
+                            .active_anim = float_boil};
   hotspots[i++] = (Hotspot){.rect = POOL_WATER_HOTSPOT,
                             .enabled = after_sunscreen,
                             .poi = POOL_EDGE_POI,

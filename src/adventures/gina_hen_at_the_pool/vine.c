@@ -72,7 +72,7 @@ static void init(void) {
   hotspots[i++] = (Hotspot){.rect = GRAPES_HOTSPOT,
                             .poi = GRAPES_POI,
                             .on_arrive = pick_grapes,
-                            .hint = grapes_boil};
+                            .active_anim = grapes_boil};
   hotspots[i++] = (Hotspot){
       .rect = TREE_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_tree};
   hotspots[i++] = (Hotspot){

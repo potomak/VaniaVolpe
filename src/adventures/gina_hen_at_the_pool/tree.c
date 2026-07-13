@@ -85,11 +85,11 @@ static void init(void) {
                             .enabled = float_is_stuck,
                             .poi = FLOAT_LOOK_POI,
                             .on_arrive = examine_float,
-                            .hint = float_boil};
+                            .active_anim = float_boil};
   hotspots[i++] = (Hotspot){.rect = CARLA_HOTSPOT,
                             .poi = CARLA_POI,
                             .on_arrive = talk_to_carla,
-                            .hint = carla_boil};
+                            .active_anim = carla_boil};
   hotspots[i++] = (Hotspot){
       .rect = POOL_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_pool};
   hotspots[i++] = (Hotspot){
