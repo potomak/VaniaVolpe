@@ -57,8 +57,14 @@ typedef struct plane {
 // reads like its description: "tapping the shovel digs".
 typedef struct hotspot {
   SDL_Rect rect;
-  // NULL = always active; else gates the hotspot on scene state (a disabled
-  // hotspot lets the click fall through to the ones below / the walk).
+  // Gates this row for click dispatch: hotspots_handle_click takes the first
+  // enabled row that contains the tap. NULL = always enabled. "Enabled" means
+  // the row handles a tap right now — an explanatory "not yet" line still
+  // counts, so an always-tappable object (the gate: open it with the key,
+  // else say she needs one) leaves this NULL. Set a predicate only to let the
+  // tap fall through to the rows below / the default walk when the row should
+  // do nothing (a not-yet-dug key). active_anim (below) plays while any row
+  // carrying it is enabled, so this gates the boil too.
   bool (*enabled)(void);
   // Where the actor walks before acting (exact goal, so a POI on blocked
   // ground is legal — see walk_actor_to). Ignored when immediate.
