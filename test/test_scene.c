@@ -78,6 +78,13 @@ static bool pred_b_on;
 static bool pred_a(void) { return pred_a_on; }
 static bool pred_b(void) { return pred_b_on; }
 
+// A complementary pair, like the sunscreen bottle's before/after rows: exactly
+// one is enabled at a time, and they share one boil the object shows in both
+// states.
+static bool sunscreen_on;
+static bool bottle_before(void) { return !sunscreen_on; }
+static bool bottle_after(void) { return sunscreen_on; }
+
 static bool order_is(const int *order, int count, const int *expected,
                      int expected_count) {
   if (count != expected_count) {
@@ -283,6 +290,35 @@ int test_scene(void) {
   sync_hotspot_active_anims(&s);
   check(!boil_a->is_playing, "and refreezes once every carrier is disabled");
 
+  // The exact case the OR-across-carriers logic exists for (the sunscreen
+  // bottle): two complementary rows share one boil, so the object boils in
+  // *both* states — including the state where the enabled row comes before the
+  // disabled one in the table, which a naive per-row play/freeze would let the
+  // later, disabled row freeze.
+  AnimationData *bottle_boil = make_animation_data(3, LOOP);
+  Hotspot bottle[2] = {
+      {.rect = {0, 0, 10, 10},
+       .enabled = bottle_before,
+       .active_anim = bottle_boil},
+      {.rect = {0, 0, 10, 10},
+       .enabled = bottle_after,
+       .active_anim = bottle_boil},
+  };
+  Scene bs = {0};
+  bs.hotspots = bottle;
+  bs.hotspots_length = 2;
+
+  sunscreen_on = false; // row 0 (before) enabled, row 1 (after) disabled
+  sync_hotspot_active_anims(&bs);
+  check(bottle_boil->is_playing,
+        "a shared boil stays on when the later row is the disabled one");
+
+  sunscreen_on = true; // row 0 disabled, row 1 enabled — the other ordering
+  sync_hotspot_active_anims(&bs);
+  check(bottle_boil->is_playing,
+        "and across the complementary state, so it boils throughout");
+
+  free_animation(bottle_boil);
   free_animation(boil_a);
   free_animation(boil_b);
 
