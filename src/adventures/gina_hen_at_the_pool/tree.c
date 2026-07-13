@@ -20,16 +20,19 @@
 #include "hen.h"
 #include "tree.h"
 
-static ImageData images[4] = {
+static ImageData images[2] = {
     {NULL, "background.png", "tree", 0, 0},
-    {NULL, "float.png", "tree", 0, 0},
-    {NULL, "carla.png", "tree", 0, 0},
     {NULL, "basket.png", "tree", 0, 0},
 };
 static const ImageData *background = &images[0];
-static const ImageData *stuck_float = &images[1];
-static const ImageData *carla = &images[2];
-static const ImageData *basket = &images[3];
+static const ImageData *basket = &images[1];
+
+// The tappable objects boil (LIVELINESS.md Part 3): the stuck float squiggles
+// while it can be examined, Carla while she can be talked to. Same size as the
+// old still PNGs, so the render positions are unchanged.
+static AnimationData *float_boil;
+static AnimationData *carla_boil;
+static AnimationData *animations[2];
 
 static ChunkData chunks[2] = {
     {NULL, "voice.wav", "tree"},
@@ -74,13 +77,19 @@ static void init(void) {
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
+  float_boil = animations[0] = make_animation_data(3, LOOP);
+  carla_boil = animations[1] = make_animation_data(3, LOOP);
+
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
                             .enabled = float_is_stuck,
                             .poi = FLOAT_LOOK_POI,
-                            .on_arrive = examine_float};
-  hotspots[i++] = (Hotspot){
-      .rect = CARLA_HOTSPOT, .poi = CARLA_POI, .on_arrive = talk_to_carla};
+                            .on_arrive = examine_float,
+                            .active_anim = float_boil};
+  hotspots[i++] = (Hotspot){.rect = CARLA_HOTSPOT,
+                            .poi = CARLA_POI,
+                            .on_arrive = talk_to_carla,
+                            .active_anim = carla_boil};
   hotspots[i++] = (Hotspot){
       .rect = POOL_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_pool};
   hotspots[i++] = (Hotspot){
@@ -92,7 +101,13 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  return hen_load_media(gina, renderer);
+  if (!hen_load_media(gina, renderer)) {
+    return false;
+  }
+  return load_animation(renderer, float_boil, (Asset){"float_boil.png", "tree"},
+                        (Asset){"float_boil.anim", "tree"}) &&
+         load_animation(renderer, carla_boil, (Asset){"carla_boil.png", "tree"},
+                        (Asset){"carla_boil.anim", "tree"});
 }
 
 // ── interactions
@@ -174,9 +189,9 @@ static void update(float delta_time) { hen_update(gina, delta_time); }
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
   if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
-    render_image(renderer, stuck_float, FLOAT_AT);
+    render_animation(renderer, float_boil, FLOAT_AT);
   }
-  render_image(renderer, carla, CARLA_AT);
+  render_animation(renderer, carla_boil, CARLA_AT);
   hen_render(gina, renderer);
   // Once Carla has handed it over, Gina carries the basket with her.
   if (gina_state.has_basket) {
@@ -212,6 +227,8 @@ Scene tree_scene = {
     .walk_mask_dir = "tree",
     .images = images,
     .images_length = LEN(images),
+    .animations = animations,
+    .animations_length = LEN(animations),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
 };

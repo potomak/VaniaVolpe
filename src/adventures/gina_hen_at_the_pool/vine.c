@@ -19,12 +19,15 @@
 #include "hen.h"
 #include "vine.h"
 
-static ImageData images[2] = {
+static ImageData images[1] = {
     {NULL, "background.png", "vine", 0, 0},
-    {NULL, "grapes.png", "vine", 0, 0},
 };
 static const ImageData *background = &images[0];
-static const ImageData *grapes = &images[1];
+
+// The grapes boil (LIVELINESS.md Part 3) to show they are tappable; same size
+// as the old still PNG, so the render position is unchanged.
+static AnimationData *grapes_boil;
+static AnimationData *animations[1];
 
 static ChunkData chunks[1] = {
     {NULL, "voice.wav", "vine"},
@@ -63,9 +66,13 @@ static void init(void) {
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "vine");
 
+  grapes_boil = animations[0] = make_animation_data(3, LOOP);
+
   int i = 0;
-  hotspots[i++] = (Hotspot){
-      .rect = GRAPES_HOTSPOT, .poi = GRAPES_POI, .on_arrive = pick_grapes};
+  hotspots[i++] = (Hotspot){.rect = GRAPES_HOTSPOT,
+                            .poi = GRAPES_POI,
+                            .on_arrive = pick_grapes,
+                            .active_anim = grapes_boil};
   hotspots[i++] = (Hotspot){
       .rect = TREE_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_tree};
   hotspots[i++] = (Hotspot){
@@ -75,7 +82,12 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  return hen_load_media(gina, renderer);
+  if (!hen_load_media(gina, renderer)) {
+    return false;
+  }
+  return load_animation(renderer, grapes_boil,
+                        (Asset){"grapes_boil.png", "vine"},
+                        (Asset){"grapes_boil.anim", "vine"});
 }
 
 static void go_to_tree(void) { set_active_scene(TREE); }
@@ -122,7 +134,7 @@ static void update(float delta_time) { hen_update(gina, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
-  render_image(renderer, grapes, GRAPES_AT);
+  render_animation(renderer, grapes_boil, GRAPES_AT);
   hen_render(gina, renderer);
 }
 
@@ -152,6 +164,8 @@ Scene vine_scene = {
     .walk_mask_dir = "vine",
     .images = images,
     .images_length = LEN(images),
+    .animations = animations,
+    .animations_length = LEN(animations),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
 };

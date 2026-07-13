@@ -40,6 +40,45 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
   return false;
 }
 
+void sync_hotspot_active_anims(const Scene *scene) {
+  for (int i = 0; i < scene->hotspots_length; i++) {
+    AnimationData *anim = scene->hotspots[i].active_anim;
+    if (anim == NULL) {
+      continue;
+    }
+    // Handle each distinct animation once: two hotspots may share one object's
+    // boil (e.g. the sunscreen bottle's before/after entries), and only the OR
+    // of their enabled states is meaningful.
+    bool already_handled = false;
+    for (int j = 0; j < i; j++) {
+      if (scene->hotspots[j].active_anim == anim) {
+        already_handled = true;
+        break;
+      }
+    }
+    if (already_handled) {
+      continue;
+    }
+    // Play if any hotspot carrying this animation is enabled.
+    bool any_enabled = false;
+    for (int j = 0; j < scene->hotspots_length; j++) {
+      const Hotspot *h = &scene->hotspots[j];
+      if (h->active_anim == anim && (h->enabled == NULL || h->enabled())) {
+        any_enabled = true;
+        break;
+      }
+    }
+    if (any_enabled) {
+      play_animation(anim, NULL); // no-op if already playing
+    } else if (anim->is_playing) {
+      // Freeze in place. stop_animation would reset the frame and fire the end
+      // callback; there is none here, but hold the current frame and skip the
+      // callback path explicitly rather than relying on that.
+      anim->is_playing = false;
+    }
+  }
+}
+
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length,
                        int *out_order) {

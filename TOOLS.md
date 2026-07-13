@@ -80,6 +80,13 @@ them.
   downscaled by `--scale` (nearest-neighbour), repacked vertically with a
   matching `.anim`. Placeholders to develop depth bands against; real art
   replaces them file-for-file. Needs Pillow.
+- **`gen_boil_sheet.py`** — turns a still object PNG into a placeholder
+  "boil" sheet (see `LIVELINESS.md` Part 3): each frame is the source nudged
+  by a gentle sine wiggle, packed vertically with a matching `.anim`, same
+  frame size as the source so a scene swaps `render_image` for
+  `render_animation` with no position change. Placeholders to develop the
+  boiling hotspots against; real traced frames replace them file-for-file.
+  Needs Pillow.
 
 ## Asset pipeline
 
