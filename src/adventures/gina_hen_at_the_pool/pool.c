@@ -250,6 +250,13 @@ static void try_dive(void) {
 }
 
 static void process_input(SDL_Event *event) {
+  // Drag & drop (LIVELINESS.md Part 2): dragging the pointer from a press on
+  // Gina picks her up (plain taps fall through, so hotspots she stands on
+  // keep working). The landing scan runs on the live grid, so a pre-sunscreen
+  // drop always lands back in the shade and nobody lands in the pool.
+  if (walk_actor_drag_event(gina, &walk_grid, event)) {
+    return;
+  }
   switch (event->type) {
   case SDL_MOUSEMOTION:
     m_pos.x = event->motion.x;

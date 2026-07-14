@@ -161,6 +161,11 @@ static void talk_to_carla(void) {
 }
 
 static void process_input(SDL_Event *event) {
+  // Drag & drop (LIVELINESS.md Part 2): dragging the pointer from a press on
+  // Gina picks her up; plain taps fall through to the hotspots.
+  if (walk_actor_drag_event(gina, &walk_grid, event)) {
+    return;
+  }
   switch (event->type) {
   case SDL_MOUSEMOTION:
     m_pos.x = event->motion.x;

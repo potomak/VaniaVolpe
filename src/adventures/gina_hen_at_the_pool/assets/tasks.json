@@ -31,6 +31,33 @@
       "size": "120x120",
       "description": "Gina's beak-moving talk loop. For read-along lip-sync this can grow to a 7-frame mouth-shape sheet (X A B C D E F, see SPEECH.md); 3 frames stay fine as a classic loop."
     },
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "dragged",
+      "frames": 2,
+      "size": "120x120",
+      "description": "Gina held mid-air by the pointer: dangling, legs paddling (loops). Until this sheet lands the game shows her idle sheet while dragged (LIVELINESS.md Part 2)."
+    },
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "falling",
+      "frames": 3,
+      "size": "120x120",
+      "description": "Gina flutter-falling after being dropped: quick comedic wing flaps (loops while she descends)."
+    },
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "landing",
+      "frames": 3,
+      "size": "120x120",
+      "description": "Touchdown beat: a little squat and feather puff (plays once, then back to idle)."
+    },
 
     {
       "group": "Voice — Poolside",

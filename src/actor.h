@@ -30,6 +30,12 @@ typedef enum actor_state {
   TALKING,
   SITTING,
   WAVING,
+  // Drag & drop (LIVELINESS.md Part 2), kept contiguous so
+  // `state >= DRAGGED` reads as "airborne / off normal ground". All three
+  // sheets are optional — a missing one falls back to the idle sheet.
+  DRAGGED,
+  FALLING,
+  LANDING,
   // Always last: number of states / size of the animation table.
   ACTOR_STATE_COUNT,
 } ActorState;
@@ -108,6 +114,14 @@ typedef struct actor {
   // Fired once when the current walk reaches its target; per-instance so two
   // actors walking at once don't clobber each other's callback. NULL when idle.
   void (*on_end_walking)(void);
+  // Drag & drop (LIVELINESS.md Part 2). A press over the sprite arms a drag
+  // (managed by walk_actor_drag_event); drag_offset keeps the grab point
+  // under the pointer while DRAGGED; fall_target_y is the centre y the actor
+  // descends to while FALLING.
+  bool drag_armed;
+  SDL_FPoint drag_grab;   // pointer position at the arming press
+  SDL_FPoint drag_offset; // current_position - drag_grab when the drag began
+  float fall_target_y;
 } Actor;
 
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);
@@ -152,5 +166,20 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text);
 
 // Play a one-off state animation (e.g. SITTING, WAVING) and hold it.
 void actor_play_state(Actor *actor, ActorState state);
+
+// The sprite's screen-space rectangle (reference frame centred on
+// current_position): the grab target for drag & drop, before padding.
+SDL_Rect actor_sprite_rect(const Actor *actor);
+
+// Start dragging (LIVELINESS.md Part 2): interrupts a walk (dropping its
+// callback) or catches the actor mid-fall; refused while TALKING (returns
+// false), like walks are. The actor then follows actor_drag_move until
+// actor_drop. Scenes don't call these directly — walk_actor_drag_event does.
+bool actor_begin_drag(Actor *actor);
+void actor_drag_move(Actor *actor, SDL_FPoint pointer);
+// Release at the landing target (centre coordinates, from the walk grid —
+// see walk_actor_drag_event): below the actor starts a FALLING descent; at
+// or above snaps there directly (a short hop, never an upward "fall").
+void actor_drop(Actor *actor, SDL_FPoint target);
 
 #endif /* actor_h */

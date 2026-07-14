@@ -89,6 +89,23 @@ static void cancel_walk(Actor *actor) {
   actor->on_end_walking = NULL;
 }
 
+// Touchdown at the end of a drop: play the one-shot LANDING beat when the
+// sheet exists (the LANDING case in actor_update returns to IDLE when it
+// stops), else straight back to IDLE.
+static void touch_down(Actor *actor) {
+  AnimationData *falling = variant_animations(actor)[FALLING];
+  if (falling != NULL) {
+    stop_animation(falling);
+  }
+  AnimationData *landing = variant_animations(actor)[LANDING];
+  if (landing != NULL) {
+    play_animation(landing, NULL);
+    actor->state = LANDING;
+  } else {
+    actor->state = IDLE;
+  }
+}
+
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   Actor *actor = malloc(sizeof(Actor));
   actor->spec = spec;
@@ -127,6 +144,10 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   actor->talking_cues = NULL;
   actor->cue_cursor = 0;
   actor->on_end_walking = NULL;
+  actor->drag_armed = false;
+  actor->drag_grab = (SDL_FPoint){0, 0};
+  actor->drag_offset = (SDL_FPoint){0, 0};
+  actor->fall_target_y = 0;
   actor_face(actor, WEST);
   return actor;
 }
@@ -219,8 +240,9 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
 void actor_update(Actor *actor, float delta_time) {
   // Advance every playing animation each frame (timing lives here now, not in
   // render). Only the active variant's animations ever play, but ticking all
-  // of them is a cheap no-op on the stopped ones. All actor animations loop
-  // with no end callback, so this never fires a stray callback.
+  // of them is a cheap no-op on the stopped ones. Actor animations are always
+  // played with no end callback (a ONE_SHOT LANDING sheet stops itself
+  // silently), so this never fires a stray callback.
   int now = SDL_GetTicks();
   for (int v = 0; v < actor->spec->variants_length; v++) {
     for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
@@ -238,8 +260,31 @@ void actor_update(Actor *actor, float delta_time) {
   case IDLE:
   case SITTING:
   case WAVING:
+  case DRAGGED: // position follows the pointer (actor_drag_move)
   case ACTOR_STATE_COUNT:
     break;
+  case FALLING: {
+    // Constant-speed descent to the landing target (LIVELINESS.md Part 2).
+    float remaining = actor->fall_target_y - actor->current_position.y;
+    float step = FALL_SPEED * delta_time;
+    if (remaining <= step) {
+      actor->current_position.y = actor->fall_target_y;
+      touch_down(actor);
+    } else {
+      actor->current_position.y += step;
+    }
+    break;
+  }
+  case LANDING: {
+    // The one-shot landing beat stops itself (animation_update); poll it
+    // rather than arming a context-less end callback, as the spec's fidgets
+    // do too.
+    AnimationData *landing = variant_animations(actor)[LANDING];
+    if (landing == NULL || !landing->is_playing) {
+      actor->state = IDLE;
+    }
+    break;
+  }
   case WALKING: {
     // Stop when within 2px of target OR when we have passed it (dot product
     // of the original direction and the remaining vector turns negative).
@@ -359,7 +404,11 @@ void actor_free(Actor *actor) {
 
 void actor_walk_path(Actor *actor, const SDL_FPoint *points, int points_length,
                      void (*on_end)(void)) {
-  if (actor->state == TALKING) {
+  // No walking while talking, held by the pointer, or mid-air. A LANDING
+  // beat may be interrupted (she is on the ground; its one-shot just ticks
+  // out silently).
+  if (actor->state == TALKING || actor->state == DRAGGED ||
+      actor->state == FALLING) {
     return;
   }
 
@@ -445,7 +494,9 @@ void actor_walk_to(Actor *actor, SDL_FPoint target_position,
 }
 
 void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
-  if (actor->state == WALKING) {
+  // A talking head mid-air would hang there: no lines while held or falling.
+  if (actor->state == WALKING || actor->state == DRAGGED ||
+      actor->state == FALLING) {
     return;
   }
 
@@ -511,4 +562,77 @@ void actor_play_state(Actor *actor, ActorState state) {
     play_animation(variant_animations(actor)[state], NULL);
   }
   actor->state = state;
+}
+
+SDL_Rect actor_sprite_rect(const Actor *actor) {
+  // reference_animation doesn't mutate; it just returns a mutable animation.
+  AnimationData *reference = reference_animation((Actor *)actor);
+  if (reference == NULL) {
+    return (SDL_Rect){(int)actor->current_position.x,
+                      (int)actor->current_position.y, 0, 0};
+  }
+  int w = reference->sprite_clips[0].w;
+  int h = reference->sprite_clips[0].h;
+  return (SDL_Rect){(int)actor->current_position.x - w / 2,
+                    (int)actor->current_position.y - h / 2, w, h};
+}
+
+bool actor_begin_drag(Actor *actor) {
+  if (actor->state == TALKING) {
+    return false;
+  }
+  // Interrupt whatever she was doing: a walk is cancelled (dropping its
+  // callback, like any interrupted walk); a fall or landing beat is caught
+  // mid-air. The airborne animations were played with no callback, so
+  // stopping them is silent.
+  cancel_walk(actor);
+  AnimationData *falling = variant_animations(actor)[FALLING];
+  if (falling != NULL) {
+    stop_animation(falling);
+  }
+  AnimationData *landing = variant_animations(actor)[LANDING];
+  if (landing != NULL) {
+    stop_animation(landing);
+  }
+  AnimationData *dragged = variant_animations(actor)[DRAGGED];
+  if (dragged != NULL) {
+    play_animation(dragged, NULL);
+  }
+  actor->state = DRAGGED;
+  return true;
+}
+
+void actor_drag_move(Actor *actor, SDL_FPoint pointer) {
+  if (actor->state != DRAGGED) {
+    return;
+  }
+  // The grab point stays under the pointer: the offset was taken at the
+  // arming press, so she doesn't snap by half a sprite.
+  actor->current_position.x = pointer.x + actor->drag_offset.x;
+  actor->current_position.y = pointer.y + actor->drag_offset.y;
+}
+
+void actor_drop(Actor *actor, SDL_FPoint target) {
+  if (actor->state != DRAGGED) {
+    return;
+  }
+  AnimationData *dragged = variant_animations(actor)[DRAGGED];
+  if (dragged != NULL) {
+    stop_animation(dragged);
+  }
+  // The column scan preserves x; the nearest-ground fallback may nudge it.
+  actor->current_position.x = target.x;
+  if (target.y > actor->current_position.y + ACTOR_ARRIVE_EPSILON) {
+    actor->fall_target_y = target.y;
+    AnimationData *falling = variant_animations(actor)[FALLING];
+    if (falling != NULL) {
+      play_animation(falling, NULL);
+    }
+    actor->state = FALLING;
+  } else {
+    // Landing at or above the drop: place her there — a short hop, never an
+    // upward "fall".
+    actor->current_position.y = target.y;
+    touch_down(actor);
+  }
 }
