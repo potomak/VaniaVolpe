@@ -30,6 +30,10 @@ typedef enum actor_state {
   TALKING,
   SITTING,
   WAVING,
+  // Playing one of the spec's idle fidgets (LIVELINESS.md Part 1). Fidget
+  // sheets live in Actor.fidget_anims, not the per-state animation table, so
+  // this slot in that table is always NULL.
+  FIDGETING,
   // Drag & drop (LIVELINESS.md Part 2), kept contiguous so
   // `state >= DRAGGED` reads as "airborne / off normal ground". All three
   // sheets are optional — a missing one falls back to the idle sheet.
@@ -53,6 +57,22 @@ typedef struct actor_anim_spec {
 
 // Most sprite sets (depth variants) one actor can carry.
 #define ACTOR_MAX_VARIANTS 3
+
+// Most idle fidgets one actor can carry (LIVELINESS.md Part 1).
+#define ACTOR_MAX_FIDGETS 4
+
+// One idle fidget in a character's spec: a short one-shot animation (a peck,
+// a blink) played after a randomized quiet delay, then back to IDLE. An
+// ActorAnimSpec minus the state — fidgets are deliberately not per-character
+// ActorStates: they are all the same behaviour with different art, and an
+// open-ended list doesn't churn the enum for every new character.
+typedef struct actor_fidget_spec {
+  const char *sprite_filename;
+  const char *data_filename;
+  int frames;
+  // Milliseconds per frame; 0 means the engine default (DEFAULT_MS_PER_FRAME).
+  int ms_per_frame;
+} ActorFidgetSpec;
 
 // A full sprite set for one depth, plus how the actor moves at that depth
 // (DEPTH_AND_CAMERA.md Phase 2). Variant 0 is the nearest; every variant must
@@ -81,6 +101,11 @@ typedef struct actor_spec {
   // canonical order (X A B C D E F) and lines with .cues sidecars drive it.
   // 0: classic looping talking animation (see SPEECH.md).
   int talk_shape_frames;
+  // Idle fidgets (LIVELINESS.md Part 1); NULL/0 = the actor never fidgets.
+  // Fidgets play on variant 0 only — far variants skip them rather than
+  // requiring every fidget at every depth.
+  const ActorFidgetSpec *fidgets;
+  int fidgets_length;
 } ActorSpec;
 
 typedef struct actor {
@@ -122,6 +147,12 @@ typedef struct actor {
   SDL_FPoint drag_grab;   // pointer position at the arming press
   SDL_FPoint drag_offset; // current_position - drag_grab when the drag began
   float fall_target_y;
+  // Idle fidgets (LIVELINESS.md Part 1): the spec's fidget sheets (variant 0
+  // art, ONE_SHOT), which one is playing while FIDGETING, and when the next
+  // one fires (re-rolled every time the actor enters IDLE).
+  AnimationData *fidget_anims[ACTOR_MAX_FIDGETS];
+  int active_fidget;
+  Uint32 next_fidget_at;
 } Actor;
 
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);

@@ -49,7 +49,18 @@ for Vania's adventure (mechanism-ready, art later), positional audio.
 
 ---
 
-## Part 1 — Idle fidgets
+## Part 1 — Idle fidgets *(shipped)*
+
+Implemented in #97, as specced: a spec-level `ActorFidgetSpec` list, one
+`FIDGETING` state, a `rand_range(4000, 9000)` ms timer re-rolled by every
+return to IDLE (all such returns go through one `enter_idle` helper), and
+polling of the one-shot's `is_playing` instead of a context-less callback.
+Walks, lines, drags and `actor_play_state` all stop a fidget first. `rand()`
+is deliberately unseeded — the delays only need to look random, and
+determinism helps the tests. Gina's three fidget sheets are tracked in
+`assets/tasks.json` (the mechanism is dormant for her until they land); the
+depth-demo fox demonstrates it today with her existing waving sheet as a
+one-entry fidget list. The design as specced:
 
 ### Design
 
@@ -341,4 +352,5 @@ The parts are independent; suggested order by joy-per-effort:
    without waiting for art.
 2. **Part 2** second *(shipped, #96)* — the engine work was the bulk and the
    art can follow (idle-sheet fallbacks keep it playable end-to-end).
-3. **Part 1** last — pure charm, fully art-gated.
+3. **Part 1** last *(shipped, #97)* — pure charm; the engine is in, Gina's
+   fidget art follows through the asset pipeline.

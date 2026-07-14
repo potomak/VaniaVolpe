@@ -74,6 +74,12 @@ static const ActorVariantSpec DEMO_FOX_VARIANTS[] = {
     {.anims = NEAR_ANIMS, .anims_length = 2, .speed_scale = 1.0F},
     {.anims = FAR_ANIMS, .anims_length = 2, .speed_scale = 0.6F},
 };
+// Idle fidget (LIVELINESS.md Part 1), demonstrating the mechanism with
+// existing art: leave the fox alone for a few seconds and she waves once.
+// Fidgets play on variant 0 only, so no far waving sheet is needed.
+static const ActorFidgetSpec DEMO_FOX_FIDGETS[] = {
+    {"waving.png", "waving.anim", 3, 160}, // slowed so the wave reads
+};
 static const ActorSpec DEMO_FOX_SPEC = {
     .id = "demo_fox",
     .display_name = "Vania",
@@ -83,6 +89,8 @@ static const ActorSpec DEMO_FOX_SPEC = {
     .move_state = WALKING,
     .variants = DEMO_FOX_VARIANTS,
     .variants_length = 2,
+    .fidgets = DEMO_FOX_FIDGETS,
+    .fidgets_length = LEN(DEMO_FOX_FIDGETS),
 };
 
 static Actor *fox;

@@ -8,6 +8,7 @@
 #include <SDL2_mixer/SDL_mixer.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "actor.h"
 #include "constants.h"
@@ -39,8 +40,8 @@ static AnimationData *reference_animation(Actor *actor) {
   return NULL;
 }
 
-// Face every variant's animations, so a depth switch mid-walk keeps the
-// actor pointing the same way.
+// Face every variant's animations (and the fidgets), so a depth switch
+// mid-walk keeps the actor pointing the same way.
 static void actor_face(Actor *actor, HorizontalOrientation orientation) {
   SDL_RendererFlip flip =
       orientation == EAST ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
@@ -49,6 +50,11 @@ static void actor_face(Actor *actor, HorizontalOrientation orientation) {
       if (actor->animations[v][i]) {
         actor->animations[v][i]->flip = flip;
       }
+    }
+  }
+  for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
+    if (actor->fidget_anims[i]) {
+      actor->fidget_anims[i]->flip = flip;
     }
   }
 }
@@ -69,6 +75,39 @@ static void start_segment(Actor *actor, SDL_FPoint target) {
   actor->direction = (SDL_FPoint){dx / dist, dy / dist};
 }
 
+// Fidgets the spec actually carries (bounded by the animation array).
+static int fidget_count(const Actor *actor) {
+  int count = actor->spec->fidgets_length;
+  return count > ACTOR_MAX_FIDGETS ? ACTOR_MAX_FIDGETS : count;
+}
+
+// Every return to IDLE goes through here so the fidget timer is re-rolled
+// (LIVELINESS.md Part 1): the next fidget fires a randomized few seconds
+// after the actor last came to rest. rand() is deliberately unseeded — the
+// delays only need to *look* random, and determinism helps the tests.
+static void enter_idle(Actor *actor) {
+  actor->state = IDLE;
+  if (fidget_count(actor) > 0) {
+    Uint32 span = FIDGET_MAX_DELAY_MS - FIDGET_MIN_DELAY_MS;
+    actor->next_fidget_at = SDL_GetTicks() + FIDGET_MIN_DELAY_MS +
+                            (Uint32)(rand() % (int)(span + 1));
+  }
+}
+
+// Interrupt a playing fidget: a tap always wins over a peck. The fidget was
+// played with no callback, so stopping it is silent; callers usually
+// overwrite the state right after.
+static void stop_fidget(Actor *actor) {
+  if (actor->state != FIDGETING) {
+    return;
+  }
+  AnimationData *fidget = actor->fidget_anims[actor->active_fidget];
+  if (fidget != NULL) {
+    stop_animation(fidget);
+  }
+  enter_idle(actor);
+}
+
 // Stop an in-flight walk without firing its callback: the pending callback is
 // dropped, exactly like a walk interrupted by a new destination.
 static void cancel_walk(Actor *actor) {
@@ -76,7 +115,7 @@ static void cancel_walk(Actor *actor) {
     if (variant_animations(actor)[actor->spec->move_state]) {
       stop_animation(variant_animations(actor)[actor->spec->move_state]);
     }
-    actor->state = IDLE;
+    enter_idle(actor);
     if (actor->move_sound_channel >= 0) {
       Mix_HaltChannel(actor->move_sound_channel);
       actor->move_sound_channel = -1;
@@ -102,7 +141,7 @@ static void touch_down(Actor *actor) {
     play_animation(landing, NULL);
     actor->state = LANDING;
   } else {
-    actor->state = IDLE;
+    enter_idle(actor);
   }
 }
 
@@ -148,6 +187,20 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   actor->drag_grab = (SDL_FPoint){0, 0};
   actor->drag_offset = (SDL_FPoint){0, 0};
   actor->fall_target_y = 0;
+  for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
+    actor->fidget_anims[i] = NULL;
+  }
+  for (int i = 0; i < fidget_count(actor); i++) {
+    const ActorFidgetSpec *fidget = &spec->fidgets[i];
+    AnimationData *animation = make_animation_data(fidget->frames, ONE_SHOT);
+    if (animation != NULL && fidget->ms_per_frame > 0) {
+      animation->ms_per_frame = fidget->ms_per_frame;
+    }
+    actor->fidget_anims[i] = animation;
+  }
+  actor->active_fidget = 0;
+  actor->next_fidget_at = 0;
+  enter_idle(actor); // state IDLE + the first fidget timer roll
   actor_face(actor, WEST);
   return actor;
 }
@@ -215,6 +268,28 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
     }
   }
 
+  if (spec->fidgets_length > ACTOR_MAX_FIDGETS) {
+    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                "%s: %d fidgets declared, only the first %d are used", spec->id,
+                spec->fidgets_length, ACTOR_MAX_FIDGETS);
+  }
+  for (int i = 0; i < fidget_count(actor); i++) {
+    const ActorFidgetSpec *fidget = &spec->fidgets[i];
+    if (!load_animation(renderer, actor->fidget_anims[i],
+                        (Asset){
+                            .filename = fidget->sprite_filename,
+                            .directory = spec->assets_dir,
+                        },
+                        (Asset){
+                            .filename = fidget->data_filename,
+                            .directory = spec->assets_dir,
+                        })) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load %s fidget %s",
+                   spec->id, fidget->sprite_filename);
+      return false;
+    }
+  }
+
   if (spec->move_sound_filename) {
     char move_sound_path[ASSET_PATH_MAX];
     asset_resolve(
@@ -251,6 +326,11 @@ void actor_update(Actor *actor, float delta_time) {
       }
     }
   }
+  for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
+    if (actor->fidget_anims[i] != NULL) {
+      animation_update(actor->fidget_anims[i], now);
+    }
+  }
 
   float dx = actor->target_position.x - actor->current_position.x;
   float dy = actor->target_position.y - actor->current_position.y;
@@ -258,6 +338,31 @@ void actor_update(Actor *actor, float delta_time) {
 
   switch (actor->state) {
   case IDLE:
+    // Idle fidgets (LIVELINESS.md Part 1): after the rolled delay, play one
+    // at random. Variant 0 only — far variants have no fidget art.
+    if (fidget_count(actor) > 0 && actor->variant == 0 &&
+        (Uint32)now >= actor->next_fidget_at) {
+      actor->active_fidget = rand() % fidget_count(actor);
+      AnimationData *fidget = actor->fidget_anims[actor->active_fidget];
+      if (fidget != NULL) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s fidgets (%d)",
+                    actor->spec->id, actor->active_fidget);
+        play_animation(fidget, NULL);
+        actor->state = FIDGETING;
+      } else {
+        enter_idle(actor); // failed to allocate at startup: just re-roll
+      }
+    }
+    break;
+  case FIDGETING: {
+    // The one-shot fidget stops itself (animation_update); poll it rather
+    // than arming a context-less end callback, like LANDING does.
+    AnimationData *fidget = actor->fidget_anims[actor->active_fidget];
+    if (fidget == NULL || !fidget->is_playing) {
+      enter_idle(actor);
+    }
+    break;
+  }
   case SITTING:
   case WAVING:
   case DRAGGED: // position follows the pointer (actor_drag_move)
@@ -281,7 +386,7 @@ void actor_update(Actor *actor, float delta_time) {
     // do too.
     AnimationData *landing = variant_animations(actor)[LANDING];
     if (landing == NULL || !landing->is_playing) {
-      actor->state = IDLE;
+      enter_idle(actor);
     }
     break;
   }
@@ -302,7 +407,7 @@ void actor_update(Actor *actor, float delta_time) {
         return;
       }
       stop_animation(variant_animations(actor)[actor->spec->move_state]);
-      actor->state = IDLE;
+      enter_idle(actor);
       actor->direction = (SDL_FPoint){0, 0};
       actor->waypoints_length = 0;
       actor->waypoint_index = 0;
@@ -352,7 +457,7 @@ void actor_update(Actor *actor, float delta_time) {
       } else if (talking != NULL) {
         stop_animation(talking);
       }
-      actor->state = IDLE;
+      enter_idle(actor);
     }
     break;
   }
@@ -370,10 +475,13 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
       .x = (int)actor->current_position.x - reference->sprite_clips[0].w / 2,
       .y = (int)actor->current_position.y - reference->sprite_clips[0].h / 2};
 
-  // IDLE renders the actor's idle animation (e.g. the fox's sitting sprite).
+  // IDLE renders the actor's idle animation (e.g. the fox's sitting sprite);
+  // FIDGETING renders the active fidget (they live outside the state table).
   ActorState state =
       actor->state == IDLE ? actor->spec->idle_state : actor->state;
-  AnimationData *animation = variant_animations(actor)[state];
+  AnimationData *animation = actor->state == FIDGETING
+                                 ? actor->fidget_anims[actor->active_fidget]
+                                 : variant_animations(actor)[state];
   if (animation == NULL) {
     animation = variant_animations(actor)[actor->spec->idle_state];
   }
@@ -389,6 +497,11 @@ void actor_free(Actor *actor) {
       if (actor->animations[v][i]) {
         free_animation(actor->animations[v][i]);
       }
+    }
+  }
+  for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
+    if (actor->fidget_anims[i]) {
+      free_animation(actor->fidget_anims[i]);
     }
   }
   if (actor->move_sound) {
@@ -411,6 +524,8 @@ void actor_walk_path(Actor *actor, const SDL_FPoint *points, int points_length,
       actor->state == FALLING) {
     return;
   }
+  // A tap always wins over a fidget.
+  stop_fidget(actor);
 
   if (points_length > ACTOR_MAX_WAYPOINTS) {
     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -499,6 +614,8 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
       actor->state == FALLING) {
     return;
   }
+  // A line always wins over a fidget.
+  stop_fidget(actor);
 
   const char *line = text;
   if (line == NULL && dialog != NULL) {
@@ -558,6 +675,7 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
 }
 
 void actor_play_state(Actor *actor, ActorState state) {
+  stop_fidget(actor);
   if (variant_animations(actor)[state]) {
     play_animation(variant_animations(actor)[state], NULL);
   }
@@ -581,10 +699,11 @@ bool actor_begin_drag(Actor *actor) {
   if (actor->state == TALKING) {
     return false;
   }
-  // Interrupt whatever she was doing: a walk is cancelled (dropping its
-  // callback, like any interrupted walk); a fall or landing beat is caught
-  // mid-air. The airborne animations were played with no callback, so
-  // stopping them is silent.
+  // Interrupt whatever she was doing: a fidget stops, a walk is cancelled
+  // (dropping its callback, like any interrupted walk), a fall or landing
+  // beat is caught mid-air. The airborne animations were played with no
+  // callback, so stopping them is silent.
+  stop_fidget(actor);
   cancel_walk(actor);
   AnimationData *falling = variant_animations(actor)[FALLING];
   if (falling != NULL) {
