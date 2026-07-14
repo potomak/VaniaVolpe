@@ -503,3 +503,90 @@ void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
   }
   actor_walk_path(actor, path, count, on_end);
 }
+
+// Landing target for a drop at `from`. Coordinates are the sprite centre —
+// the walk grid is authored against the centre (see MOVEMENT.md), so the
+// landing target is computed like every walk target. The drop falls straight
+// down: the centre of the first walkable cell at or below `from` in its grid
+// column; a column with no ground below (or a drop outside the scene) falls
+// back to the nearest walkable point overall.
+static SDL_FPoint drop_target(const WalkGrid *grid, SDL_FPoint from) {
+  int cx = (int)from.x / WALK_CELL_SIZE;
+  if (from.x >= 0 && cx < grid->w) {
+    int start = (int)from.y / WALK_CELL_SIZE;
+    if (start < 0) {
+      start = 0;
+    }
+    for (int cy = start; cy < grid->h; cy++) {
+      if (grid->cells[cy][cx]) {
+        return (SDL_FPoint){from.x,
+                            cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F};
+      }
+    }
+  }
+  return walk_grid_nearest(grid, (SDL_Point){(int)from.x, (int)from.y});
+}
+
+bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
+                           const SDL_Event *event) {
+  switch (event->type) {
+  case SDL_MOUSEBUTTONDOWN: {
+    SDL_Point p = {event->button.x, event->button.y};
+    SDL_Rect grab = actor_sprite_rect(actor);
+    grab.x -= DRAG_GRAB_PADDING;
+    grab.y -= DRAG_GRAB_PADDING;
+    grab.w += 2 * DRAG_GRAB_PADDING;
+    grab.h += 2 * DRAG_GRAB_PADDING;
+    // TALKING refuses the grab like it refuses walks.
+    if (actor->state != TALKING && SDL_PointInRect(&p, &grab)) {
+      actor->drag_armed = true;
+      actor->drag_grab = (SDL_FPoint){(float)p.x, (float)p.y};
+    }
+    // The press always falls through: a hotspot the actor happens to stand
+    // on keeps working for plain taps. If the pointer then travels, the
+    // drag steals the actor, cancelling whatever walk the press started.
+    return false;
+  }
+  case SDL_MOUSEMOTION: {
+    SDL_FPoint p = {(float)event->motion.x, (float)event->motion.y};
+    if (actor->state == DRAGGED) {
+      actor_drag_move(actor, p);
+      return true;
+    }
+    if (actor->drag_armed) {
+      // A stale press: the button is no longer held (e.g. the fallen-through
+      // press hit a navigation hotspot and the release went to another
+      // scene). Disarm instead of phantom-grabbing on a later motion.
+      if ((event->motion.state & SDL_BUTTON_LMASK) == 0) {
+        actor->drag_armed = false;
+        return false;
+      }
+      float dx = p.x - actor->drag_grab.x;
+      float dy = p.y - actor->drag_grab.y;
+      if (dx * dx + dy * dy >= DRAG_START_THRESHOLD * DRAG_START_THRESHOLD) {
+        actor->drag_armed = false;
+        // The offset is taken against the arming press, so the grab point
+        // stays under the pointer without a snap, wherever the fallen-
+        // through press briefly walked her meanwhile.
+        actor->drag_offset =
+            (SDL_FPoint){actor->current_position.x - actor->drag_grab.x,
+                         actor->current_position.y - actor->drag_grab.y};
+        if (actor_begin_drag(actor)) {
+          actor_drag_move(actor, p);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  case SDL_MOUSEBUTTONUP:
+    actor->drag_armed = false;
+    if (actor->state == DRAGGED) {
+      actor_drop(actor, drop_target(grid, actor->current_position));
+      return true;
+    }
+    return false;
+  default:
+    return false;
+  }
+}

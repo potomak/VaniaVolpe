@@ -367,6 +367,216 @@ static void test_wide_scene(void) {
         "a wide mask is self-describing and round-trips");
 }
 
+// ── drag & drop (LIVELINESS.md Part 2) ───────────────────────────────────────
+
+// Synthesized mouse events, as walk_actor_drag_event consumes them.
+static SDL_Event mouse_down(int x, int y) {
+  SDL_Event e = {0};
+  e.type = SDL_MOUSEBUTTONDOWN;
+  e.button.x = x;
+  e.button.y = y;
+  return e;
+}
+
+static SDL_Event mouse_motion(int x, int y) {
+  SDL_Event e = {0};
+  e.type = SDL_MOUSEMOTION;
+  e.motion.x = x;
+  e.motion.y = y;
+  e.motion.state = SDL_BUTTON_LMASK; // dragging = the button is held
+  return e;
+}
+
+static SDL_Event mouse_up(int x, int y) {
+  SDL_Event e = {0};
+  e.type = SDL_MOUSEBUTTONUP;
+  e.button.x = x;
+  e.button.y = y;
+  return e;
+}
+
+static bool drag(Actor *actor, const WalkGrid *grid, const SDL_Event *e) {
+  return walk_actor_drag_event(actor, grid, e);
+}
+
+// Step the actor until the fall (and any landing beat) resolves to IDLE.
+static void run_out_fall(Actor *actor) {
+  for (int i = 0; i < 3000 && actor->state != IDLE; i++) {
+    actor_update(actor, 1.0F / 30.0F);
+  }
+}
+
+static void test_drag_and_drop(void) {
+  fprintf(stderr, "\n-- drag & drop unit tests --\n");
+
+  // The poolside strip (y 430..580 walkable), the drop testbed.
+  static WalkGrid grid;
+  walk_grid_build(&grid, &POOL_POOLSIDE_AREA, WINDOW_SIZE);
+
+  Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
+  // make_actor leaves the (never loaded) sprite clips unset; the grab
+  // hit-test reads frame 0, so give it the hen's 120x120.
+  actor->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+
+  // A press away from the sprite neither arms nor consumes.
+  SDL_Event e = mouse_down(500, 100);
+  check(!drag(actor, &grid, &e) && !actor->drag_armed,
+        "a press off the sprite is ignored");
+
+  // A press on the sprite arms the drag but still falls through, so a
+  // hotspot the actor stands on keeps working for plain taps; a
+  // sub-threshold wiggle + release stays a tap and changes nothing.
+  e = mouse_down(150, 480);
+  bool pressed_through = !drag(actor, &grid, &e) && actor->drag_armed;
+  e = mouse_motion(153, 482);
+  bool wiggle_through = !drag(actor, &grid, &e);
+  e = mouse_up(153, 482);
+  bool released_through = !drag(actor, &grid, &e) && !actor->drag_armed;
+  check(pressed_through && wiggle_through && released_through &&
+            actor->state == IDLE && actor->current_position.x == 150 &&
+            actor->current_position.y == 480,
+        "a tap on the actor falls through to the scene untouched");
+
+  // A stale press (button no longer held) disarms instead of grabbing.
+  e = mouse_down(150, 480);
+  drag(actor, &grid, &e);
+  e = mouse_motion(400, 100);
+  e.motion.state = 0; // the release went elsewhere (e.g. a scene switch)
+  check(!drag(actor, &grid, &e) && !actor->drag_armed && actor->state == IDLE,
+        "a button-less motion disarms a stale press");
+
+  // Press + travel: the drag begins and she follows the pointer.
+  e = mouse_down(150, 480);
+  drag(actor, &grid, &e);
+  e = mouse_motion(400, 100);
+  drag(actor, &grid, &e);
+  check(actor->state == DRAGGED, "pointer travel past the threshold grabs");
+  e = mouse_motion(410, 90);
+  drag(actor, &grid, &e);
+  check(fabsf(actor->current_position.x - 410.0F) <= DRAG_START_THRESHOLD &&
+            fabsf(actor->current_position.y - 90.0F) <= DRAG_START_THRESHOLD,
+        "while dragged she follows the pointer (grab offset aside)");
+
+  // Release over the pool: she falls straight down her column onto the
+  // strip's first walkable cell, at FALL_SPEED, then goes IDLE (no LANDING
+  // sheet in this spec).
+  float drop_x = actor->current_position.x;
+  e = mouse_up(410, 90);
+  drag(actor, &grid, &e);
+  check(actor->state == FALLING, "a release above the ground starts a fall");
+  float before_y = actor->current_position.y;
+  actor_update(actor, 0.1F);
+  check(fabsf(actor->current_position.y - (before_y + FALL_SPEED * 0.1F)) <
+            0.001F,
+        "the fall descends at FALL_SPEED");
+  run_out_fall(actor);
+  check(actor->state == IDLE && actor->current_position.x == drop_x &&
+            walk_grid_contains(&grid,
+                               (SDL_Point){(int)actor->current_position.x,
+                                           (int)actor->current_position.y}),
+        "she lands on walkable ground straight below the drop");
+
+  // Drop below every walkable cell in the column: nearest ground is above,
+  // so she is placed there directly — never an upward "fall".
+  e = mouse_down((int)actor->current_position.x,
+                 (int)actor->current_position.y);
+  drag(actor, &grid, &e);
+  e = mouse_motion(400, 595);
+  drag(actor, &grid, &e);
+  e = mouse_up(400, 595);
+  drag(actor, &grid, &e);
+  check(actor->state != FALLING &&
+            walk_grid_contains(&grid,
+                               (SDL_Point){(int)actor->current_position.x,
+                                           (int)actor->current_position.y}),
+        "a drop under the ground snaps up to the nearest cell, no fall");
+  run_out_fall(actor);
+
+  // A grab mid-walk cancels the walk and drops its callback.
+  stale_fired = false;
+  walk_actor_to(actor, &grid, (SDL_FPoint){700, 480}, true, on_stale);
+  check(actor->state == WALKING, "walk with callback starts");
+  e = mouse_down((int)actor->current_position.x,
+                 (int)actor->current_position.y);
+  drag(actor, &grid, &e);
+  e = mouse_motion((int)actor->current_position.x + 20,
+                   (int)actor->current_position.y);
+  drag(actor, &grid, &e);
+  check(actor->state == DRAGGED && actor->on_end_walking == NULL,
+        "a grab mid-walk cancels the walk");
+  for (int i = 0; i < 30; i++) {
+    actor_update(actor, 1.0F / 30.0F);
+  }
+  check(!stale_fired, "the cancelled walk never fires its callback");
+
+  // She can be caught mid-fall.
+  e = mouse_motion(400, 100);
+  drag(actor, &grid, &e); // carry her up high
+  e = mouse_up(400, 100);
+  drag(actor, &grid, &e);
+  check(actor->state == FALLING, "released mid-air she falls again");
+  actor_update(actor, 0.05F);
+  e = mouse_down((int)actor->current_position.x,
+                 (int)actor->current_position.y);
+  drag(actor, &grid, &e);
+  e = mouse_motion((int)actor->current_position.x - 20,
+                   (int)actor->current_position.y);
+  drag(actor, &grid, &e);
+  check(actor->state == DRAGGED, "she can be caught mid-fall");
+  e = mouse_up((int)actor->current_position.x - 20, 480);
+  drag(actor, &grid, &e);
+  run_out_fall(actor);
+
+  // TALKING refuses the grab; the press falls through to the scene.
+  actor->state = TALKING;
+  e = mouse_down((int)actor->current_position.x,
+                 (int)actor->current_position.y);
+  check(!drag(actor, &grid, &e) && !actor->drag_armed,
+        "TALKING refuses the grab, like walks");
+  actor->state = IDLE;
+
+  // With a LANDING sheet the fall ends in the one-shot beat, then IDLE.
+  actor->animations[0][LANDING] = make_animation_data(1, ONE_SHOT);
+  actor->animations[0][LANDING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  e = mouse_down((int)actor->current_position.x,
+                 (int)actor->current_position.y);
+  drag(actor, &grid, &e);
+  e = mouse_motion(300, 100);
+  drag(actor, &grid, &e);
+  e = mouse_up(300, 100);
+  drag(actor, &grid, &e);
+  for (int i = 0; i < 3000 && actor->state == FALLING; i++) {
+    actor_update(actor, 1.0F / 30.0F);
+  }
+  check(actor->state == LANDING && actor->animations[0][LANDING]->is_playing,
+        "touchdown plays the one-shot landing beat");
+  // Age the beat past its runtime so animation_update stops it.
+  actor->animations[0][LANDING]->start_time = (int)SDL_GetTicks() - 1000;
+  actor_update(actor, 1.0F / 30.0F);
+  actor_update(actor, 1.0F / 30.0F);
+  check(actor->state == IDLE, "the landing beat over, she returns to IDLE");
+
+  actor_free(actor);
+
+  // Pre-sunscreen invariant (R3): with the shade grid live, a drop far from
+  // the umbrella still lands inside the shade.
+  static WalkGrid shade;
+  walk_grid_build(&shade, &POOL_SHADE_AREA, WINDOW_SIZE);
+  Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
+  gina->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  e = mouse_down(150, 480);
+  drag(gina, &shade, &e);
+  e = mouse_motion(700, 200);
+  drag(gina, &shade, &e);
+  e = mouse_up(700, 200);
+  drag(gina, &shade, &e);
+  run_out_fall(gina);
+  check(walk_grid_contains(&shade, (SDL_Point){(int)gina->current_position.x,
+                                               (int)gina->current_position.y}),
+        "a pre-sunscreen drop lands back inside the shade");
+  actor_free(gina);
+}
+
 int test_walk(void) {
   failures = 0;
   fprintf(stderr, "\n-- walk geometry unit tests --\n");
@@ -386,6 +596,7 @@ int test_walk(void) {
   test_pool_state_switch();
   test_exact_goal_walk(&entrance_grid);
   test_stale_callback_cancelled(&playground_grid);
+  test_drag_and_drop();
 
   return failures;
 }

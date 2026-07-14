@@ -125,7 +125,28 @@ observable without a renderer.
 
 ---
 
-## Part 2 — Drag & drop the actor
+## Part 2 — Drag & drop the actor *(shipped)*
+
+Implemented in #96 with three deviations the implementation surfaced:
+
+- **The press falls through.** The spec had the drag consume the arming
+  press; the headless playthrough immediately caught what that breaks — a
+  hotspot the actor stands on (the sunscreen bottle under Gina at her start)
+  stops responding to taps. As built, a press on the actor arms the drag but
+  still reaches the scene, so plain taps behave exactly as before; pointer
+  travel past the threshold then *steals* the actor, cancelling whatever walk
+  the press started (grabs cancel walks anyway). A stale press (its release
+  went to another scene) is disarmed by the button mask on the next motion.
+- **Centre, not feet.** The landing scan runs on sprite-centre coordinates:
+  the walk grid is authored against the centre (see MOVEMENT.md), so the
+  landing target is computed like every walk target. Same subtraction, same
+  fall height.
+- **She can be caught mid-fall** — a grab is refused only while TALKING, so
+  catching her mid-air works, and it's the better toy.
+
+The three sheets are tracked in `assets/tasks.json` (idle-sheet fallback
+until they land); the optional flap/thud sounds wait for the audio pass.
+The design as specced:
 
 ### Design
 
@@ -318,6 +339,6 @@ The parts are independent; suggested order by joy-per-effort:
 1. **Part 3** first *(shipped, #95)* — smallest engine delta, changes the
    feel of every scene, and the placeholder-boil tool made it visible
    without waiting for art.
-2. **Part 2** second — the engine work is the bulk and the art can follow
-   (idle-sheet fallbacks keep it playable end-to-end).
+2. **Part 2** second *(shipped, #96)* — the engine work was the bulk and the
+   art can follow (idle-sheet fallbacks keep it playable end-to-end).
 3. **Part 1** last — pure charm, fully art-gated.

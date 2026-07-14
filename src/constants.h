@@ -26,6 +26,14 @@
 // arrived. Also the "tap landed on the actor" threshold in actor_walk_to.
 #define ACTOR_ARRIVE_EPSILON 2.0f
 
+// Drag & drop (LIVELINESS.md Part 2). A press within GRAB_PADDING px of the
+// actor's sprite arms a drag; pointer travel beyond START_THRESHOLD begins it
+// (anything less is a tap). A dropped actor descends at FALL_SPEED — constant,
+// no gravity integration: a hen flutters down, she doesn't plummet.
+#define DRAG_GRAB_PADDING 10
+#define DRAG_START_THRESHOLD 8.0f
+#define FALL_SPEED 420.0f
+
 #define LEN(x) (sizeof(x) / sizeof((x)[0]))
 
 #endif

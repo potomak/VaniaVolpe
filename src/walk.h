@@ -93,4 +93,17 @@ int walk_grid_find_path(const WalkGrid *grid, SDL_FPoint from, SDL_FPoint to,
 void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
                    bool exact_goal, void (*on_end)(void));
 
+// Drag & drop (LIVELINESS.md Part 2). Scenes call this first in
+// process_input, with their live grid. A press on the actor's (padded)
+// sprite arms a drag but still falls through to the scene — a hotspot the
+// actor stands on keeps working for plain taps. Pointer travel past
+// DRAG_START_THRESHOLD then steals the actor (cancelling whatever walk the
+// press started), and the release drops her onto the first walkable cell
+// straight below the drop point (its grid column; no ground below falls
+// back to walk_grid_nearest) — so a drop can never break a walkable-area
+// invariant. Returns true when the event was the drag's (carry or release);
+// consumed events must not reach the hotspots.
+bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
+                           const SDL_Event *event);
+
 #endif /* walk_h */
