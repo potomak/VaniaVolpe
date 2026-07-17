@@ -24,3 +24,15 @@ screenshots/
 SDL2.framework
 SDL2_image.framework
 SDL2_mixer.framework
+
+## Android build (fetched sources, synced assets, gradle output)
+android/app/jni/SDL2/
+android/app/jni/SDL2_image/
+android/app/jni/SDL2_mixer/
+android/app/jni/SDL2_ttf/
+android/app/src/main/java/org/
+android/app/src/main/assets/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties

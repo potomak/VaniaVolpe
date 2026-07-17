@@ -30,6 +30,10 @@ All source is in `src/`. Build via `make`:
   `…/VaniaVolpe/catalog.html`) that lists assets per adventure/locale, plays
   audio and animations, and flags any locale missing a file the reference locale
   (`it_IT`) has. Built by `tools/gen_asset_catalog.py` + `src/emscripten/catalog.html`.
+- `make android` — native Android APK (SDL2's Android backend; project under
+  `android/`). Needs the Android SDK + NDK and `gradle`; CI
+  (`.github/workflows/android.yml`) builds a debug-signed, installable APK
+  artifact on every push to `main`. See `TOOLS.md` → *Android build*.
 - `make clean` — removes objects, binaries, and `build/`.
 
 `build/` is git-ignored; never commit generated web artifacts.

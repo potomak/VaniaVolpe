@@ -258,8 +258,11 @@ int main(int argc, char *argv[]) {
 
 #endif /* !SDL_MAIN_HANDLED */
 
-#else
+#elif !defined(__ANDROID__)
 
+// On Android there is no C main: SDLActivity loads the shared library and
+// calls SDL_main itself (and SDL_main.h remaps `main`, so defining one here
+// would collide).
 int main(int argc, char *argv[]) { return SDL_main(argc, argv); }
 
 #endif /* __IPHONEOS__ || __TVOS__ */
