@@ -51,16 +51,20 @@ for Vania's adventure (mechanism-ready, art later), positional audio.
 
 ## Part 1 — Idle fidgets *(shipped)*
 
-Implemented in #97, as specced: a spec-level `ActorFidgetSpec` list, one
-`FIDGETING` state, a `rand_range(4000, 9000)` ms timer re-rolled by every
-return to IDLE (all such returns go through one `enter_idle` helper), and
-polling of the one-shot's `is_playing` instead of a context-less callback.
-Walks, lines, drags and `actor_play_state` all stop a fidget first. `rand()`
-is deliberately unseeded — the delays only need to look random, and
-determinism helps the tests. Gina's three fidget sheets are tracked in
-`assets/tasks.json` (the mechanism is dormant for her until they land); the
-depth-demo fox demonstrates it today with her existing waving sheet as a
-one-entry fidget list. The design as specced:
+Implemented in #97: an `ActorFidgetSpec` list, one `FIDGETING` state, a
+`rand_range(4000, 9000)` ms timer re-rolled by every return to IDLE (all
+such returns go through one `enter_idle` helper), and polling of the
+one-shot's `is_playing` instead of a context-less callback. Walks, lines,
+drags and `actor_play_state` all stop a fidget first. `rand()` is
+deliberately unseeded — the delays only need to look random, and determinism
+helps the tests. One deviation from the spec below, from review: fidget
+lists live on the **variant** spec rather than variant 0 of the actor, so
+every depth can fidget with its own art and the variant-0 special case
+disappears — a variant without fidget art simply never triggers. Gina's
+three fidget sheets are tracked in `assets/tasks.json` (the mechanism is
+dormant for her until they land); the depth-demo fox demonstrates it today
+with her waving sheet at both depths (the far copy generated like her other
+far sheets). The design as specced:
 
 ### Design
 

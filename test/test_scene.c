@@ -64,12 +64,29 @@ static const ActorSpec TWO_VARIANT_SPEC = {
     .variants_length = 2,
 };
 
-// A fidgeting spec (LIVELINESS.md Part 1): two synthetic fidgets, never
-// loaded from disk — make_actor builds their AnimationData from the spec,
-// which is all the trigger/interrupt logic touches.
+// A fidgeting spec (LIVELINESS.md Part 1): synthetic fidgets, never loaded
+// from disk — make_actor builds their AnimationData from the spec, which is
+// all the trigger/interrupt logic touches. Fidget lists are per variant:
+// variant 0 has two, variant 1 has none, variant 2 has its own.
 static const ActorFidgetSpec TEST_FIDGETS[] = {
     {"peck.png", "peck.anim", 2, 0},
     {"blink.png", "blink.anim", 1, 0},
+};
+static const ActorFidgetSpec FAR_TEST_FIDGETS[] = {
+    {"peck_far.png", "peck_far.anim", 2, 0},
+};
+static const ActorVariantSpec FIDGET_VARIANTS[] = {
+    {.anims = VARIANT_ANIMS,
+     .anims_length = 2,
+     .speed_scale = 1.0F,
+     .fidgets = TEST_FIDGETS,
+     .fidgets_length = 2},
+    {.anims = VARIANT_ANIMS, .anims_length = 2, .speed_scale = 1.0F},
+    {.anims = VARIANT_ANIMS,
+     .anims_length = 2,
+     .speed_scale = 1.0F,
+     .fidgets = FAR_TEST_FIDGETS,
+     .fidgets_length = 1},
 };
 static const ActorSpec FIDGET_SPEC = {
     .id = "test_fidgeter",
@@ -78,10 +95,8 @@ static const ActorSpec FIDGET_SPEC = {
     .velocity = 100,
     .idle_state = IDLE,
     .move_state = WALKING,
-    .variants = TWO_VARIANTS,
-    .variants_length = 2,
-    .fidgets = TEST_FIDGETS,
-    .fidgets_length = 2,
+    .variants = FIDGET_VARIANTS,
+    .variants_length = 3,
 };
 
 // Give an actor a WALKING animation with one frame_h-tall frame, so
@@ -357,14 +372,15 @@ int test_scene(void) {
   // Force the timer: the next update picks a fidget and plays it.
   fidgeter->next_fidget_at = 0;
   actor_update(fidgeter, 1.0F / 30.0F);
-  bool playing = fidgeter->fidget_anims[fidgeter->active_fidget] != NULL &&
-                 fidgeter->fidget_anims[fidgeter->active_fidget]->is_playing;
+  bool playing = fidgeter->fidget_anims[0][fidgeter->active_fidget] != NULL &&
+                 fidgeter->fidget_anims[0][fidgeter->active_fidget]->is_playing;
   check(fidgeter->state == FIDGETING && playing &&
             fidgeter->active_fidget >= 0 && fidgeter->active_fidget < 2,
         "the elapsed timer starts one of the spec's fidgets");
 
   // A walk interrupts the fidget instantly and stops its animation.
-  AnimationData *interrupted = fidgeter->fidget_anims[fidgeter->active_fidget];
+  AnimationData *interrupted =
+      fidgeter->fidget_anims[0][fidgeter->active_fidget];
   actor_walk_to(fidgeter, (SDL_FPoint){200, 100}, NULL);
   check(fidgeter->state == WALKING && !interrupted->is_playing,
         "a tap wins over a fidget: the walk starts, the fidget stops");
@@ -378,7 +394,7 @@ int test_scene(void) {
   // A finished one-shot fidget returns to IDLE on its own.
   fidgeter->next_fidget_at = 0;
   actor_update(fidgeter, 1.0F / 30.0F);
-  AnimationData *beat = fidgeter->fidget_anims[fidgeter->active_fidget];
+  AnimationData *beat = fidgeter->fidget_anims[0][fidgeter->active_fidget];
   beat->start_time = (int)SDL_GetTicks() - 10000; // age it past its runtime
   actor_update(fidgeter, 1.0F / 30.0F);
   actor_update(fidgeter, 1.0F / 30.0F);
@@ -397,11 +413,19 @@ int test_scene(void) {
     actor_update(fidgeter, 1.0F / 30.0F);
   }
 
-  // Far variants never fidget: the art only exists for variant 0.
+  // Fidget lists are per variant: one without any never fidgets, one with
+  // its own uses it.
   actor_set_variant(fidgeter, 1);
   fidgeter->next_fidget_at = 0;
   actor_update(fidgeter, 1.0F / 30.0F);
-  check(fidgeter->state == IDLE, "a far variant never fidgets");
+  check(fidgeter->state == IDLE, "a variant without fidgets never fidgets");
+  actor_set_variant(fidgeter, 2);
+  fidgeter->next_fidget_at = 0;
+  actor_update(fidgeter, 1.0F / 30.0F);
+  check(fidgeter->state == FIDGETING && fidgeter->active_fidget == 0 &&
+            fidgeter->fidget_anims[2][0] != NULL &&
+            fidgeter->fidget_anims[2][0]->is_playing,
+        "a variant with its own fidgets plays from its own list");
   actor_free(fidgeter);
 
   // An actor with no fidget list never fidgets.

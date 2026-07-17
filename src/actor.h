@@ -83,6 +83,11 @@ typedef struct actor_variant_spec {
   const ActorAnimSpec *anims;
   int anims_length;
   float speed_scale; // 1.0 = spec velocity; far variants use < 1.0
+  // Idle fidgets for this depth (LIVELINESS.md Part 1); NULL/0 = this
+  // variant never fidgets. No cross-variant parity required: a far variant
+  // without fidget art simply stands still.
+  const ActorFidgetSpec *fidgets;
+  int fidgets_length;
 } ActorVariantSpec;
 
 // Static description of a character. Two characters differ only by their spec.
@@ -101,11 +106,6 @@ typedef struct actor_spec {
   // canonical order (X A B C D E F) and lines with .cues sidecars drive it.
   // 0: classic looping talking animation (see SPEECH.md).
   int talk_shape_frames;
-  // Idle fidgets (LIVELINESS.md Part 1); NULL/0 = the actor never fidgets.
-  // Fidgets play on variant 0 only — far variants skip them rather than
-  // requiring every fidget at every depth.
-  const ActorFidgetSpec *fidgets;
-  int fidgets_length;
 } ActorSpec;
 
 typedef struct actor {
@@ -147,10 +147,11 @@ typedef struct actor {
   SDL_FPoint drag_grab;   // pointer position at the arming press
   SDL_FPoint drag_offset; // current_position - drag_grab when the drag began
   float fall_target_y;
-  // Idle fidgets (LIVELINESS.md Part 1): the spec's fidget sheets (variant 0
-  // art, ONE_SHOT), which one is playing while FIDGETING, and when the next
-  // one fires (re-rolled every time the actor enters IDLE).
-  AnimationData *fidget_anims[ACTOR_MAX_FIDGETS];
+  // Idle fidgets (LIVELINESS.md Part 1): each variant's fidget sheets
+  // (ONE_SHOT), which one is playing while FIDGETING, and when the next one
+  // fires (re-rolled every time the actor enters IDLE). The active variant's
+  // list is the one that triggers.
+  AnimationData *fidget_anims[ACTOR_MAX_VARIANTS][ACTOR_MAX_FIDGETS];
   int active_fidget;
   Uint32 next_fidget_at;
 } Actor;

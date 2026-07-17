@@ -52,9 +52,11 @@ static void actor_face(Actor *actor, HorizontalOrientation orientation) {
       }
     }
   }
-  for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
-    if (actor->fidget_anims[i]) {
-      actor->fidget_anims[i]->flip = flip;
+  for (int v = 0; v < actor->spec->variants_length; v++) {
+    for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
+      if (actor->fidget_anims[v][i]) {
+        actor->fidget_anims[v][i]->flip = flip;
+      }
     }
   }
 }
@@ -75,23 +77,27 @@ static void start_segment(Actor *actor, SDL_FPoint target) {
   actor->direction = (SDL_FPoint){dx / dist, dy / dist};
 }
 
-// Fidgets the spec actually carries (bounded by the animation array).
-static int fidget_count(const Actor *actor) {
-  int count = actor->spec->fidgets_length;
-  return count > ACTOR_MAX_FIDGETS ? ACTOR_MAX_FIDGETS : count;
+// Fidgets a variant's spec actually carries (bounded by the animation array).
+static int fidget_count(const ActorVariantSpec *variant) {
+  return SDL_min(variant->fidgets_length, ACTOR_MAX_FIDGETS);
+}
+
+// The active variant's fidget table.
+static AnimationData **variant_fidgets(Actor *actor) {
+  return actor->fidget_anims[actor->variant];
 }
 
 // Every return to IDLE goes through here so the fidget timer is re-rolled
 // (LIVELINESS.md Part 1): the next fidget fires a randomized few seconds
-// after the actor last came to rest. rand() is deliberately unseeded — the
-// delays only need to *look* random, and determinism helps the tests.
+// after the actor last came to rest. Rolled whether or not the active
+// variant has fidgets — the trigger checks that — so a variant switch never
+// sees a stale timer. rand() is deliberately unseeded: the delays only need
+// to *look* random, and determinism helps the tests.
 static void enter_idle(Actor *actor) {
   actor->state = IDLE;
-  if (fidget_count(actor) > 0) {
-    Uint32 span = FIDGET_MAX_DELAY_MS - FIDGET_MIN_DELAY_MS;
-    actor->next_fidget_at = SDL_GetTicks() + FIDGET_MIN_DELAY_MS +
-                            (Uint32)(rand() % (int)(span + 1));
-  }
+  Uint32 span = FIDGET_MAX_DELAY_MS - FIDGET_MIN_DELAY_MS;
+  actor->next_fidget_at =
+      SDL_GetTicks() + FIDGET_MIN_DELAY_MS + (Uint32)(rand() % (int)(span + 1));
 }
 
 // Interrupt a playing fidget: a tap always wins over a peck. The fidget was
@@ -101,7 +107,7 @@ static void stop_fidget(Actor *actor) {
   if (actor->state != FIDGETING) {
     return;
   }
-  AnimationData *fidget = actor->fidget_anims[actor->active_fidget];
+  AnimationData *fidget = variant_fidgets(actor)[actor->active_fidget];
   if (fidget != NULL) {
     stop_animation(fidget);
   }
@@ -187,16 +193,21 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   actor->drag_grab = (SDL_FPoint){0, 0};
   actor->drag_offset = (SDL_FPoint){0, 0};
   actor->fall_target_y = 0;
-  for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
-    actor->fidget_anims[i] = NULL;
-  }
-  for (int i = 0; i < fidget_count(actor); i++) {
-    const ActorFidgetSpec *fidget = &spec->fidgets[i];
-    AnimationData *animation = make_animation_data(fidget->frames, ONE_SHOT);
-    if (animation != NULL && fidget->ms_per_frame > 0) {
-      animation->ms_per_frame = fidget->ms_per_frame;
+  for (int v = 0; v < ACTOR_MAX_VARIANTS; v++) {
+    for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
+      actor->fidget_anims[v][i] = NULL;
     }
-    actor->fidget_anims[i] = animation;
+  }
+  for (int v = 0; v < spec->variants_length; v++) {
+    const ActorVariantSpec *variant = &spec->variants[v];
+    for (int i = 0; i < fidget_count(variant); i++) {
+      const ActorFidgetSpec *fidget = &variant->fidgets[i];
+      AnimationData *animation = make_animation_data(fidget->frames, ONE_SHOT);
+      if (animation != NULL && fidget->ms_per_frame > 0) {
+        animation->ms_per_frame = fidget->ms_per_frame;
+      }
+      actor->fidget_anims[v][i] = animation;
+    }
   }
   actor->active_fidget = 0;
   actor->next_fidget_at = 0;
@@ -268,25 +279,30 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
     }
   }
 
-  if (spec->fidgets_length > ACTOR_MAX_FIDGETS) {
-    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                "%s: %d fidgets declared, only the first %d are used", spec->id,
-                spec->fidgets_length, ACTOR_MAX_FIDGETS);
-  }
-  for (int i = 0; i < fidget_count(actor); i++) {
-    const ActorFidgetSpec *fidget = &spec->fidgets[i];
-    if (!load_animation(renderer, actor->fidget_anims[i],
-                        (Asset){
-                            .filename = fidget->sprite_filename,
-                            .directory = spec->assets_dir,
-                        },
-                        (Asset){
-                            .filename = fidget->data_filename,
-                            .directory = spec->assets_dir,
-                        })) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load %s fidget %s",
-                   spec->id, fidget->sprite_filename);
-      return false;
+  for (int v = 0; v < spec->variants_length; v++) {
+    const ActorVariantSpec *variant = &spec->variants[v];
+    if (variant->fidgets_length > ACTOR_MAX_FIDGETS) {
+      SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                  "%s variant %d: %d fidgets declared, only the first %d are "
+                  "used",
+                  spec->id, v, variant->fidgets_length, ACTOR_MAX_FIDGETS);
+    }
+    for (int i = 0; i < fidget_count(variant); i++) {
+      const ActorFidgetSpec *fidget = &variant->fidgets[i];
+      if (!load_animation(renderer, actor->fidget_anims[v][i],
+                          (Asset){
+                              .filename = fidget->sprite_filename,
+                              .directory = spec->assets_dir,
+                          },
+                          (Asset){
+                              .filename = fidget->data_filename,
+                              .directory = spec->assets_dir,
+                          })) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to load %s fidget %s", spec->id,
+                     fidget->sprite_filename);
+        return false;
+      }
     }
   }
 
@@ -326,9 +342,11 @@ void actor_update(Actor *actor, float delta_time) {
       }
     }
   }
-  for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
-    if (actor->fidget_anims[i] != NULL) {
-      animation_update(actor->fidget_anims[i], now);
+  for (int v = 0; v < actor->spec->variants_length; v++) {
+    for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
+      if (actor->fidget_anims[v][i] != NULL) {
+        animation_update(actor->fidget_anims[v][i], now);
+      }
     }
   }
 
@@ -337,13 +355,14 @@ void actor_update(Actor *actor, float delta_time) {
   float ticks = SDL_GetTicks();
 
   switch (actor->state) {
-  case IDLE:
+  case IDLE: {
     // Idle fidgets (LIVELINESS.md Part 1): after the rolled delay, play one
-    // at random. Variant 0 only — far variants have no fidget art.
-    if (fidget_count(actor) > 0 && actor->variant == 0 &&
-        (Uint32)now >= actor->next_fidget_at) {
-      actor->active_fidget = rand() % fidget_count(actor);
-      AnimationData *fidget = actor->fidget_anims[actor->active_fidget];
+    // of the active variant's fidgets at random. A variant with no fidget
+    // art simply never triggers.
+    int fidgets = fidget_count(&actor->spec->variants[actor->variant]);
+    if (fidgets > 0 && (Uint32)now >= actor->next_fidget_at) {
+      actor->active_fidget = rand() % fidgets;
+      AnimationData *fidget = variant_fidgets(actor)[actor->active_fidget];
       if (fidget != NULL) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s fidgets (%d)",
                     actor->spec->id, actor->active_fidget);
@@ -354,10 +373,13 @@ void actor_update(Actor *actor, float delta_time) {
       }
     }
     break;
+  }
   case FIDGETING: {
     // The one-shot fidget stops itself (animation_update); poll it rather
-    // than arming a context-less end callback, like LANDING does.
-    AnimationData *fidget = actor->fidget_anims[actor->active_fidget];
+    // than arming a context-less end callback, like LANDING does. (The
+    // variant can't change mid-fidget: bands are a function of feet y, and
+    // a fidgeting actor is stationary.)
+    AnimationData *fidget = variant_fidgets(actor)[actor->active_fidget];
     if (fidget == NULL || !fidget->is_playing) {
       enter_idle(actor);
     }
@@ -480,7 +502,7 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
   ActorState state =
       actor->state == IDLE ? actor->spec->idle_state : actor->state;
   AnimationData *animation = actor->state == FIDGETING
-                                 ? actor->fidget_anims[actor->active_fidget]
+                                 ? variant_fidgets(actor)[actor->active_fidget]
                                  : variant_animations(actor)[state];
   if (animation == NULL) {
     animation = variant_animations(actor)[actor->spec->idle_state];
@@ -499,9 +521,11 @@ void actor_free(Actor *actor) {
       }
     }
   }
-  for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
-    if (actor->fidget_anims[i]) {
-      free_animation(actor->fidget_anims[i]);
+  for (int v = 0; v < actor->spec->variants_length; v++) {
+    for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
+      if (actor->fidget_anims[v][i]) {
+        free_animation(actor->fidget_anims[v][i]);
+      }
     }
   }
   if (actor->move_sound) {
