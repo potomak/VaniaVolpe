@@ -86,7 +86,8 @@ Backends* for how the harnesses work.
   backends), `MOVEMENT.md` (walkability grid + A* pathfinding; shipped),
   `DEPTH_AND_CAMERA.md` (props, depth variants, camera, parallax; shipped),
   `SPEECH.md` (lip-sync cues + read-along subtitles; code phases shipped),
-  `LIVELINESS.md` (idle fidgets — spec; actor drag & drop + boiling hotspots — shipped),
+  `LIVELINESS.md` (idle fidgets, actor drag & drop, boiling hotspots; all shipped,
+  character art via the asset pipeline),
   `TOOLS.md` (index of every dev tool: debug overlay & walk-mask paint mode,
   browser tools, generator scripts, test harnesses). The queued
   work lives in **GitHub issues** (label `backlog`), not a file.

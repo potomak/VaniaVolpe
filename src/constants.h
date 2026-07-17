@@ -34,6 +34,11 @@
 #define DRAG_START_THRESHOLD 8.0f
 #define FALL_SPEED 420.0f
 
+// Idle fidgets (LIVELINESS.md Part 1): after a randomized quiet delay in
+// [MIN, MAX] ms of IDLE, an actor with fidgets plays one at random.
+#define FIDGET_MIN_DELAY_MS 4000
+#define FIDGET_MAX_DELAY_MS 9000
+
 #define LEN(x) (sizeof(x) / sizeof((x)[0]))
 
 #endif

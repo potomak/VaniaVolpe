@@ -58,6 +58,33 @@
       "size": "120x120",
       "description": "Touchdown beat: a little squat and feather puff (plays once, then back to idle)."
     },
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "peck",
+      "frames": 4,
+      "size": "120x120",
+      "description": "Idle fidget (LIVELINESS.md Part 1): head down, two pecks at the ground, head up (plays once)."
+    },
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "headshake",
+      "frames": 4,
+      "size": "120x120",
+      "description": "Idle fidget: a quick left-right feather ruffle (plays once)."
+    },
+    {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "blink",
+      "frames": 2,
+      "size": "120x120",
+      "description": "Idle fidget: eyelids close and open (plays once)."
+    },
 
     {
       "group": "Voice — Poolside",

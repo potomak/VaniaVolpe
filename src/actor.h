@@ -30,6 +30,10 @@ typedef enum actor_state {
   TALKING,
   SITTING,
   WAVING,
+  // Playing one of the spec's idle fidgets (LIVELINESS.md Part 1). Fidget
+  // sheets live in Actor.fidget_anims, not the per-state animation table, so
+  // this slot in that table is always NULL.
+  FIDGETING,
   // Drag & drop (LIVELINESS.md Part 2), kept contiguous so
   // `state >= DRAGGED` reads as "airborne / off normal ground". All three
   // sheets are optional — a missing one falls back to the idle sheet.
@@ -54,6 +58,22 @@ typedef struct actor_anim_spec {
 // Most sprite sets (depth variants) one actor can carry.
 #define ACTOR_MAX_VARIANTS 3
 
+// Most idle fidgets one actor can carry (LIVELINESS.md Part 1).
+#define ACTOR_MAX_FIDGETS 4
+
+// One idle fidget in a character's spec: a short one-shot animation (a peck,
+// a blink) played after a randomized quiet delay, then back to IDLE. An
+// ActorAnimSpec minus the state — fidgets are deliberately not per-character
+// ActorStates: they are all the same behaviour with different art, and an
+// open-ended list doesn't churn the enum for every new character.
+typedef struct actor_fidget_spec {
+  const char *sprite_filename;
+  const char *data_filename;
+  int frames;
+  // Milliseconds per frame; 0 means the engine default (DEFAULT_MS_PER_FRAME).
+  int ms_per_frame;
+} ActorFidgetSpec;
+
 // A full sprite set for one depth, plus how the actor moves at that depth
 // (DEPTH_AND_CAMERA.md Phase 2). Variant 0 is the nearest; every variant must
 // provide the same set of states as variant 0 (validated in
@@ -63,6 +83,11 @@ typedef struct actor_variant_spec {
   const ActorAnimSpec *anims;
   int anims_length;
   float speed_scale; // 1.0 = spec velocity; far variants use < 1.0
+  // Idle fidgets for this depth (LIVELINESS.md Part 1); NULL/0 = this
+  // variant never fidgets. No cross-variant parity required: a far variant
+  // without fidget art simply stands still.
+  const ActorFidgetSpec *fidgets;
+  int fidgets_length;
 } ActorVariantSpec;
 
 // Static description of a character. Two characters differ only by their spec.
@@ -122,6 +147,13 @@ typedef struct actor {
   SDL_FPoint drag_grab;   // pointer position at the arming press
   SDL_FPoint drag_offset; // current_position - drag_grab when the drag began
   float fall_target_y;
+  // Idle fidgets (LIVELINESS.md Part 1): each variant's fidget sheets
+  // (ONE_SHOT), which one is playing while FIDGETING, and when the next one
+  // fires (re-rolled every time the actor enters IDLE). The active variant's
+  // list is the one that triggers.
+  AnimationData *fidget_anims[ACTOR_MAX_VARIANTS][ACTOR_MAX_FIDGETS];
+  int active_fidget;
+  Uint32 next_fidget_at;
 } Actor;
 
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);

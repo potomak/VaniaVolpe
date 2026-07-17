@@ -70,9 +70,27 @@ static const ActorAnimSpec FAR_ANIMS[] = {
     {WALKING, "walking_far.png", "walking_far.anim", 4, LOOP},
     {SITTING, "sitting_far.png", "sitting_far.anim", 3, LOOP},
 };
+// Idle fidget (LIVELINESS.md Part 1), demonstrating the mechanism with
+// existing art: leave the fox alone for a few seconds and she waves once —
+// at either depth, each variant with its own sheet (the far one generated
+// like the other far sheets).
+static const ActorFidgetSpec NEAR_FIDGETS[] = {
+    {"waving.png", "waving.anim", 3, 160}, // slowed so the wave reads
+};
+static const ActorFidgetSpec FAR_FIDGETS[] = {
+    {"waving_far.png", "waving_far.anim", 3, 160},
+};
 static const ActorVariantSpec DEMO_FOX_VARIANTS[] = {
-    {.anims = NEAR_ANIMS, .anims_length = 2, .speed_scale = 1.0F},
-    {.anims = FAR_ANIMS, .anims_length = 2, .speed_scale = 0.6F},
+    {.anims = NEAR_ANIMS,
+     .anims_length = 2,
+     .speed_scale = 1.0F,
+     .fidgets = NEAR_FIDGETS,
+     .fidgets_length = LEN(NEAR_FIDGETS)},
+    {.anims = FAR_ANIMS,
+     .anims_length = 2,
+     .speed_scale = 0.6F,
+     .fidgets = FAR_FIDGETS,
+     .fidgets_length = LEN(FAR_FIDGETS)},
 };
 static const ActorSpec DEMO_FOX_SPEC = {
     .id = "demo_fox",

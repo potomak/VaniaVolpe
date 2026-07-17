@@ -64,6 +64,41 @@ static const ActorSpec TWO_VARIANT_SPEC = {
     .variants_length = 2,
 };
 
+// A fidgeting spec (LIVELINESS.md Part 1): synthetic fidgets, never loaded
+// from disk — make_actor builds their AnimationData from the spec, which is
+// all the trigger/interrupt logic touches. Fidget lists are per variant:
+// variant 0 has two, variant 1 has none, variant 2 has its own.
+static const ActorFidgetSpec TEST_FIDGETS[] = {
+    {"peck.png", "peck.anim", 2, 0},
+    {"blink.png", "blink.anim", 1, 0},
+};
+static const ActorFidgetSpec FAR_TEST_FIDGETS[] = {
+    {"peck_far.png", "peck_far.anim", 2, 0},
+};
+static const ActorVariantSpec FIDGET_VARIANTS[] = {
+    {.anims = VARIANT_ANIMS,
+     .anims_length = 2,
+     .speed_scale = 1.0F,
+     .fidgets = TEST_FIDGETS,
+     .fidgets_length = 2},
+    {.anims = VARIANT_ANIMS, .anims_length = 2, .speed_scale = 1.0F},
+    {.anims = VARIANT_ANIMS,
+     .anims_length = 2,
+     .speed_scale = 1.0F,
+     .fidgets = FAR_TEST_FIDGETS,
+     .fidgets_length = 1},
+};
+static const ActorSpec FIDGET_SPEC = {
+    .id = "test_fidgeter",
+    .display_name = "Test",
+    .assets_dir = "test",
+    .velocity = 100,
+    .idle_state = IDLE,
+    .move_state = WALKING,
+    .variants = FIDGET_VARIANTS,
+    .variants_length = 3,
+};
+
 // Give an actor a WALKING animation with one frame_h-tall frame, so
 // reference_animation resolves and feet y = centre y + frame_h / 2.
 static void give_reference_frame(Actor *actor, int frame_h) {
@@ -321,6 +356,84 @@ int test_scene(void) {
   free_animation(bottle_boil);
   free_animation(boil_a);
   free_animation(boil_b);
+
+  // ── idle fidgets (LIVELINESS.md Part 1) ───────────────────────────────────
+
+  fprintf(stderr, "\nidle fidgets:\n");
+
+  Actor *fidgeter = make_actor(&FIDGET_SPEC, (SDL_FPoint){100, 100});
+  check(fidgeter->state == IDLE &&
+            fidgeter->next_fidget_at >= SDL_GetTicks() + FIDGET_MIN_DELAY_MS,
+        "a fresh actor is idle with a fidget timer at least MIN_DELAY out");
+
+  actor_update(fidgeter, 1.0F / 30.0F);
+  check(fidgeter->state == IDLE, "no fidget before the rolled delay");
+
+  // Force the timer: the next update picks a fidget and plays it.
+  fidgeter->next_fidget_at = 0;
+  actor_update(fidgeter, 1.0F / 30.0F);
+  bool playing = fidgeter->fidget_anims[0][fidgeter->active_fidget] != NULL &&
+                 fidgeter->fidget_anims[0][fidgeter->active_fidget]->is_playing;
+  check(fidgeter->state == FIDGETING && playing &&
+            fidgeter->active_fidget >= 0 && fidgeter->active_fidget < 2,
+        "the elapsed timer starts one of the spec's fidgets");
+
+  // A walk interrupts the fidget instantly and stops its animation.
+  AnimationData *interrupted =
+      fidgeter->fidget_anims[0][fidgeter->active_fidget];
+  actor_walk_to(fidgeter, (SDL_FPoint){200, 100}, NULL);
+  check(fidgeter->state == WALKING && !interrupted->is_playing,
+        "a tap wins over a fidget: the walk starts, the fidget stops");
+  for (int i = 0; i < 300 && fidgeter->state == WALKING; i++) {
+    actor_update(fidgeter, 1.0F / 30.0F);
+  }
+  check(fidgeter->state == IDLE &&
+            fidgeter->next_fidget_at >= SDL_GetTicks() + FIDGET_MIN_DELAY_MS,
+        "arriving re-enters IDLE and re-rolls the fidget timer");
+
+  // A finished one-shot fidget returns to IDLE on its own.
+  fidgeter->next_fidget_at = 0;
+  actor_update(fidgeter, 1.0F / 30.0F);
+  AnimationData *beat = fidgeter->fidget_anims[0][fidgeter->active_fidget];
+  beat->start_time = (int)SDL_GetTicks() - 10000; // age it past its runtime
+  actor_update(fidgeter, 1.0F / 30.0F);
+  actor_update(fidgeter, 1.0F / 30.0F);
+  check(fidgeter->state == IDLE && !beat->is_playing &&
+            fidgeter->next_fidget_at >= SDL_GetTicks() + FIDGET_MIN_DELAY_MS,
+        "a finished fidget returns to IDLE with a fresh timer");
+
+  // A grab interrupts a fidget too.
+  fidgeter->next_fidget_at = 0;
+  actor_update(fidgeter, 1.0F / 30.0F);
+  check(fidgeter->state == FIDGETING, "fidgeting again");
+  check(actor_begin_drag(fidgeter) && fidgeter->state == DRAGGED,
+        "a grab wins over a fidget");
+  actor_drop(fidgeter, fidgeter->current_position);
+  for (int i = 0; i < 30 && fidgeter->state != IDLE; i++) {
+    actor_update(fidgeter, 1.0F / 30.0F);
+  }
+
+  // Fidget lists are per variant: one without any never fidgets, one with
+  // its own uses it.
+  actor_set_variant(fidgeter, 1);
+  fidgeter->next_fidget_at = 0;
+  actor_update(fidgeter, 1.0F / 30.0F);
+  check(fidgeter->state == IDLE, "a variant without fidgets never fidgets");
+  actor_set_variant(fidgeter, 2);
+  fidgeter->next_fidget_at = 0;
+  actor_update(fidgeter, 1.0F / 30.0F);
+  check(fidgeter->state == FIDGETING && fidgeter->active_fidget == 0 &&
+            fidgeter->fidget_anims[2][0] != NULL &&
+            fidgeter->fidget_anims[2][0]->is_playing,
+        "a variant with its own fidgets plays from its own list");
+  actor_free(fidgeter);
+
+  // An actor with no fidget list never fidgets.
+  Actor *still = make_actor(&BARE_SPEC, (SDL_FPoint){0, 0});
+  still->next_fidget_at = 0;
+  actor_update(still, 1.0F / 30.0F);
+  check(still->state == IDLE, "an actor with no fidgets stays still");
+  actor_free(still);
 
   return failures;
 }
