@@ -121,11 +121,11 @@ def emit_group(out, prefix, rel_dir, entries):
             out.append(f"#define {a}_STYLE {STYLES[e.get('style', 'loop')]}")
             out.append(f"#define {a}_MS_PER_FRAME {e.get('ms_per_frame', 0)}")
             out.append(f'#define {a}_SPRITE_ASSET '
-                       f'{{.filename = "{e["name"]}.png", '
-                       f'.directory = "{rel_dir}"}}')
+                       f'((Asset){{.filename = "{e["name"]}.png", '
+                       f'.directory = "{rel_dir}"}})')
             out.append(f'#define {a}_DATA_ASSET '
-                       f'{{.filename = "{e["name"]}.anim", '
-                       f'.directory = "{rel_dir}"}}')
+                       f'((Asset){{.filename = "{e["name"]}.anim", '
+                       f'.directory = "{rel_dir}"}})')
         out.append(f"#define {tag}_ANIMS_COUNT {len(anims)}")
     out.append("")
 

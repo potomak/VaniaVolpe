@@ -120,12 +120,12 @@ sunscreen_boil = animations[GINA_POOL_ANIM_SUNSCREEN_BOIL] =
                         GINA_POOL_ANIM_SUNSCREEN_BOIL_STYLE);
 ...
 load_animation(renderer, sunscreen_boil,
-               (Asset)GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET,
-               (Asset)GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET);
+               GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET,
+               GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET);
 ```
 
-The `_ASSET` macros are brace initializers, cast to `(Asset)` compound
-literals at the call site.
+The `_ASSET` macros expand to `(Asset){...}` compound literals, so call
+sites pass them like values.
 
 ### Build-time validation
 

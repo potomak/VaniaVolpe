@@ -174,14 +174,14 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
   return load_animation(renderer, sunscreen_boil,
-                        (Asset)GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET,
-                        (Asset)GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET) &&
+                        GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET,
+                        GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET) &&
          load_animation(renderer, goggles_boil,
-                        (Asset)GINA_POOL_ANIM_GOGGLES_BOIL_SPRITE_ASSET,
-                        (Asset)GINA_POOL_ANIM_GOGGLES_BOIL_DATA_ASSET) &&
+                        GINA_POOL_ANIM_GOGGLES_BOIL_SPRITE_ASSET,
+                        GINA_POOL_ANIM_GOGGLES_BOIL_DATA_ASSET) &&
          load_animation(renderer, float_boil,
-                        (Asset)GINA_POOL_ANIM_FLOAT_BOIL_SPRITE_ASSET,
-                        (Asset)GINA_POOL_ANIM_FLOAT_BOIL_DATA_ASSET);
+                        GINA_POOL_ANIM_FLOAT_BOIL_SPRITE_ASSET,
+                        GINA_POOL_ANIM_FLOAT_BOIL_DATA_ASSET);
 }
 
 // ── interactions
