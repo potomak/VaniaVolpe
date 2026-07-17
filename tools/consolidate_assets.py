@@ -15,7 +15,7 @@ every drop-box that has files:
    - art       — copies the PNG to `<dir>/<name>.png`;
 3. clears the drop-box.
 
-It reads the same `assets/tasks.json` manifests, so a fresh session can run it
+It reads the same `assets/assets.json` manifests, so a fresh session can run it
 with no other context — "consolidate the new assets I uploaded" — and it is
 idempotent: an empty drop-box is skipped. Re-run `gen_asset_tasks.py`
 afterwards to tick the boxes.
@@ -23,7 +23,7 @@ afterwards to tick the boxes.
 Usage:
   tools/consolidate_assets.py               # every adventure
   tools/consolidate_assets.py --dry-run     # report only, touch nothing
-  tools/consolidate_assets.py path/to/tasks.json ...
+  tools/consolidate_assets.py path/to/assets.json ...
 
 Requires Pillow (for stitching animation frames).
 """
@@ -114,9 +114,9 @@ def main():
 
     root = tasks.repo_root()
     paths = args.manifests or sorted(glob.glob(
-        os.path.join(root, "src/adventures/*/assets/tasks.json")))
+        os.path.join(root, "src/adventures/*/assets/assets.json")))
     if not paths:
-        parser.error("no tasks.json manifests found")
+        parser.error("no assets.json manifests found")
 
     done = 0
     for manifest in tasks.load_manifests(root, paths):

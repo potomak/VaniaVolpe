@@ -61,7 +61,7 @@ helps the tests. One deviation from the spec below, from review: fidget
 lists live on the **variant** spec rather than variant 0 of the actor, so
 every depth can fidget with its own art and the variant-0 special case
 disappears — a variant without fidget art simply never triggers. Gina's
-three fidget sheets are tracked in `assets/tasks.json` (the mechanism is
+three fidget sheets are tracked in `assets/assets.json` (the mechanism is
 dormant for her until they land); the depth-demo fox demonstrates it today
 with her waving sheet at both depths (the far copy generated like her other
 far sheets). The design as specced:
@@ -159,7 +159,7 @@ Implemented in #96 with three deviations the implementation surfaced:
 - **She can be caught mid-fall** — a grab is refused only while TALKING, so
   catching her mid-air works, and it's the better toy.
 
-The three sheets are tracked in `assets/tasks.json` (idle-sheet fallback
+The three sheets are tracked in `assets/assets.json` (idle-sheet fallback
 until they land); the optional flap/thud sounds wait for the audio pass.
 The design as specced:
 

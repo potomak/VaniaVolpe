@@ -9,16 +9,15 @@ reference migration, the remaining scenes are tracked in #111.
 
 Before this, every scene hard-coded its asset tables inline — filenames,
 directories, frame counts, play styles — and the art pipeline kept a *second*
-list of the same assets in `assets/tasks.json` (what still needs authoring,
+list of the same assets in a pipeline manifest (what still needs authoring,
 at what size, with which frame counts). Two lists, one truth: a frame count
 changed in a `.anim` file could silently disagree with the scene that plays
 it, and the estimator counted from a file the game never read.
 
 ## One manifest per adventure
 
-`src/adventures/<adv>/assets/tasks.json` (the name predates its runtime role;
-see #111) is the adventure's **asset manifest** — the single source of truth
-read by:
+`src/adventures/<adv>/assets/assets.json` is the adventure's **asset
+manifest** — the single source of truth read by:
 
 - `tools/gen_asset_tasks.py` — the *Assets to author* page + `_inbox/`
   drop-boxes (authoring entries only);

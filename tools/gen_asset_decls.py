@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate C asset declarations from an adventure's asset manifest.
 
-The manifest (assets/tasks.json — see ASSETS.md) is the single source of
+The manifest (assets/assets.json — see ASSETS.md) is the single source of
 truth for an adventure's assets: the art pipeline, the cost estimator and —
 via this generator — the game itself all read the same file. This emits a
 header of initializer and index macros so scenes declare their tables from
@@ -24,7 +24,7 @@ entries (per-line recordings still to author) are not yet runtime assets and
 are skipped.
 
 Usage:
-  tools/gen_asset_decls.py --manifest <assets>/tasks.json --out build/gen/<adv>_assets.h
+  tools/gen_asset_decls.py --manifest <assets>/assets.json --out build/gen/<adv>_assets.h
 """
 
 import argparse

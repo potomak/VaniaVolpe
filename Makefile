@@ -109,7 +109,7 @@ $(GINA_SCRIPT_H): test/scripts/gina.json tools/gen_playtest.py
 test/play_gina.test.o: $(GINA_SCRIPT_H)
 
 # Generate the asset declarations from the adventure manifest (ASSETS.md).
-$(GINA_ASSETS_H): $(GINA_DIR)/assets/tasks.json tools/gen_asset_decls.py
+$(GINA_ASSETS_H): $(GINA_DIR)/assets/assets.json tools/gen_asset_decls.py
 	mkdir -p $(GEN_DIR)
 	python3 tools/gen_asset_decls.py --manifest $< --out $@
 
@@ -171,7 +171,7 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) $(GINA_ASSETS_H) \
                src/emscripten/catalog.html tools/gen_asset_catalog.py \
                src/emscripten/asset_tasks.html tools/gen_asset_tasks.py \
                src/emscripten/cost_estimate.html \
-               $(wildcard src/adventures/*/assets/tasks.json)
+               $(wildcard src/adventures/*/assets/assets.json)
 	mkdir -p $(WEB_DIR)
 	$(EMCC) $(EM_CFLAGS) $(SRCS) $(EM_LDFLAGS) -o $(WEB_TARGET)
 	# Stamp the per-build id: replace the shell's __CACHE_BUST__ placeholder (used

@@ -200,7 +200,7 @@ def scaffold_inbox(root, manifest):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("manifests", nargs="*",
-                        help="tasks.json files (default: every adventure's)")
+                        help="assets.json manifests (default: every adventure's)")
     parser.add_argument("--out", metavar="DIR",
                         help="write DIR/asset_tasks.json for the page; without "
                              "it, refresh the _inbox drop-box folders instead")
@@ -210,9 +210,9 @@ def main():
 
     root = repo_root()
     paths = args.manifests or sorted(glob.glob(
-        os.path.join(root, "src/adventures/*/assets/tasks.json")))
+        os.path.join(root, "src/adventures/*/assets/assets.json")))
     if not paths:
-        parser.error("no tasks.json manifests found")
+        parser.error("no assets.json manifests found")
     manifests = load_manifests(root, paths)
 
     if args.out:
