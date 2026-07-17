@@ -47,13 +47,13 @@ the game; the entry point is
   the per-adventure checklist of real art & voice still to make, with a
   one-click GitHub **upload** link per task (see the asset pipeline below).
   Renders `asset_tasks.json`, emitted from each adventure's
-  `assets/tasks.json` by `tools/gen_asset_tasks.py` during `make web`.
+  `assets/index.json` by `tools/gen_asset_tasks.py` during `make web`.
 - **Art cost estimate** — [`cost_estimate.html`](https://potomak.github.io/VaniaVolpe/cost_estimate.html):
   a live, tweakable planning estimate for commissioning all of Gina's image
   assets (backgrounds, props, animation frames) from a professional
   illustrator — hourly rate, hours per asset, revision rounds and overhead are
   all editable, and the total updates as you change them. Self-contained
-  (opens as a plain file too); asset-count defaults match `assets/tasks.json`.
+  (opens as a plain file too); asset-count defaults match `assets/index.json`.
   Excludes voice/audio. A planning aid, not a quote.
 
 ## Generator scripts (`tools/`)
@@ -71,8 +71,14 @@ them.
   writes the committed `.cues` / `.words` sidecars that drive the talking
   animation (see `SPEECH.md`). Needs the Rhubarb CLI on `PATH` or
   `$RHUBARB`; idempotent by mtime, `--force` regenerates.
+- **`gen_asset_decls.py`** — generates the C asset declarations
+  (`build/gen/<adv>_assets.h`) from an adventure's asset manifest
+  (`assets/index.json`), so migrated scenes declare their image/chunk/animation
+  tables from the same file the pipeline and estimator read; validates frame
+  counts against the committed `.anim` files. Run automatically by `make`. See
+  `ASSETS.md`.
 - **`gen_asset_tasks.py`** — the asset pipeline's front end (see below): emits
-  the `asset_tasks.json` (from each adventure's `assets/tasks.json`, with live
+  the `asset_tasks.json` (from each adventure's `assets/index.json`, with live
   status) behind the *Assets to author* page. Run by `make web`; stdlib only.
 - **`consolidate_assets.py`** — the asset pipeline's back end: folds uploaded
   raw files from the `_inbox/<id>/` drop-boxes into the real asset files
@@ -99,7 +105,9 @@ them.
 
 How placeholder art and silent voice lines become real assets, and how a fresh
 session can pick up uploads with no other context. Each adventure declares the
-assets it still needs in `src/adventures/<adv>/assets/tasks.json`; every task
+assets it still needs in `src/adventures/<adv>/assets/index.json` — the same
+manifest the game's generated asset declarations come from (see `ASSETS.md`;
+entries marked `"task": false` are runtime-only and skipped here). Every task
 has a stable **id** (`<type>-<dir>-<name>`) that names its directories.
 
 1. **List** — `tools/gen_asset_tasks.py --out` (run by `make web`) renders the

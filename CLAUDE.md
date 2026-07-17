@@ -88,6 +88,8 @@ Backends* for how the harnesses work.
   `SPEECH.md` (lip-sync cues + read-along subtitles; code phases shipped),
   `LIVELINESS.md` (idle fidgets, actor drag & drop, boiling hotspots; all shipped,
   character art via the asset pipeline),
+  `ASSETS.md` (declarative assets: the per-adventure manifest `assets/index.json`
+  → generated C declarations via `tools/gen_asset_decls.py`; pool scene migrated),
   `TOOLS.md` (index of every dev tool: debug overlay & walk-mask paint mode,
   browser tools, generator scripts, test harnesses). The queued
   work lives in **GitHub issues** (label `backlog`), not a file.
@@ -118,8 +120,14 @@ larger than the window with a following camera and parallax planes (see
   the read-along word highlight, see `SPEECH.md`) are on by default;
   `--subtitles=0` / `$VANIA_SUBTITLES=0` / web `?subtitles=0` disable them. `tools/gen_en_us_placeholders.sh`
   scaffolds a complete `en_US` from `it_IT`.
+- **`assets/index.json` is the adventure's asset manifest** (see `ASSETS.md`):
+  the game's asset tables are generated from it at build time
+  (`tools/gen_asset_decls.py` → `build/gen/<adv>_assets.h`, included by migrated
+  scenes), and it also drives the art pipeline and the cost estimator. Changing
+  an animation's frame count means updating the manifest **and** the `.anim` —
+  the build fails if they disagree.
 - **Placeholder art & voice have a pipeline.** Each adventure lists the real
-  assets it still needs in `assets/tasks.json`; artists upload raw files into
+  assets it still needs in `assets/index.json`; artists upload raw files into
   per-task drop-boxes `<assets_root>/_inbox/<id>/`. To ingest uploads ("check
   and consolidate the assets I uploaded"), run `tools/consolidate_assets.py`
   (stitches frames → sprite sheet, moves WAVs/PNGs into place, archives sources

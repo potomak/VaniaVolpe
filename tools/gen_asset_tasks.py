@@ -48,6 +48,13 @@ REPO_NAME = "VaniaVolpe"
 SCAFFOLD_FILES = {"README.md", ".gitkeep"}
 
 
+# The manifest also declares runtime-only entries ("task": false — see
+# ASSETS.md) for the game's generated declarations; they are not authoring
+# work, so every view here skips them.
+def authoring_tasks(manifest):
+    return [t for t in manifest["tasks"] if t.get("task", True)]
+
+
 def repo_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -151,7 +158,7 @@ def task_view(root, manifest, branch, task):
 
 def manifest_view(root, manifest, branch):
     groups = []
-    for task in manifest["tasks"]:
+    for task in authoring_tasks(manifest):
         view = task_view(root, manifest, branch, task)
         if not groups or groups[-1]["name"] != task["group"]:
             groups.append({"name": task["group"], "tasks": []})
@@ -177,7 +184,7 @@ def load_manifests(root, paths):
 # git tracks it and the Upload here link resolves) for exactly the outstanding
 # tasks — and none for the done ones.
 def scaffold_inbox(root, manifest):
-    for task in manifest["tasks"]:
+    for task in authoring_tasks(manifest):
         rel = inbox_rel(manifest, task)
         d = os.path.join(root, rel)
         done = uploaded_files(root, sources_rel(manifest, task))
@@ -193,7 +200,7 @@ def scaffold_inbox(root, manifest):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("manifests", nargs="*",
-                        help="tasks.json files (default: every adventure's)")
+                        help="index.json manifests (default: every adventure's)")
     parser.add_argument("--out", metavar="DIR",
                         help="write DIR/asset_tasks.json for the page; without "
                              "it, refresh the _inbox drop-box folders instead")
@@ -203,9 +210,9 @@ def main():
 
     root = repo_root()
     paths = args.manifests or sorted(glob.glob(
-        os.path.join(root, "src/adventures/*/assets/tasks.json")))
+        os.path.join(root, "src/adventures/*/assets/index.json")))
     if not paths:
-        parser.error("no tasks.json manifests found")
+        parser.error("no index.json manifests found")
     manifests = load_manifests(root, paths)
 
     if args.out:
