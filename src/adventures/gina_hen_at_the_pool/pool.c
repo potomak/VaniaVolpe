@@ -21,13 +21,17 @@
 #include "hen.h"
 #include "pool.h"
 
-// Backdrops, auto-loaded from the scene's images table.
-static ImageData images[2] = {
-    {NULL, "background.png", "pool", 0, 0},
-    {NULL, "water.png", "pool", 0, 0},
-};
-static const ImageData *background = &images[0];
-static const ImageData *water = &images[1];
+// Asset declarations generated from the adventure manifest (ASSETS.md): the
+// filenames, table order and animation frame counts below come from
+// assets/tasks.json via gen_asset_decls.py, so the scene, the art pipeline
+// and the estimator all read one source of truth.
+#include "gina_assets.h"
+
+// Backdrops, auto-loaded from the scene's images table. (The tappable
+// objects render as boils below; their still PNGs are authoring-only.)
+static ImageData images[GINA_POOL_IMAGES_COUNT] = GINA_POOL_IMAGES_INIT;
+static const ImageData *background = &images[GINA_POOL_IMAGE_BACKGROUND];
+static const ImageData *water = &images[GINA_POOL_IMAGE_WATER];
 
 // The tappable objects boil (LIVELINESS.md Part 3): the engine plays each
 // while its hotspot is enabled (see the active_anim wired in init) and freezes
@@ -37,15 +41,11 @@ static const ImageData *water = &images[1];
 static AnimationData *sunscreen_boil;
 static AnimationData *goggles_boil;
 static AnimationData *float_boil;
-static AnimationData *animations[3];
+static AnimationData *animations[GINA_POOL_ANIMS_COUNT];
 
 // Sound effects and dialog (silent placeholders; lines are logged to stdout).
-static ChunkData chunks[3] = {
-    {NULL, "voice.wav", "pool"},
-    {NULL, "wind.wav", "pool"},
-    {NULL, "splash.wav", "pool"},
-};
-static const ChunkData *voice(void) { return &chunks[0]; }
+static ChunkData chunks[GINA_POOL_CHUNKS_COUNT] = GINA_POOL_CHUNKS_INIT;
+static const ChunkData *voice(void) { return &chunks[GINA_POOL_CHUNK_VOICE]; }
 
 static SDL_Point m_pos;
 
@@ -117,9 +117,13 @@ static void init(void) {
 
   rebuild_walk_grid();
 
-  sunscreen_boil = animations[0] = make_animation_data(3, LOOP);
-  goggles_boil = animations[1] = make_animation_data(3, LOOP);
-  float_boil = animations[2] = make_animation_data(3, LOOP);
+  sunscreen_boil = animations[GINA_POOL_ANIM_SUNSCREEN_BOIL] =
+      make_animation_data(GINA_POOL_ANIM_SUNSCREEN_BOIL_FRAMES,
+                          GINA_POOL_ANIM_SUNSCREEN_BOIL_STYLE);
+  goggles_boil = animations[GINA_POOL_ANIM_GOGGLES_BOIL] = make_animation_data(
+      GINA_POOL_ANIM_GOGGLES_BOIL_FRAMES, GINA_POOL_ANIM_GOGGLES_BOIL_STYLE);
+  float_boil = animations[GINA_POOL_ANIM_FLOAT_BOIL] = make_animation_data(
+      GINA_POOL_ANIM_FLOAT_BOIL_FRAMES, GINA_POOL_ANIM_FLOAT_BOIL_STYLE);
 
   int i = 0;
   // The same bottle, two behaviours: reach for it before the sunscreen, a
@@ -170,13 +174,14 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
   return load_animation(renderer, sunscreen_boil,
-                        (Asset){"sunscreen_boil.png", "pool"},
-                        (Asset){"sunscreen_boil.anim", "pool"}) &&
+                        (Asset)GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET,
+                        (Asset)GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET) &&
          load_animation(renderer, goggles_boil,
-                        (Asset){"goggles_boil.png", "pool"},
-                        (Asset){"goggles_boil.anim", "pool"}) &&
-         load_animation(renderer, float_boil, (Asset){"float_boil.png", "pool"},
-                        (Asset){"float_boil.anim", "pool"});
+                        (Asset)GINA_POOL_ANIM_GOGGLES_BOIL_SPRITE_ASSET,
+                        (Asset)GINA_POOL_ANIM_GOGGLES_BOIL_DATA_ASSET) &&
+         load_animation(renderer, float_boil,
+                        (Asset)GINA_POOL_ANIM_FLOAT_BOIL_SPRITE_ASSET,
+                        (Asset)GINA_POOL_ANIM_FLOAT_BOIL_DATA_ASSET);
 }
 
 // ── interactions
@@ -213,13 +218,13 @@ static void collect_goggles(void) {
 
 static void float_blows_away(void) {
   gina_state.float_state = FLOAT_STUCK_IN_TREE;
-  Mix_PlayChannel(-1, chunks[1].chunk, 0); // wind
+  Mix_PlayChannel(-1, chunks[GINA_POOL_CHUNK_WIND].chunk, 0);
   gina_say(gina, "Oh no! Il vento ha portato il salvagente sull'albero!",
            voice());
 }
 
 static void dive(void) {
-  Mix_PlayChannel(-1, chunks[2].chunk, 0); // splash
+  Mix_PlayChannel(-1, chunks[GINA_POOL_CHUNK_SPLASH].chunk, 0);
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Gina: Che bello! Ancora!");
   // Replay the adventure in place. The reset happens without leaving the
   // scene (no on_scene_active), so the walkable area must be rebuilt here or

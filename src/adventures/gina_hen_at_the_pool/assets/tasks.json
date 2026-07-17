@@ -1,6 +1,7 @@
 {
   "adventure": "gina_hen_at_the_pool",
   "title": "Gina la Gallina in Piscina",
+  "prefix": "GINA",
   "assets_root": "src/adventures/gina_hen_at_the_pool/assets",
   "reference_locale": "it_IT",
   "tasks": [
@@ -85,7 +86,6 @@
       "size": "120x120",
       "description": "Idle fidget: eyelids close and open (plays once)."
     },
-
     {
       "group": "Voice — Poolside",
       "type": "voice",
@@ -150,7 +150,6 @@
       "text": "Che bello! Ancora!",
       "description": "Splashes in and wants to go again (adventure replays)."
     },
-
     {
       "group": "Voice — Tree",
       "type": "voice",
@@ -207,7 +206,6 @@
       "text": "Mmm, che uva buona! Ecco il tuo salvagente!",
       "description": "Carla takes the grapes and returns the float."
     },
-
     {
       "group": "Voice — Vine",
       "type": "voice",
@@ -224,7 +222,6 @@
       "text": "Non ho niente per raccoglierle.",
       "description": "No basket yet, so nothing to gather grapes with."
     },
-
     {
       "group": "Voice — Minigames",
       "type": "voice",
@@ -241,7 +238,6 @@
       "text": "Cestino pieno d'uva! Ora torno da Carla.",
       "description": "Fills the basket with grapes."
     },
-
     {
       "group": "Art — Poolside",
       "type": "art",
@@ -264,7 +260,8 @@
       "dir": "common/pool",
       "name": "sunscreen",
       "size": "40x60",
-      "description": "The sunscreen bottle."
+      "description": "The sunscreen bottle.",
+      "runtime": false
     },
     {
       "group": "Art — Poolside",
@@ -272,7 +269,8 @@
       "dir": "common/pool",
       "name": "goggles",
       "size": "60x30",
-      "description": "The swimming goggles."
+      "description": "The swimming goggles.",
+      "runtime": false
     },
     {
       "group": "Art — Poolside",
@@ -280,9 +278,9 @@
       "dir": "common/pool",
       "name": "float",
       "size": "90x60",
-      "description": "The pool float / ring."
+      "description": "The pool float / ring.",
+      "runtime": false
     },
-
     {
       "group": "Art — Tree",
       "type": "art",
@@ -315,7 +313,6 @@
       "size": "50x40",
       "description": "The basket Carla hands over (Gina carries it)."
     },
-
     {
       "group": "Art — Vine",
       "type": "art",
@@ -332,7 +329,6 @@
       "size": "100x120",
       "description": "The grape bunch on the vine."
     },
-
     {
       "group": "Art — Minigames",
       "type": "art",
@@ -364,6 +360,61 @@
       "name": "grape",
       "size": "40x40",
       "description": "A single grape for the picking minigame."
+    },
+    {
+      "group": "Runtime only — Poolside",
+      "type": "animation",
+      "dir": "pool",
+      "name": "sunscreen_boil",
+      "frames": 3,
+      "style": "loop",
+      "task": false,
+      "description": "Placeholder boil for the sunscreen bottle (replaced file-for-file by traced frames)."
+    },
+    {
+      "group": "Runtime only — Poolside",
+      "type": "animation",
+      "dir": "pool",
+      "name": "goggles_boil",
+      "frames": 3,
+      "style": "loop",
+      "task": false,
+      "description": "Placeholder boil for the goggles."
+    },
+    {
+      "group": "Runtime only — Poolside",
+      "type": "animation",
+      "dir": "pool",
+      "name": "float_boil",
+      "frames": 3,
+      "style": "loop",
+      "task": false,
+      "description": "Placeholder boil for the pool float."
+    },
+    {
+      "group": "Runtime only — Poolside",
+      "type": "audio",
+      "dir": "pool",
+      "name": "voice",
+      "task": false,
+      "localized": true,
+      "description": "Per-scene silent voice placeholder (replaced by per-line WAVs as recordings land)."
+    },
+    {
+      "group": "Runtime only — Poolside",
+      "type": "audio",
+      "dir": "pool",
+      "name": "wind",
+      "task": false,
+      "description": "The gust that carries the float into the tree."
+    },
+    {
+      "group": "Runtime only — Poolside",
+      "type": "audio",
+      "dir": "pool",
+      "name": "splash",
+      "task": false,
+      "description": "The dive splash."
     }
   ]
 }

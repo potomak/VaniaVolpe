@@ -120,7 +120,7 @@ def main():
 
     done = 0
     for manifest in tasks.load_manifests(root, paths):
-        for task in manifest["tasks"]:
+        for task in tasks.authoring_tasks(manifest):
             result = consolidate_task(root, manifest, task, args.dry_run)
             if result is None:
                 continue

@@ -71,6 +71,12 @@ them.
   writes the committed `.cues` / `.words` sidecars that drive the talking
   animation (see `SPEECH.md`). Needs the Rhubarb CLI on `PATH` or
   `$RHUBARB`; idempotent by mtime, `--force` regenerates.
+- **`gen_asset_decls.py`** — generates the C asset declarations
+  (`build/gen/<adv>_assets.h`) from an adventure's asset manifest
+  (`assets/tasks.json`), so migrated scenes declare their image/chunk/animation
+  tables from the same file the pipeline and estimator read; validates frame
+  counts against the committed `.anim` files. Run automatically by `make`. See
+  `ASSETS.md`.
 - **`gen_asset_tasks.py`** — the asset pipeline's front end (see below): emits
   the `asset_tasks.json` (from each adventure's `assets/tasks.json`, with live
   status) behind the *Assets to author* page. Run by `make web`; stdlib only.
@@ -99,7 +105,9 @@ them.
 
 How placeholder art and silent voice lines become real assets, and how a fresh
 session can pick up uploads with no other context. Each adventure declares the
-assets it still needs in `src/adventures/<adv>/assets/tasks.json`; every task
+assets it still needs in `src/adventures/<adv>/assets/tasks.json` — the same
+manifest the game's generated asset declarations come from (see `ASSETS.md`;
+entries marked `"task": false` are runtime-only and skipped here). Every task
 has a stable **id** (`<type>-<dir>-<name>`) that names its directories.
 
 1. **List** — `tools/gen_asset_tasks.py --out` (run by `make web`) renders the

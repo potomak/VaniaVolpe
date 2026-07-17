@@ -4,7 +4,8 @@ VFTS_DIR = src/adventures/vania_fox_the_slide
 GINA_DIR = src/adventures/gina_hen_at_the_pool
 DEMO_DIR = src/adventures/depth_demo
 CFLAGS  = -std=c99 -Wall $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer SDL2_ttf) \
-          -I./include -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR)
+          -I./include -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR) \
+          -Ibuild/gen
 LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image SDL2_mixer SDL2_ttf) -lm
 TARGET  = vaniavolpe
 
@@ -67,6 +68,11 @@ TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))
 GEN_DIR = build/gen
 GINA_SCRIPT_H = $(GEN_DIR)/gina_script.h
 
+# Asset declarations generated from each adventure's manifest (ASSETS.md):
+# scenes declare their tables from these macros instead of repeating
+# filenames and frame counts inline.
+GINA_ASSETS_H = $(GEN_DIR)/gina_assets.h
+
 # ── default target (SDL window) ───────────────────────────────────────────────
 
 all: $(TARGET)
@@ -102,6 +108,16 @@ $(GINA_SCRIPT_H): test/scripts/gina.json tools/gen_playtest.py
 # The Gina play-test #includes the generated header.
 test/play_gina.test.o: $(GINA_SCRIPT_H)
 
+# Generate the asset declarations from the adventure manifest (ASSETS.md).
+$(GINA_ASSETS_H): $(GINA_DIR)/assets/tasks.json tools/gen_asset_decls.py
+	mkdir -p $(GEN_DIR)
+	python3 tools/gen_asset_decls.py --manifest $< --out $@
+
+# Scenes migrated to the manifest #include the generated header (all three
+# object flavours build the same source).
+$(GINA_DIR)/pool.o $(GINA_DIR)/pool.terminal.o $(GINA_DIR)/pool.test.o: \
+	$(GINA_ASSETS_H)
+
 %.test.o: %.c
 	$(CC) $(CFLAGS) -Itest -I$(GEN_DIR) -c $< -o $@
 
@@ -122,7 +138,7 @@ WEB_CACHE_BUST := $(shell git rev-parse --short HEAD 2>/dev/null || date +%s)
 EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
              -sUSE_SDL_MIXER=2 -sUSE_SDL_TTF=2
 EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./src/emscripten/compat \
-             -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR)
+             -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR) -Ibuild/gen
 # Preload each adventure's shared (common) layer plus every locale. Per-locale
 # web bundles (download only the chosen language) are a future optimisation.
 EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
@@ -151,7 +167,7 @@ WEB_ASSETS = $(shell find $(VFTS_DIR)/assets $(GINA_DIR)/assets -type f)
 
 web: $(WEB_TARGET)
 
-$(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) \
+$(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) $(GINA_ASSETS_H) \
                src/emscripten/catalog.html tools/gen_asset_catalog.py \
                src/emscripten/asset_tasks.html tools/gen_asset_tasks.py \
                src/emscripten/cost_estimate.html \
