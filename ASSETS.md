@@ -16,7 +16,7 @@ it, and the estimator counted from a file the game never read.
 
 ## One manifest per adventure
 
-`src/adventures/<adv>/assets/assets.json` is the adventure's **asset
+`src/adventures/<adv>/assets/index.json` is the adventure's **asset
 manifest** — the single source of truth read by:
 
 - `tools/gen_asset_tasks.py` — the *Assets to author* page + `_inbox/`

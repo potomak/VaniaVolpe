@@ -23,7 +23,7 @@
 
 // Asset declarations generated from the adventure manifest (ASSETS.md): the
 // filenames, table order and animation frame counts below come from
-// assets/assets.json via gen_asset_decls.py, so the scene, the art pipeline
+// assets/index.json via gen_asset_decls.py, so the scene, the art pipeline
 // and the estimator all read one source of truth.
 #include "gina_assets.h"
 
