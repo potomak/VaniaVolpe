@@ -4,7 +4,7 @@
   "prefix": "GINA",
   "assets_root": "src/adventures/gina_hen_at_the_pool/assets",
   "reference_locale": "it_IT",
-  "tasks": [
+  "assets": [
     {
       "group": "Gina animations",
       "type": "animation",
@@ -12,7 +12,8 @@
       "name": "idle",
       "frames": 2,
       "size": "120x120",
-      "description": "Gina standing, gentle idle (breathing / small bob)."
+      "description": "Gina standing, gentle idle (breathing / small bob).",
+      "task": true
     },
     {
       "group": "Gina animations",
@@ -21,7 +22,8 @@
       "name": "walking",
       "frames": 4,
       "size": "120x120",
-      "description": "Gina walking cycle, side view (faces east; the engine mirrors it for west)."
+      "description": "Gina walking cycle, side view (faces east; the engine mirrors it for west).",
+      "task": true
     },
     {
       "group": "Gina animations",
@@ -30,7 +32,8 @@
       "name": "talking",
       "frames": 3,
       "size": "120x120",
-      "description": "Gina's beak-moving talk loop. For read-along lip-sync this can grow to a 7-frame mouth-shape sheet (X A B C D E F, see SPEECH.md); 3 frames stay fine as a classic loop."
+      "description": "Gina's beak-moving talk loop. For read-along lip-sync this can grow to a 7-frame mouth-shape sheet (X A B C D E F, see SPEECH.md); 3 frames stay fine as a classic loop.",
+      "task": true
     },
     {
       "group": "Gina animations",
@@ -39,7 +42,8 @@
       "name": "dragged",
       "frames": 2,
       "size": "120x120",
-      "description": "Gina held mid-air by the pointer: dangling, legs paddling (loops). Until this sheet lands the game shows her idle sheet while dragged (LIVELINESS.md Part 2)."
+      "description": "Gina held mid-air by the pointer: dangling, legs paddling (loops). Until this sheet lands the game shows her idle sheet while dragged (LIVELINESS.md Part 2).",
+      "task": true
     },
     {
       "group": "Gina animations",
@@ -48,7 +52,8 @@
       "name": "falling",
       "frames": 3,
       "size": "120x120",
-      "description": "Gina flutter-falling after being dropped: quick comedic wing flaps (loops while she descends)."
+      "description": "Gina flutter-falling after being dropped: quick comedic wing flaps (loops while she descends).",
+      "task": true
     },
     {
       "group": "Gina animations",
@@ -57,7 +62,8 @@
       "name": "landing",
       "frames": 3,
       "size": "120x120",
-      "description": "Touchdown beat: a little squat and feather puff (plays once, then back to idle)."
+      "description": "Touchdown beat: a little squat and feather puff (plays once, then back to idle).",
+      "task": true
     },
     {
       "group": "Gina animations",
@@ -66,7 +72,8 @@
       "name": "peck",
       "frames": 4,
       "size": "120x120",
-      "description": "Idle fidget (LIVELINESS.md Part 1): head down, two pecks at the ground, head up (plays once)."
+      "description": "Idle fidget (LIVELINESS.md Part 1): head down, two pecks at the ground, head up (plays once).",
+      "task": true
     },
     {
       "group": "Gina animations",
@@ -75,7 +82,8 @@
       "name": "headshake",
       "frames": 4,
       "size": "120x120",
-      "description": "Idle fidget: a quick left-right feather ruffle (plays once)."
+      "description": "Idle fidget: a quick left-right feather ruffle (plays once).",
+      "task": true
     },
     {
       "group": "Gina animations",
@@ -84,7 +92,8 @@
       "name": "blink",
       "frames": 2,
       "size": "120x120",
-      "description": "Idle fidget: eyelids close and open (plays once)."
+      "description": "Idle fidget: eyelids close and open (plays once).",
+      "task": true
     },
     {
       "group": "Voice — Poolside",
@@ -92,7 +101,8 @@
       "dir": "pool/dialog",
       "name": "shade_reminder",
       "text": "Devo mettere la crema solare prima di uscire dall'ombra!",
-      "description": "Refuses to leave the umbrella's shade before sunscreen."
+      "description": "Refuses to leave the umbrella's shade before sunscreen.",
+      "task": true
     },
     {
       "group": "Voice — Poolside",
@@ -100,7 +110,8 @@
       "dir": "pool/dialog",
       "name": "sunscreen_done",
       "text": "Ho gia' messo la crema.",
-      "description": "Taps the bottle again after applying sunscreen."
+      "description": "Taps the bottle again after applying sunscreen.",
+      "task": true
     },
     {
       "group": "Voice — Poolside",
@@ -108,7 +119,8 @@
       "dir": "pool/dialog",
       "name": "got_goggles",
       "text": "Ho preso gli occhialini!",
-      "description": "Collects the goggles."
+      "description": "Collects the goggles.",
+      "task": true
     },
     {
       "group": "Voice — Poolside",
@@ -116,7 +128,8 @@
       "dir": "pool/dialog",
       "name": "float_blows_away",
       "text": "Oh no! Il vento ha portato il salvagente sull'albero!",
-      "description": "A gust carries the pool float into the tree."
+      "description": "A gust carries the pool float into the tree.",
+      "task": true
     },
     {
       "group": "Voice — Poolside",
@@ -124,7 +137,8 @@
       "dir": "pool/dialog",
       "name": "need_goggles",
       "text": "Mi servono gli occhialini per tuffarmi.",
-      "description": "Tries to dive without the goggles."
+      "description": "Tries to dive without the goggles.",
+      "task": true
     },
     {
       "group": "Voice — Poolside",
@@ -132,7 +146,8 @@
       "dir": "pool/dialog",
       "name": "float_by_pool",
       "text": "Mi serve il salvagente: e' li' vicino alla piscina.",
-      "description": "Tries to dive while the float is still by the pool."
+      "description": "Tries to dive while the float is still by the pool.",
+      "task": true
     },
     {
       "group": "Voice — Poolside",
@@ -140,7 +155,8 @@
       "dir": "pool/dialog",
       "name": "float_in_tree",
       "text": "Il salvagente e' sull'albero! Devo recuperarlo.",
-      "description": "Tries to dive while the float is stuck in the tree."
+      "description": "Tries to dive while the float is stuck in the tree.",
+      "task": true
     },
     {
       "group": "Voice — Poolside",
@@ -148,7 +164,8 @@
       "dir": "pool/dialog",
       "name": "dive_again",
       "text": "Che bello! Ancora!",
-      "description": "Splashes in and wants to go again (adventure replays)."
+      "description": "Splashes in and wants to go again (adventure replays).",
+      "task": true
     },
     {
       "group": "Voice — Tree",
@@ -156,7 +173,8 @@
       "dir": "tree/dialog",
       "name": "cant_reach",
       "text": "Non ci arrivo!",
-      "description": "Looks at the float stuck in the branches."
+      "description": "Looks at the float stuck in the branches.",
+      "task": true
     },
     {
       "group": "Voice — Tree",
@@ -164,7 +182,8 @@
       "dir": "tree/dialog",
       "name": "need_help",
       "text": "Mi serve aiuto...",
-      "description": "Second look at the stuck float."
+      "description": "Second look at the stuck float.",
+      "task": true
     },
     {
       "group": "Voice — Tree",
@@ -172,7 +191,8 @@
       "dir": "tree/dialog",
       "name": "ask_carla",
       "text": "Potrei chiedere a Carla.",
-      "description": "Third look — thinks of asking Carla the crow."
+      "description": "Third look — thinks of asking Carla the crow.",
+      "task": true
     },
     {
       "group": "Voice — Tree",
@@ -180,7 +200,8 @@
       "dir": "tree/dialog",
       "name": "hi_carla",
       "text": "Ciao Carla!",
-      "description": "Greets Carla when the float is not stuck."
+      "description": "Greets Carla when the float is not stuck.",
+      "task": true
     },
     {
       "group": "Voice — Tree",
@@ -188,7 +209,8 @@
       "dir": "tree/dialog",
       "name": "carla_offer",
       "text": "Ti aiuto se mi porti dell'uva. Prendi questo cestino!",
-      "description": "Carla's deal, in Gina's voice: grapes for the float, here's a basket."
+      "description": "Carla's deal, in Gina's voice: grapes for the float, here's a basket.",
+      "task": true
     },
     {
       "group": "Voice — Tree",
@@ -196,7 +218,8 @@
       "dir": "tree/dialog",
       "name": "carla_reminder",
       "text": "Hai gia' il cestino? Portami l'uva dalla vigna!",
-      "description": "Carla reminds Gina to bring grapes."
+      "description": "Carla reminds Gina to bring grapes.",
+      "task": true
     },
     {
       "group": "Voice — Tree",
@@ -204,7 +227,8 @@
       "dir": "tree/dialog",
       "name": "carla_thanks",
       "text": "Mmm, che uva buona! Ecco il tuo salvagente!",
-      "description": "Carla takes the grapes and returns the float."
+      "description": "Carla takes the grapes and returns the float.",
+      "task": true
     },
     {
       "group": "Voice — Vine",
@@ -212,7 +236,8 @@
       "dir": "vine/dialog",
       "name": "already_grapes",
       "text": "Ho gia' l'uva nel cestino.",
-      "description": "The basket already holds grapes."
+      "description": "The basket already holds grapes.",
+      "task": true
     },
     {
       "group": "Voice — Vine",
@@ -220,7 +245,8 @@
       "dir": "vine/dialog",
       "name": "nothing_to_pick",
       "text": "Non ho niente per raccoglierle.",
-      "description": "No basket yet, so nothing to gather grapes with."
+      "description": "No basket yet, so nothing to gather grapes with.",
+      "task": true
     },
     {
       "group": "Voice — Minigames",
@@ -228,7 +254,8 @@
       "dir": "sunscreen/dialog",
       "name": "ready",
       "text": "Pronta! Ora posso uscire al sole!",
-      "description": "Finishes rubbing in the sunscreen."
+      "description": "Finishes rubbing in the sunscreen.",
+      "task": true
     },
     {
       "group": "Voice — Minigames",
@@ -236,133 +263,149 @@
       "dir": "grapes/dialog",
       "name": "basket_full",
       "text": "Cestino pieno d'uva! Ora torno da Carla.",
-      "description": "Fills the basket with grapes."
+      "description": "Fills the basket with grapes.",
+      "task": true
     },
     {
       "group": "Art — Poolside",
-      "type": "art",
+      "type": "image",
       "dir": "common/pool",
       "name": "background",
       "size": "800x600",
-      "description": "Poolside scene backdrop."
+      "description": "Poolside scene backdrop.",
+      "task": true
     },
     {
       "group": "Art — Poolside",
-      "type": "art",
+      "type": "image",
       "dir": "common/pool",
       "name": "water",
       "size": "460x180",
-      "description": "The pool's water surface."
+      "description": "The pool's water surface.",
+      "task": true
     },
     {
       "group": "Art — Poolside",
-      "type": "art",
+      "type": "image",
       "dir": "common/pool",
       "name": "sunscreen",
       "size": "40x60",
       "description": "The sunscreen bottle.",
-      "runtime": false
+      "runtime": false,
+      "task": true
     },
     {
       "group": "Art — Poolside",
-      "type": "art",
+      "type": "image",
       "dir": "common/pool",
       "name": "goggles",
       "size": "60x30",
       "description": "The swimming goggles.",
-      "runtime": false
+      "runtime": false,
+      "task": true
     },
     {
       "group": "Art — Poolside",
-      "type": "art",
+      "type": "image",
       "dir": "common/pool",
       "name": "float",
       "size": "90x60",
       "description": "The pool float / ring.",
-      "runtime": false
+      "runtime": false,
+      "task": true
     },
     {
       "group": "Art — Tree",
-      "type": "art",
+      "type": "image",
       "dir": "common/tree",
       "name": "background",
       "size": "800x600",
-      "description": "The tree scene backdrop."
+      "description": "The tree scene backdrop.",
+      "task": true
     },
     {
       "group": "Art — Tree",
-      "type": "art",
+      "type": "image",
       "dir": "common/tree",
       "name": "carla",
       "size": "70x70",
       "description": "Carla the crow, perched in the tree.",
-      "runtime": false
+      "runtime": false,
+      "task": true
     },
     {
       "group": "Art — Tree",
-      "type": "art",
+      "type": "image",
       "dir": "common/tree",
       "name": "float",
       "size": "90x60",
       "description": "The float, caught in the branches.",
-      "runtime": false
+      "runtime": false,
+      "task": true
     },
     {
       "group": "Art — Tree",
-      "type": "art",
+      "type": "image",
       "dir": "common/tree",
       "name": "basket",
       "size": "50x40",
-      "description": "The basket Carla hands over (Gina carries it)."
+      "description": "The basket Carla hands over (Gina carries it).",
+      "task": true
     },
     {
       "group": "Art — Vine",
-      "type": "art",
+      "type": "image",
       "dir": "common/vine",
       "name": "background",
       "size": "800x600",
-      "description": "The vineyard backdrop."
+      "description": "The vineyard backdrop.",
+      "task": true
     },
     {
       "group": "Art — Vine",
-      "type": "art",
+      "type": "image",
       "dir": "common/vine",
       "name": "grapes",
       "size": "100x120",
       "description": "The grape bunch on the vine.",
-      "runtime": false
+      "runtime": false,
+      "task": true
     },
     {
       "group": "Art — Minigames",
-      "type": "art",
+      "type": "image",
       "dir": "common/sunscreen",
       "name": "background",
       "size": "800x600",
-      "description": "Sunscreen minigame backdrop."
+      "description": "Sunscreen minigame backdrop.",
+      "task": true
     },
     {
       "group": "Art — Minigames",
-      "type": "art",
+      "type": "image",
       "dir": "common/sunscreen",
       "name": "gina",
       "size": "240x240",
-      "description": "Close-up of Gina for the sunscreen minigame."
+      "description": "Close-up of Gina for the sunscreen minigame.",
+      "task": true
     },
     {
       "group": "Art — Minigames",
-      "type": "art",
+      "type": "image",
       "dir": "common/grapes",
       "name": "background",
       "size": "800x600",
-      "description": "Grape-picking minigame backdrop."
+      "description": "Grape-picking minigame backdrop.",
+      "task": true
     },
     {
       "group": "Art — Minigames",
-      "type": "art",
+      "type": "image",
       "dir": "common/grapes",
       "name": "grape",
       "size": "40x40",
-      "description": "A single grape for the picking minigame."
+      "description": "A single grape for the picking minigame.",
+      "task": true
     },
     {
       "group": "Runtime only — Poolside",
@@ -371,7 +414,6 @@
       "name": "sunscreen_boil",
       "frames": 3,
       "style": "loop",
-      "task": false,
       "description": "Placeholder boil for the sunscreen bottle (replaced file-for-file by traced frames)."
     },
     {
@@ -381,7 +423,6 @@
       "name": "goggles_boil",
       "frames": 3,
       "style": "loop",
-      "task": false,
       "description": "Placeholder boil for the goggles."
     },
     {
@@ -391,7 +432,6 @@
       "name": "float_boil",
       "frames": 3,
       "style": "loop",
-      "task": false,
       "description": "Placeholder boil for the pool float."
     },
     {
@@ -399,7 +439,6 @@
       "type": "audio",
       "dir": "pool",
       "name": "voice",
-      "task": false,
       "localized": true,
       "description": "Per-scene silent voice placeholder (replaced by per-line WAVs as recordings land)."
     },
@@ -408,7 +447,6 @@
       "type": "audio",
       "dir": "pool",
       "name": "wind",
-      "task": false,
       "description": "The gust that carries the float into the tree."
     },
     {
@@ -416,7 +454,6 @@
       "type": "audio",
       "dir": "pool",
       "name": "splash",
-      "task": false,
       "description": "The dive splash."
     },
     {
@@ -424,7 +461,6 @@
       "type": "audio",
       "dir": "hen",
       "name": "walking",
-      "task": false,
       "description": "Gina's footstep loop (the ActorSpec move sound)."
     },
     {
@@ -434,7 +470,6 @@
       "name": "float_boil",
       "frames": 3,
       "style": "loop",
-      "task": false,
       "description": "Placeholder boil for the float stuck in the branches."
     },
     {
@@ -444,7 +479,6 @@
       "name": "carla_boil",
       "frames": 3,
       "style": "loop",
-      "task": false,
       "description": "Placeholder boil for Carla the crow."
     },
     {
@@ -452,7 +486,6 @@
       "type": "audio",
       "dir": "tree",
       "name": "voice",
-      "task": false,
       "localized": true,
       "description": "Per-scene silent voice placeholder."
     },
@@ -461,7 +494,6 @@
       "type": "audio",
       "dir": "tree",
       "name": "caw",
-      "task": false,
       "description": "Carla's caw."
     },
     {
@@ -471,7 +503,6 @@
       "name": "grapes_boil",
       "frames": 3,
       "style": "loop",
-      "task": false,
       "description": "Placeholder boil for the grape bunch."
     },
     {
@@ -479,7 +510,6 @@
       "type": "audio",
       "dir": "vine",
       "name": "voice",
-      "task": false,
       "localized": true,
       "description": "Per-scene silent voice placeholder."
     },
@@ -488,7 +518,6 @@
       "type": "audio",
       "dir": "sunscreen",
       "name": "voice",
-      "task": false,
       "localized": true,
       "description": "Per-scene silent voice placeholder."
     },
@@ -497,7 +526,6 @@
       "type": "audio",
       "dir": "grapes",
       "name": "voice",
-      "task": false,
       "localized": true,
       "description": "Per-scene silent voice placeholder."
     },
@@ -506,7 +534,6 @@
       "type": "audio",
       "dir": "grapes",
       "name": "pop",
-      "task": false,
       "description": "A grape being picked."
     }
   ]

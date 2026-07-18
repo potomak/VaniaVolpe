@@ -15,13 +15,13 @@ the JSON is consumed at build time. Run by make; output under build/gen/.
 
 The generator also validates what it can see:
 - an animation's `frames` must match its committed .anim row count;
-- runtime-only entries ("task": false) must have their files on disk.
+- finished entries (no "task": true flag) must have their files on disk.
 
-Entry dirs: authoring tasks use layered dirs ("common/pool"); runtime-only
-entries use resolver dirs ("pool"). Both map to the same runtime dir (the
-layer prefix is stripped), which is what the emitted macros use. `voice`
-entries (per-line recordings still to author) are not yet runtime assets and
-are skipped.
+Entry dirs: entries still to author ("task": true) use layered dirs
+("common/pool"); the rest use resolver dirs ("pool"). Both map to the same
+runtime dir (the layer prefix is stripped), which is what the emitted macros
+use. `voice` entries (per-line recordings still to author) are not yet
+runtime assets and are skipped.
 
 Usage:
   tools/gen_asset_decls.py --manifest <assets>/index.json --out build/gen/<adv>_assets.h
@@ -33,7 +33,7 @@ import os
 import re
 import sys
 
-EXT = {"image": ".png", "art": ".png", "audio": ".wav"}
+EXT = {"image": ".png", "audio": ".wav"}
 STYLES = {"loop": "LOOP", "one_shot": "ONE_SHOT"}
 
 
@@ -47,7 +47,7 @@ def sym(text):
 
 def runtime_dir(entry):
     d = entry["dir"]
-    if entry.get("task", True) and d.startswith("common/"):
+    if entry.get("task", False) and d.startswith("common/"):
         return d[len("common/") :]
     return d
 
@@ -81,12 +81,12 @@ def validate(root, manifest, entry, rel_dir):
             if rows != entry["frames"]:
                 die(f"{rel_dir}/{name}.anim has {rows} frames, "
                     f"manifest says {entry['frames']}")
-        elif not entry.get("task", True):
+        elif not entry.get("task", False):
             die(f"runtime asset {rel_dir}/{name}.anim is missing")
-        if (not entry.get("task", True)
+        if (not entry.get("task", False)
                 and find_file(root, manifest, rel_dir, name + ".png") is None):
             die(f"runtime asset {rel_dir}/{name}.png is missing")
-    elif not entry.get("task", True):
+    elif not entry.get("task", False):
         filename = name + EXT[entry["type"]]
         if find_file(root, manifest, rel_dir, filename) is None:
             die(f"runtime asset {rel_dir}/{filename} is missing")
@@ -94,7 +94,7 @@ def validate(root, manifest, entry, rel_dir):
 
 def emit_group(out, prefix, rel_dir, entries):
     tag = f"{prefix}_{sym(rel_dir)}"
-    images = [e for e in entries if e["type"] in ("image", "art")]
+    images = [e for e in entries if e["type"] == "image"]
     chunks = [e for e in entries if e["type"] == "audio"]
     anims = [e for e in entries if e["type"] == "animation"]
 
@@ -158,7 +158,7 @@ def main():
 
     # Group runtime-relevant entries by their runtime dir, preserving order.
     groups = {}
-    for entry in manifest["tasks"]:
+    for entry in manifest["assets"]:
         if entry["type"] == "voice":
             continue  # per-line recordings: not runtime assets yet
         if not entry.get("runtime", True):

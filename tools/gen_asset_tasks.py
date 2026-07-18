@@ -48,11 +48,11 @@ REPO_NAME = "VaniaVolpe"
 SCAFFOLD_FILES = {"README.md", ".gitkeep"}
 
 
-# The manifest also declares runtime-only entries ("task": false — see
-# ASSETS.md) for the game's generated declarations; they are not authoring
-# work, so every view here skips them.
+# The manifest lists every asset (see ASSETS.md); only entries explicitly
+# marked "task": true are still to author — everything else is finished or
+# runtime-managed and skipped by the pipeline views here.
 def authoring_tasks(manifest):
-    return [t for t in manifest["tasks"] if t.get("task", True)]
+    return [t for t in manifest["assets"] if t.get("task", False)]
 
 
 def repo_root():
@@ -130,7 +130,7 @@ def meta_line(task):
         if task.get("size"):
             bits.append(f"{task['size']} each")
         return " · ".join(bits)
-    if task["type"] == "art" and task.get("size"):
+    if task["type"] == "image" and task.get("size"):
         return task["size"]
     return ""
 
