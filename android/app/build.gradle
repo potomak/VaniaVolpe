@@ -1,0 +1,35 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'it.curlybrackets.vaniavolpe'
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId 'it.curlybrackets.vaniavolpe'
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 1
+        versionName '0.1'
+        externalNativeBuild {
+            ndkBuild {
+                arguments 'APP_PLATFORM=android-21'
+                // arm64 only: every consumer phone since ~2017. Add
+                // 'armeabi-v7a', 'x86_64' here if older devices or emulators
+                // are needed (roughly doubles the native build per ABI).
+                abiFilters 'arm64-v8a'
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    externalNativeBuild {
+        ndkBuild {
+            path 'jni/Android.mk'
+        }
+    }
+    lint {
+        abortOnError false
+    }
+}

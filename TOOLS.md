@@ -146,6 +146,23 @@ never shipped (the web preload and the asset catalog skip `_`-prefixed dirs).
 - **Terminal build** — `make terminal` → `./vaniavolpe_terminal`: the whole
   game as libcaca ASCII art; handy for quick play-testing over SSH.
 
+## Android build
+
+`make android` builds the game as a native Android app — the same C sources
+compiled by the NDK into a shared library that SDL's stock `SDLActivity`
+loads (project under `android/`, an instance of SDL2's android-project
+template). Two helper scripts do the setup: `android/fetch_deps.sh` downloads
+the pinned SDL2 / SDL2_image / SDL2_mixer / SDL2_ttf release sources (each
+ships its own `Android.mk`) and copies SDL's Java glue; `android/sync_assets.sh`
+mirrors the shipped asset trees into the APK preserving their repo-relative
+paths (on Android `SDL_RWFromFile` reads relative paths from the APK's
+assets, so `asset_resolve()` works unchanged). Both destinations are
+git-ignored. Locally it needs the Android SDK + NDK and `gradle`; in CI,
+`.github/workflows/android.yml` builds a debug-signed APK on every push to
+`main` (and on PRs touching the game) and uploads it as a workflow artifact —
+download `vaniavolpe-debug-apk` from the run page and install it directly on
+a phone.
+
 ## Adding a tool
 
 Keep this file the index: one entry per tool, a sentence on what it's for,

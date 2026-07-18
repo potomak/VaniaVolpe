@@ -194,6 +194,16 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) $(GINA_ASSETS_H) \
 	cp src/emscripten/walk_editor.html $(WEB_DIR)/walk_editor.html
 	cp src/emscripten/cost_estimate.html $(WEB_DIR)/cost_estimate.html
 
+# ── android target (native SDL2 APK; see TOOLS.md → Android build) ────────────
+
+# Needs the Android SDK + NDK and gradle on PATH (CI provides them; locally,
+# point ANDROID_HOME at an SDK install). Produces a debug-signed, directly
+# installable APK under android/app/build/outputs/apk/debug/.
+android: $(GINA_ASSETS_H)
+	android/fetch_deps.sh
+	android/sync_assets.sh
+	gradle -p android assembleDebug
+
 # ── formatting (clang-format, LLVM style; see .clang-format) ──────────────────
 
 CLANG_FORMAT ?= clang-format
@@ -217,4 +227,4 @@ clean:
 	      $(TARGET) $(TARGET_TERMINAL) $(TARGET_TEST)
 	rm -rf build
 
-.PHONY: all terminal test run-test web clean format format-check
+.PHONY: all terminal test run-test web android clean format format-check
