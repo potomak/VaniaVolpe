@@ -295,7 +295,8 @@
       "dir": "common/tree",
       "name": "carla",
       "size": "70x70",
-      "description": "Carla the crow, perched in the tree."
+      "description": "Carla the crow, perched in the tree.",
+      "runtime": false
     },
     {
       "group": "Art — Tree",
@@ -303,7 +304,8 @@
       "dir": "common/tree",
       "name": "float",
       "size": "90x60",
-      "description": "The float, caught in the branches."
+      "description": "The float, caught in the branches.",
+      "runtime": false
     },
     {
       "group": "Art — Tree",
@@ -327,7 +329,8 @@
       "dir": "common/vine",
       "name": "grapes",
       "size": "100x120",
-      "description": "The grape bunch on the vine."
+      "description": "The grape bunch on the vine.",
+      "runtime": false
     },
     {
       "group": "Art — Minigames",
@@ -415,6 +418,96 @@
       "name": "splash",
       "task": false,
       "description": "The dive splash."
+    },
+    {
+      "group": "Runtime only — Gina",
+      "type": "audio",
+      "dir": "hen",
+      "name": "walking",
+      "task": false,
+      "description": "Gina's footstep loop (the ActorSpec move sound)."
+    },
+    {
+      "group": "Runtime only — Tree",
+      "type": "animation",
+      "dir": "tree",
+      "name": "float_boil",
+      "frames": 3,
+      "style": "loop",
+      "task": false,
+      "description": "Placeholder boil for the float stuck in the branches."
+    },
+    {
+      "group": "Runtime only — Tree",
+      "type": "animation",
+      "dir": "tree",
+      "name": "carla_boil",
+      "frames": 3,
+      "style": "loop",
+      "task": false,
+      "description": "Placeholder boil for Carla the crow."
+    },
+    {
+      "group": "Runtime only — Tree",
+      "type": "audio",
+      "dir": "tree",
+      "name": "voice",
+      "task": false,
+      "localized": true,
+      "description": "Per-scene silent voice placeholder."
+    },
+    {
+      "group": "Runtime only — Tree",
+      "type": "audio",
+      "dir": "tree",
+      "name": "caw",
+      "task": false,
+      "description": "Carla's caw."
+    },
+    {
+      "group": "Runtime only — Vine",
+      "type": "animation",
+      "dir": "vine",
+      "name": "grapes_boil",
+      "frames": 3,
+      "style": "loop",
+      "task": false,
+      "description": "Placeholder boil for the grape bunch."
+    },
+    {
+      "group": "Runtime only — Vine",
+      "type": "audio",
+      "dir": "vine",
+      "name": "voice",
+      "task": false,
+      "localized": true,
+      "description": "Per-scene silent voice placeholder."
+    },
+    {
+      "group": "Runtime only — Minigames",
+      "type": "audio",
+      "dir": "sunscreen",
+      "name": "voice",
+      "task": false,
+      "localized": true,
+      "description": "Per-scene silent voice placeholder."
+    },
+    {
+      "group": "Runtime only — Minigames",
+      "type": "audio",
+      "dir": "grapes",
+      "name": "voice",
+      "task": false,
+      "localized": true,
+      "description": "Per-scene silent voice placeholder."
+    },
+    {
+      "group": "Runtime only — Minigames",
+      "type": "audio",
+      "dir": "grapes",
+      "name": "pop",
+      "task": false,
+      "description": "A grape being picked."
     }
   ]
 }

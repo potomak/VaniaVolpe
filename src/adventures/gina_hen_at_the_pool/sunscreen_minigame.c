@@ -18,16 +18,16 @@
 #include "gina_state.h"
 #include "sunscreen_minigame.h"
 
-static ImageData images[2] = {
-    {NULL, "background.png", "sunscreen", 0, 0},
-    {NULL, "gina.png", "sunscreen", 0, 0},
-};
-static const ImageData *background = &images[0];
-static const ImageData *gina_closeup = &images[1];
+// Asset declarations generated from the adventure manifest (ASSETS.md).
+#include "gina_assets.h"
 
-static ChunkData chunks[1] = {
-    {NULL, "voice.wav", "sunscreen"},
-};
+static ImageData images[GINA_SUNSCREEN_IMAGES_COUNT] =
+    GINA_SUNSCREEN_IMAGES_INIT;
+static const ImageData *background = &images[GINA_SUNSCREEN_IMAGE_BACKGROUND];
+static const ImageData *gina_closeup = &images[GINA_SUNSCREEN_IMAGE_GINA];
+
+static ChunkData chunks[GINA_SUNSCREEN_CHUNKS_COUNT] =
+    GINA_SUNSCREEN_CHUNKS_INIT;
 
 // The close-up rect Gina occupies, and the brush grid laid over it.
 #define GINA_X 280
@@ -78,7 +78,7 @@ static void brush_at(int x, int y) {
     gina_state.has_sunscreen = true;
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Gina: Pronta! Ora posso uscire al sole!");
-    Mix_PlayChannel(-1, chunks[0].chunk, 0);
+    Mix_PlayChannel(-1, chunks[GINA_SUNSCREEN_CHUNK_VOICE].chunk, 0);
     set_active_scene(POOL);
   }
 }

@@ -216,7 +216,10 @@ def main():
     manifests = load_manifests(root, paths)
 
     if args.out:
-        views = [manifest_view(root, m, args.branch) for m in manifests]
+        # An adventure whose manifest is all runtime-only entries (finished
+        # art, e.g. Vania) has nothing to author and stays off the page.
+        views = [v for v in (manifest_view(root, m, args.branch)
+                             for m in manifests) if v["groups"]]
         os.makedirs(args.out, exist_ok=True)
         out = os.path.join(args.out, "asset_tasks.json")
         with open(out, "w") as f:

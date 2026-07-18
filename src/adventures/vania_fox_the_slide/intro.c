@@ -17,16 +17,18 @@
 
 #include "intro.h"
 
-static ImageData images[1] = {
-    {NULL, "intro_background.png", "intro", 0, 0},
-};
-static const ImageData *background = &images[0];
+// Asset declarations generated from the adventure manifest (ASSETS.md).
+#include "vania_assets.h"
+
+static ImageData images[VANIA_INTRO_IMAGES_COUNT] = VANIA_INTRO_IMAGES_INIT;
+static const ImageData *background =
+    &images[VANIA_INTRO_IMAGE_INTRO_BACKGROUND];
 
 // Animations (the framework ticks and frees these; the scene only declares
 // them)
 static AnimationData *play_button;
 static AnimationData *exit_button;
-static AnimationData *animations[2];
+static AnimationData *animations[VANIA_INTRO_ANIMS_COUNT];
 
 static Fox *fox;
 
@@ -34,10 +36,7 @@ static Fox *fox;
 static Mix_Music *music = NULL;
 
 // Sound effects
-static ChunkData chunks[2] = {
-    {NULL, "play_button_click.wav", "intro"},
-    {NULL, "exit_button_click.wav", "intro"},
-};
+static ChunkData chunks[VANIA_INTRO_CHUNKS_COUNT] = VANIA_INTRO_CHUNKS_INIT;
 
 // Mouse position
 static SDL_Point m_pos;
@@ -50,8 +49,10 @@ static Hotspot hotspots[2];
 static void start_playing(void) { set_active_scene(PLAYGROUND_ENTRANCE); }
 
 static void init(void) {
-  play_button = animations[0] = make_animation_data(3, LOOP);
-  exit_button = animations[1] = make_animation_data(3, LOOP);
+  play_button = animations[VANIA_INTRO_ANIM_PLAY_BUTTON] = make_animation_data(
+      VANIA_INTRO_ANIM_PLAY_BUTTON_FRAMES, VANIA_INTRO_ANIM_PLAY_BUTTON_STYLE);
+  exit_button = animations[VANIA_INTRO_ANIM_EXIT_BUTTON] = make_animation_data(
+      VANIA_INTRO_ANIM_EXIT_BUTTON_FRAMES, VANIA_INTRO_ANIM_EXIT_BUTTON_STYLE);
 
   fox = make_fox((SDL_FPoint){322, 317});
   fox_sit(fox);
@@ -65,27 +66,15 @@ static void init(void) {
 
 static bool load_media(SDL_Renderer *renderer) {
   if (!load_animation(renderer, play_button,
-                      (Asset){
-                          .filename = "play_button.png",
-                          .directory = "intro",
-                      },
-                      (Asset){
-                          .filename = "play_button.anim",
-                          .directory = "intro",
-                      })) {
+                      VANIA_INTRO_ANIM_PLAY_BUTTON_SPRITE_ASSET,
+                      VANIA_INTRO_ANIM_PLAY_BUTTON_DATA_ASSET)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load play button");
     return false;
   }
 
   if (!load_animation(renderer, exit_button,
-                      (Asset){
-                          .filename = "exit_button.png",
-                          .directory = "intro",
-                      },
-                      (Asset){
-                          .filename = "exit_button.anim",
-                          .directory = "intro",
-                      })) {
+                      VANIA_INTRO_ANIM_EXIT_BUTTON_SPRITE_ASSET,
+                      VANIA_INTRO_ANIM_EXIT_BUTTON_DATA_ASSET)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load exit button");
     return false;
   }
@@ -97,12 +86,7 @@ static bool load_media(SDL_Renderer *renderer) {
 
   // Load music
   char music_path[ASSET_PATH_MAX];
-  asset_resolve(
-      (Asset){
-          .filename = "intro.wav",
-          .directory = "music",
-      },
-      music_path, sizeof(music_path));
+  asset_resolve(VANIA_MUSIC_CHUNK_INTRO_ASSET, music_path, sizeof(music_path));
   music = Mix_LoadMUS(music_path);
   if (music == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",

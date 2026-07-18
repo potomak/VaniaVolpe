@@ -93,7 +93,8 @@ Backends* for how the harnesses work.
   `LIVELINESS.md` (idle fidgets, actor drag & drop, boiling hotspots; all shipped,
   character art via the asset pipeline),
   `ASSETS.md` (declarative assets: the per-adventure manifest `assets/index.json`
-  → generated C declarations via `tools/gen_asset_decls.py`; pool scene migrated),
+  → generated C declarations via `tools/gen_asset_decls.py`; both adventures
+  migrated, depth demo deliberately inline),
   `TOOLS.md` (index of every dev tool: debug overlay & walk-mask paint mode,
   browser tools, generator scripts, test harnesses). The queued
   work lives in **GitHub issues** (label `backlog`), not a file.

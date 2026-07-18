@@ -100,26 +100,41 @@ def emit_group(out, prefix, rel_dir, entries):
 
     out.append(f"// ── {rel_dir} ─────────────────────────────────────────────")
     if images:
+        # Whole-table INIT for scenes whose table is one dir, per-entry _INIT
+        # rows for scenes that mix dirs in one table.
         for i, e in enumerate(images):
-            out.append(f"#define {tag}_IMAGE_{sym(e['name'])} {i}")
+            m = f"{tag}_IMAGE_{sym(e['name'])}"
+            out.append(f"#define {m} {i}")
+            out.append(f'#define {m}_INIT '
+                       f'{{NULL, "{e["name"]}.png", "{rel_dir}", 0, 0}}')
         out.append(f"#define {tag}_IMAGES_COUNT {len(images)}")
-        rows = ", ".join(
-            f'{{NULL, "{e["name"]}.png", "{rel_dir}", 0, 0}}' for e in images)
+        rows = ", ".join(f"{tag}_IMAGE_{sym(e['name'])}_INIT" for e in images)
         out.append(f"#define {tag}_IMAGES_INIT {{{rows}}}")
     if chunks:
+        # _FILE feeds ActorSpec filename fields (resolved against the actor's
+        # assets_dir); _ASSET feeds asset_resolve (e.g. music streams).
         for i, e in enumerate(chunks):
-            out.append(f"#define {tag}_CHUNK_{sym(e['name'])} {i}")
+            m = f"{tag}_CHUNK_{sym(e['name'])}"
+            out.append(f"#define {m} {i}")
+            out.append(f'#define {m}_INIT '
+                       f'{{NULL, "{e["name"]}.wav", "{rel_dir}"}}')
+            out.append(f'#define {m}_FILE "{e["name"]}.wav"')
+            out.append(f'#define {m}_ASSET ((Asset){{.filename = '
+                       f'"{e["name"]}.wav", .directory = "{rel_dir}"}})')
         out.append(f"#define {tag}_CHUNKS_COUNT {len(chunks)}")
-        rows = ", ".join(
-            f'{{NULL, "{e["name"]}.wav", "{rel_dir}"}}' for e in chunks)
+        rows = ", ".join(f"{tag}_CHUNK_{sym(e['name'])}_INIT" for e in chunks)
         out.append(f"#define {tag}_CHUNKS_INIT {{{rows}}}")
     if anims:
+        # _SPRITE_FILE/_DATA_FILE feed ActorAnimSpec (filenames relative to
+        # the actor's assets_dir); the _ASSET pair feeds load_animation.
         for i, e in enumerate(anims):
             a = f"{tag}_ANIM_{sym(e['name'])}"
             out.append(f"#define {a} {i}")
             out.append(f"#define {a}_FRAMES {e['frames']}")
             out.append(f"#define {a}_STYLE {STYLES[e.get('style', 'loop')]}")
             out.append(f"#define {a}_MS_PER_FRAME {e.get('ms_per_frame', 0)}")
+            out.append(f'#define {a}_SPRITE_FILE "{e["name"]}.png"')
+            out.append(f'#define {a}_DATA_FILE "{e["name"]}.anim"')
             out.append(f'#define {a}_SPRITE_ASSET '
                        f'((Asset){{.filename = "{e["name"]}.png", '
                        f'.directory = "{rel_dir}"}})')
