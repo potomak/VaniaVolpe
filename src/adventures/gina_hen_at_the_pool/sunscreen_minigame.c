@@ -18,7 +18,9 @@
 #include "gina_state.h"
 #include "sunscreen_minigame.h"
 
-// Asset declarations generated from the adventure manifest (ASSETS.md).
+// Asset declarations generated from the adventure manifest (ASSETS.md). The
+// chunks table mixes directories (the chime is shared by both minigames), so
+// it lists per-entry _INIT rows.
 #include "gina_assets.h"
 
 static ImageData images[GINA_SUNSCREEN_IMAGES_COUNT] =
@@ -26,8 +28,14 @@ static ImageData images[GINA_SUNSCREEN_IMAGES_COUNT] =
 static const ImageData *background = &images[GINA_SUNSCREEN_IMAGE_BACKGROUND];
 static const ImageData *gina_closeup = &images[GINA_SUNSCREEN_IMAGE_GINA];
 
-static ChunkData chunks[GINA_SUNSCREEN_CHUNKS_COUNT] =
-    GINA_SUNSCREEN_CHUNKS_INIT;
+// The completion reward (#116): a confetti burst over the close-up while the
+// chime plays, then back to the pool where Gina explains.
+static AnimationData *celebration;
+static AnimationData *animations[GINA_SUNSCREEN_ANIMS_COUNT];
+
+static ChunkData chunks[1] = {
+    GINA_MINIGAMES_CHUNK_CHIME_INIT,
+};
 
 // The close-up rect Gina occupies, and the brush grid laid over it.
 #define GINA_X 280
@@ -42,6 +50,9 @@ static ChunkData chunks[GINA_SUNSCREEN_CHUNKS_COUNT] =
 static bool painted[ROWS][COLS];
 static int painted_count;
 static bool brushing;
+// Completion reached: the celebration is playing, input is ignored, and the
+// scene switches when the burst ends.
+static bool celebrating;
 
 static void reset_grid(void) {
   for (int r = 0; r < ROWS; r++) {
@@ -51,18 +62,32 @@ static void reset_grid(void) {
   }
   painted_count = 0;
   brushing = false;
+  celebrating = false;
+  stop_animation(celebration);
 }
 
-static void init(void) { reset_grid(); }
+static void init(void) {
+  celebration = animations[GINA_SUNSCREEN_ANIM_CELEBRATION] =
+      make_animation_data(GINA_SUNSCREEN_ANIM_CELEBRATION_FRAMES,
+                          GINA_SUNSCREEN_ANIM_CELEBRATION_STYLE);
+  reset_grid();
+}
 
 static bool load_media(SDL_Renderer *renderer) {
-  (void)renderer;
-  return true;
+  return load_animation(renderer, celebration,
+                        GINA_SUNSCREEN_ANIM_CELEBRATION_SPRITE_ASSET,
+                        GINA_SUNSCREEN_ANIM_CELEBRATION_DATA_ASSET);
+}
+
+static void back_to_pool(void) {
+  // Gina explains back at the pool (the scene reads the flag on activation).
+  gina_state.announce_sunscreen = true;
+  set_active_scene(POOL);
 }
 
 // Mark the cell under (x, y), if it is over Gina and not already painted.
 static void brush_at(int x, int y) {
-  if (x < GINA_X || x >= GINA_X + GINA_W || y < GINA_Y ||
+  if (celebrating || x < GINA_X || x >= GINA_X + GINA_W || y < GINA_Y ||
       y >= GINA_Y + GINA_H) {
     return;
   }
@@ -76,10 +101,10 @@ static void brush_at(int x, int y) {
 
   if (painted_count >= (int)(COVERAGE_THRESHOLD * ROWS * COLS)) {
     gina_state.has_sunscreen = true;
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Gina: Pronta! Ora posso uscire al sole!");
-    Mix_PlayChannel(-1, chunks[GINA_SUNSCREEN_CHUNK_VOICE].chunk, 0);
-    set_active_scene(POOL);
+    // The reward beat (#116): chime + confetti burst, then back to the pool.
+    celebrating = true;
+    Mix_PlayChannel(-1, chunks[0].chunk, 0);
+    play_animation(celebration, back_to_pool);
   }
 }
 
@@ -118,6 +143,11 @@ static void render(SDL_Renderer *renderer) {
       }
     }
   }
+
+  // The reward burst over the close-up while the chime plays.
+  if (celebrating) {
+    render_animation(renderer, celebration, (SDL_Point){GINA_X, GINA_Y});
+  }
 }
 
 static void deinit(void) {}
@@ -137,6 +167,8 @@ Scene sunscreen_minigame_scene = {
     .on_scene_inactive = on_scene_inactive,
     .images = images,
     .images_length = LEN(images),
+    .animations = animations,
+    .animations_length = LEN(animations),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
 };

@@ -93,6 +93,13 @@ them.
   downscaled by `--scale` (nearest-neighbour), repacked vertically with a
   matching `.anim`. Placeholders to develop depth bands against; real art
   replaces them file-for-file. Needs Pillow.
+- **`gen_celebration_sheet.py`** — emits a placeholder celebration sheet (a
+  confetti burst, one-shot) for a minigame's completion reward (#116);
+  `--palette sun|grape` picks the colours. Real drawn frames replace the
+  files one-for-one via the asset pipeline. Needs Pillow.
+- **`gen_chime.py`** — synthesises the placeholder minigame completion chime
+  (a short ascending arpeggio); a real recording replaces it via the asset
+  pipeline. Stdlib only.
 - **`gen_boil_sheet.py`** — turns a still object PNG into a placeholder
   "boil" sheet (see `LIVELINESS.md` Part 3): each frame is the source nudged
   by a gentle sine wiggle, packed vertically with a matching `.anim`, same
