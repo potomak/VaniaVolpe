@@ -107,7 +107,7 @@ How placeholder art and silent voice lines become real assets, and how a fresh
 session can pick up uploads with no other context. Each adventure declares the
 assets it still needs in `src/adventures/<adv>/assets/index.json` — the same
 manifest the game's generated asset declarations come from (see `ASSETS.md`;
-entries marked `"task": false` are runtime-only and skipped here). Every task
+only entries marked `"task": true` are still to author and shown here). Every task
 has a stable **id** (`<type>-<dir>-<name>`) that names its directories.
 
 1. **List** — `tools/gen_asset_tasks.py --out` (run by `make web`) renders the

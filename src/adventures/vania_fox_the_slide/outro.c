@@ -17,10 +17,12 @@
 
 #include "outro.h"
 
-static ImageData images[1] = {
-    {NULL, "outro_background.png", "outro", 0, 0},
-};
-static const ImageData *background = &images[0];
+// Asset declarations generated from the adventure manifest (ASSETS.md).
+#include "vania_assets.h"
+
+static ImageData images[VANIA_OUTRO_IMAGES_COUNT] = VANIA_OUTRO_IMAGES_INIT;
+static const ImageData *background =
+    &images[VANIA_OUTRO_IMAGE_OUTRO_BACKGROUND];
 
 static Fox *fox;
 
@@ -40,12 +42,7 @@ static bool load_media(SDL_Renderer *renderer) {
 
   // Load music
   char music_path[ASSET_PATH_MAX];
-  asset_resolve(
-      (Asset){
-          .filename = "intro.wav",
-          .directory = "music",
-      },
-      music_path, sizeof(music_path));
+  asset_resolve(VANIA_MUSIC_CHUNK_INTRO_ASSET, music_path, sizeof(music_path));
   music = Mix_LoadMUS(music_path);
   if (music == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",

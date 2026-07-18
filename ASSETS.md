@@ -37,19 +37,19 @@ Top-level:
   "prefix": "GINA",
   "assets_root": "src/adventures/gina_hen_at_the_pool/assets",
   "reference_locale": "it_IT",
-  "tasks": [ ... ]
+  "assets": [ ... ]
 }
 ```
 
 `prefix` names the generated macros (`GINA_...`); it defaults to the
 upper-cased adventure id.
 
-Each entry in `tasks`:
+Each entry in `assets`:
 
 | field | meaning |
 |---|---|
 | `group` | display grouping on the *Assets to author* page (consecutive entries with the same group render together) |
-| `type` | `animation`, `art` (still image), `audio`, or `voice` (a spoken line) |
+| `type` | `animation`, `image` (matching the C `ImageData`), `audio`, or `voice` (a spoken line) |
 | `dir` | where the asset lives (see *directory rules* below) |
 | `name` | base filename, no extension |
 | `frames` | animations: frame count — **validated against the committed `.anim`** |
@@ -58,20 +58,21 @@ Each entry in `tasks`:
 | `size` | authoring hint (`WxH`) shown to the artist |
 | `text` | voice: the line to record |
 | `localized` | the file lives under a locale dir, not `common/` |
-| `task` | `false` = **runtime-only**: the game loads it, but it is not an authoring task (no drop-box, not on the page, not in the estimate) |
+| `task` | `true` = **still to author**: gets a drop-box, appears on the page and in the estimate (the game meanwhile shows a placeholder). Default `false`: a finished/runtime-managed asset |
 | `runtime` | `false` = **authoring-only**: an artist makes it, but the game shows a derived asset instead (e.g. the pool stills, which render as boils) |
 | `description` | one sentence of context, shown to the artist |
 
-Entries default to being both an authoring task and a runtime asset; the two
-flags carve out the exceptions from either side.
+By default an entry is a finished runtime asset. `task: true` marks the ones
+still to author; `runtime: false` marks the ones the game doesn't load
+directly.
 
 ### Directory rules
 
-Authoring entries use **layered** dirs (`common/pool` — the layer the finished
-file is committed to); runtime-only entries use **resolver** dirs (`pool` —
-what `asset_resolve()` takes, since the layer is its job to pick). The
-generator maps both to the same runtime dir by stripping the `common/` prefix,
-so the emitted macros always hold resolver dirs.
+Entries still to author (`task: true`) use **layered** dirs (`common/pool` —
+the layer the finished file is committed to); the rest use **resolver** dirs
+(`pool` — what `asset_resolve()` takes, since the layer is its job to pick).
+The generator maps both to the same runtime dir by stripping the `common/`
+prefix, so the emitted macros always hold resolver dirs.
 
 `voice` entries are authoring-only for now (scenes still play a shared
 per-scene `voice.wav` placeholder, declared as a runtime-only `audio` entry);
@@ -102,10 +103,22 @@ GINA_POOL_ANIM_SUNSCREEN_BOIL         // index into the animations table
 GINA_POOL_ANIM_SUNSCREEN_BOIL_FRAMES
 GINA_POOL_ANIM_SUNSCREEN_BOIL_STYLE   // LOOP / ONE_SHOT
 GINA_POOL_ANIM_SUNSCREEN_BOIL_MS_PER_FRAME
-GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET  // {.filename=..., .directory=...}
+GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET  // ((Asset){...}) compound literal
 GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET
 GINA_POOL_ANIMS_COUNT
 ```
+
+Beyond the whole-table macros, each entry also gets standalone forms for the
+places a table macro can't reach:
+
+- `..._IMAGE_X_INIT` / `..._CHUNK_X_INIT` — one initializer row, for scene
+  tables that mix directories (e.g. the playground's SFX + dialog lines in
+  one chunks array);
+- `..._CHUNK_X_FILE` / `..._ANIM_X_SPRITE_FILE` / `..._ANIM_X_DATA_FILE` —
+  bare filename strings, for `ActorSpec`/`ActorAnimSpec` fields (resolved
+  against the actor's `assets_dir`);
+- `..._CHUNK_X_ASSET` — an `(Asset)` compound literal, for direct
+  `asset_resolve` calls (music streams).
 
 A scene then declares its tables from the manifest instead of repeating it:
 
@@ -141,9 +154,15 @@ compile error instead of a runtime surprise.
 
 ## Migration status
 
-- **Shipped**: `pool.c` (Gina's poolside scene) — images, chunks and boil
-  animations all come from the manifest; the manifest gained `prefix`, the
-  runtime-only entries and the `runtime: false` flags.
-- **Remaining**: the other Gina scenes, the hen `ActorSpec`, Vania's adventure
-  (needs its manifest written) and optionally the depth demo — tracked in
-  #111.
+Every scene and actor of both content adventures reads the generated headers
+(#105 introduced the architecture with the pool scene; #111 migrated the
+rest):
+
+- **Gina** — all five scenes plus the hen `ActorSpec`. The manifest carries
+  the authoring tasks and the runtime-only entries side by side.
+- **Vania** — all four scenes plus the fox `ActorSpec`. Its art is finished,
+  so nothing in `assets/index.json` is marked `task: true`: pure runtime
+  declarations, nothing on the *Assets to author* page.
+- **Depth demo** — deliberately left inline: it is the developer reference
+  for scene mechanics, and its hand-written tables double as the "before"
+  example of what the manifest replaces.

@@ -19,18 +19,19 @@
 
 #include "playground.h"
 
-static ImageData images[5] = {
-    {NULL, "playground_background.png", "playground", 0, 0},
-    {NULL, "squirrel.png", "playground", 0, 0},
-    {NULL, "peg.png", "playground", 0, 0},
-    {NULL, "fixed_peg.png", "playground", 0, 0},
-    {NULL, "acorns.png", "playground", 0, 0},
-};
-static const ImageData *background = &images[0];
-static const ImageData *squirrel = &images[1];
-static const ImageData *peg = &images[2];
-static const ImageData *fixed_peg = &images[3];
-static const ImageData *acorns = &images[4];
+// Asset declarations generated from the adventure manifest (ASSETS.md). The
+// chunks table mixes directories (scene SFX and the dialog lines), so it
+// lists per-entry _INIT rows instead of one table macro.
+#include "vania_assets.h"
+
+static ImageData images[VANIA_PLAYGROUND_IMAGES_COUNT] =
+    VANIA_PLAYGROUND_IMAGES_INIT;
+static const ImageData *background =
+    &images[VANIA_PLAYGROUND_IMAGE_PLAYGROUND_BACKGROUND];
+static const ImageData *squirrel = &images[VANIA_PLAYGROUND_IMAGE_SQUIRREL];
+static const ImageData *peg = &images[VANIA_PLAYGROUND_IMAGE_PEG];
+static const ImageData *fixed_peg = &images[VANIA_PLAYGROUND_IMAGE_FIXED_PEG];
+static const ImageData *acorns = &images[VANIA_PLAYGROUND_IMAGE_ACORNS];
 
 static Fox *fox;
 
@@ -47,16 +48,16 @@ static Mix_Music *music = NULL;
 
 // Sound effects and dialog
 static ChunkData chunks[9] = {
-    {NULL, "acorns_falling.wav", "playground"},
-    {NULL, "peg_falling.wav", "playground"},
+    VANIA_PLAYGROUND_CHUNK_ACORNS_FALLING_INIT,
+    VANIA_PLAYGROUND_CHUNK_PEG_FALLING_INIT,
     // TODO: Record new sound
-    {NULL, "peg_falling.wav", "playground"},
-    {NULL, "examine_fixed_slide.wav", "playground/dialog"},
-    {NULL, "examine_slide_1.wav", "playground/dialog"},
-    {NULL, "examine_slide_2.wav", "playground/dialog"},
-    {NULL, "examine_squirrel_1.wav", "playground/dialog"},
-    {NULL, "examine_squirrel_2.wav", "playground/dialog"},
-    {NULL, "sliding_down.wav", "playground/dialog"},
+    VANIA_PLAYGROUND_CHUNK_PEG_FALLING_INIT,
+    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_FIXED_SLIDE_INIT,
+    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SLIDE_1_INIT,
+    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SLIDE_2_INIT,
+    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SQUIRREL_1_INIT,
+    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SQUIRREL_2_INIT,
+    VANIA_PLAYGROUND_DIALOG_CHUNK_SLIDING_DOWN_INIT,
 };
 static const ChunkData *acorns_falling_sound = &chunks[0];
 static const ChunkData *peg_falling_sound = &chunks[1];
@@ -147,10 +148,10 @@ static void init(void) {
 
   // Baselines are set in on_scene_active, once the image heights are known
   // (the ground line is the bottom edge of each sprite).
-  *acorn_pile_prop =
-      (Prop){.image = &images[4] /* acorns */, .pos = ACORN_PILE_POS};
-  *dropped_peg_prop =
-      (Prop){.image = &images[2] /* peg */, .pos = DROPPED_PEG_POS};
+  *acorn_pile_prop = (Prop){.image = &images[VANIA_PLAYGROUND_IMAGE_ACORNS],
+                            .pos = ACORN_PILE_POS};
+  *dropped_peg_prop = (Prop){.image = &images[VANIA_PLAYGROUND_IMAGE_PEG],
+                             .pos = DROPPED_PEG_POS};
 
   int i = 0;
   hotspots[i++] = (Hotspot){
@@ -187,12 +188,8 @@ static bool load_media(SDL_Renderer *renderer) {
 
   // Load music
   char music_path[ASSET_PATH_MAX];
-  asset_resolve(
-      (Asset){
-          .filename = "playground.wav",
-          .directory = "music",
-      },
-      music_path, sizeof(music_path));
+  asset_resolve(VANIA_MUSIC_CHUNK_PLAYGROUND_ASSET, music_path,
+                sizeof(music_path));
   music = Mix_LoadMUS(music_path);
   if (music == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",

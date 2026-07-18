@@ -20,25 +20,22 @@
 #include "hen.h"
 #include "tree.h"
 
-static ImageData images[2] = {
-    {NULL, "background.png", "tree", 0, 0},
-    {NULL, "basket.png", "tree", 0, 0},
-};
-static const ImageData *background = &images[0];
-static const ImageData *basket = &images[1];
+// Asset declarations generated from the adventure manifest (ASSETS.md).
+#include "gina_assets.h"
+
+static ImageData images[GINA_TREE_IMAGES_COUNT] = GINA_TREE_IMAGES_INIT;
+static const ImageData *background = &images[GINA_TREE_IMAGE_BACKGROUND];
+static const ImageData *basket = &images[GINA_TREE_IMAGE_BASKET];
 
 // The tappable objects boil (LIVELINESS.md Part 3): the stuck float squiggles
 // while it can be examined, Carla while she can be talked to. Same size as the
 // old still PNGs, so the render positions are unchanged.
 static AnimationData *float_boil;
 static AnimationData *carla_boil;
-static AnimationData *animations[2];
+static AnimationData *animations[GINA_TREE_ANIMS_COUNT];
 
-static ChunkData chunks[2] = {
-    {NULL, "voice.wav", "tree"},
-    {NULL, "caw.wav", "tree"},
-};
-static const ChunkData *voice(void) { return &chunks[0]; }
+static ChunkData chunks[GINA_TREE_CHUNKS_COUNT] = GINA_TREE_CHUNKS_INIT;
+static const ChunkData *voice(void) { return &chunks[GINA_TREE_CHUNK_VOICE]; }
 
 static SDL_Point m_pos;
 
@@ -77,8 +74,10 @@ static void init(void) {
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
-  float_boil = animations[0] = make_animation_data(3, LOOP);
-  carla_boil = animations[1] = make_animation_data(3, LOOP);
+  float_boil = animations[GINA_TREE_ANIM_FLOAT_BOIL] = make_animation_data(
+      GINA_TREE_ANIM_FLOAT_BOIL_FRAMES, GINA_TREE_ANIM_FLOAT_BOIL_STYLE);
+  carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL] = make_animation_data(
+      GINA_TREE_ANIM_CARLA_BOIL_FRAMES, GINA_TREE_ANIM_CARLA_BOIL_STYLE);
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
@@ -104,10 +103,12 @@ static bool load_media(SDL_Renderer *renderer) {
   if (!hen_load_media(gina, renderer)) {
     return false;
   }
-  return load_animation(renderer, float_boil, (Asset){"float_boil.png", "tree"},
-                        (Asset){"float_boil.anim", "tree"}) &&
-         load_animation(renderer, carla_boil, (Asset){"carla_boil.png", "tree"},
-                        (Asset){"carla_boil.anim", "tree"});
+  return load_animation(renderer, float_boil,
+                        GINA_TREE_ANIM_FLOAT_BOIL_SPRITE_ASSET,
+                        GINA_TREE_ANIM_FLOAT_BOIL_DATA_ASSET) &&
+         load_animation(renderer, carla_boil,
+                        GINA_TREE_ANIM_CARLA_BOIL_SPRITE_ASSET,
+                        GINA_TREE_ANIM_CARLA_BOIL_DATA_ASSET);
 }
 
 // ── interactions
@@ -137,7 +138,7 @@ static void examine_float(void) {
 }
 
 static void talk_to_carla(void) {
-  Mix_PlayChannel(-1, chunks[1].chunk, 0); // caw
+  Mix_PlayChannel(-1, chunks[GINA_TREE_CHUNK_CAW].chunk, 0);
 
   if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
     if (gina_state.has_grapes) {

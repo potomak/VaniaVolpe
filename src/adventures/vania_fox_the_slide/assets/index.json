@@ -1,0 +1,299 @@
+{
+  "adventure": "vania_fox_the_slide",
+  "title": "Vania Volpe — Lo Scivolo",
+  "prefix": "VANIA",
+  "assets_root": "src/adventures/vania_fox_the_slide/assets",
+  "reference_locale": "it_IT",
+  "assets": [
+    {
+      "group": "Runtime — Fox",
+      "type": "animation",
+      "dir": "fox",
+      "name": "walking",
+      "frames": 4,
+      "style": "loop",
+      "description": "Vania's walking cycle, side view (mirrored for west)."
+    },
+    {
+      "group": "Runtime — Fox",
+      "type": "animation",
+      "dir": "fox",
+      "name": "talking",
+      "frames": 7,
+      "style": "loop",
+      "description": "Cue-driven talking sheet: one frame per canonical mouth shape (X A B C D E F, see SPEECH.md); the .anim maps the seven shapes onto the three drawn mouths."
+    },
+    {
+      "group": "Runtime — Fox",
+      "type": "animation",
+      "dir": "fox",
+      "name": "sitting",
+      "frames": 3,
+      "style": "loop",
+      "description": "Vania sitting (the idle state)."
+    },
+    {
+      "group": "Runtime — Fox",
+      "type": "animation",
+      "dir": "fox",
+      "name": "waving",
+      "frames": 3,
+      "style": "loop",
+      "description": "Vania waving (the outro)."
+    },
+    {
+      "group": "Runtime — Fox",
+      "type": "audio",
+      "dir": "fox",
+      "name": "walking",
+      "description": "Vania's footstep loop (the ActorSpec move sound)."
+    },
+    {
+      "group": "Runtime — Intro",
+      "type": "image",
+      "dir": "intro",
+      "name": "intro_background",
+      "localized": true,
+      "description": "Title screen backdrop (text-bearing, per locale)."
+    },
+    {
+      "group": "Runtime — Intro",
+      "type": "animation",
+      "dir": "intro",
+      "name": "play_button",
+      "frames": 3,
+      "style": "loop",
+      "localized": true,
+      "description": "The labelled Play button (wiggles on hover; per locale)."
+    },
+    {
+      "group": "Runtime — Intro",
+      "type": "animation",
+      "dir": "intro",
+      "name": "exit_button",
+      "frames": 3,
+      "style": "loop",
+      "localized": true,
+      "description": "The labelled Exit button (wiggles on hover; per locale)."
+    },
+    {
+      "group": "Runtime — Intro",
+      "type": "audio",
+      "dir": "intro",
+      "name": "play_button_click",
+      "description": "Play button click."
+    },
+    {
+      "group": "Runtime — Intro",
+      "type": "audio",
+      "dir": "intro",
+      "name": "exit_button_click",
+      "description": "Exit button click."
+    },
+    {
+      "group": "Runtime — Music",
+      "type": "audio",
+      "dir": "music",
+      "name": "intro",
+      "description": "Intro/outro music (streamed via Mix_LoadMUS)."
+    },
+    {
+      "group": "Runtime — Music",
+      "type": "audio",
+      "dir": "music",
+      "name": "playground",
+      "description": "Playground music (streamed via Mix_LoadMUS)."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "image",
+      "dir": "playground_entrance",
+      "name": "playground_entrance_background",
+      "description": "The gate scene backdrop."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "image",
+      "dir": "playground_entrance",
+      "name": "key",
+      "description": "The gate key (buried, on the ground, then carried)."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "animation",
+      "dir": "playground_entrance",
+      "name": "excavator",
+      "frames": 4,
+      "style": "one_shot",
+      "description": "The toy excavator (runs when tapped)."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "animation",
+      "dir": "playground_entrance",
+      "name": "gate",
+      "frames": 7,
+      "style": "one_shot",
+      "description": "The gate swinging open."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "animation",
+      "dir": "playground_entrance",
+      "name": "shovel",
+      "frames": 5,
+      "style": "one_shot",
+      "description": "The shovel digging out the key."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "audio",
+      "dir": "playground_entrance",
+      "name": "excavator",
+      "description": "The excavator rattling."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "audio",
+      "dir": "playground_entrance",
+      "name": "shovel",
+      "description": "Digging."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "audio",
+      "dir": "playground_entrance",
+      "name": "key_reveal",
+      "description": "The key appearing."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "audio",
+      "dir": "playground_entrance/dialog",
+      "name": "examine_gate_1",
+      "localized": true,
+      "description": "First look at the locked gate."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "audio",
+      "dir": "playground_entrance/dialog",
+      "name": "examine_gate_2",
+      "localized": true,
+      "description": "Second look at the locked gate."
+    },
+    {
+      "group": "Runtime — Playground entrance",
+      "type": "audio",
+      "dir": "playground_entrance/dialog",
+      "name": "examine_slide_from_outside",
+      "localized": true,
+      "description": "Looking at the slide through the fence."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "image",
+      "dir": "playground",
+      "name": "playground_background",
+      "description": "The playground backdrop."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "image",
+      "dir": "playground",
+      "name": "squirrel",
+      "description": "The squirrel holding the peg."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "image",
+      "dir": "playground",
+      "name": "peg",
+      "description": "The peg (held, dropped, then carried)."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "image",
+      "dir": "playground",
+      "name": "fixed_peg",
+      "description": "The peg fitted into the slide."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "image",
+      "dir": "playground",
+      "name": "acorns",
+      "description": "The acorns (in the tree, fallen, then carried)."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "audio",
+      "dir": "playground",
+      "name": "acorns_falling",
+      "description": "Acorns dropping from the tree."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "audio",
+      "dir": "playground",
+      "name": "peg_falling",
+      "description": "The peg hitting the ground (also reused for the gate and the slide fix)."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "audio",
+      "dir": "playground/dialog",
+      "name": "examine_fixed_slide",
+      "localized": true,
+      "description": "The slide is fixed."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "audio",
+      "dir": "playground/dialog",
+      "name": "examine_slide_1",
+      "localized": true,
+      "description": "First look at the broken slide."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "audio",
+      "dir": "playground/dialog",
+      "name": "examine_slide_2",
+      "localized": true,
+      "description": "Second look at the broken slide."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "audio",
+      "dir": "playground/dialog",
+      "name": "examine_squirrel_1",
+      "localized": true,
+      "description": "First chat with the squirrel."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "audio",
+      "dir": "playground/dialog",
+      "name": "examine_squirrel_2",
+      "localized": true,
+      "description": "Second chat with the squirrel."
+    },
+    {
+      "group": "Runtime — Playground",
+      "type": "audio",
+      "dir": "playground/dialog",
+      "name": "sliding_down",
+      "localized": true,
+      "description": "Wheee — sliding down."
+    },
+    {
+      "group": "Runtime — Outro",
+      "type": "image",
+      "dir": "outro",
+      "name": "outro_background",
+      "localized": true,
+      "description": "The end card (text-bearing, per locale)."
+    }
+  ]
+}

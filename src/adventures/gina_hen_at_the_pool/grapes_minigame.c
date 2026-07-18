@@ -17,17 +17,14 @@
 #include "gina_state.h"
 #include "grapes_minigame.h"
 
-static ImageData images[2] = {
-    {NULL, "background.png", "grapes", 0, 0},
-    {NULL, "grape.png", "grapes", 0, 0},
-};
-static const ImageData *background = &images[0];
-static const ImageData *grape = &images[1];
+// Asset declarations generated from the adventure manifest (ASSETS.md).
+#include "gina_assets.h"
 
-static ChunkData chunks[2] = {
-    {NULL, "voice.wav", "grapes"},
-    {NULL, "pop.wav", "grapes"},
-};
+static ImageData images[GINA_GRAPES_IMAGES_COUNT] = GINA_GRAPES_IMAGES_INIT;
+static const ImageData *background = &images[GINA_GRAPES_IMAGE_BACKGROUND];
+static const ImageData *grape = &images[GINA_GRAPES_IMAGE_GRAPE];
+
+static ChunkData chunks[GINA_GRAPES_CHUNKS_COUNT] = GINA_GRAPES_CHUNKS_INIT;
 
 #define GRAPE_SIZE 40
 #define GRAPE_COUNT 6
@@ -75,7 +72,7 @@ static void process_input(SDL_Event *event) {
       if (SDL_PointInRect(&m_pos, &r)) {
         collected[i] = true;
         collected_count++;
-        Mix_PlayChannel(-1, chunks[1].chunk, 0); // pop
+        Mix_PlayChannel(-1, chunks[GINA_GRAPES_CHUNK_POP].chunk, 0);
         break;
       }
     }

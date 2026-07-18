@@ -15,13 +15,13 @@ the JSON is consumed at build time. Run by make; output under build/gen/.
 
 The generator also validates what it can see:
 - an animation's `frames` must match its committed .anim row count;
-- runtime-only entries ("task": false) must have their files on disk.
+- finished entries (no "task": true flag) must have their files on disk.
 
-Entry dirs: authoring tasks use layered dirs ("common/pool"); runtime-only
-entries use resolver dirs ("pool"). Both map to the same runtime dir (the
-layer prefix is stripped), which is what the emitted macros use. `voice`
-entries (per-line recordings still to author) are not yet runtime assets and
-are skipped.
+Entry dirs: entries still to author ("task": true) use layered dirs
+("common/pool"); the rest use resolver dirs ("pool"). Both map to the same
+runtime dir (the layer prefix is stripped), which is what the emitted macros
+use. `voice` entries (per-line recordings still to author) are not yet
+runtime assets and are skipped.
 
 Usage:
   tools/gen_asset_decls.py --manifest <assets>/index.json --out build/gen/<adv>_assets.h
@@ -33,7 +33,7 @@ import os
 import re
 import sys
 
-EXT = {"image": ".png", "art": ".png", "audio": ".wav"}
+EXT = {"image": ".png", "audio": ".wav"}
 STYLES = {"loop": "LOOP", "one_shot": "ONE_SHOT"}
 
 
@@ -47,7 +47,7 @@ def sym(text):
 
 def runtime_dir(entry):
     d = entry["dir"]
-    if entry.get("task", True) and d.startswith("common/"):
+    if entry.get("task", False) and d.startswith("common/"):
         return d[len("common/") :]
     return d
 
@@ -81,12 +81,12 @@ def validate(root, manifest, entry, rel_dir):
             if rows != entry["frames"]:
                 die(f"{rel_dir}/{name}.anim has {rows} frames, "
                     f"manifest says {entry['frames']}")
-        elif not entry.get("task", True):
+        elif not entry.get("task", False):
             die(f"runtime asset {rel_dir}/{name}.anim is missing")
-        if (not entry.get("task", True)
+        if (not entry.get("task", False)
                 and find_file(root, manifest, rel_dir, name + ".png") is None):
             die(f"runtime asset {rel_dir}/{name}.png is missing")
-    elif not entry.get("task", True):
+    elif not entry.get("task", False):
         filename = name + EXT[entry["type"]]
         if find_file(root, manifest, rel_dir, filename) is None:
             die(f"runtime asset {rel_dir}/{filename} is missing")
@@ -94,32 +94,47 @@ def validate(root, manifest, entry, rel_dir):
 
 def emit_group(out, prefix, rel_dir, entries):
     tag = f"{prefix}_{sym(rel_dir)}"
-    images = [e for e in entries if e["type"] in ("image", "art")]
+    images = [e for e in entries if e["type"] == "image"]
     chunks = [e for e in entries if e["type"] == "audio"]
     anims = [e for e in entries if e["type"] == "animation"]
 
     out.append(f"// ── {rel_dir} ─────────────────────────────────────────────")
     if images:
+        # Whole-table INIT for scenes whose table is one dir, per-entry _INIT
+        # rows for scenes that mix dirs in one table.
         for i, e in enumerate(images):
-            out.append(f"#define {tag}_IMAGE_{sym(e['name'])} {i}")
+            m = f"{tag}_IMAGE_{sym(e['name'])}"
+            out.append(f"#define {m} {i}")
+            out.append(f'#define {m}_INIT '
+                       f'{{NULL, "{e["name"]}.png", "{rel_dir}", 0, 0}}')
         out.append(f"#define {tag}_IMAGES_COUNT {len(images)}")
-        rows = ", ".join(
-            f'{{NULL, "{e["name"]}.png", "{rel_dir}", 0, 0}}' for e in images)
+        rows = ", ".join(f"{tag}_IMAGE_{sym(e['name'])}_INIT" for e in images)
         out.append(f"#define {tag}_IMAGES_INIT {{{rows}}}")
     if chunks:
+        # _FILE feeds ActorSpec filename fields (resolved against the actor's
+        # assets_dir); _ASSET feeds asset_resolve (e.g. music streams).
         for i, e in enumerate(chunks):
-            out.append(f"#define {tag}_CHUNK_{sym(e['name'])} {i}")
+            m = f"{tag}_CHUNK_{sym(e['name'])}"
+            out.append(f"#define {m} {i}")
+            out.append(f'#define {m}_INIT '
+                       f'{{NULL, "{e["name"]}.wav", "{rel_dir}"}}')
+            out.append(f'#define {m}_FILE "{e["name"]}.wav"')
+            out.append(f'#define {m}_ASSET ((Asset){{.filename = '
+                       f'"{e["name"]}.wav", .directory = "{rel_dir}"}})')
         out.append(f"#define {tag}_CHUNKS_COUNT {len(chunks)}")
-        rows = ", ".join(
-            f'{{NULL, "{e["name"]}.wav", "{rel_dir}"}}' for e in chunks)
+        rows = ", ".join(f"{tag}_CHUNK_{sym(e['name'])}_INIT" for e in chunks)
         out.append(f"#define {tag}_CHUNKS_INIT {{{rows}}}")
     if anims:
+        # _SPRITE_FILE/_DATA_FILE feed ActorAnimSpec (filenames relative to
+        # the actor's assets_dir); the _ASSET pair feeds load_animation.
         for i, e in enumerate(anims):
             a = f"{tag}_ANIM_{sym(e['name'])}"
             out.append(f"#define {a} {i}")
             out.append(f"#define {a}_FRAMES {e['frames']}")
             out.append(f"#define {a}_STYLE {STYLES[e.get('style', 'loop')]}")
             out.append(f"#define {a}_MS_PER_FRAME {e.get('ms_per_frame', 0)}")
+            out.append(f'#define {a}_SPRITE_FILE "{e["name"]}.png"')
+            out.append(f'#define {a}_DATA_FILE "{e["name"]}.anim"')
             out.append(f'#define {a}_SPRITE_ASSET '
                        f'((Asset){{.filename = "{e["name"]}.png", '
                        f'.directory = "{rel_dir}"}})')
@@ -143,7 +158,7 @@ def main():
 
     # Group runtime-relevant entries by their runtime dir, preserving order.
     groups = {}
-    for entry in manifest["tasks"]:
+    for entry in manifest["assets"]:
         if entry["type"] == "voice":
             continue  # per-line recordings: not runtime assets yet
         if not entry.get("runtime", True):

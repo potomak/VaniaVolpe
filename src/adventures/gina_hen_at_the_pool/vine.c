@@ -19,20 +19,19 @@
 #include "hen.h"
 #include "vine.h"
 
-static ImageData images[1] = {
-    {NULL, "background.png", "vine", 0, 0},
-};
-static const ImageData *background = &images[0];
+// Asset declarations generated from the adventure manifest (ASSETS.md).
+#include "gina_assets.h"
+
+static ImageData images[GINA_VINE_IMAGES_COUNT] = GINA_VINE_IMAGES_INIT;
+static const ImageData *background = &images[GINA_VINE_IMAGE_BACKGROUND];
 
 // The grapes boil (LIVELINESS.md Part 3) to show they are tappable; same size
 // as the old still PNG, so the render position is unchanged.
 static AnimationData *grapes_boil;
-static AnimationData *animations[1];
+static AnimationData *animations[GINA_VINE_ANIMS_COUNT];
 
-static ChunkData chunks[1] = {
-    {NULL, "voice.wav", "vine"},
-};
-static const ChunkData *voice(void) { return &chunks[0]; }
+static ChunkData chunks[GINA_VINE_CHUNKS_COUNT] = GINA_VINE_CHUNKS_INIT;
+static const ChunkData *voice(void) { return &chunks[GINA_VINE_CHUNK_VOICE]; }
 
 static SDL_Point m_pos;
 
@@ -66,7 +65,8 @@ static void init(void) {
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "vine");
 
-  grapes_boil = animations[0] = make_animation_data(3, LOOP);
+  grapes_boil = animations[GINA_VINE_ANIM_GRAPES_BOIL] = make_animation_data(
+      GINA_VINE_ANIM_GRAPES_BOIL_FRAMES, GINA_VINE_ANIM_GRAPES_BOIL_STYLE);
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = GRAPES_HOTSPOT,
@@ -86,8 +86,8 @@ static bool load_media(SDL_Renderer *renderer) {
     return false;
   }
   return load_animation(renderer, grapes_boil,
-                        (Asset){"grapes_boil.png", "vine"},
-                        (Asset){"grapes_boil.anim", "vine"});
+                        GINA_VINE_ANIM_GRAPES_BOIL_SPRITE_ASSET,
+                        GINA_VINE_ANIM_GRAPES_BOIL_DATA_ASSET);
 }
 
 static void go_to_tree(void) { set_active_scene(TREE); }

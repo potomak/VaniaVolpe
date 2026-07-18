@@ -18,19 +18,24 @@
 
 #include "playground_entrance.h"
 
-static ImageData images[2] = {
-    {NULL, "playground_entrance_background.png", "playground_entrance", 0, 0},
-    {NULL, "key.png", "playground_entrance", 0, 0},
-};
-static const ImageData *background = &images[0];
-static const ImageData *key = &images[1];
+// Asset declarations generated from the adventure manifest (ASSETS.md). The
+// chunks table mixes directories (SFX here, one reused from the playground,
+// the dialog lines), so it lists per-entry _INIT rows instead of one table
+// macro.
+#include "vania_assets.h"
+
+static ImageData images[VANIA_PLAYGROUND_ENTRANCE_IMAGES_COUNT] =
+    VANIA_PLAYGROUND_ENTRANCE_IMAGES_INIT;
+static const ImageData *background =
+    &images[VANIA_PLAYGROUND_ENTRANCE_IMAGE_PLAYGROUND_ENTRANCE_BACKGROUND];
+static const ImageData *key = &images[VANIA_PLAYGROUND_ENTRANCE_IMAGE_KEY];
 
 // Animations (the framework ticks and frees these; the scene only declares
 // them)
 static AnimationData *excavator;
 static AnimationData *gate;
 static AnimationData *shovel;
-static AnimationData *animations[3];
+static AnimationData *animations[VANIA_PLAYGROUND_ENTRANCE_ANIMS_COUNT];
 
 static Fox *fox;
 
@@ -40,14 +45,14 @@ static Mix_Music *music = NULL;
 // Sound effects and dialog
 static int excavator_sound_channel = -1;
 static ChunkData chunks[7] = {
-    {NULL, "excavator.wav", "playground_entrance"},
-    {NULL, "shovel.wav", "playground_entrance"},
-    {NULL, "key_reveal.wav", "playground_entrance"},
+    VANIA_PLAYGROUND_ENTRANCE_CHUNK_EXCAVATOR_INIT,
+    VANIA_PLAYGROUND_ENTRANCE_CHUNK_SHOVEL_INIT,
+    VANIA_PLAYGROUND_ENTRANCE_CHUNK_KEY_REVEAL_INIT,
     // I'm reusing the sound effect of the peg falling
-    {NULL, "peg_falling.wav", "playground"},
-    {NULL, "examine_gate_1.wav", "playground_entrance/dialog"},
-    {NULL, "examine_gate_2.wav", "playground_entrance/dialog"},
-    {NULL, "examine_slide_from_outside.wav", "playground_entrance/dialog"},
+    VANIA_PLAYGROUND_CHUNK_PEG_FALLING_INIT,
+    VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_GATE_1_INIT,
+    VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_GATE_2_INIT,
+    VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_SLIDE_FROM_OUTSIDE_INIT,
 };
 static const ChunkData *excavator_sound = &chunks[0];
 static const ChunkData *shovel_sound = &chunks[1];
@@ -111,11 +116,17 @@ static void run_excavator(void) {
 }
 
 static void init(void) {
-  excavator = animations[0] = make_animation_data(4, ONE_SHOT);
+  excavator = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR] =
+      make_animation_data(VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_FRAMES,
+                          VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_STYLE);
   // Loop the animation 6 times before stopping
   excavator->max_loop_count = 6;
-  gate = animations[1] = make_animation_data(7, ONE_SHOT);
-  shovel = animations[2] = make_animation_data(5, ONE_SHOT);
+  gate = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE] =
+      make_animation_data(VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_FRAMES,
+                          VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_STYLE);
+  shovel = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL] =
+      make_animation_data(VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_FRAMES,
+                          VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_STYLE);
   // Loop the animation 3 times before stopping
   shovel->max_loop_count = 3;
 
@@ -150,40 +161,22 @@ static void init(void) {
 
 static bool load_media(SDL_Renderer *renderer) {
   if (!load_animation(renderer, excavator,
-                      (Asset){
-                          .filename = "excavator.png",
-                          .directory = "playground_entrance",
-                      },
-                      (Asset){
-                          .filename = "excavator.anim",
-                          .directory = "playground_entrance",
-                      })) {
+                      VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_SPRITE_ASSET,
+                      VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_DATA_ASSET)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load excavator");
     return false;
   }
 
   if (!load_animation(renderer, gate,
-                      (Asset){
-                          .filename = "gate.png",
-                          .directory = "playground_entrance",
-                      },
-                      (Asset){
-                          .filename = "gate.anim",
-                          .directory = "playground_entrance",
-                      })) {
+                      VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_SPRITE_ASSET,
+                      VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_DATA_ASSET)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load gate");
     return false;
   }
 
   if (!load_animation(renderer, shovel,
-                      (Asset){
-                          .filename = "shovel.png",
-                          .directory = "playground_entrance",
-                      },
-                      (Asset){
-                          .filename = "shovel.anim",
-                          .directory = "playground_entrance",
-                      })) {
+                      VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPRITE_ASSET,
+                      VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_DATA_ASSET)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load shovel");
     return false;
   }
@@ -195,12 +188,8 @@ static bool load_media(SDL_Renderer *renderer) {
 
   // Load music
   char music_path[ASSET_PATH_MAX];
-  asset_resolve(
-      (Asset){
-          .filename = "playground.wav",
-          .directory = "music",
-      },
-      music_path, sizeof(music_path));
+  asset_resolve(VANIA_MUSIC_CHUNK_PLAYGROUND_ASSET, music_path,
+                sizeof(music_path));
   music = Mix_LoadMUS(music_path);
   if (music == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",

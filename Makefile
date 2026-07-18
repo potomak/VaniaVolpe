@@ -72,6 +72,8 @@ GINA_SCRIPT_H = $(GEN_DIR)/gina_script.h
 # scenes declare their tables from these macros instead of repeating
 # filenames and frame counts inline.
 GINA_ASSETS_H = $(GEN_DIR)/gina_assets.h
+VANIA_ASSETS_H = $(GEN_DIR)/vania_assets.h
+ASSETS_HEADERS = $(GINA_ASSETS_H) $(VANIA_ASSETS_H)
 
 # ── default target (SDL window) ───────────────────────────────────────────────
 
@@ -108,15 +110,25 @@ $(GINA_SCRIPT_H): test/scripts/gina.json tools/gen_playtest.py
 # The Gina play-test #includes the generated header.
 test/play_gina.test.o: $(GINA_SCRIPT_H)
 
-# Generate the asset declarations from the adventure manifest (ASSETS.md).
+# Generate the asset declarations from each adventure's manifest (ASSETS.md).
 $(GINA_ASSETS_H): $(GINA_DIR)/assets/index.json tools/gen_asset_decls.py
 	mkdir -p $(GEN_DIR)
 	python3 tools/gen_asset_decls.py --manifest $< --out $@
 
-# Scenes migrated to the manifest #include the generated header (all three
+$(VANIA_ASSETS_H): $(VFTS_DIR)/assets/index.json tools/gen_asset_decls.py
+	mkdir -p $(GEN_DIR)
+	python3 tools/gen_asset_decls.py --manifest $< --out $@
+
+# Sources migrated to the manifest #include the generated header (all three
 # object flavours build the same source).
-$(GINA_DIR)/pool.o $(GINA_DIR)/pool.terminal.o $(GINA_DIR)/pool.test.o: \
-	$(GINA_ASSETS_H)
+GINA_MANIFEST_OBJS = $(foreach s,pool hen tree vine sunscreen_minigame \
+  grapes_minigame,$(GINA_DIR)/$(s).o $(GINA_DIR)/$(s).terminal.o \
+  $(GINA_DIR)/$(s).test.o)
+$(GINA_MANIFEST_OBJS): $(GINA_ASSETS_H)
+
+VANIA_MANIFEST_OBJS = $(foreach s,fox intro playground_entrance playground \
+  outro,$(VFTS_DIR)/$(s).o $(VFTS_DIR)/$(s).terminal.o $(VFTS_DIR)/$(s).test.o)
+$(VANIA_MANIFEST_OBJS): $(VANIA_ASSETS_H)
 
 %.test.o: %.c
 	$(CC) $(CFLAGS) -Itest -I$(GEN_DIR) -c $< -o $@
@@ -167,7 +179,7 @@ WEB_ASSETS = $(shell find $(VFTS_DIR)/assets $(GINA_DIR)/assets -type f)
 
 web: $(WEB_TARGET)
 
-$(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) $(GINA_ASSETS_H) \
+$(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) $(ASSETS_HEADERS) \
                src/emscripten/catalog.html tools/gen_asset_catalog.py \
                src/emscripten/asset_tasks.html tools/gen_asset_tasks.py \
                src/emscripten/cost_estimate.html \
@@ -199,7 +211,7 @@ $(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) $(GINA_ASSETS_H) \
 # Needs the Android SDK + NDK and gradle on PATH (CI provides them; locally,
 # point ANDROID_HOME at an SDK install). Produces a debug-signed, directly
 # installable APK under android/app/build/outputs/apk/debug/.
-android: $(GINA_ASSETS_H)
+android: $(ASSETS_HEADERS)
 	android/fetch_deps.sh
 	android/sync_assets.sh
 	gradle -p android assembleDebug
