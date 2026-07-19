@@ -177,6 +177,15 @@ typedef struct scene {
   ChunkData *chunks;
   int chunks_length;
 
+  // Declarative background music (SCENES.md milestone 4): the manifest asset of
+  // a music stream the framework plays on scene entry and halts on exit, so a
+  // scene sets `.music` and drops the whole Mix_LoadMUS/PlayMusic/HaltMusic/
+  // FreeMusic lifecycle. A zeroed asset ({0}, no filename) means the scene has
+  // no music. music_stream is the framework-owned runtime handle (loaded in the
+  // media pass, freed on teardown); scenes never touch it.
+  Asset music;
+  Mix_Music *music_stream;
+
   // Animations the scene draws itself (buttons, props, …). The framework ticks
   // them each frame and frees them on teardown, so scenes only declare them —
   // they don't call animation_update. (An actor ticks its own animations.)
@@ -310,6 +319,32 @@ bool load_scene_animations(Scene *scene, SDL_Renderer *renderer);
 // Advance the scene's declared animations (called once per frame by the
 // engine).
 void update_scene_animations(Scene scene, int now_ms);
+
+// Load a scene's declarative background music (.music) into its music_stream,
+// or a no-op returning true when the scene declared none. Called by the engine
+// in the media-load pass.
+bool load_scene_music(Scene *scene);
+
+// Play / halt a scene's declarative music around scene activation (called by
+// the engine in set_active_scene / adventure_switch_to). Each is a no-op when
+// the scene declared no music, so both switch paths call them unconditionally.
+void scene_start_music(const Scene *scene);
+void scene_stop_music(const Scene *scene);
+
+// Free a scene's music stream (called by the engine on teardown).
+void free_scene_music(Scene *scene);
+
+// Play a sound-effect chunk on the first free channel, returning the channel it
+// started on (or -1 on failure) — the high-level form of Mix_PlayChannel so a
+// scene's handlers never touch SDL_mixer (SCENES.md milestone 4). The chunk is
+// one of the scene's own (a typed ChunkData *, so a wrong name is a compile
+// error). Most callers ignore the return; capture it to later stop the sound.
+int scene_play_sound(const ChunkData *chunk);
+
+// Stop whatever is playing on a channel previously returned by scene_play_sound
+// (e.g. to retrigger a looping SFX from the top). A negative channel is
+// ignored, so an un-started handle is safe to pass.
+void scene_stop_channel(int channel);
 
 void free_scene_images(Scene *scene);
 

@@ -6,7 +6,6 @@
 //
 
 #include <SDL2/SDL.h>
-#include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
 
 #include "constants.h"
@@ -42,10 +41,8 @@ static SceneSprite sprites[3];
 
 static Fox *fox;
 
-// Music
-static Mix_Music *music = NULL;
-
-// Sound effects
+// Sound effects. Music is declared on the Scene (.music, SCENES.md
+// milestone 4); the framework plays and frees it.
 static ChunkData chunks[VANIA_INTRO_CHUNKS_COUNT] = VANIA_INTRO_CHUNKS_INIT;
 
 // Mouse position
@@ -78,23 +75,9 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  // The play/exit buttons are loaded by the framework from anim_specs.
-  if (!fox_load_media(fox, renderer)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load fox");
-    return false;
-  }
-
-  // Load music
-  char music_path[ASSET_PATH_MAX];
-  asset_resolve(VANIA_MUSIC_CHUNK_INTRO_ASSET, music_path, sizeof(music_path));
-  music = Mix_LoadMUS(music_path);
-  if (music == NULL) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",
-                 Mix_GetError());
-    return false;
-  }
-
-  return true;
+  // The play/exit buttons are loaded by the framework from anim_specs, the
+  // music from .music; only the fox remains.
+  return fox_load_media(fox, renderer);
 }
 
 static void process_input(SDL_Event *event) {
@@ -134,21 +117,14 @@ static void render(SDL_Renderer *renderer) {
   fox_render(fox, renderer);
 }
 
-static void deinit(void) {
-  fox_free(fox);
-
-  Mix_FreeMusic(music);
-  music = NULL;
-}
+static void deinit(void) { fox_free(fox); }
 
 static void on_scene_active(void) {
   stop_animation(play_button);
   stop_animation(exit_button);
-
-  Mix_PlayMusic(music, -1);
 }
 
-static void on_scene_inactive(void) { Mix_HaltMusic(); }
+static void on_scene_inactive(void) {}
 
 Scene intro_scene = {
     .init = init,
@@ -171,4 +147,5 @@ Scene intro_scene = {
     .animations_length = LEN(animations),
     .anim_specs = anim_specs,
     .anim_specs_length = LEN(anim_specs),
+    .music = VANIA_MUSIC_CHUNK_INTRO_ASSET_INIT,
 };

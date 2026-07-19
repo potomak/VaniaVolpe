@@ -384,6 +384,53 @@ void update_scene_animations(Scene scene, int now_ms) {
   }
 }
 
+bool load_scene_music(Scene *scene) {
+  scene->music_stream = NULL;
+  if (scene->music.filename == NULL) {
+    return true;
+  }
+  char path[ASSET_PATH_MAX];
+  asset_resolve(scene->music, path, sizeof(path));
+  scene->music_stream = Mix_LoadMUS(path);
+  if (scene->music_stream == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music %s: %s",
+                 path, Mix_GetError());
+    return false;
+  }
+  return true;
+}
+
+void scene_start_music(const Scene *scene) {
+  if (scene->music_stream != NULL) {
+    Mix_PlayMusic(scene->music_stream, -1);
+  }
+}
+
+void scene_stop_music(const Scene *scene) {
+  // One music channel plays at a time, so halting on exit is enough; the gate
+  // keeps a music-less scene from silencing whatever (nothing) is playing.
+  if (scene->music_stream != NULL) {
+    Mix_HaltMusic();
+  }
+}
+
+void free_scene_music(Scene *scene) {
+  if (scene->music_stream != NULL) {
+    Mix_FreeMusic(scene->music_stream);
+    scene->music_stream = NULL;
+  }
+}
+
+int scene_play_sound(const ChunkData *chunk) {
+  return Mix_PlayChannel(-1, chunk->chunk, 0);
+}
+
+void scene_stop_channel(int channel) {
+  if (channel >= 0) {
+    Mix_HaltChannel(channel);
+  }
+}
+
 void free_scene_images(Scene *scene) {
   for (int i = 0; i < scene->images_length; i++) {
     free_image_texture(&scene->images[i]);

@@ -6,7 +6,6 @@
 //
 
 #include <SDL2/SDL.h>
-#include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -178,7 +177,7 @@ static void talk_to_carla(void) {
   if (float_falling) {
     return;
   }
-  Mix_PlayChannel(-1, chunks[GINA_TREE_CHUNK_CAW].chunk, 0);
+  scene_play_sound(&chunks[GINA_TREE_CHUNK_CAW]);
 
   if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
     if (gina_state.has_grapes) {
@@ -187,7 +186,7 @@ static void talk_to_carla(void) {
       // (#118): chime + confetti burst over the float as it comes back.
       gina_state.has_grapes = false;
       gina_say(gina, "Mmm, che uva buona! Ecco il tuo salvagente!", voice());
-      Mix_PlayChannel(-1, chime_sound->chunk, 0);
+      scene_play_sound(chime_sound);
       play_animation(celebration, NULL);
       float_falling = true;
       tween_start(&float_tween, (SDL_FPoint){FLOAT_AT.x, FLOAT_AT.y},

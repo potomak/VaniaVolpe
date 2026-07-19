@@ -42,6 +42,9 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
     if (!load_scene_animations(scene, renderer)) {
       return false;
     }
+    if (!load_scene_music(scene)) {
+      return false;
+    }
   }
   return true;
 }
@@ -54,5 +57,6 @@ void adventure_deinit(const Adventure *adventure) {
     free_scene_planes(scene);
     free_scene_chunks(scene);
     free_scene_animations(scene);
+    free_scene_music(scene);
   }
 }
