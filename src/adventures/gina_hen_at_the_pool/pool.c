@@ -318,6 +318,11 @@ static void on_scene_active(void) {
   // The sunscreen may have been applied since init (the minigame scene sets
   // it, then control returns here): pick the state-appropriate walk area.
   rebuild_walk_grid();
+  // Fresh from the sunscreen minigame (#116): explain what the reward means.
+  if (gina_state.announce_sunscreen) {
+    gina_state.announce_sunscreen = false;
+    gina_say(gina, "Pronta! Ora posso uscire al sole!", voice());
+  }
 }
 
 static void on_scene_inactive(void) {}

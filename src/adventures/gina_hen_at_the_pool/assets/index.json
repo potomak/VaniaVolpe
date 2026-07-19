@@ -168,6 +168,15 @@
       "task": true
     },
     {
+      "group": "Voice — Poolside",
+      "type": "voice",
+      "dir": "pool/dialog",
+      "name": "sunscreen_ready",
+      "text": "Pronta! Ora posso uscire al sole!",
+      "description": "Back at the pool after the sunscreen minigame: she can now go play in the sun.",
+      "task": true
+    },
+    {
       "group": "Voice — Tree",
       "type": "voice",
       "dir": "tree/dialog",
@@ -249,21 +258,12 @@
       "task": true
     },
     {
-      "group": "Voice — Minigames",
+      "group": "Voice — Vine",
       "type": "voice",
-      "dir": "sunscreen/dialog",
-      "name": "ready",
-      "text": "Pronta! Ora posso uscire al sole!",
-      "description": "Finishes rubbing in the sunscreen.",
-      "task": true
-    },
-    {
-      "group": "Voice — Minigames",
-      "type": "voice",
-      "dir": "grapes/dialog",
+      "dir": "vine/dialog",
       "name": "basket_full",
       "text": "Cestino pieno d'uva! Ora torno da Carla.",
-      "description": "Fills the basket with grapes.",
+      "description": "Back at the vine with the basket full: time to bring Carla the grapes.",
       "task": true
     },
     {
@@ -408,6 +408,36 @@
       "task": true
     },
     {
+      "group": "Art — Minigames",
+      "type": "animation",
+      "dir": "common/sunscreen",
+      "name": "celebration",
+      "frames": 8,
+      "style": "one_shot",
+      "size": "240x240",
+      "description": "Completion reward burst over Gina's close-up (plays once with the chime). Placeholder confetti via tools/gen_celebration_sheet.py.",
+      "task": true
+    },
+    {
+      "group": "Art — Minigames",
+      "type": "animation",
+      "dir": "common/grapes",
+      "name": "celebration",
+      "frames": 8,
+      "style": "one_shot",
+      "size": "240x240",
+      "description": "Completion reward burst over the picked bunch (plays once with the chime). Placeholder confetti via tools/gen_celebration_sheet.py.",
+      "task": true
+    },
+    {
+      "group": "Audio — Minigames",
+      "type": "audio",
+      "dir": "common/minigames",
+      "name": "chime",
+      "description": "Success chime both minigames play on completion. Placeholder arpeggio via tools/gen_chime.py.",
+      "task": true
+    },
+    {
       "group": "Runtime only — Poolside",
       "type": "animation",
       "dir": "pool",
@@ -509,22 +539,6 @@
       "group": "Runtime only — Vine",
       "type": "audio",
       "dir": "vine",
-      "name": "voice",
-      "localized": true,
-      "description": "Per-scene silent voice placeholder."
-    },
-    {
-      "group": "Runtime only — Minigames",
-      "type": "audio",
-      "dir": "sunscreen",
-      "name": "voice",
-      "localized": true,
-      "description": "Per-scene silent voice placeholder."
-    },
-    {
-      "group": "Runtime only — Minigames",
-      "type": "audio",
-      "dir": "grapes",
       "name": "voice",
       "localized": true,
       "description": "Per-scene silent voice placeholder."

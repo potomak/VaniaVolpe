@@ -29,6 +29,11 @@ typedef struct gina_state {
   bool has_basket;        // given by Carla; needed to collect grapes
   bool has_grapes;        // collected in the grapes minigame; fed to Carla
 
+  // A minigame just finished (#116): the scene it returns to sees the flag,
+  // clears it and has Gina explain what the completion means.
+  bool announce_sunscreen; // pool: she can now go play in the sun
+  bool announce_grapes;    // vine: bring the full basket to Carla
+
   // Repeated-tap dialogue counter for the float stuck up the tree.
   int examine_float_count;
 } GinaState;

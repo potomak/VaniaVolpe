@@ -80,7 +80,8 @@ def target_rel(manifest, task):
         return [base + ".png", base + ".anim"]
     if task["type"] == "voice":
         return [f"{assets}/{locale}/{task['dir']}/{task['name']}.wav"]
-    return [f"{assets}/{task['dir']}/{task['name']}.png"]
+    ext = ".wav" if task["type"] == "audio" else ".png"
+    return [f"{assets}/{task['dir']}/{task['name']}{ext}"]
 
 
 def uploaded_files(root, rel_dir):
@@ -120,6 +121,8 @@ def drop_desc(task):
                 f"only decide frame order, so name them e.g. 01.png, 02.png…")
     if task["type"] == "voice":
         return f"the recorded line as a WAV (any filename; saved as {task['name']}.wav)"
+    if task["type"] == "audio":
+        return f"the finished sound as a WAV (any filename; saved as {task['name']}.wav)"
     size = f" ({task['size']})" if task.get("size") else ""
     return f"the finished PNG{size} (any filename)"
 

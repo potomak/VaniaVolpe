@@ -1,51 +1,214 @@
 {
-  "adventure": "gina",
-  "title": "Gina la Gallina in Piscina",
-  "comment": "Single source of truth for the Gina playthrough, shared by the native C test (via tools/gen_playtest.py -> a generated header) and the browser test (test/web/run_playtest.js reads this file directly). Coordinates are fractions of the 800x600 logical screen; wait_ms is how long to run the loop after the action so walks and spoken lines finish.",
-  "steps": [
-    { "action": "click", "x": 0.5, "y": 0.497, "wait_ms": 1500, "note": "hub -> Gina (second button)" },
-    { "action": "screenshot", "name": "01-pool" },
-    { "action": "click", "x": 0.5, "y": 0.5, "wait_ms": 1200, "note": "try to leave the shade -> refused" },
-    { "action": "click", "x": 0.175, "y": 0.883, "wait_ms": 2500, "note": "tap sunscreen bottle -> minigame" },
-    { "action": "screenshot", "name": "02-sunscreen-minigame" },
-    { "action": "brush", "x0": 0.36, "x1": 0.64, "y0": 0.31, "y1": 0.69, "rows": 8, "wait_ms": 1500, "note": "paint on the sunscreen" },
-    { "action": "click", "x": 0.45, "y": 0.808, "wait_ms": 2800, "note": "collect goggles" },
-    { "action": "click", "x": 0.5, "y": 0.217, "wait_ms": 3000, "note": "tap pool -> needs float" },
-    { "action": "click", "x": 0.756, "y": 0.833, "wait_ms": 3000, "note": "tap float -> wind blows it to the tree" },
-    { "action": "click", "x": 0.5, "y": 0.217, "wait_ms": 3000, "note": "tap pool again -> float is gone" },
-    { "action": "click", "x": 0.981, "y": 0.542, "wait_ms": 1200, "note": "go to the tree (right edge)" },
-    { "action": "screenshot", "name": "03-tree" },
-    { "action": "click", "x": 0.681, "y": 0.167, "wait_ms": 3000, "note": "examine the stuck float" },
-    { "action": "click", "x": 0.494, "y": 0.308, "wait_ms": 3000, "note": "talk to Carla -> basket" },
-    { "action": "click", "x": 0.981, "y": 0.542, "wait_ms": 1200, "note": "go to the vine (right edge)" },
-    { "action": "click", "x": 0.5, "y": 0.4, "wait_ms": 2800, "note": "tap grapes -> minigame" },
-    { "action": "screenshot", "name": "04-grapes-minigame" },
-    { "action": "click", "x": 0.45, "y": 0.283, "wait_ms": 400, "note": "grape" },
-    { "action": "click", "x": 0.525, "y": 0.3, "wait_ms": 400, "note": "grape" },
-    { "action": "click", "x": 0.6, "y": 0.283, "wait_ms": 400, "note": "grape" },
-    { "action": "click", "x": 0.475, "y": 0.383, "wait_ms": 400, "note": "grape" },
-    { "action": "click", "x": 0.5625, "y": 0.383, "wait_ms": 400, "note": "grape" },
-    { "action": "click", "x": 0.519, "y": 0.483, "wait_ms": 400, "note": "grape" },
-    { "action": "wait", "wait_ms": 1000, "note": "basket fills, back to the vine" },
-    { "action": "click", "x": 0.019, "y": 0.542, "wait_ms": 1200, "note": "back to the tree (left edge)" },
-    { "action": "click", "x": 0.494, "y": 0.308, "wait_ms": 3000, "note": "give Carla the grapes -> float back" },
-    { "action": "screenshot", "name": "05-float-retrieved" },
-    { "action": "click", "x": 0.019, "y": 0.542, "wait_ms": 1200, "note": "back to the pool (left edge)" },
-    { "action": "click", "x": 0.5, "y": 0.217, "wait_ms": 3500, "note": "dive!" },
-    { "action": "screenshot", "name": "06-dive" }
-  ],
-  "expect": [
-    "Hub: starting adventure 'Gina la Gallina in Piscina'",
-    "Devo mettere la crema",
-    "Pronta! Ora posso uscire al sole",
-    "Ho preso gli occhialini",
-    "Mi serve il salvagente",
-    "Oh no! Il vento",
-    "Il salvagente e' sull'albero",
-    "Non ci arrivo",
-    "Prendi questo cestino",
-    "Cestino pieno d'uva",
-    "Ecco il tuo salvagente",
-    "Che bello! Ancora"
-  ]
+ "adventure": "gina",
+ "title": "Gina la Gallina in Piscina",
+ "comment": "Single source of truth for the Gina playthrough, shared by the native C test (via tools/gen_playtest.py -> a generated header) and the browser test (test/web/run_playtest.js reads this file directly). Coordinates are fractions of the 800x600 logical screen; wait_ms is how long to run the loop after the action so walks and spoken lines finish.",
+ "steps": [
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.497,
+   "wait_ms": 1500,
+   "note": "hub -> Gina (second button)"
+  },
+  {
+   "action": "screenshot",
+   "name": "01-pool"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.5,
+   "wait_ms": 1200,
+   "note": "try to leave the shade -> refused"
+  },
+  {
+   "action": "click",
+   "x": 0.175,
+   "y": 0.883,
+   "wait_ms": 2500,
+   "note": "tap sunscreen bottle -> minigame"
+  },
+  {
+   "action": "screenshot",
+   "name": "02-sunscreen-minigame"
+  },
+  {
+   "action": "brush",
+   "x0": 0.36,
+   "x1": 0.64,
+   "y0": 0.31,
+   "y1": 0.69,
+   "rows": 8,
+   "wait_ms": 3200,
+   "note": "paint on the sunscreen -> chime + burst, back to the pool, Gina explains"
+  },
+  {
+   "action": "click",
+   "x": 0.45,
+   "y": 0.808,
+   "wait_ms": 2800,
+   "note": "collect goggles"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.217,
+   "wait_ms": 3000,
+   "note": "tap pool -> needs float"
+  },
+  {
+   "action": "click",
+   "x": 0.756,
+   "y": 0.833,
+   "wait_ms": 3000,
+   "note": "tap float -> wind blows it to the tree"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.217,
+   "wait_ms": 3000,
+   "note": "tap pool again -> float is gone"
+  },
+  {
+   "action": "click",
+   "x": 0.981,
+   "y": 0.542,
+   "wait_ms": 1200,
+   "note": "go to the tree (right edge)"
+  },
+  {
+   "action": "screenshot",
+   "name": "03-tree"
+  },
+  {
+   "action": "click",
+   "x": 0.681,
+   "y": 0.167,
+   "wait_ms": 3000,
+   "note": "examine the stuck float"
+  },
+  {
+   "action": "click",
+   "x": 0.494,
+   "y": 0.308,
+   "wait_ms": 3000,
+   "note": "talk to Carla -> basket"
+  },
+  {
+   "action": "click",
+   "x": 0.981,
+   "y": 0.542,
+   "wait_ms": 1200,
+   "note": "go to the vine (right edge)"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.4,
+   "wait_ms": 2800,
+   "note": "tap grapes -> minigame"
+  },
+  {
+   "action": "screenshot",
+   "name": "04-grapes-minigame"
+  },
+  {
+   "action": "click",
+   "x": 0.45,
+   "y": 0.283,
+   "wait_ms": 400,
+   "note": "grape"
+  },
+  {
+   "action": "click",
+   "x": 0.525,
+   "y": 0.3,
+   "wait_ms": 400,
+   "note": "grape"
+  },
+  {
+   "action": "click",
+   "x": 0.6,
+   "y": 0.283,
+   "wait_ms": 400,
+   "note": "grape"
+  },
+  {
+   "action": "click",
+   "x": 0.475,
+   "y": 0.383,
+   "wait_ms": 400,
+   "note": "grape"
+  },
+  {
+   "action": "click",
+   "x": 0.5625,
+   "y": 0.383,
+   "wait_ms": 400,
+   "note": "grape"
+  },
+  {
+   "action": "click",
+   "x": 0.519,
+   "y": 0.483,
+   "wait_ms": 400,
+   "note": "grape"
+  },
+  {
+   "action": "wait",
+   "wait_ms": 2800,
+   "note": "chime + burst, back to the vine, Gina explains"
+  },
+  {
+   "action": "click",
+   "x": 0.019,
+   "y": 0.542,
+   "wait_ms": 1200,
+   "note": "back to the tree (left edge)"
+  },
+  {
+   "action": "click",
+   "x": 0.494,
+   "y": 0.308,
+   "wait_ms": 3000,
+   "note": "give Carla the grapes -> float back"
+  },
+  {
+   "action": "screenshot",
+   "name": "05-float-retrieved"
+  },
+  {
+   "action": "click",
+   "x": 0.019,
+   "y": 0.542,
+   "wait_ms": 1200,
+   "note": "back to the pool (left edge)"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.217,
+   "wait_ms": 3500,
+   "note": "dive!"
+  },
+  {
+   "action": "screenshot",
+   "name": "06-dive"
+  }
+ ],
+ "expect": [
+  "Hub: starting adventure 'Gina la Gallina in Piscina'",
+  "Devo mettere la crema",
+  "Pronta! Ora posso uscire al sole",
+  "Ho preso gli occhialini",
+  "Mi serve il salvagente",
+  "Oh no! Il vento",
+  "Il salvagente e' sull'albero",
+  "Non ci arrivo",
+  "Prendi questo cestino",
+  "Cestino pieno d'uva",
+  "Ecco il tuo salvagente",
+  "Che bello! Ancora"
+ ]
 }

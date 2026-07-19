@@ -148,6 +148,11 @@ static void deinit(void) { hen_free(gina); }
 static void on_scene_active(void) {
   gina->current_position = HEN_START;
   gina->target_position = HEN_START;
+  // Fresh from the grapes minigame (#116): explain what the reward means.
+  if (gina_state.announce_grapes) {
+    gina_state.announce_grapes = false;
+    gina_say(gina, "Cestino pieno d'uva! Ora torno da Carla.", voice());
+  }
 }
 
 static void on_scene_inactive(void) {}
