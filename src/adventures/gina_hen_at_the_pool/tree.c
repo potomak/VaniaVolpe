@@ -14,6 +14,7 @@
 #include "game.h"
 #include "image.h"
 #include "sound.h"
+#include "tween.h"
 
 #include "gina_hen_at_the_pool.h"
 #include "gina_state.h"
@@ -44,6 +45,11 @@ static const SDL_FPoint HEN_START = {400, 480};
 
 static const SDL_Point FLOAT_AT = {500, 70};
 static const SDL_Point CARLA_AT = {360, 150};
+
+// The float's drop from the branches after the trade (#107): a bouncing fall
+// to the ground; the state flips to retrieved when it settles.
+static Tween float_tween;
+static bool float_falling;
 
 static const SDL_Rect FLOAT_HOTSPOT = {500, 70, 90, 60};
 static const SDL_Rect CARLA_HOTSPOT = {360, 150, 70, 70};
@@ -115,7 +121,7 @@ static bool load_media(SDL_Renderer *renderer) {
 // ──────────────────────────────────────────────────────────────
 
 static bool float_is_stuck(void) {
-  return gina_state.float_state == FLOAT_STUCK_IN_TREE;
+  return gina_state.float_state == FLOAT_STUCK_IN_TREE && !float_falling;
 }
 
 static void go_to_pool(void) { set_active_scene(POOL); }
@@ -137,15 +143,29 @@ static void examine_float(void) {
   gina_state.examine_float_count++;
 }
 
+// The float has settled on the ground: only now is it truly retrieved.
+static void float_dropped(void) {
+  float_falling = false;
+  gina_state.float_state = FLOAT_RETRIEVED;
+}
+
 static void talk_to_carla(void) {
+  // While the float is mid-fall the trade already happened; ignore the tap.
+  if (float_falling) {
+    return;
+  }
   Mix_PlayChannel(-1, chunks[GINA_TREE_CHUNK_CAW].chunk, 0);
 
   if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
     if (gina_state.has_grapes) {
-      // Carla eats the grapes, flies up and drops the float back to Gina.
-      gina_state.float_state = FLOAT_RETRIEVED;
+      // Carla eats the grapes and drops the float back to Gina (#107): it
+      // bounces down from the branches while she says thanks.
       gina_state.has_grapes = false;
       gina_say(gina, "Mmm, che uva buona! Ecco il tuo salvagente!", voice());
+      float_falling = true;
+      tween_start(&float_tween, (SDL_FPoint){FLOAT_AT.x, FLOAT_AT.y},
+                  (SDL_FPoint){FLOAT_AT.x, 430}, 900, TWEEN_BOUNCE,
+                  float_dropped);
       return;
     }
     if (!gina_state.has_basket) {
@@ -190,11 +210,20 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) { hen_update(gina, delta_time); }
+static void update(float delta_time) {
+  hen_update(gina, delta_time);
+  if (float_falling) {
+    tween_update(&float_tween, delta_time);
+  }
+}
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
-  if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
+  if (float_falling) {
+    // The drop: the float bounces down from the branches.
+    SDL_FPoint p = tween_pos(&float_tween);
+    render_animation(renderer, float_boil, (SDL_Point){(int)p.x, (int)p.y});
+  } else if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
     render_animation(renderer, float_boil, FLOAT_AT);
   }
   render_animation(renderer, carla_boil, CARLA_AT);

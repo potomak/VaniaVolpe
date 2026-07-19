@@ -87,6 +87,15 @@ void render_animation(SDL_Renderer *renderer, AnimationData *animation,
 void render_image(SDL_Renderer *renderer, const ImageData *image,
                   SDL_Point point);
 
+// Scaled variants for tweened objects (see tween.h): draw at `scale` times
+// the natural size, scaling around the image's centre so a shrinking object
+// stays put instead of drifting toward its top-left corner.
+void render_animation_scaled(SDL_Renderer *renderer, AnimationData *animation,
+                             SDL_Point point, float scale);
+
+void render_image_scaled(SDL_Renderer *renderer, const ImageData *image,
+                         SDL_Point point, float scale);
+
 // Camera scroll offset, applied to every render_image / render_animation
 // draw. Engine-only (game_render sets it around a scrolling scene's render
 // pass and resets it for screen-space UI); scenes never call these — they
