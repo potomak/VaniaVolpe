@@ -27,7 +27,8 @@ static float eased(TweenEase ease, float p) {
     return 1 - (1 - p) * (1 - p);
   case TWEEN_BOUNCE: {
     // Standard ease-out-bounce: three decaying bounces into the target.
-    const float n = 7.5625F, d = 2.75F;
+    const float n = 7.5625F;
+    const float d = 2.75F;
     if (p < 1 / d) {
       return n * p * p;
     }

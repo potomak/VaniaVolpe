@@ -51,7 +51,8 @@ int test_tween(void) {
   check(near_f(tween_scale(&t), 1), "scale defaults to 1 throughout");
 
   // Ease-in starts slower than linear; ease-out starts faster.
-  Tween in, out;
+  Tween in;
+  Tween out;
   tween_start(&in, (SDL_FPoint){0, 0}, (SDL_FPoint){100, 0}, 1000,
               TWEEN_EASE_IN, NULL);
   tween_start(&out, (SDL_FPoint){0, 0}, (SDL_FPoint){100, 0}, 1000,
