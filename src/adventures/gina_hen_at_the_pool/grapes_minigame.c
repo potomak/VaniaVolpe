@@ -12,6 +12,7 @@
 #include "game.h"
 #include "image.h"
 #include "sound.h"
+#include "tween.h"
 
 #include "gina_hen_at_the_pool.h"
 #include "gina_state.h"
@@ -40,13 +41,24 @@ static const ChunkData *chime_sound = &chunks[1];
 
 #define GRAPE_SIZE 40
 #define GRAPE_COUNT 6
+// How long a picked grape takes to drop off the bottom of the screen (#108).
+#define GRAPE_FALL_MS 550
 
 // Where each grape sits (top-left).
 static const SDL_Point GRAPE_AT[GRAPE_COUNT] = {
     {340, 150}, {400, 160}, {460, 150}, {360, 210}, {430, 210}, {395, 270},
 };
-static bool collected[GRAPE_COUNT];
-static int collected_count;
+
+// A tapped grape falls off-screen before it's gone (#108), so each has three
+// phases and its own fall tween.
+typedef enum grape_phase {
+  GRAPE_ON_VINE, // at rest, tappable
+  GRAPE_FALLING, // picked: dropping under its tween
+  GRAPE_GONE,    // off-screen; no longer drawn
+} GrapePhase;
+static GrapePhase phase[GRAPE_COUNT];
+static Tween fall[GRAPE_COUNT];
+
 // Completion reached: the celebration is playing, input is ignored, and the
 // scene switches when the burst ends.
 static bool celebrating;
@@ -55,9 +67,8 @@ static SDL_Point m_pos;
 
 static void reset_grapes(void) {
   for (int i = 0; i < GRAPE_COUNT; i++) {
-    collected[i] = false;
+    phase[i] = GRAPE_ON_VINE;
   }
-  collected_count = 0;
   celebrating = false;
   stop_animation(celebration);
 }
@@ -96,30 +107,47 @@ static void process_input(SDL_Event *event) {
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
     for (int i = 0; i < GRAPE_COUNT; i++) {
-      if (collected[i]) {
+      if (phase[i] != GRAPE_ON_VINE) {
         continue;
       }
       SDL_Rect r = {GRAPE_AT[i].x, GRAPE_AT[i].y, GRAPE_SIZE, GRAPE_SIZE};
       if (SDL_PointInRect(&m_pos, &r)) {
-        collected[i] = true;
-        collected_count++;
+        // Pick it: it drops off the bottom of the screen (#108). Completion
+        // is checked in update, once every grape has finished falling.
+        phase[i] = GRAPE_FALLING;
+        tween_start(&fall[i], (SDL_FPoint){GRAPE_AT[i].x, GRAPE_AT[i].y},
+                    (SDL_FPoint){GRAPE_AT[i].x, WINDOW_HEIGHT}, GRAPE_FALL_MS,
+                    TWEEN_EASE_IN, NULL);
         Mix_PlayChannel(-1, pop_sound->chunk, 0);
         break;
       }
-    }
-    if (collected_count == GRAPE_COUNT) {
-      gina_state.has_grapes = true;
-      // The reward beat (#116): chime + confetti burst, then back to the
-      // vine.
-      celebrating = true;
-      Mix_PlayChannel(-1, chime_sound->chunk, 0);
-      play_animation(celebration, back_to_vine);
     }
     break;
   }
 }
 
-static void update(float delta_time) { (void)delta_time; }
+static void update(float delta_time) {
+  if (celebrating) {
+    return; // the framework ticks the celebration animation
+  }
+  int gone = 0;
+  for (int i = 0; i < GRAPE_COUNT; i++) {
+    if (phase[i] == GRAPE_FALLING && !tween_update(&fall[i], delta_time)) {
+      phase[i] = GRAPE_GONE;
+    }
+    if (phase[i] == GRAPE_GONE) {
+      gone++;
+    }
+  }
+  // Every grape picked and landed: the reward beat (#116) — chime + confetti
+  // burst, then back to the vine.
+  if (gone == GRAPE_COUNT) {
+    gina_state.has_grapes = true;
+    celebrating = true;
+    Mix_PlayChannel(-1, chime_sound->chunk, 0);
+    play_animation(celebration, back_to_vine);
+  }
+}
 
 // Where the reward burst plays: centred over the picked bunch.
 static const SDL_Point CELEBRATION_AT = {275, 100};
@@ -127,8 +155,12 @@ static const SDL_Point CELEBRATION_AT = {275, 100};
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
   for (int i = 0; i < GRAPE_COUNT; i++) {
-    if (!collected[i]) {
+    if (phase[i] == GRAPE_ON_VINE) {
       render_image(renderer, grape, GRAPE_AT[i]);
+    } else if (phase[i] == GRAPE_FALLING) {
+      // Mid-fall: draw it at its tween position.
+      SDL_FPoint p = tween_pos(&fall[i]);
+      render_image(renderer, grape, (SDL_Point){(int)p.x, (int)p.y});
     }
   }
 
