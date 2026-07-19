@@ -37,6 +37,11 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_SUNSCREEN_ANIM_CELEBRATION_SPEC,
 };
 
+// The static sprite layer (SCENES.md milestone 2): the backdrop and Gina's
+// close-up. render() draws the dynamic layer over them: the sunscreen the
+// player paints on, and the completion burst.
+static SceneSprite sprites[2];
+
 static ChunkData chunks[1] = {
     GINA_MINIGAMES_CHUNK_CHIME_INIT,
 };
@@ -72,6 +77,9 @@ static void reset_grid(void) {
 
 static void init(void) {
   celebration = animations[GINA_SUNSCREEN_ANIM_CELEBRATION];
+  int s = 0;
+  sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
+  sprites[s++] = (SceneSprite){.image = gina_closeup, .at = {GINA_X, GINA_Y}};
   reset_grid();
 }
 
@@ -130,8 +138,8 @@ static void process_input(SDL_Event *event) {
 static void update(float delta_time) { (void)delta_time; }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
-  render_image(renderer, gina_closeup, (SDL_Point){GINA_X, GINA_Y});
+  // The backdrop and Gina's close-up are static sprites (drawn by the
+  // framework); render() draws the paint and the burst over them.
 
   // Painted cells: a pale sunscreen layer over Gina.
   SDL_SetRenderDrawColor(renderer, 0xFA, 0xF0, 0xD0, 0xFF);
@@ -167,6 +175,8 @@ Scene sunscreen_minigame_scene = {
     .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
     .animations = animations,

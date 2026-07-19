@@ -32,6 +32,23 @@ typedef struct prop {
   bool visible; // scenes toggle this (e.g. a picked-up item)
 } Prop;
 
+// A static scene sprite (SCENES.md milestone 2): an image or animation drawn
+// at a fixed scene position, optionally gated by a predicate — the declarative
+// form of a scene's background/boil/button draws. The framework draws the
+// scene's sprite table (in order, skipping gated-off entries) before the
+// scene's own render, which is left to draw only the dynamic action layer (the
+// actor, tweened objects, things that follow the actor, overlays on top).
+// Scenes build the table in their init like the hotspot table, so an animation
+// sprite can reference an object the framework made (SCENES.md milestone 1).
+typedef struct scene_sprite {
+  // Exactly one of image / animation is non-NULL. image is const to match how
+  // scenes alias their backgrounds (const ImageData *).
+  const ImageData *image;
+  AnimationData *animation;
+  SDL_Point at;          // top-left, scene coordinates
+  bool (*visible)(void); // NULL = always drawn; else gated like a hotspot
+} SceneSprite;
+
 // A background/foreground layer that scrolls at its own parallax factor
 // (DEPTH_AND_CAMERA.md Phase 4). Planes are drawn by the engine, not by the
 // scene's render, each at origin - camera.pos * parallax — so a distant plane
@@ -135,6 +152,13 @@ typedef struct scene {
   // entry, update after the scene's update, input conversion, render offset).
   Camera *camera;
 
+  // Static sprites (SceneSprite): the framework draws these each frame, in
+  // order, before the scene's own render — so the scene's render draws only
+  // the dynamic action layer. NULL/0 for scenes that draw everything
+  // themselves. Built in the scene's init (like the hotspot table).
+  SceneSprite *sprites;
+  int sprites_length;
+
   // Images
   ImageData *images;
   int images_length;
@@ -221,6 +245,12 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
 // active_anim are skipped; one shared by several hotspots is handled once,
 // ORing their states.
 void sync_hotspot_active_anims(const Scene *scene);
+
+// Draw a scene's static sprite table (SceneSprite, SCENES.md milestone 2): each
+// visible entry in order, an image or an animation at its scene position.
+// Called by the engine before the scene's render, inside the camera offset.
+void render_scene_sprites(SDL_Renderer *renderer, const SceneSprite *sprites,
+                          int sprites_length);
 
 bool load_scene_images(Scene *scene, SDL_Renderer *renderer);
 

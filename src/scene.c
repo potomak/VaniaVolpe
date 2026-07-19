@@ -138,6 +138,21 @@ void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
   }
 }
 
+void render_scene_sprites(SDL_Renderer *renderer, const SceneSprite *sprites,
+                          int sprites_length) {
+  for (int i = 0; i < sprites_length; i++) {
+    const SceneSprite *sprite = &sprites[i];
+    if (sprite->visible != NULL && !sprite->visible()) {
+      continue;
+    }
+    if (sprite->animation != NULL) {
+      render_animation(renderer, sprite->animation, sprite->at);
+    } else {
+      render_image(renderer, sprite->image, sprite->at);
+    }
+  }
+}
+
 bool load_scene_images(Scene *scene, SDL_Renderer *renderer) {
   for (int i = 0; i < scene->images_length; i++) {
     if (!load_image(renderer, &scene->images[i])) {

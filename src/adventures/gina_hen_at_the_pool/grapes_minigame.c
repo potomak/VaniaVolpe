@@ -36,6 +36,10 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_GRAPES_ANIM_CELEBRATION_SPEC,
 };
 
+// The static sprite layer (SCENES.md milestone 2): just the backdrop. render()
+// draws the dynamic grapes (falling under their tweens) and the burst.
+static SceneSprite sprites[1];
+
 static ChunkData chunks[2] = {
     GINA_GRAPES_CHUNK_POP_INIT,
     GINA_MINIGAMES_CHUNK_CHIME_INIT,
@@ -79,6 +83,7 @@ static void reset_grapes(void) {
 
 static void init(void) {
   celebration = animations[GINA_GRAPES_ANIM_CELEBRATION];
+  sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
   reset_grapes();
 }
 
@@ -156,7 +161,8 @@ static void update(float delta_time) {
 static const SDL_Point CELEBRATION_AT = {275, 100};
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
+  // The backdrop is a static sprite (drawn by the framework); render() draws
+  // the dynamic grapes and the burst.
   for (int i = 0; i < GRAPE_COUNT; i++) {
     if (phase[i] == GRAPE_ON_VINE) {
       render_image(renderer, grape, GRAPE_AT[i]);
@@ -188,6 +194,8 @@ Scene grapes_minigame_scene = {
     .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
     .animations = animations,

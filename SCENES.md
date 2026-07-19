@@ -221,8 +221,17 @@ a time, never a big-bang rewrite:
    freeing were already the framework's job and are untouched. The named
    aliases (`grapes_boil = animations[IDX];`) stay until Layer 2 makes render
    declarative.
-2. **The `SceneSprite` render list.** Absorbs the static draws; dynamic draws
-   stay in a custom `render`.
+2. **The `SceneSprite` render list.** ✅ **Shipped.** A scene declares a
+   `SceneSprite` table (`{image|animation, at, visible}`, built in its init like
+   the hotspot table); the framework draws it (in order, skipping gated-off
+   entries) before the scene's `render`, which shrinks to just the dynamic
+   action layer — the actor, tweened objects, things that follow the actor, and
+   overlays that sit on top (`render_scene_sprites` in `scene.c`, called from
+   `game.c` inside the camera offset). Gated sprites use `visible` predicates
+   (the boils reuse or mirror their hotspot gates). Every content scene of both
+   adventures migrated; the depth demo stays inline. Verified visually (the
+   playthrough only asserts dialogue, so a browser screenshot per adventure
+   confirmed the sprites render).
 3. **The boil collapse** (hotspot-carried `anim` + `at`).
 4. **The action API** (`play_<name>()`, `say_<line>()`, `.music` field) with
    build-time id validation.

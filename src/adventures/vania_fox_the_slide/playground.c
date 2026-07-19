@@ -43,6 +43,11 @@ static Prop props[2];
 static Prop *acorn_pile_prop = &props[0];  // fallen acorns, on the ground
 static Prop *dropped_peg_prop = &props[1]; // peg the squirrel dropped
 
+// The static sprite layer (SCENES.md milestone 2): backdrop and the squirrel.
+// Everything else (the peg and acorns in their many states, the y-sorted
+// props, the fox) is dynamic and stays in render().
+static SceneSprite sprites[2];
+
 // Music
 static Mix_Music *music = NULL;
 
@@ -152,6 +157,9 @@ static void init(void) {
                             .pos = ACORN_PILE_POS};
   *dropped_peg_prop = (Prop){.image = &images[VANIA_PLAYGROUND_IMAGE_PEG],
                              .pos = DROPPED_PEG_POS};
+
+  sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
+  sprites[1] = (SceneSprite){.image = squirrel, .at = {85, 160}};
 
   int i = 0;
   hotspots[i++] = (Hotspot){
@@ -315,8 +323,9 @@ static void update(float delta_time) {
 }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
-  render_image(renderer, squirrel, (SDL_Point){85, 160});
+  // Backdrop and squirrel are static sprites (drawn by the framework). render()
+  // draws the dynamic layer: the peg/acorns in their states and the y-sorted
+  // props + fox.
 
   // The on-the-ground placements are props (y-sorted with the fox below);
   // every other placement never overlaps the fox and stays a manual draw.
@@ -401,6 +410,8 @@ Scene playground_scene = {
     .pois_length = LEN(pois),
     .walk_grid = &walk_grid,
     .walk_mask_dir = "playground",
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,

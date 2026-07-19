@@ -35,6 +35,11 @@ static const SceneAnimSpec anim_specs[] = {
     VANIA_INTRO_ANIM_EXIT_BUTTON_SPEC,
 };
 
+// The static sprite layer (SCENES.md milestone 2): backdrop and the two
+// buttons (which animate on hover but are always drawn). render() draws only
+// the fox.
+static SceneSprite sprites[3];
+
 static Fox *fox;
 
 // Music
@@ -56,6 +61,11 @@ static void start_playing(void) { set_active_scene(PLAYGROUND_ENTRANCE); }
 static void init(void) {
   play_button = animations[VANIA_INTRO_ANIM_PLAY_BUTTON];
   exit_button = animations[VANIA_INTRO_ANIM_EXIT_BUTTON];
+
+  int s = 0;
+  sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
+  sprites[s++] = (SceneSprite){.animation = play_button, .at = {410, 260}};
+  sprites[s++] = (SceneSprite){.animation = exit_button, .at = {440, 450}};
 
   fox = make_fox((SDL_FPoint){322, 317});
   fox_sit(fox);
@@ -119,11 +129,8 @@ static void process_input(SDL_Event *event) {
 static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
-
-  render_animation(renderer, play_button, (SDL_Point){410, 260});
-  render_animation(renderer, exit_button, (SDL_Point){440, 450});
-
+  // The backdrop and buttons are static sprites (drawn by the framework); only
+  // the fox is dynamic.
   fox_render(fox, renderer);
 }
 
@@ -154,6 +161,8 @@ Scene intro_scene = {
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,
     .hotspots_length = LEN(hotspots),
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,
