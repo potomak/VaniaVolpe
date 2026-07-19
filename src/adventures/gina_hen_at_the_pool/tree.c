@@ -45,11 +45,11 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_TREE_ANIM_CARLA_BOIL_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): backdrop, the stuck float
-// (gated by float_is_stuck — off while it falls, when render() draws the
-// tweened one) and Carla. render() keeps the dynamic draws: the falling float,
-// the actor, the carried basket and the reward burst.
-static SceneSprite sprites[3];
+// The static sprite layer (SCENES.md milestone 2): just the backdrop. The
+// stuck float and Carla are boils declared on their hotspots (milestone 3),
+// which the framework plays and draws. render() keeps the dynamic draws: the
+// falling float, the actor, the carried basket and the reward burst.
+static SceneSprite sprites[1];
 
 // The scene's own chunks (voice/caw) plus the shared completion chime (#118),
 // which lives in another dir — so the table lists per-entry _INIT rows and
@@ -110,22 +110,21 @@ static void init(void) {
   carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL];
   celebration = animations[GINA_TREE_ANIM_CELEBRATION];
 
-  int s = 0;
-  sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
-  sprites[s++] = (SceneSprite){
-      .animation = float_boil, .at = FLOAT_AT, .visible = float_is_stuck};
-  sprites[s++] = (SceneSprite){.animation = carla_boil, .at = CARLA_AT};
+  sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
                             .enabled = float_is_stuck,
                             .poi = FLOAT_LOOK_POI,
                             .on_arrive = examine_float,
-                            .active_anim = float_boil};
+                            .active_anim = float_boil,
+                            .anim_at = FLOAT_AT,
+                            .anim_visible = float_is_stuck};
   hotspots[i++] = (Hotspot){.rect = CARLA_HOTSPOT,
                             .poi = CARLA_POI,
                             .on_arrive = talk_to_carla,
-                            .active_anim = carla_boil};
+                            .active_anim = carla_boil,
+                            .anim_at = CARLA_AT};
   hotspots[i++] = (Hotspot){
       .rect = POOL_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_pool};
   hotspots[i++] = (Hotspot){
