@@ -33,10 +33,21 @@ static const ImageData *basket = &images[GINA_TREE_IMAGE_BASKET];
 // old still PNGs, so the render positions are unchanged.
 static AnimationData *float_boil;
 static AnimationData *carla_boil;
+// The progress-reward burst over the float (#118): plays once with the chime
+// when Carla drops it back.
+static AnimationData *celebration;
 static AnimationData *animations[GINA_TREE_ANIMS_COUNT];
 
-static ChunkData chunks[GINA_TREE_CHUNKS_COUNT] = GINA_TREE_CHUNKS_INIT;
+// The scene's own chunks (voice/caw) plus the shared completion chime (#118),
+// which lives in another dir — so the table lists per-entry _INIT rows and
+// appends the chime after the tree's own chunks.
+static ChunkData chunks[GINA_TREE_CHUNKS_COUNT + 1] = {
+    GINA_TREE_CHUNK_VOICE_INIT,
+    GINA_TREE_CHUNK_CAW_INIT,
+    GINA_MINIGAMES_CHUNK_CHIME_INIT,
+};
 static const ChunkData *voice(void) { return &chunks[GINA_TREE_CHUNK_VOICE]; }
+static const ChunkData *chime_sound = &chunks[GINA_TREE_CHUNKS_COUNT];
 
 static SDL_Point m_pos;
 
@@ -45,6 +56,8 @@ static const SDL_FPoint HEN_START = {400, 480};
 
 static const SDL_Point FLOAT_AT = {500, 70};
 static const SDL_Point CARLA_AT = {360, 150};
+// The float-return reward burst (#118), centred over the float's fall path.
+static const SDL_Point CELEBRATION_AT = {425, 130};
 
 // The float's drop from the branches after the trade (#107): a bouncing fall
 // to the ground; the state flips to retrieved when it settles.
@@ -84,6 +97,8 @@ static void init(void) {
       GINA_TREE_ANIM_FLOAT_BOIL_FRAMES, GINA_TREE_ANIM_FLOAT_BOIL_STYLE);
   carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL] = make_animation_data(
       GINA_TREE_ANIM_CARLA_BOIL_FRAMES, GINA_TREE_ANIM_CARLA_BOIL_STYLE);
+  celebration = animations[GINA_TREE_ANIM_CELEBRATION] = make_animation_data(
+      GINA_TREE_ANIM_CELEBRATION_FRAMES, GINA_TREE_ANIM_CELEBRATION_STYLE);
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
@@ -114,7 +129,10 @@ static bool load_media(SDL_Renderer *renderer) {
                         GINA_TREE_ANIM_FLOAT_BOIL_DATA_ASSET) &&
          load_animation(renderer, carla_boil,
                         GINA_TREE_ANIM_CARLA_BOIL_SPRITE_ASSET,
-                        GINA_TREE_ANIM_CARLA_BOIL_DATA_ASSET);
+                        GINA_TREE_ANIM_CARLA_BOIL_DATA_ASSET) &&
+         load_animation(renderer, celebration,
+                        GINA_TREE_ANIM_CELEBRATION_SPRITE_ASSET,
+                        GINA_TREE_ANIM_CELEBRATION_DATA_ASSET);
 }
 
 // ── interactions
@@ -159,9 +177,12 @@ static void talk_to_carla(void) {
   if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
     if (gina_state.has_grapes) {
       // Carla eats the grapes and drops the float back to Gina (#107): it
-      // bounces down from the branches while she says thanks.
+      // bounces down from the branches while she says thanks. Progress reward
+      // (#118): chime + confetti burst over the float as it comes back.
       gina_state.has_grapes = false;
       gina_say(gina, "Mmm, che uva buona! Ecco il tuo salvagente!", voice());
+      Mix_PlayChannel(-1, chime_sound->chunk, 0);
+      play_animation(celebration, NULL);
       float_falling = true;
       tween_start(&float_tween, (SDL_FPoint){FLOAT_AT.x, FLOAT_AT.y},
                   (SDL_FPoint){FLOAT_AT.x, 430}, 900, TWEEN_BOUNCE,
@@ -233,6 +254,10 @@ static void render(SDL_Renderer *renderer) {
     render_image(renderer, basket,
                  (SDL_Point){gina->current_position.x - 55,
                              gina->current_position.y - 70});
+  }
+  // The reward burst over the returning float while the chime plays.
+  if (celebration->is_playing) {
+    render_animation(renderer, celebration, CELEBRATION_AT);
   }
 }
 

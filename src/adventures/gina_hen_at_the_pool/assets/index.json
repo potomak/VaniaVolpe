@@ -315,6 +315,17 @@
       "task": true
     },
     {
+      "group": "Art — Poolside",
+      "type": "animation",
+      "dir": "common/pool",
+      "name": "celebration",
+      "frames": 8,
+      "style": "one_shot",
+      "size": "240x240",
+      "description": "Completion reward burst over the goggles when Gina collects them (plays once with the chime). Placeholder confetti via tools/gen_celebration_sheet.py.",
+      "task": true
+    },
+    {
       "group": "Art — Tree",
       "type": "image",
       "dir": "common/tree",
@@ -350,6 +361,17 @@
       "name": "basket",
       "size": "50x40",
       "description": "The basket Carla hands over (Gina carries it).",
+      "task": true
+    },
+    {
+      "group": "Art — Tree",
+      "type": "animation",
+      "dir": "common/tree",
+      "name": "celebration",
+      "frames": 8,
+      "style": "one_shot",
+      "size": "240x240",
+      "description": "Completion reward burst over the float when Carla drops it back (plays once with the chime). Placeholder confetti via tools/gen_celebration_sheet.py.",
       "task": true
     },
     {

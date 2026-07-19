@@ -27,6 +27,8 @@ PALETTES = {
     "sun": [(255, 205, 66), (255, 158, 27), (255, 240, 180), (255, 111, 60)],
     # Grape purples and vine greens for the picking minigame.
     "grape": [(154, 78, 174), (106, 27, 154), (139, 195, 74), (233, 213, 255)],
+    # Pool blues and foam whites for the poolside goggles reward.
+    "water": [(66, 165, 245), (3, 155, 229), (129, 212, 250), (225, 245, 254)],
 }
 
 

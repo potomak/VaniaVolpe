@@ -42,11 +42,23 @@ static const ImageData *water = &images[GINA_POOL_IMAGE_WATER];
 static AnimationData *sunscreen_boil;
 static AnimationData *goggles_boil;
 static AnimationData *float_boil;
+// The progress-reward burst over the goggles (#118): plays once with the
+// chime when she collects them, no input lock (this is a walking scene).
+static AnimationData *celebration;
 static AnimationData *animations[GINA_POOL_ANIMS_COUNT];
 
-// Sound effects and dialog (silent placeholders; lines are logged to stdout).
-static ChunkData chunks[GINA_POOL_CHUNKS_COUNT] = GINA_POOL_CHUNKS_INIT;
+// Sound effects and dialog, plus the shared completion chime (#118). The
+// table mixes dirs (the chime lives in common/minigames), so it lists
+// per-entry _INIT rows rather than the whole-table macro; the chime is
+// appended after the pool's own chunks.
+static ChunkData chunks[GINA_POOL_CHUNKS_COUNT + 1] = {
+    GINA_POOL_CHUNK_VOICE_INIT,
+    GINA_POOL_CHUNK_WIND_INIT,
+    GINA_POOL_CHUNK_SPLASH_INIT,
+    GINA_MINIGAMES_CHUNK_CHIME_INIT,
+};
 static const ChunkData *voice(void) { return &chunks[GINA_POOL_CHUNK_VOICE]; }
+static const ChunkData *chime_sound = &chunks[GINA_POOL_CHUNKS_COUNT];
 
 static SDL_Point m_pos;
 
@@ -133,6 +145,8 @@ static void init(void) {
       GINA_POOL_ANIM_GOGGLES_BOIL_FRAMES, GINA_POOL_ANIM_GOGGLES_BOIL_STYLE);
   float_boil = animations[GINA_POOL_ANIM_FLOAT_BOIL] = make_animation_data(
       GINA_POOL_ANIM_FLOAT_BOIL_FRAMES, GINA_POOL_ANIM_FLOAT_BOIL_STYLE);
+  celebration = animations[GINA_POOL_ANIM_CELEBRATION] = make_animation_data(
+      GINA_POOL_ANIM_CELEBRATION_FRAMES, GINA_POOL_ANIM_CELEBRATION_STYLE);
 
   int i = 0;
   // The same bottle, two behaviours: reach for it before the sunscreen, a
@@ -190,7 +204,10 @@ static bool load_media(SDL_Renderer *renderer) {
                         GINA_POOL_ANIM_GOGGLES_BOIL_DATA_ASSET) &&
          load_animation(renderer, float_boil,
                         GINA_POOL_ANIM_FLOAT_BOIL_SPRITE_ASSET,
-                        GINA_POOL_ANIM_FLOAT_BOIL_DATA_ASSET);
+                        GINA_POOL_ANIM_FLOAT_BOIL_DATA_ASSET) &&
+         load_animation(renderer, celebration,
+                        GINA_POOL_ANIM_CELEBRATION_SPRITE_ASSET,
+                        GINA_POOL_ANIM_CELEBRATION_DATA_ASSET);
 }
 
 // ── interactions
@@ -223,6 +240,10 @@ static void go_to_tree(void) { set_active_scene(TREE); }
 
 static void collect_goggles(void) {
   gina_state.has_goggles = true;
+  // Progress reward (#118): chime + confetti burst over the goggles while she
+  // cheers. No input lock — she just picked something up, she isn't leaving.
+  Mix_PlayChannel(-1, chime_sound->chunk, 0);
+  play_animation(celebration, NULL);
   gina_say(gina, "Ho preso gli occhialini!", voice());
 }
 
@@ -346,6 +367,10 @@ static void update(float delta_time) {
   }
 }
 
+// The goggles reward burst, centred over the goggles (240x240 sheet over the
+// 60x30 goggles at GOGGLES_AT).
+static const SDL_Point CELEBRATION_AT = {240, 365};
+
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
   render_image(renderer, water, WATER_AT);
@@ -365,6 +390,10 @@ static void render(SDL_Renderer *renderer) {
     }
   }
   hen_render(gina, renderer);
+  // The reward burst over the goggles spot while the chime plays.
+  if (celebration->is_playing) {
+    render_animation(renderer, celebration, CELEBRATION_AT);
+  }
 }
 
 static void deinit(void) { hen_free(gina); }
