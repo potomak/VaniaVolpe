@@ -14,6 +14,7 @@
 #include "test_camera.h"
 #include "test_lipsync.h"
 #include "test_scene.h"
+#include "test_tween.h"
 #include "test_walk.h"
 
 int main(void) {
@@ -41,6 +42,7 @@ int main(void) {
   failures += test_lipsync();
   failures += test_scene();
   failures += test_camera();
+  failures += test_tween();
 
   harness_shutdown();
 

@@ -60,8 +60,8 @@
    "action": "click",
    "x": 0.756,
    "y": 0.833,
-   "wait_ms": 3000,
-   "note": "tap float -> wind blows it to the tree"
+   "wait_ms": 3500,
+   "note": "tap float -> wind blows it toward the tree (tween), Gina reacts"
   },
   {
    "action": "click",
@@ -189,8 +189,8 @@
    "action": "click",
    "x": 0.5,
    "y": 0.217,
-   "wait_ms": 3500,
-   "note": "dive!"
+   "wait_ms": 4000,
+   "note": "dive! (tween arc into the water, then splash + line + replay reset)"
   },
   {
    "action": "screenshot",

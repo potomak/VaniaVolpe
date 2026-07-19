@@ -64,7 +64,8 @@ Backends* for how the harnesses work.
   (adventure registry), `scene.{c,h}` (scene framework: scenes, props, depth
   bands, parallax planes), `actor.{c,h}` (generic character engine + depth
   variants), `walk.{c,h}` (walkability grid + A*), `camera.{c,h}` (scrolling
-  scenes), `image.c` (sprite/animation engine + render offset), `sound.c`,
+  scenes), `tween.{c,h}` (scene-object position/scale tweens),
+  `image.c` (sprite/animation engine + render offset), `sound.c`,
   `lipsync.c` (mouth-cue & word-timing sidecars), `subtitle.c` (dialogue
   overlay + read-along highlight), `asset.c` (locale-aware path resolution) +
   `locale.c` (locale selection), `debug.c`.

@@ -293,3 +293,29 @@ void render_image(SDL_Renderer *renderer, const ImageData *image,
                           image->width, image->height};
   SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
 }
+
+// Destination rect for a draw of natural size w x h at `point`, scaled around
+// its centre (shared by the two *_scaled variants).
+static SDL_Rect scaled_quad(SDL_Point point, int w, int h, float scale) {
+  int sw = (int)(w * scale);
+  int sh = (int)(h * scale);
+  return (SDL_Rect){point.x + render_offset.x + (w - sw) / 2,
+                    point.y + render_offset.y + (h - sh) / 2, sw, sh};
+}
+
+void render_animation_scaled(SDL_Renderer *renderer, AnimationData *animation,
+                             SDL_Point point, float scale) {
+  if (animation->image.texture == NULL) {
+    return;
+  }
+  SDL_Rect *clip = &animation->sprite_clips[animation->current_frame];
+  SDL_Rect render_quad = scaled_quad(point, clip->w, clip->h, scale);
+  SDL_RenderCopyEx(renderer, animation->image.texture, clip, &render_quad, 0,
+                   NULL, animation->flip);
+}
+
+void render_image_scaled(SDL_Renderer *renderer, const ImageData *image,
+                         SDL_Point point, float scale) {
+  SDL_Rect render_quad = scaled_quad(point, image->width, image->height, scale);
+  SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
+}

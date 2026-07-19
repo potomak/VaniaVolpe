@@ -15,6 +15,7 @@
 #include "game.h"
 #include "image.h"
 #include "sound.h"
+#include "tween.h"
 
 #include "gina_hen_at_the_pool.h"
 #include "gina_state.h"
@@ -51,6 +52,14 @@ static SDL_Point m_pos;
 
 static Hen *gina;
 static const SDL_FPoint HEN_START = {150, 480};
+
+// Scene-object tweens (#107/#119). The float's flight into the tree, and
+// Gina's dive arc into the water; the flags gate hotspots/input while each
+// motion runs.
+static Tween float_tween;
+static bool float_flying;
+static Tween dive_tween;
+static bool diving;
 
 // Object positions (top-left, matching each placeholder's size).
 static const SDL_Point WATER_AT = {170, 40};
@@ -196,7 +205,8 @@ static bool goggles_to_collect(void) {
 }
 
 static bool float_at_the_pool(void) {
-  return gina_state.has_sunscreen && gina_state.float_state == FLOAT_AT_POOL;
+  return gina_state.has_sunscreen && gina_state.float_state == FLOAT_AT_POOL &&
+         !float_flying;
 }
 
 static void open_sunscreen_minigame(void) {
@@ -216,14 +226,31 @@ static void collect_goggles(void) {
   gina_say(gina, "Ho preso gli occhialini!", voice());
 }
 
-static void float_blows_away(void) {
+// The float is gone: flip the state (which moves it to the tree scene) and
+// only now let Gina react — the line reads as a response to what she saw.
+static void float_gone(void) {
+  float_flying = false;
   gina_state.float_state = FLOAT_STUCK_IN_TREE;
-  Mix_PlayChannel(-1, chunks[GINA_POOL_CHUNK_WIND].chunk, 0);
   gina_say(gina, "Oh no! Il vento ha portato il salvagente sull'albero!",
            voice());
 }
 
-static void dive(void) {
+static void float_blows_away(void) {
+  Mix_PlayChannel(-1, chunks[GINA_POOL_CHUNK_WIND].chunk, 0);
+  // The gust carries the float up and off toward the tree (#107): a hop off
+  // the right edge, shrinking as it recedes. The state flips when it lands.
+  float_flying = true;
+  tween_start(&float_tween, (SDL_FPoint){FLOAT_AT.x, FLOAT_AT.y},
+              (SDL_FPoint){WINDOW_WIDTH + 40, 120}, 900, TWEEN_EASE_IN,
+              float_gone);
+  float_tween.arc_height = 60;
+  float_tween.to_scale = 0.5F;
+}
+
+// Landing half of the dive (#119): splash, the happy line, and the in-place
+// replay reset that used to happen on the tap.
+static void dive_landed(void) {
+  diving = false;
   Mix_PlayChannel(-1, chunks[GINA_POOL_CHUNK_SPLASH].chunk, 0);
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Gina: Che bello! Ancora!");
   // Replay the adventure in place. The reset happens without leaving the
@@ -233,6 +260,15 @@ static void dive(void) {
   rebuild_walk_grid();
   gina->current_position = HEN_START;
   gina->target_position = HEN_START;
+}
+
+static void dive(void) {
+  // The dive arc (#119): a tweened hop from the pool edge into the water.
+  // Input is ignored until she lands (see process_input).
+  diving = true;
+  tween_start(&dive_tween, gina->current_position, (SDL_FPoint){400, 190}, 700,
+              TWEEN_EASE_IN, dive_landed);
+  dive_tween.arc_height = 100;
 }
 
 static void try_dive(void) {
@@ -255,6 +291,10 @@ static void try_dive(void) {
 }
 
 static void process_input(SDL_Event *event) {
+  // Mid-dive nothing is clickable; the replay reset re-enables input.
+  if (diving) {
+    return;
+  }
   // Drag & drop (LIVELINESS.md Part 2): dragging the pointer from a press on
   // Gina picks her up (plain taps fall through, so hotspots she stands on
   // keep working). The landing scan runs on the live grid, so a pre-sunscreen
@@ -292,7 +332,19 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) { hen_update(gina, delta_time); }
+static void update(float delta_time) {
+  hen_update(gina, delta_time);
+  // The dive arc drives Gina's position directly, like Vania's slide; when
+  // the final tick fires dive_landed the reset has already repositioned her,
+  // so the assignment is skipped (tween_update returns false on that tick).
+  if (diving && tween_update(&dive_tween, delta_time)) {
+    gina->current_position = tween_pos(&dive_tween);
+    gina->target_position = gina->current_position;
+  }
+  if (float_flying) {
+    tween_update(&float_tween, delta_time);
+  }
+}
 
 static void render(SDL_Renderer *renderer) {
   render_image(renderer, background, (SDL_Point){0, 0});
@@ -302,7 +354,15 @@ static void render(SDL_Renderer *renderer) {
     render_animation(renderer, goggles_boil, GOGGLES_AT);
   }
   if (gina_state.float_state == FLOAT_AT_POOL) {
-    render_animation(renderer, float_boil, FLOAT_AT);
+    if (float_flying) {
+      // Mid-flight: the float follows its tween, shrinking as it recedes.
+      SDL_FPoint p = tween_pos(&float_tween);
+      render_animation_scaled(renderer, float_boil,
+                              (SDL_Point){(int)p.x, (int)p.y},
+                              tween_scale(&float_tween));
+    } else {
+      render_animation(renderer, float_boil, FLOAT_AT);
+    }
   }
   hen_render(gina, renderer);
 }
