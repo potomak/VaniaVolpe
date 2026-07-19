@@ -121,6 +121,11 @@ def emit_group(out, prefix, rel_dir, entries):
             out.append(f'#define {m}_FILE "{e["name"]}.wav"')
             out.append(f'#define {m}_ASSET ((Asset){{.filename = '
                        f'"{e["name"]}.wav", .directory = "{rel_dir}"}})')
+            # A plain-brace Asset initializer (not the compound literal above)
+            # so it is a constant aggregate valid at file scope — feeds a
+            # scene's declarative `.music` field (SCENES.md milestone 4).
+            out.append(f'#define {m}_ASSET_INIT '
+                       f'{{"{e["name"]}.wav", "{rel_dir}"}}')
         out.append(f"#define {tag}_CHUNKS_COUNT {len(chunks)}")
         rows = ", ".join(f"{tag}_CHUNK_{sym(e['name'])}_INIT" for e in chunks)
         out.append(f"#define {tag}_CHUNKS_INIT {{{rows}}}")

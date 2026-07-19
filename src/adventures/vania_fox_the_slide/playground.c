@@ -6,7 +6,6 @@
 //
 
 #include <SDL2/SDL.h>
-#include <SDL2_mixer/SDL_mixer.h>
 #include <math.h>
 #include <stdbool.h>
 
@@ -48,10 +47,8 @@ static Prop *dropped_peg_prop = &props[1]; // peg the squirrel dropped
 // props, the fox) is dynamic and stays in render().
 static SceneSprite sprites[2];
 
-// Music
-static Mix_Music *music = NULL;
-
-// Sound effects and dialog
+// Sound effects and dialog. Music is declared on the Scene (.music, SCENES.md
+// milestone 4); the framework plays and frees it.
 static ChunkData chunks[9] = {
     VANIA_PLAYGROUND_CHUNK_ACORNS_FALLING_INIT,
     VANIA_PLAYGROUND_CHUNK_PEG_FALLING_INIT,
@@ -189,23 +186,8 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!fox_load_media(fox, renderer)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load fox");
-    return false;
-  }
-
-  // Load music
-  char music_path[ASSET_PATH_MAX];
-  asset_resolve(VANIA_MUSIC_CHUNK_PLAYGROUND_ASSET, music_path,
-                sizeof(music_path));
-  music = Mix_LoadMUS(music_path);
-  if (music == NULL) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",
-                 Mix_GetError());
-    return false;
-  }
-
-  return true;
+  // Music is loaded by the framework from .music; only the fox remains.
+  return fox_load_media(fox, renderer);
 }
 
 static void maybe_use_slide(void) {
@@ -213,7 +195,7 @@ static void maybe_use_slide(void) {
   if (has_peg) {
     has_peg = false;
     has_slide_been_fixed = true;
-    Mix_PlayChannel(-1, fix_slide_sound->chunk, 0);
+    scene_play_sound(fix_slide_sound);
     // TODO: Wait for sound effect to end before starting to talk
     fox_talk(fox, examine_fixed_slide);
     return;
@@ -241,7 +223,7 @@ static void maybe_get_peg(void) {
   if (has_acorns) {
     has_acorns = false;
     has_peg_been_dropped = true;
-    Mix_PlayChannel(-1, peg_falling_sound->chunk, 0);
+    scene_play_sound(peg_falling_sound);
     return;
   }
 
@@ -256,7 +238,7 @@ static void maybe_get_peg(void) {
 
 static void make_acorns_fall(void) {
   have_acorns_fallen = true;
-  Mix_PlayChannel(-1, acorns_falling_sound->chunk, 0);
+  scene_play_sound(acorns_falling_sound);
 }
 
 static void pickup_acorns(void) { has_acorns = true; }
@@ -361,16 +343,9 @@ static void render(SDL_Renderer *renderer) {
   render_action_layer(renderer, props, LEN(props), (Actor *[]){fox}, 1);
 }
 
-static void deinit(void) {
-  fox_free(fox);
-
-  Mix_FreeMusic(music);
-  music = NULL;
-}
+static void deinit(void) { fox_free(fox); }
 
 static void on_scene_active(void) {
-  Mix_PlayMusic(music, -1);
-
   // Anchor each prop's ground line to its sprite's bottom edge. Image sizes
   // are known here: the framework loads scene images right after load_media,
   // long before any scene becomes active.
@@ -393,7 +368,7 @@ static void on_scene_active(void) {
   has_acorns = false;
 }
 
-static void on_scene_inactive(void) { Mix_HaltMusic(); }
+static void on_scene_inactive(void) {}
 
 Scene playground_scene = {
     .init = init,
@@ -416,4 +391,5 @@ Scene playground_scene = {
     .images_length = LEN(images),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
+    .music = VANIA_MUSIC_CHUNK_PLAYGROUND_ASSET_INIT,
 };

@@ -5,7 +5,6 @@
 //
 
 #include <SDL2/SDL.h>
-#include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
 #include <stdio.h>
 

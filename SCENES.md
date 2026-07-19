@@ -5,7 +5,8 @@ are, what's present, and the interactions — and the framework owns the
 plumbing (making and loading animations, drawing the static layer, playing
 sounds, the input default). The spec the implementation follows, the way
 `LIVELINESS.md` and `ASSETS.md` were written before their code. Tracked in the
-backlog (#129); **milestone 1 is shipped** — see *Migration plan* below.
+backlog (#129); **milestones 1–3 are shipped and milestone 4 is partly
+shipped** — see *Migration plan* below.
 
 ## The problem
 
@@ -239,8 +240,29 @@ a time, never a big-bang rewrite:
    layer. So a scene no longer lists a boil as a separate sprite — the tappable
    thing and its squiggle are declared together. Migrated the boil scenes
    (pool, tree, vine); their sprite tables shrink to the backdrop (+ water).
-4. **The action API** (`play_<name>()`, `say_<line>()`, `.music` field) with
-   build-time id validation.
+4. **The action API.** 🚧 **Partly shipped.** Two halves:
+   - **`.music` declarative field.** ✅ **Shipped.** A scene sets
+     `.music = <PREFIX>_MUSIC_CHUNK_<NAME>_ASSET_INIT` (a generated, so
+     build-time-validated, `Asset` initializer) and drops the whole
+     `Mix_LoadMUS`/`PlayMusic`/`HaltMusic`/`FreeMusic` lifecycle: the framework
+     loads it in the media pass, plays it on scene entry and halts it on exit
+     (`scene_start_music`/`scene_stop_music`, wired into `game.c`'s
+     `set_active_scene`/`adventure_switch_to`), and frees it on teardown. Both
+     Vania scenes with music migrated (intro/outro share the theme, the two
+     playground scenes share theirs); Gina has no music. Zero scenes keep a
+     `Mix_Music *`.
+   - **Sound-effect API.** ✅ **Shipped** as a compile-safe framework primitive
+     (`scene_play_sound(const ChunkData *)` → the channel, `scene_stop_channel`
+     to retrigger), not the generated `play_<name>()`/`say_<line>()` wrappers.
+     Every SFX call site in both adventures moved onto it, so **no scene
+     includes `<SDL2_mixer/...>` any more.** The typed `ChunkData *` keeps the
+     compile-time safety (a wrong name is an undeclared identifier); the nullary
+     generated wrappers are deferred because `play_<name>()` needs the shared
+     chime to hold a real generated index in each scene's chunk table (a
+     per-scene `chunk_specs` layer, mirroring `anim_specs`, still to land) and
+     `say_<line>()` needs the scene to carry its actor as data (the `.actor`
+     field milestone 5 introduces) plus per-line voice WAVs Gina doesn't have
+     yet. Tracked as a follow-up.
 5. **The input default.**
 
 Migrate both content adventures at each meaningful step to keep the

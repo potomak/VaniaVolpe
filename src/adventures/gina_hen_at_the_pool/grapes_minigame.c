@@ -5,7 +5,6 @@
 //
 
 #include <SDL2/SDL.h>
-#include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
 
 #include "constants.h"
@@ -126,7 +125,7 @@ static void process_input(SDL_Event *event) {
         tween_start(&fall[i], (SDL_FPoint){GRAPE_AT[i].x, GRAPE_AT[i].y},
                     (SDL_FPoint){GRAPE_AT[i].x, WINDOW_HEIGHT}, GRAPE_FALL_MS,
                     TWEEN_EASE_IN, NULL);
-        Mix_PlayChannel(-1, pop_sound->chunk, 0);
+        scene_play_sound(pop_sound);
         break;
       }
     }
@@ -152,7 +151,7 @@ static void update(float delta_time) {
   if (gone == GRAPE_COUNT) {
     gina_state.has_grapes = true;
     celebrating = true;
-    Mix_PlayChannel(-1, chime_sound->chunk, 0);
+    scene_play_sound(chime_sound);
     play_animation(celebration, back_to_vine);
   }
 }

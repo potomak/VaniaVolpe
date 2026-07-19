@@ -6,7 +6,6 @@
 //
 
 #include <SDL2/SDL.h>
-#include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
 
 #include "constants.h"
@@ -51,10 +50,8 @@ static SceneSprite sprites[5];
 
 static Fox *fox;
 
-// Music
-static Mix_Music *music = NULL;
-
-// Sound effects and dialog
+// Sound effects and dialog. Music is declared on the Scene (.music, SCENES.md
+// milestone 4); the framework plays and frees it.
 static int excavator_sound_channel = -1;
 static ChunkData chunks[7] = {
     VANIA_PLAYGROUND_ENTRANCE_CHUNK_EXCAVATOR_INIT,
@@ -121,10 +118,10 @@ static bool key_on_the_ground(void) {
 
 static void run_excavator(void) {
   play_animation(excavator, NULL);
-  if (excavator_sound_channel > -1) {
-    Mix_HaltChannel(excavator_sound_channel);
-  }
-  excavator_sound_channel = Mix_PlayChannel(-1, excavator_sound->chunk, 0);
+  // Retrigger from the top: stop a still-playing run before starting again
+  // (scene_stop_channel ignores the initial -1 handle).
+  scene_stop_channel(excavator_sound_channel);
+  excavator_sound_channel = scene_play_sound(excavator_sound);
 }
 
 static void init(void) {
@@ -174,25 +171,9 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  // The excavator, gate and shovel are loaded by the framework from
-  // anim_specs.
-  if (!fox_load_media(fox, renderer)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load fox");
-    return false;
-  }
-
-  // Load music
-  char music_path[ASSET_PATH_MAX];
-  asset_resolve(VANIA_MUSIC_CHUNK_PLAYGROUND_ASSET, music_path,
-                sizeof(music_path));
-  music = Mix_LoadMUS(music_path);
-  if (music == NULL) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s",
-                 Mix_GetError());
-    return false;
-  }
-
-  return true;
+  // The excavator, gate and shovel are loaded by the framework from anim_specs,
+  // the music from .music; only the fox remains.
+  return fox_load_media(fox, renderer);
 }
 
 static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
@@ -200,7 +181,7 @@ static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
 static void maybe_open_gate(void) {
   // If key is in inventory open gate then go to PLAYGROUND scene
   if (has_key) {
-    Mix_PlayChannel(-1, open_gate_sound->chunk, 0);
+    scene_play_sound(open_gate_sound);
     play_animation(gate, go_to_playground);
     return;
   }
@@ -218,7 +199,7 @@ static void add_key_to_inventory(void) { has_key = true; }
 
 static void reveal_key(void) {
   has_key_been_revealed = true;
-  Mix_PlayChannel(-1, key_reveal_sound->chunk, 0);
+  scene_play_sound(key_reveal_sound);
 }
 
 static void maybe_dig_out_key(void) {
@@ -229,7 +210,7 @@ static void maybe_dig_out_key(void) {
 
   // Play shovel animation and reveal key
   play_animation(shovel, reveal_key);
-  Mix_PlayChannel(-1, shovel_sound->chunk, 0);
+  scene_play_sound(shovel_sound);
 }
 
 static void examine_slide(void) {
@@ -277,16 +258,9 @@ static void render(SDL_Renderer *renderer) {
   fox_render(fox, renderer);
 }
 
-static void deinit(void) {
-  fox_free(fox);
-
-  Mix_FreeMusic(music);
-  music = NULL;
-}
+static void deinit(void) { fox_free(fox); }
 
 static void on_scene_active(void) {
-  Mix_PlayMusic(music, -1);
-
   // Initialize scene state
   has_key_been_revealed = false;
   examine_gate_count = 0;
@@ -295,7 +269,7 @@ static void on_scene_active(void) {
   has_key = false;
 }
 
-static void on_scene_inactive(void) { Mix_HaltMusic(); }
+static void on_scene_inactive(void) {}
 
 Scene playground_entrance_scene = {
     .init = init,
@@ -322,4 +296,5 @@ Scene playground_entrance_scene = {
     .animations_length = LEN(animations),
     .anim_specs = anim_specs,
     .anim_specs_length = LEN(anim_specs),
+    .music = VANIA_MUSIC_CHUNK_PLAYGROUND_ASSET_INIT,
 };

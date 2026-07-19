@@ -6,7 +6,6 @@
 //
 
 #include <SDL2/SDL.h>
-#include <SDL2_mixer/SDL_mixer.h>
 #include <stdbool.h>
 
 #include "constants.h"
@@ -113,7 +112,7 @@ static void brush_at(int x, int y) {
     gina_state.has_sunscreen = true;
     // The reward beat (#116): chime + confetti burst, then back to the pool.
     celebrating = true;
-    Mix_PlayChannel(-1, chunks[0].chunk, 0);
+    scene_play_sound(&chunks[0]);
     play_animation(celebration, back_to_pool);
   }
 }

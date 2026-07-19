@@ -48,7 +48,9 @@ static void snap_scene_camera(void) {
 
 void adventure_switch_to(const Adventure *adventure) {
   if (game.current_adventure != NULL) {
-    scene_instance(game.current_scene)->on_scene_inactive();
+    const Scene *previous = scene_instance(game.current_scene);
+    previous->on_scene_inactive();
+    scene_stop_music(previous);
   }
   // A line spoken in the old adventure must not linger over the new one.
   subtitle_clear();
@@ -58,7 +60,9 @@ void adventure_switch_to(const Adventure *adventure) {
   if (adventure->on_enter != NULL) {
     adventure->on_enter();
   }
-  scene_instance(game.current_scene)->on_scene_active();
+  const Scene *current = scene_instance(game.current_scene);
+  current->on_scene_active();
+  scene_start_music(current);
   snap_scene_camera();
 }
 
@@ -70,10 +74,14 @@ const Scene *scene_instance(int scene) {
 
 // Sets a new scene as the current scene
 void set_active_scene(int scene) {
-  scene_instance(game.current_scene)->on_scene_inactive();
+  const Scene *previous = scene_instance(game.current_scene);
+  previous->on_scene_inactive();
+  scene_stop_music(previous);
   subtitle_clear();
   game.current_scene = scene;
-  scene_instance(game.current_scene)->on_scene_active();
+  const Scene *current = scene_instance(game.current_scene);
+  current->on_scene_active();
+  scene_start_music(current);
   snap_scene_camera();
 }
 
