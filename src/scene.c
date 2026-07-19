@@ -79,6 +79,31 @@ void sync_hotspot_active_anims(const Scene *scene) {
   }
 }
 
+void render_hotspot_anims(SDL_Renderer *renderer, const Scene *scene) {
+  for (int i = 0; i < scene->hotspots_length; i++) {
+    const Hotspot *hotspot = &scene->hotspots[i];
+    if (hotspot->active_anim == NULL) {
+      continue;
+    }
+    // Draw each distinct animation once (shared boils use the first carrier's
+    // anim_at/anim_visible), mirroring the sync dedup above.
+    bool already_drawn = false;
+    for (int j = 0; j < i; j++) {
+      if (scene->hotspots[j].active_anim == hotspot->active_anim) {
+        already_drawn = true;
+        break;
+      }
+    }
+    if (already_drawn) {
+      continue;
+    }
+    if (hotspot->anim_visible != NULL && !hotspot->anim_visible()) {
+      continue;
+    }
+    render_animation(renderer, hotspot->active_anim, hotspot->anim_at);
+  }
+}
+
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length,
                        int *out_order) {

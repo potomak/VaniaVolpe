@@ -186,6 +186,7 @@ void game_render(SDL_Renderer *renderer) {
   // draws the dynamic action layer (the actor, tweens, overlays) on top.
   render_set_offset(camera_offset);
   render_scene_sprites(renderer, scene->sprites, scene->sprites_length);
+  render_hotspot_anims(renderer, scene);
   scene->render(renderer);
   render_set_offset((SDL_Point){0, 0});
 

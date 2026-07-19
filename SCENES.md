@@ -232,7 +232,13 @@ a time, never a big-bang rewrite:
    adventures migrated; the depth demo stays inline. Verified visually (the
    playthrough only asserts dialogue, so a browser screenshot per adventure
    confirmed the sprites render).
-3. **The boil collapse** (hotspot-carried `anim` + `at`).
+3. **The boil collapse.** ✅ **Shipped.** A boil now lives in one place: on its
+   hotspot. `Hotspot.active_anim` gained `anim_at` (draw position) and
+   `anim_visible` (a draw gate, independent of `enabled` which gates the play),
+   and `render_hotspot_anims` draws each distinct active_anim once in the sprite
+   layer. So a scene no longer lists a boil as a separate sprite — the tappable
+   thing and its squiggle are declared together. Migrated the boil scenes
+   (pool, tree, vine); their sprite tables shrink to the backdrop (+ water).
 4. **The action API** (`play_<name>()`, `say_<line>()`, `.music` field) with
    build-time id validation.
 5. **The input default.**

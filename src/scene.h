@@ -98,6 +98,16 @@ typedef struct hotspot {
   // play it if ANY of them is enabled (e.g. an object with a before/after
   // pair).
   AnimationData *active_anim;
+  // Where the framework draws active_anim (SCENES.md milestone 3): the boil is
+  // declared once, on the hotspot — the engine both plays it (above) and draws
+  // it here, so a scene no longer lists a separate sprite for it. Top-left,
+  // scene coordinates. Only meaningful when active_anim is set.
+  SDL_Point anim_at;
+  // Gates the *draw* of active_anim, independent of enabled (which gates the
+  // play): an object may be visible-but-frozen before it becomes tappable, or
+  // vanish once consumed. NULL = drawn whenever active_anim is set. Shared
+  // active_anims draw once, using the first carrier's anim_at/anim_visible.
+  bool (*anim_visible)(void);
 } Hotspot;
 
 // A scene animation declared as data (SCENES.md, milestone 1): the framework
@@ -245,6 +255,13 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
 // active_anim are skipped; one shared by several hotspots is handled once,
 // ORing their states.
 void sync_hotspot_active_anims(const Scene *scene);
+
+// Draw every hotspot's active_anim at its anim_at (SCENES.md milestone 3), each
+// distinct animation once, skipping any gated off by anim_visible. Called by
+// the engine in the sprite layer (after render_scene_sprites, before the
+// scene's render), so a scene declares its boils on the hotspots instead of
+// listing them as separate sprites.
+void render_hotspot_anims(SDL_Renderer *renderer, const Scene *scene);
 
 // Draw a scene's static sprite table (SceneSprite, SCENES.md milestone 2): each
 // visible entry in order, an image or an animation at its scene position.

@@ -56,11 +56,11 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_POOL_ANIM_FLOAT_BOIL_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): backdrop, water, and the
-// three object boils. The framework draws these before render(), which keeps
-// only the dynamic draws (the float mid-flight, the actor, the reward burst).
-// The goggles and float boils are gated by render predicates below.
-static SceneSprite sprites[5];
+// The static sprite layer (SCENES.md milestone 2): backdrop and water. The
+// three object boils are declared on their hotspots (milestone 3) — the
+// framework plays and draws each. render() keeps only the dynamic draws (the
+// float mid-flight, the actor, the reward burst).
+static SceneSprite sprites[2];
 
 // Sound effects and dialog, plus the shared completion chime (#118). The
 // table mixes dirs (the chime lives in common/minigames), so it lists
@@ -163,12 +163,6 @@ static void init(void) {
   int s = 0;
   sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
   sprites[s++] = (SceneSprite){.image = water, .at = WATER_AT};
-  sprites[s++] = (SceneSprite){.animation = sunscreen_boil, .at = SUNSCREEN_AT};
-  sprites[s++] = (SceneSprite){
-      .animation = goggles_boil, .at = GOGGLES_AT, .visible = goggles_present};
-  sprites[s++] = (SceneSprite){.animation = float_boil,
-                               .at = FLOAT_AT,
-                               .visible = float_resting_at_pool};
 
   int i = 0;
   // The same bottle, two behaviours: reach for it before the sunscreen, a
@@ -178,22 +172,28 @@ static void init(void) {
                             .enabled = before_sunscreen,
                             .poi = SUNSCREEN_POI,
                             .on_arrive = open_sunscreen_minigame,
-                            .active_anim = sunscreen_boil};
+                            .active_anim = sunscreen_boil,
+                            .anim_at = SUNSCREEN_AT};
   hotspots[i++] = (Hotspot){.rect = SUNSCREEN_HOTSPOT,
                             .enabled = after_sunscreen,
                             .immediate = true,
                             .on_arrive = say_sunscreen_done,
-                            .active_anim = sunscreen_boil};
+                            .active_anim = sunscreen_boil,
+                            .anim_at = SUNSCREEN_AT};
   hotspots[i++] = (Hotspot){.rect = GOGGLES_HOTSPOT,
                             .enabled = goggles_to_collect,
                             .poi = GOGGLES_POI,
                             .on_arrive = collect_goggles,
-                            .active_anim = goggles_boil};
+                            .active_anim = goggles_boil,
+                            .anim_at = GOGGLES_AT,
+                            .anim_visible = goggles_present};
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
                             .enabled = float_at_the_pool,
                             .poi = FLOAT_POI,
                             .on_arrive = float_blows_away,
-                            .active_anim = float_boil};
+                            .active_anim = float_boil,
+                            .anim_at = FLOAT_AT,
+                            .anim_visible = float_resting_at_pool};
   hotspots[i++] = (Hotspot){.rect = POOL_WATER_HOTSPOT,
                             .enabled = after_sunscreen,
                             .poi = POOL_EDGE_POI,
