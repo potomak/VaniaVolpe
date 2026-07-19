@@ -26,12 +26,17 @@ static const ImageData *background =
 
 static Fox *fox;
 
+// The static sprite layer (SCENES.md milestone 2): just the end card. render()
+// draws only the waving fox.
+static SceneSprite sprites[1];
+
 // Music
 static Mix_Music *music = NULL;
 
 static void init(void) {
   fox = make_fox((SDL_FPoint){398, 329});
   fox_wave(fox);
+  sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
 }
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -64,8 +69,8 @@ static void process_input(SDL_Event *event) {
 static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
-
+  // The end card is a static sprite (drawn by the framework); only the fox is
+  // dynamic.
   fox_render(fox, renderer);
 }
 
@@ -89,6 +94,8 @@ Scene outro_scene = {
     .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
 };

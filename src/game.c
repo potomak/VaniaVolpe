@@ -181,8 +181,11 @@ void game_render(SDL_Renderer *renderer) {
   render_scene_planes(renderer, scene->bg_planes, scene->bg_planes_length,
                       camera);
 
-  // The action layer, in scene coordinates.
+  // The static sprite layer then the action layer, both in scene coordinates.
+  // The framework draws the declared sprites first; the scene's own render
+  // draws the dynamic action layer (the actor, tweens, overlays) on top.
   render_set_offset(camera_offset);
+  render_scene_sprites(renderer, scene->sprites, scene->sprites_length);
   scene->render(renderer);
   render_set_offset((SDL_Point){0, 0});
 

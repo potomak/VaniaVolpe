@@ -56,6 +56,12 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_POOL_ANIM_FLOAT_BOIL_SPEC,
 };
 
+// The static sprite layer (SCENES.md milestone 2): backdrop, water, and the
+// three object boils. The framework draws these before render(), which keeps
+// only the dynamic draws (the float mid-flight, the actor, the reward burst).
+// The goggles and float boils are gated by render predicates below.
+static SceneSprite sprites[5];
+
 // Sound effects and dialog, plus the shared completion chime (#118). The
 // table mixes dirs (the chime lives in common/minigames), so it lists
 // per-entry _INIT rows rather than the whole-table macro; the chime is
@@ -134,6 +140,8 @@ static bool before_sunscreen(void);
 static bool after_sunscreen(void);
 static bool goggles_to_collect(void);
 static bool float_at_the_pool(void);
+static bool goggles_present(void);
+static bool float_resting_at_pool(void);
 static void open_sunscreen_minigame(void);
 static void say_sunscreen_done(void);
 static void collect_goggles(void);
@@ -151,6 +159,16 @@ static void init(void) {
   goggles_boil = animations[GINA_POOL_ANIM_GOGGLES_BOIL];
   float_boil = animations[GINA_POOL_ANIM_FLOAT_BOIL];
   celebration = animations[GINA_POOL_ANIM_CELEBRATION];
+
+  int s = 0;
+  sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
+  sprites[s++] = (SceneSprite){.image = water, .at = WATER_AT};
+  sprites[s++] = (SceneSprite){.animation = sunscreen_boil, .at = SUNSCREEN_AT};
+  sprites[s++] = (SceneSprite){
+      .animation = goggles_boil, .at = GOGGLES_AT, .visible = goggles_present};
+  sprites[s++] = (SceneSprite){.animation = float_boil,
+                               .at = FLOAT_AT,
+                               .visible = float_resting_at_pool};
 
   int i = 0;
   // The same bottle, two behaviours: reach for it before the sunscreen, a
@@ -216,6 +234,15 @@ static bool goggles_to_collect(void) {
 static bool float_at_the_pool(void) {
   return gina_state.has_sunscreen && gina_state.float_state == FLOAT_AT_POOL &&
          !float_flying;
+}
+
+// Render-visibility for the object boils (SceneSprite gates): the goggles show
+// until collected, the float while it rests at the pool — both independent of
+// the sunscreen, unlike the tap gates above (and the float sprite is off while
+// it flies, when render() draws the tweened one).
+static bool goggles_present(void) { return !gina_state.has_goggles; }
+static bool float_resting_at_pool(void) {
+  return gina_state.float_state == FLOAT_AT_POOL && !float_flying;
 }
 
 static void open_sunscreen_minigame(void) {
@@ -364,22 +391,15 @@ static void update(float delta_time) {
 static const SDL_Point CELEBRATION_AT = {240, 365};
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
-  render_image(renderer, water, WATER_AT);
-  render_animation(renderer, sunscreen_boil, SUNSCREEN_AT);
-  if (!gina_state.has_goggles) {
-    render_animation(renderer, goggles_boil, GOGGLES_AT);
-  }
-  if (gina_state.float_state == FLOAT_AT_POOL) {
-    if (float_flying) {
-      // Mid-flight: the float follows its tween, shrinking as it recedes.
-      SDL_FPoint p = tween_pos(&float_tween);
-      render_animation_scaled(renderer, float_boil,
-                              (SDL_Point){(int)p.x, (int)p.y},
-                              tween_scale(&float_tween));
-    } else {
-      render_animation(renderer, float_boil, FLOAT_AT);
-    }
+  // The backdrop, water and object boils are static sprites (drawn by the
+  // framework). render() draws only the dynamic layer: the float mid-flight,
+  // the actor, and the reward burst on top.
+  if (gina_state.float_state == FLOAT_AT_POOL && float_flying) {
+    // Mid-flight: the float follows its tween, shrinking as it recedes.
+    SDL_FPoint p = tween_pos(&float_tween);
+    render_animation_scaled(renderer, float_boil,
+                            (SDL_Point){(int)p.x, (int)p.y},
+                            tween_scale(&float_tween));
   }
   hen_render(gina, renderer);
   // The reward burst over the goggles spot while the chime plays.
@@ -422,6 +442,8 @@ Scene pool_scene = {
     .pois = pois,
     .pois_length = LEN(pois),
     .walk_grid = &walk_grid,
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
     .animations = animations,

@@ -43,6 +43,12 @@ static const SceneAnimSpec anim_specs[] = {
     VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPEC,
 };
 
+// The static sprite layer (SCENES.md milestone 2): backdrop, the three
+// machines, and the key once it's on the ground (gated by key_on_the_ground).
+// render() keeps the dynamic draws: the carried key (which follows the fox)
+// and the fox.
+static SceneSprite sprites[5];
+
 static Fox *fox;
 
 // Music
@@ -129,6 +135,14 @@ static void init(void) {
   shovel = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL];
   // Loop the animation 3 times before stopping
   shovel->max_loop_count = 3;
+
+  int s = 0;
+  sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
+  sprites[s++] = (SceneSprite){.animation = excavator, .at = {180, 350}};
+  sprites[s++] = (SceneSprite){.animation = gate, .at = {491, 152}};
+  sprites[s++] = (SceneSprite){.animation = shovel, .at = {112, 380}};
+  sprites[s++] = (SceneSprite){
+      .image = key, .at = {20, 431}, .visible = key_on_the_ground};
 
   fox = make_fox((SDL_FPoint){580, 457});
 
@@ -251,20 +265,13 @@ static void process_input(SDL_Event *event) {
 static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
-
-  render_animation(renderer, excavator, (SDL_Point){180, 350});
-  render_animation(renderer, gate, (SDL_Point){491, 152});
-  render_animation(renderer, shovel, (SDL_Point){112, 380});
-
-  if (has_key_been_revealed) {
-    if (has_key) {
-      render_image(renderer, key,
-                   (SDL_Point){fox->current_position.x - 50,
-                               fox->current_position.y - 80});
-    } else {
-      render_image(renderer, key, (SDL_Point){20, 431});
-    }
+  // Backdrop, machines and the on-ground key are static sprites (drawn by the
+  // framework). render() draws the dynamic layer: the key while the fox
+  // carries it, and the fox.
+  if (has_key_been_revealed && has_key) {
+    render_image(renderer, key,
+                 (SDL_Point){fox->current_position.x - 50,
+                             fox->current_position.y - 80});
   }
 
   fox_render(fox, renderer);
@@ -305,6 +312,8 @@ Scene playground_entrance_scene = {
     .pois_length = LEN(pois),
     .walk_grid = &walk_grid,
     .walk_mask_dir = "playground_entrance",
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
     .chunks = chunks,

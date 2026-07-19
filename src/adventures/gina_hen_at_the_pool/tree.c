@@ -45,6 +45,12 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_TREE_ANIM_CARLA_BOIL_SPEC,
 };
 
+// The static sprite layer (SCENES.md milestone 2): backdrop, the stuck float
+// (gated by float_is_stuck — off while it falls, when render() draws the
+// tweened one) and Carla. render() keeps the dynamic draws: the falling float,
+// the actor, the carried basket and the reward burst.
+static SceneSprite sprites[3];
+
 // The scene's own chunks (voice/caw) plus the shared completion chime (#118),
 // which lives in another dir — so the table lists per-entry _INIT rows and
 // appends the chime after the tree's own chunks.
@@ -103,6 +109,12 @@ static void init(void) {
   float_boil = animations[GINA_TREE_ANIM_FLOAT_BOIL];
   carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL];
   celebration = animations[GINA_TREE_ANIM_CELEBRATION];
+
+  int s = 0;
+  sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
+  sprites[s++] = (SceneSprite){
+      .animation = float_boil, .at = FLOAT_AT, .visible = float_is_stuck};
+  sprites[s++] = (SceneSprite){.animation = carla_boil, .at = CARLA_AT};
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
@@ -234,15 +246,14 @@ static void update(float delta_time) {
 }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
+  // Backdrop, the stuck float and Carla are static sprites (drawn by the
+  // framework). render() draws the dynamic layer: the falling float, the
+  // actor, the carried basket and the reward burst.
   if (float_falling) {
     // The drop: the float bounces down from the branches.
     SDL_FPoint p = tween_pos(&float_tween);
     render_animation(renderer, float_boil, (SDL_Point){(int)p.x, (int)p.y});
-  } else if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
-    render_animation(renderer, float_boil, FLOAT_AT);
   }
-  render_animation(renderer, carla_boil, CARLA_AT);
   hen_render(gina, renderer);
   // Once Carla has handed it over, Gina carries the basket with her.
   if (gina_state.has_basket) {
@@ -280,6 +291,8 @@ Scene tree_scene = {
     .pois_length = LEN(pois),
     .walk_grid = &walk_grid,
     .walk_mask_dir = "tree",
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
     .animations = animations,

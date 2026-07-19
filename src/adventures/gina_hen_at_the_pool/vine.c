@@ -35,6 +35,11 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_VINE_ANIM_GRAPES_BOIL_SPEC,
 };
 
+// The static sprite layer (SCENES.md milestone 2): the framework draws these
+// before render(), which is left to draw only the actor. Built in init (like
+// the hotspots) so it can reference the framework-made grapes boil.
+static SceneSprite sprites[2];
+
 static ChunkData chunks[GINA_VINE_CHUNKS_COUNT] = GINA_VINE_CHUNKS_INIT;
 static const ChunkData *voice(void) { return &chunks[GINA_VINE_CHUNK_VOICE]; }
 
@@ -71,6 +76,10 @@ static void init(void) {
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "vine");
 
   grapes_boil = animations[GINA_VINE_ANIM_GRAPES_BOIL];
+
+  int s = 0;
+  sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
+  sprites[s++] = (SceneSprite){.animation = grapes_boil, .at = GRAPES_AT};
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = GRAPES_HOTSPOT,
@@ -139,8 +148,8 @@ static void process_input(SDL_Event *event) {
 static void update(float delta_time) { hen_update(gina, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
-  render_image(renderer, background, (SDL_Point){0, 0});
-  render_animation(renderer, grapes_boil, GRAPES_AT);
+  // The background and the grapes boil are the scene's static sprites (drawn
+  // by the framework); only the actor is dynamic.
   hen_render(gina, renderer);
 }
 
@@ -173,6 +182,8 @@ Scene vine_scene = {
     .pois_length = LEN(pois),
     .walk_grid = &walk_grid,
     .walk_mask_dir = "vine",
+    .sprites = sprites,
+    .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
     .animations = animations,
