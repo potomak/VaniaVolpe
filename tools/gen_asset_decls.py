@@ -141,6 +141,15 @@ def emit_group(out, prefix, rel_dir, entries):
             out.append(f'#define {a}_DATA_ASSET '
                        f'((Asset){{.filename = "{e["name"]}.anim", '
                        f'.directory = "{rel_dir}"}})')
+            # A SceneAnimSpec initializer (frames, style, sprite, data) — a
+            # scene lists these and lets the framework make/load the animation
+            # (SCENES.md milestone 1). Plain brace inits (not the _ASSET
+            # compound literals) so the whole thing is a constant aggregate
+            # initializer valid at file scope.
+            out.append(f'#define {a}_SPEC '
+                       f'{{{e["frames"]}, {STYLES[e.get("style", "loop")]}, '
+                       f'{{"{e["name"]}.png", "{rel_dir}"}}, '
+                       f'{{"{e["name"]}.anim", "{rel_dir}"}}}}')
         out.append(f"#define {tag}_ANIMS_COUNT {len(anims)}")
     out.append("")
 

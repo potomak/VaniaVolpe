@@ -30,12 +30,18 @@ static const ImageData *background =
     &images[VANIA_PLAYGROUND_ENTRANCE_IMAGE_PLAYGROUND_ENTRANCE_BACKGROUND];
 static const ImageData *key = &images[VANIA_PLAYGROUND_ENTRANCE_IMAGE_KEY];
 
-// Animations (the framework ticks and frees these; the scene only declares
-// them)
+// Animations (declared as data, SCENES.md milestone 1: the framework makes,
+// loads, ticks and frees these; the scene aliases the made objects and only
+// sets their loop counts).
 static AnimationData *excavator;
 static AnimationData *gate;
 static AnimationData *shovel;
 static AnimationData *animations[VANIA_PLAYGROUND_ENTRANCE_ANIMS_COUNT];
+static const SceneAnimSpec anim_specs[] = {
+    VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_SPEC,
+    VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_SPEC,
+    VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPEC,
+};
 
 static Fox *fox;
 
@@ -116,17 +122,11 @@ static void run_excavator(void) {
 }
 
 static void init(void) {
-  excavator = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR] =
-      make_animation_data(VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_FRAMES,
-                          VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_STYLE);
+  excavator = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR];
   // Loop the animation 6 times before stopping
   excavator->max_loop_count = 6;
-  gate = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE] =
-      make_animation_data(VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_FRAMES,
-                          VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_STYLE);
-  shovel = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL] =
-      make_animation_data(VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_FRAMES,
-                          VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_STYLE);
+  gate = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE];
+  shovel = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL];
   // Loop the animation 3 times before stopping
   shovel->max_loop_count = 3;
 
@@ -160,27 +160,8 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_animation(renderer, excavator,
-                      VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_SPRITE_ASSET,
-                      VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_DATA_ASSET)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load excavator");
-    return false;
-  }
-
-  if (!load_animation(renderer, gate,
-                      VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_SPRITE_ASSET,
-                      VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_DATA_ASSET)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load gate");
-    return false;
-  }
-
-  if (!load_animation(renderer, shovel,
-                      VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPRITE_ASSET,
-                      VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_DATA_ASSET)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load shovel");
-    return false;
-  }
-
+  // The excavator, gate and shovel are loaded by the framework from
+  // anim_specs.
   if (!fox_load_media(fox, renderer)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load fox");
     return false;
@@ -330,4 +311,6 @@ Scene playground_entrance_scene = {
     .chunks_length = LEN(chunks),
     .animations = animations,
     .animations_length = LEN(animations),
+    .anim_specs = anim_specs,
+    .anim_specs_length = LEN(anim_specs),
 };

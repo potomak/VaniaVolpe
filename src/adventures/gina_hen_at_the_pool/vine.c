@@ -26,9 +26,14 @@ static ImageData images[GINA_VINE_IMAGES_COUNT] = GINA_VINE_IMAGES_INIT;
 static const ImageData *background = &images[GINA_VINE_IMAGE_BACKGROUND];
 
 // The grapes boil (LIVELINESS.md Part 3) to show they are tappable; same size
-// as the old still PNG, so the render position is unchanged.
+// as the old still PNG, so the render position is unchanged. Declared as data
+// (SCENES.md milestone 1): the framework makes and loads it: init only aliases
+// the made object, load_media no longer touches it.
 static AnimationData *grapes_boil;
 static AnimationData *animations[GINA_VINE_ANIMS_COUNT];
+static const SceneAnimSpec anim_specs[] = {
+    GINA_VINE_ANIM_GRAPES_BOIL_SPEC,
+};
 
 static ChunkData chunks[GINA_VINE_CHUNKS_COUNT] = GINA_VINE_CHUNKS_INIT;
 static const ChunkData *voice(void) { return &chunks[GINA_VINE_CHUNK_VOICE]; }
@@ -65,8 +70,7 @@ static void init(void) {
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "vine");
 
-  grapes_boil = animations[GINA_VINE_ANIM_GRAPES_BOIL] = make_animation_data(
-      GINA_VINE_ANIM_GRAPES_BOIL_FRAMES, GINA_VINE_ANIM_GRAPES_BOIL_STYLE);
+  grapes_boil = animations[GINA_VINE_ANIM_GRAPES_BOIL];
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = GRAPES_HOTSPOT,
@@ -82,12 +86,9 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!hen_load_media(gina, renderer)) {
-    return false;
-  }
-  return load_animation(renderer, grapes_boil,
-                        GINA_VINE_ANIM_GRAPES_BOIL_SPRITE_ASSET,
-                        GINA_VINE_ANIM_GRAPES_BOIL_DATA_ASSET);
+  // The grapes boil is loaded by the framework from anim_specs; only the actor
+  // remains for the scene to load.
+  return hen_load_media(gina, renderer);
 }
 
 static void go_to_tree(void) { set_active_scene(TREE); }
@@ -176,6 +177,8 @@ Scene vine_scene = {
     .images_length = LEN(images),
     .animations = animations,
     .animations_length = LEN(animations),
+    .anim_specs = anim_specs,
+    .anim_specs_length = LEN(anim_specs),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
 };

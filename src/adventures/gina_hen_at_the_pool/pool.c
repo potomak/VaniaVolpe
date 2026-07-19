@@ -45,7 +45,16 @@ static AnimationData *float_boil;
 // The progress-reward burst over the goggles (#118): plays once with the
 // chime when she collects them, no input lock (this is a walking scene).
 static AnimationData *celebration;
+// Declared as data (SCENES.md milestone 1): the framework makes and loads
+// these; init only aliases them, load_media no longer touches them. Order
+// matches the generated indices.
 static AnimationData *animations[GINA_POOL_ANIMS_COUNT];
+static const SceneAnimSpec anim_specs[] = {
+    GINA_POOL_ANIM_CELEBRATION_SPEC,
+    GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC,
+    GINA_POOL_ANIM_GOGGLES_BOIL_SPEC,
+    GINA_POOL_ANIM_FLOAT_BOIL_SPEC,
+};
 
 // Sound effects and dialog, plus the shared completion chime (#118). The
 // table mixes dirs (the chime lives in common/minigames), so it lists
@@ -138,15 +147,10 @@ static void init(void) {
 
   rebuild_walk_grid();
 
-  sunscreen_boil = animations[GINA_POOL_ANIM_SUNSCREEN_BOIL] =
-      make_animation_data(GINA_POOL_ANIM_SUNSCREEN_BOIL_FRAMES,
-                          GINA_POOL_ANIM_SUNSCREEN_BOIL_STYLE);
-  goggles_boil = animations[GINA_POOL_ANIM_GOGGLES_BOIL] = make_animation_data(
-      GINA_POOL_ANIM_GOGGLES_BOIL_FRAMES, GINA_POOL_ANIM_GOGGLES_BOIL_STYLE);
-  float_boil = animations[GINA_POOL_ANIM_FLOAT_BOIL] = make_animation_data(
-      GINA_POOL_ANIM_FLOAT_BOIL_FRAMES, GINA_POOL_ANIM_FLOAT_BOIL_STYLE);
-  celebration = animations[GINA_POOL_ANIM_CELEBRATION] = make_animation_data(
-      GINA_POOL_ANIM_CELEBRATION_FRAMES, GINA_POOL_ANIM_CELEBRATION_STYLE);
+  sunscreen_boil = animations[GINA_POOL_ANIM_SUNSCREEN_BOIL];
+  goggles_boil = animations[GINA_POOL_ANIM_GOGGLES_BOIL];
+  float_boil = animations[GINA_POOL_ANIM_FLOAT_BOIL];
+  celebration = animations[GINA_POOL_ANIM_CELEBRATION];
 
   int i = 0;
   // The same bottle, two behaviours: reach for it before the sunscreen, a
@@ -193,21 +197,9 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!hen_load_media(gina, renderer)) {
-    return false;
-  }
-  return load_animation(renderer, sunscreen_boil,
-                        GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET,
-                        GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET) &&
-         load_animation(renderer, goggles_boil,
-                        GINA_POOL_ANIM_GOGGLES_BOIL_SPRITE_ASSET,
-                        GINA_POOL_ANIM_GOGGLES_BOIL_DATA_ASSET) &&
-         load_animation(renderer, float_boil,
-                        GINA_POOL_ANIM_FLOAT_BOIL_SPRITE_ASSET,
-                        GINA_POOL_ANIM_FLOAT_BOIL_DATA_ASSET) &&
-         load_animation(renderer, celebration,
-                        GINA_POOL_ANIM_CELEBRATION_SPRITE_ASSET,
-                        GINA_POOL_ANIM_CELEBRATION_DATA_ASSET);
+  // The boils and the celebration are loaded by the framework from anim_specs;
+  // only the actor remains for the scene to load.
+  return hen_load_media(gina, renderer);
 }
 
 // ── interactions
@@ -434,6 +426,8 @@ Scene pool_scene = {
     .images_length = LEN(images),
     .animations = animations,
     .animations_length = LEN(animations),
+    .anim_specs = anim_specs,
+    .anim_specs_length = LEN(anim_specs),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
 };

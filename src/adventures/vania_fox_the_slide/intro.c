@@ -24,11 +24,16 @@ static ImageData images[VANIA_INTRO_IMAGES_COUNT] = VANIA_INTRO_IMAGES_INIT;
 static const ImageData *background =
     &images[VANIA_INTRO_IMAGE_INTRO_BACKGROUND];
 
-// Animations (the framework ticks and frees these; the scene only declares
-// them)
+// Animations (declared as data, SCENES.md milestone 1: the framework makes,
+// loads, ticks and frees these; the scene only declares them and aliases the
+// made objects).
 static AnimationData *play_button;
 static AnimationData *exit_button;
 static AnimationData *animations[VANIA_INTRO_ANIMS_COUNT];
+static const SceneAnimSpec anim_specs[] = {
+    VANIA_INTRO_ANIM_PLAY_BUTTON_SPEC,
+    VANIA_INTRO_ANIM_EXIT_BUTTON_SPEC,
+};
 
 static Fox *fox;
 
@@ -49,10 +54,8 @@ static Hotspot hotspots[2];
 static void start_playing(void) { set_active_scene(PLAYGROUND_ENTRANCE); }
 
 static void init(void) {
-  play_button = animations[VANIA_INTRO_ANIM_PLAY_BUTTON] = make_animation_data(
-      VANIA_INTRO_ANIM_PLAY_BUTTON_FRAMES, VANIA_INTRO_ANIM_PLAY_BUTTON_STYLE);
-  exit_button = animations[VANIA_INTRO_ANIM_EXIT_BUTTON] = make_animation_data(
-      VANIA_INTRO_ANIM_EXIT_BUTTON_FRAMES, VANIA_INTRO_ANIM_EXIT_BUTTON_STYLE);
+  play_button = animations[VANIA_INTRO_ANIM_PLAY_BUTTON];
+  exit_button = animations[VANIA_INTRO_ANIM_EXIT_BUTTON];
 
   fox = make_fox((SDL_FPoint){322, 317});
   fox_sit(fox);
@@ -65,20 +68,7 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!load_animation(renderer, play_button,
-                      VANIA_INTRO_ANIM_PLAY_BUTTON_SPRITE_ASSET,
-                      VANIA_INTRO_ANIM_PLAY_BUTTON_DATA_ASSET)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load play button");
-    return false;
-  }
-
-  if (!load_animation(renderer, exit_button,
-                      VANIA_INTRO_ANIM_EXIT_BUTTON_SPRITE_ASSET,
-                      VANIA_INTRO_ANIM_EXIT_BUTTON_DATA_ASSET)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load exit button");
-    return false;
-  }
-
+  // The play/exit buttons are loaded by the framework from anim_specs.
   if (!fox_load_media(fox, renderer)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load fox");
     return false;
@@ -170,4 +160,6 @@ Scene intro_scene = {
     .chunks_length = LEN(chunks),
     .animations = animations,
     .animations_length = LEN(animations),
+    .anim_specs = anim_specs,
+    .anim_specs_length = LEN(anim_specs),
 };

@@ -83,6 +83,20 @@ typedef struct hotspot {
   AnimationData *active_anim;
 } Hotspot;
 
+// A scene animation declared as data (SCENES.md, milestone 1): the framework
+// makes it (before the scene's init, so init can wire it into a hotspot's
+// active_anim) and loads it (in the media-load pass) from these fields, which
+// come straight from the generated asset header — a scene lists
+// `<PREFIX>_<DIR>_ANIM_<NAME>_SPEC` entries and drops its make/load loops. The
+// made objects land in the scene's own animations[] storage, so ticking and
+// freeing are unchanged.
+typedef struct scene_anim_spec {
+  int frames;
+  AnimationPlaybackStyle style;
+  Asset sprite; // sprite sheet PNG
+  Asset data;   // .anim clip table
+} SceneAnimSpec;
+
 typedef struct scene {
   void (*init)(void);
   bool (*load_media)(SDL_Renderer *renderer);
@@ -132,8 +146,19 @@ typedef struct scene {
   // Animations the scene draws itself (buttons, props, …). The framework ticks
   // them each frame and frees them on teardown, so scenes only declare them —
   // they don't call animation_update. (An actor ticks its own animations.)
+  // This is the runtime storage; a scene either fills it in its init (legacy)
+  // or, when anim_specs is set, lets the framework make and load it.
   AnimationData **animations;
   int animations_length;
+
+  // Declarative animations (SceneAnimSpec, SCENES.md milestone 1): when set,
+  // the framework makes these into animations[] before init and loads them in
+  // the media pass, so the scene declares them instead of writing the
+  // make/load loops. anim_specs_length entries fill animations[0..N); the
+  // scene keeps animations/animations_length for ticking and freeing. NULL/0
+  // for scenes that still make their own animations.
+  const SceneAnimSpec *anim_specs;
+  int anim_specs_length;
 
   // Parallax planes (see Plane), drawn by the engine in array order: bg_planes
   // behind the scene's render (the action layer), fg_planes in front of it.
@@ -223,6 +248,17 @@ void render_scene_planes(SDL_Renderer *renderer, const Plane *planes,
 void free_scene_planes(Scene *scene);
 
 bool load_scene_chunks(Scene *scene);
+
+// Make the scene's declarative animations (anim_specs) into its animations[]
+// storage. Called by the engine before the scene's init (so init can hand a
+// made animation to a hotspot's active_anim); a no-op when anim_specs is
+// unset. make_animation_data needs no renderer, so this runs at init time.
+void make_scene_animations(Scene *scene);
+
+// Load the textures for the scene's declarative animations (anim_specs).
+// Called by the engine in the media-load pass, after make_scene_animations.
+// A no-op when anim_specs is unset. False on the first failed load.
+bool load_scene_animations(Scene *scene, SDL_Renderer *renderer);
 
 // Advance the scene's declared animations (called once per frame by the
 // engine).

@@ -318,6 +318,24 @@ bool load_scene_chunks(Scene *scene) {
   return true;
 }
 
+void make_scene_animations(Scene *scene) {
+  for (int i = 0; i < scene->anim_specs_length; i++) {
+    scene->animations[i] = make_animation_data(scene->anim_specs[i].frames,
+                                               scene->anim_specs[i].style);
+  }
+}
+
+bool load_scene_animations(Scene *scene, SDL_Renderer *renderer) {
+  for (int i = 0; i < scene->anim_specs_length; i++) {
+    if (!load_animation(renderer, scene->animations[i],
+                        scene->anim_specs[i].sprite,
+                        scene->anim_specs[i].data)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void update_scene_animations(Scene scene, int now_ms) {
   for (int i = 0; i < scene.animations_length; i++) {
     if (scene.animations[i] != NULL) {

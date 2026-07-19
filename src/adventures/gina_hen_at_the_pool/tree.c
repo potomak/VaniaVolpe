@@ -36,7 +36,14 @@ static AnimationData *carla_boil;
 // The progress-reward burst over the float (#118): plays once with the chime
 // when Carla drops it back.
 static AnimationData *celebration;
+// Declared as data (SCENES.md milestone 1): the framework makes and loads
+// these; init only aliases them. Order matches the generated indices.
 static AnimationData *animations[GINA_TREE_ANIMS_COUNT];
+static const SceneAnimSpec anim_specs[] = {
+    GINA_TREE_ANIM_CELEBRATION_SPEC,
+    GINA_TREE_ANIM_FLOAT_BOIL_SPEC,
+    GINA_TREE_ANIM_CARLA_BOIL_SPEC,
+};
 
 // The scene's own chunks (voice/caw) plus the shared completion chime (#118),
 // which lives in another dir — so the table lists per-entry _INIT rows and
@@ -93,12 +100,9 @@ static void init(void) {
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
-  float_boil = animations[GINA_TREE_ANIM_FLOAT_BOIL] = make_animation_data(
-      GINA_TREE_ANIM_FLOAT_BOIL_FRAMES, GINA_TREE_ANIM_FLOAT_BOIL_STYLE);
-  carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL] = make_animation_data(
-      GINA_TREE_ANIM_CARLA_BOIL_FRAMES, GINA_TREE_ANIM_CARLA_BOIL_STYLE);
-  celebration = animations[GINA_TREE_ANIM_CELEBRATION] = make_animation_data(
-      GINA_TREE_ANIM_CELEBRATION_FRAMES, GINA_TREE_ANIM_CELEBRATION_STYLE);
+  float_boil = animations[GINA_TREE_ANIM_FLOAT_BOIL];
+  carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL];
+  celebration = animations[GINA_TREE_ANIM_CELEBRATION];
 
   int i = 0;
   hotspots[i++] = (Hotspot){.rect = FLOAT_HOTSPOT,
@@ -121,18 +125,9 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!hen_load_media(gina, renderer)) {
-    return false;
-  }
-  return load_animation(renderer, float_boil,
-                        GINA_TREE_ANIM_FLOAT_BOIL_SPRITE_ASSET,
-                        GINA_TREE_ANIM_FLOAT_BOIL_DATA_ASSET) &&
-         load_animation(renderer, carla_boil,
-                        GINA_TREE_ANIM_CARLA_BOIL_SPRITE_ASSET,
-                        GINA_TREE_ANIM_CARLA_BOIL_DATA_ASSET) &&
-         load_animation(renderer, celebration,
-                        GINA_TREE_ANIM_CELEBRATION_SPRITE_ASSET,
-                        GINA_TREE_ANIM_CELEBRATION_DATA_ASSET);
+  // The boils and the celebration are loaded by the framework from anim_specs;
+  // only the actor remains for the scene to load.
+  return hen_load_media(gina, renderer);
 }
 
 // ── interactions
@@ -289,6 +284,8 @@ Scene tree_scene = {
     .images_length = LEN(images),
     .animations = animations,
     .animations_length = LEN(animations),
+    .anim_specs = anim_specs,
+    .anim_specs_length = LEN(anim_specs),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
 };
