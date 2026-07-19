@@ -125,12 +125,9 @@ static void init(void) {
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  if (!hen_load_media(gina, renderer)) {
-    return false;
-  }
   // The boils and the celebration are loaded by the framework from anim_specs;
   // only the actor remains for the scene to load.
-  return true;
+  return hen_load_media(gina, renderer);
 }
 
 // ── interactions
