@@ -13,6 +13,10 @@
 
 void adventure_init(const Adventure *adventure) {
   for (int i = 0; i < adventure->scenes_length; i++) {
+    // Make the scene's declarative animations before its init, so init can
+    // hand one to a hotspot's active_anim (SCENES.md milestone 1). A no-op for
+    // scenes that still make their own animations.
+    make_scene_animations(&adventure->scenes[i]);
     adventure->scenes[i].init();
   }
 }
@@ -33,6 +37,9 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
       return false;
     }
     if (!load_scene_chunks(scene)) {
+      return false;
+    }
+    if (!load_scene_animations(scene, renderer)) {
       return false;
     }
   }

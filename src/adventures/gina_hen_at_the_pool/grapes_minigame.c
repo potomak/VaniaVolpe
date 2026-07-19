@@ -28,9 +28,13 @@ static const ImageData *background = &images[GINA_GRAPES_IMAGE_BACKGROUND];
 static const ImageData *grape = &images[GINA_GRAPES_IMAGE_GRAPE];
 
 // The completion reward (#116): a confetti burst over the picked bunch while
-// the chime plays, then back to the vine where Gina explains.
+// the chime plays, then back to the vine where Gina explains. Declared as data
+// (SCENES.md milestone 1): the framework makes and loads it.
 static AnimationData *celebration;
 static AnimationData *animations[GINA_GRAPES_ANIMS_COUNT];
+static const SceneAnimSpec anim_specs[] = {
+    GINA_GRAPES_ANIM_CELEBRATION_SPEC,
+};
 
 static ChunkData chunks[2] = {
     GINA_GRAPES_CHUNK_POP_INIT,
@@ -74,15 +78,14 @@ static void reset_grapes(void) {
 }
 
 static void init(void) {
-  celebration = animations[GINA_GRAPES_ANIM_CELEBRATION] = make_animation_data(
-      GINA_GRAPES_ANIM_CELEBRATION_FRAMES, GINA_GRAPES_ANIM_CELEBRATION_STYLE);
+  celebration = animations[GINA_GRAPES_ANIM_CELEBRATION];
   reset_grapes();
 }
 
 static bool load_media(SDL_Renderer *renderer) {
-  return load_animation(renderer, celebration,
-                        GINA_GRAPES_ANIM_CELEBRATION_SPRITE_ASSET,
-                        GINA_GRAPES_ANIM_CELEBRATION_DATA_ASSET);
+  // The celebration is loaded by the framework from anim_specs.
+  (void)renderer;
+  return true;
 }
 
 static void back_to_vine(void) {
@@ -189,6 +192,8 @@ Scene grapes_minigame_scene = {
     .images_length = LEN(images),
     .animations = animations,
     .animations_length = LEN(animations),
+    .anim_specs = anim_specs,
+    .anim_specs_length = LEN(anim_specs),
     .chunks = chunks,
     .chunks_length = LEN(chunks),
 };

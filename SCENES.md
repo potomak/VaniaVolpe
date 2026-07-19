@@ -3,9 +3,9 @@
 A design for lighter scenes: a scene declares the assets it uses, where things
 are, what's present, and the interactions — and the framework owns the
 plumbing (making and loading animations, drawing the static layer, playing
-sounds, the input default). Nothing here is built yet; this is the spec the
-implementation follows, the way `LIVELINESS.md` and `ASSETS.md` were written
-before their code. Tracked in the backlog.
+sounds, the input default). The spec the implementation follows, the way
+`LIVELINESS.md` and `ASSETS.md` were written before their code. Tracked in the
+backlog (#129); **milestone 1 is shipped** — see *Migration plan* below.
 
 ## The problem
 
@@ -209,9 +209,18 @@ being content rather than code — the precondition for cartridges / paid packs.
 Land it the way #105 did — incrementally, one layer and one reference scene at
 a time, never a big-bang rewrite:
 
-1. **Auto-make + auto-load declared animations.** Pure deletion of the `init`
-   and `load_media` animation ceremony; no behavior change, proven by the
-   unchanged playthrough. `vine.c` as the reference.
+1. **Auto-make + auto-load declared animations.** ✅ **Shipped.** A scene lists
+   `SceneAnimSpec` entries (`<PREFIX>_<DIR>_ANIM_<NAME>_SPEC`, generated) and
+   drops its `make_animation_data`/`load_animation` loops; the framework makes
+   them into the scene's `animations[]` before `init` (so a hotspot's
+   `active_anim` can point at one) and loads them in the media pass
+   (`make_scene_animations`/`load_scene_animations` in `scene.c`, wired in
+   `adventure.c`). No behavior change — the playthrough is unchanged. `vine.c`
+   is the reference; every animation scene of both adventures migrated
+   (pool, tree, both minigames, intro, playground_entrance). Ticking and
+   freeing were already the framework's job and are untouched. The named
+   aliases (`grapes_boil = animations[IDX];`) stay until Layer 2 makes render
+   declarative.
 2. **The `SceneSprite` render list.** Absorbs the static draws; dynamic draws
    stay in a custom `render`.
 3. **The boil collapse** (hotspot-carried `anim` + `at`).
