@@ -5,9 +5,8 @@ are, what's present, and the interactions — and the framework owns the
 plumbing (making and loading animations, drawing the static layer, playing
 sounds, the input default). The spec the implementation follows, the way
 `LIVELINESS.md` and `ASSETS.md` were written before their code. Tracked in the
-backlog (#129); **milestones 1–3 and 5 are shipped, and milestone 4 is partly
-shipped** (only its `say_<line>()` dialogue helper remains) — see *Migration
-plan* below.
+backlog (#129); **all five milestones are shipped** — see *Migration plan*
+below.
 
 ## The problem
 
@@ -243,7 +242,7 @@ a time, never a big-bang rewrite:
    layer. So a scene no longer lists a boil as a separate sprite — the tappable
    thing and its squiggle are declared together. Migrated the boil scenes
    (pool, tree, vine); their sprite tables shrink to the backdrop (+ water).
-4. **The action API.** 🚧 **Partly shipped.** Two halves:
+4. **The action API.** ✅ **Shipped.** Three parts:
    - **`.music` declarative field.** ✅ **Shipped.** A scene sets
      `.music = <PREFIX>_MUSIC_CHUNK_<NAME>_ASSET_INIT` (a generated, so
      build-time-validated, `Asset` initializer) and drops the whole
@@ -268,11 +267,19 @@ a time, never a big-bang rewrite:
      keeps it compile-time-checked (`play_chmie()` won't link); every SFX call
      site in both adventures moved onto the helpers and **no scene includes
      `<SDL2_mixer/...>` any more.**
-   - **Dialogue: `say_<line>()`** — still deferred. It needs per-line voice WAVs
-     and manifest text Gina's shared-placeholder model doesn't have yet (the
-     `.actor` field it also needs now exists, from milestone 5). Until then
-     dialogue keeps `gina_say` / `fox_talk` over the scene's own voice chunks.
-     Tracked as a follow-up.
+   - **Dialogue: generated `say_<line>()`.** ✅ **Shipped.** Each spoken line is
+     a per-line dialogue chunk in a `<scene>/dialog` dir; the generator emits a
+     `static inline say_<name>(void)` over `scene_say(index)` (game.c), which
+     speaks it through the scene's `.actor` (milestone 5) — the line's text
+     comes from its `.txt` sidecar, so the asset, the subtitle and the call site
+     are one manifest entry. Both adventures use it: Vania's per-line chunks
+     migrated off `fox_talk`, and Gina's three shared `voice` placeholders were
+     split into uniquely-named per-line lines (`say_cant_reach()`,
+     `say_got_goggles()`, …), retiring `gina_say` and the literal strings.
+     Dialogue WAVs are **optional** (`ChunkData.optional_audio`): a not-yet
+     recorded line loads text-only, so Gina ships with silent placeholder WAVs +
+     `it_IT` text sidecars until real recordings land in the `_inbox`
+     drop-boxes.
 5. **The input default.** ✅ **Shipped.** The drag + hit-test + walk handler
    every walking scene repeated is now the framework default
    (`scene_default_process_input`): the engine runs it for any scene that leaves

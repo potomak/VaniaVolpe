@@ -47,24 +47,13 @@ static Prop *dropped_peg_prop = &props[1]; // peg the squirrel dropped
 // props, the fox) is dynamic and stays in render().
 static SceneSprite sprites[2];
 
-// Just the dialogue lines: the scene's sound effects (acorns_falling,
-// peg_falling) are in the adventure's shared SFX bank now and play via
-// play_<name>() (SCENES.md milestone 4). Music is declared on the Scene
-// (.music); the framework plays and frees it.
+// The scene's spoken lines, played via generated say_<name>() helpers
+// (SCENES.md milestone 4). Sound effects (acorns_falling, peg_falling) are in
+// the adventure's shared SFX bank (play_<name>()); music is declared on the
+// Scene
+// (.music); the framework plays and frees both.
 static ChunkData chunks[VANIA_PLAYGROUND_DIALOG_CHUNKS_COUNT] =
     VANIA_PLAYGROUND_DIALOG_CHUNKS_INIT;
-static const ChunkData *examine_fixed_slide =
-    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_FIXED_SLIDE];
-static const ChunkData *examine_slide_1 =
-    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SLIDE_1];
-static const ChunkData *examine_slide_2 =
-    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SLIDE_2];
-static const ChunkData *examine_squirrel_1 =
-    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SQUIRREL_1];
-static const ChunkData *examine_squirrel_2 =
-    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SQUIRREL_2];
-static const ChunkData *sliding_down =
-    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_SLIDING_DOWN];
 
 // Mouse position
 static SDL_Point m_pos;
@@ -194,23 +183,23 @@ static void maybe_use_slide(void) {
     // recorded (see the manifest).
     play_peg_falling();
     // TODO: Wait for sound effect to end before starting to talk
-    fox_talk(fox, examine_fixed_slide);
+    say_examine_fixed_slide();
     return;
   }
 
   // Else if slide is working use: win the game
   if (has_slide_been_fixed) {
     fox->current_position = START_SLIDE_POS;
-    fox_talk(fox, sliding_down);
+    say_sliding_down();
     has_started_sliding = true;
     return;
   }
 
   // Else give hint to fix the slide
   if (examine_slide_count < 1) {
-    fox_talk(fox, examine_slide_1);
+    say_examine_slide_1();
   } else {
-    fox_talk(fox, examine_slide_2);
+    say_examine_slide_2();
   }
   examine_slide_count++;
 }
@@ -226,9 +215,9 @@ static void maybe_get_peg(void) {
 
   // Else give hint to find acorns
   if (examine_squirrel_count < 1) {
-    fox_talk(fox, examine_squirrel_1);
+    say_examine_squirrel_1();
   } else {
-    fox_talk(fox, examine_squirrel_2);
+    say_examine_squirrel_2();
   }
   examine_squirrel_count++;
 }
@@ -370,7 +359,10 @@ static void on_scene_inactive(void) {}
 Scene playground_scene = {
     .init = init,
     .load_media = load_media,
+    // Custom process_input for the after-three-slides win check; .actor still
+    // declared so the generated say_<name>() helpers can speak through it.
     .process_input = process_input,
+    .actor = &fox,
     .update = update,
     .render = render,
     .deinit = deinit,

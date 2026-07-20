@@ -92,6 +92,14 @@ int sfx_play(int index) {
   return Mix_PlayChannel(-1, adventure->sfx[index].chunk, 0);
 }
 
+void scene_say(int index) {
+  const Scene *scene = scene_instance(game.current_scene);
+  SDL_assert(scene->actor != NULL);
+  SDL_assert(index >= 0 && index < scene->chunks_length);
+  // NULL text: actor_talk reads the line from the chunk's text sidecar.
+  actor_talk(*scene->actor, &scene->chunks[index], NULL);
+}
+
 void exit_game(void) { game.is_running = false; }
 
 void game_init(void) {

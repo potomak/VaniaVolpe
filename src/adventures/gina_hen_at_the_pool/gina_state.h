@@ -43,8 +43,4 @@ extern GinaState gina_state;
 // Reset all progress (called on the adventure's entry scene activation).
 void gina_state_reset(void);
 
-// Speak a line: play the (silent placeholder) chunk through the actor and also
-// log the text to stdout, so the audio-only flow is testable without art.
-void gina_say(Hen *gina, const char *line, const ChunkData *voice);
-
 #endif /* gina_state_h */

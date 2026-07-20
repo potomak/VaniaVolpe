@@ -50,11 +50,11 @@ static const SceneAnimSpec anim_specs[] = {
 // falling float, the actor, the carried basket and the reward burst.
 static SceneSprite sprites[1];
 
-// Just the dialogue voice placeholder: the scene's sound effects (caw, chime)
-// live in the adventure's shared SFX bank now and play via play_<name>()
-// (SCENES.md milestone 4).
-static ChunkData chunks[GINA_TREE_CHUNKS_COUNT] = GINA_TREE_CHUNKS_INIT;
-static const ChunkData *voice(void) { return &chunks[GINA_TREE_CHUNK_VOICE]; }
+// The scene's spoken lines (SCENES.md milestone 4): per-line dialogue chunks
+// the framework speaks via generated say_<name>() helpers. Sound effects (caw,
+// chime) live in the adventure's shared SFX bank (play_<name>()).
+static ChunkData chunks[GINA_TREE_DIALOG_CHUNKS_COUNT] =
+    GINA_TREE_DIALOG_CHUNKS_INIT;
 
 static Hen *gina;
 static const SDL_FPoint HEN_START = {400, 480};
@@ -147,13 +147,13 @@ static void go_to_vine(void) { set_active_scene(VINE); }
 static void examine_float(void) {
   switch (gina_state.examine_float_count) {
   case 0:
-    gina_say(gina, "Non ci arrivo!", voice());
+    say_cant_reach();
     break;
   case 1:
-    gina_say(gina, "Mi serve aiuto...", voice());
+    say_need_help();
     break;
   default:
-    gina_say(gina, "Potrei chiedere a Carla.", voice());
+    say_ask_carla();
     break;
   }
   gina_state.examine_float_count++;
@@ -178,7 +178,7 @@ static void talk_to_carla(void) {
       // bounces down from the branches while she says thanks. Progress reward
       // (#118): chime + confetti burst over the float as it comes back.
       gina_state.has_grapes = false;
-      gina_say(gina, "Mmm, che uva buona! Ecco il tuo salvagente!", voice());
+      say_carla_thanks();
       play_chime();
       play_animation(celebration, NULL);
       float_falling = true;
@@ -189,15 +189,14 @@ static void talk_to_carla(void) {
     }
     if (!gina_state.has_basket) {
       gina_state.has_basket = true;
-      gina_say(gina, "Ti aiuto se mi porti dell'uva. Prendi questo cestino!",
-               voice());
+      say_carla_offer();
       return;
     }
-    gina_say(gina, "Hai gia' il cestino? Portami l'uva dalla vigna!", voice());
+    say_carla_reminder();
     return;
   }
 
-  gina_say(gina, "Ciao Carla!", voice());
+  say_hi_carla();
 }
 
 static void update(float delta_time) {

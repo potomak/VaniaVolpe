@@ -61,11 +61,11 @@ static const SceneAnimSpec anim_specs[] = {
 // float mid-flight, the actor, the reward burst).
 static SceneSprite sprites[2];
 
-// Just the dialogue voice placeholder: the scene's sound effects (wind, splash,
-// chime) live in the adventure's shared SFX bank now and play via play_<name>()
-// (SCENES.md milestone 4).
-static ChunkData chunks[GINA_POOL_CHUNKS_COUNT] = GINA_POOL_CHUNKS_INIT;
-static const ChunkData *voice(void) { return &chunks[GINA_POOL_CHUNK_VOICE]; }
+// The scene's spoken lines (SCENES.md milestone 4): each is a per-line dialogue
+// chunk the framework speaks via a generated say_<name>() helper. Sound effects
+// live in the adventure's shared SFX bank (play_<name>()).
+static ChunkData chunks[GINA_POOL_DIALOG_CHUNKS_COUNT] =
+    GINA_POOL_DIALOG_CHUNKS_INIT;
 
 static SDL_Point m_pos;
 
@@ -135,7 +135,6 @@ static bool float_at_the_pool(void);
 static bool goggles_present(void);
 static bool float_resting_at_pool(void);
 static void open_sunscreen_minigame(void);
-static void say_sunscreen_done(void);
 static void collect_goggles(void);
 static void float_blows_away(void);
 static void try_dive(void);
@@ -241,9 +240,8 @@ static void open_sunscreen_minigame(void) {
   set_active_scene(SUNSCREEN_MINIGAME);
 }
 
-static void say_sunscreen_done(void) {
-  gina_say(gina, "Ho gia' messo la crema.", voice());
-}
+// The "already applied" tap is the generated say_sunscreen_done() helper
+// directly (see the hotspot table in init) — no wrapper needed.
 
 static void go_to_vine(void) { set_active_scene(VINE); }
 
@@ -255,7 +253,7 @@ static void collect_goggles(void) {
   // cheers. No input lock — she just picked something up, she isn't leaving.
   play_chime();
   play_animation(celebration, NULL);
-  gina_say(gina, "Ho preso gli occhialini!", voice());
+  say_got_goggles();
 }
 
 // The float is gone: flip the state (which moves it to the tree scene) and
@@ -263,8 +261,7 @@ static void collect_goggles(void) {
 static void float_gone(void) {
   float_flying = false;
   gina_state.float_state = FLOAT_STUCK_IN_TREE;
-  gina_say(gina, "Oh no! Il vento ha portato il salvagente sull'albero!",
-           voice());
+  say_float_blows_away();
 }
 
 static void float_blows_away(void) {
@@ -284,7 +281,7 @@ static void float_blows_away(void) {
 static void dive_landed(void) {
   diving = false;
   play_splash();
-  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Gina: Che bello! Ancora!");
+  say_dive_again();
   // Replay the adventure in place. The reset happens without leaving the
   // scene (no on_scene_active), so the walkable area must be rebuilt here or
   // Gina could roam the whole poolside before reapplying the sunscreen.
@@ -305,16 +302,15 @@ static void dive(void) {
 
 static void try_dive(void) {
   if (!gina_state.has_goggles) {
-    gina_say(gina, "Mi servono gli occhialini per tuffarmi.", voice());
+    say_need_goggles();
     return;
   }
   switch (gina_state.float_state) {
   case FLOAT_AT_POOL:
-    gina_say(gina, "Mi serve il salvagente: e' li' vicino alla piscina.",
-             voice());
+    say_float_by_pool();
     return;
   case FLOAT_STUCK_IN_TREE:
-    gina_say(gina, "Il salvagente e' sull'albero! Devo recuperarlo.", voice());
+    say_float_in_tree();
     return;
   case FLOAT_RETRIEVED:
     dive();
@@ -353,8 +349,7 @@ static void process_input(SDL_Event *event) {
     // Before the sunscreen the walk grid covers only the umbrella's shadow:
     // Gina wanders freely within the shade and refuses anything beyond it.
     if (!gina_state.has_sunscreen && !walk_grid_contains(&walk_grid, m_pos)) {
-      gina_say(gina, "Devo mettere la crema solare prima di uscire dall'ombra!",
-               voice());
+      say_shade_reminder();
       break;
     }
     // Otherwise walk toward the click, clamped to the walkable strip.
@@ -414,7 +409,7 @@ static void on_scene_active(void) {
   // Fresh from the sunscreen minigame (#116): explain what the reward means.
   if (gina_state.announce_sunscreen) {
     gina_state.announce_sunscreen = false;
-    gina_say(gina, "Pronta! Ora posso uscire al sole!", voice());
+    say_sunscreen_ready();
   }
 }
 
@@ -423,7 +418,11 @@ static void on_scene_inactive(void) {}
 Scene pool_scene = {
     .init = init,
     .load_media = load_media,
+    // Custom process_input for the dive input-lock; .actor still declared so
+    // the generated say_<name>() helpers can speak through it (SCENES.md
+    // m4/m5).
     .process_input = process_input,
+    .actor = &gina,
     .update = update,
     .render = render,
     .deinit = deinit,

@@ -97,7 +97,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "shade_reminder",
       "text": "Devo mettere la crema solare prima di uscire dall'ombra!",
@@ -106,7 +106,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "sunscreen_done",
       "text": "Ho gia' messo la crema.",
@@ -115,7 +115,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "got_goggles",
       "text": "Ho preso gli occhialini!",
@@ -124,7 +124,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "float_blows_away",
       "text": "Oh no! Il vento ha portato il salvagente sull'albero!",
@@ -133,7 +133,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "need_goggles",
       "text": "Mi servono gli occhialini per tuffarmi.",
@@ -142,7 +142,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "float_by_pool",
       "text": "Mi serve il salvagente: e' li' vicino alla piscina.",
@@ -151,7 +151,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "float_in_tree",
       "text": "Il salvagente e' sull'albero! Devo recuperarlo.",
@@ -160,7 +160,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "dive_again",
       "text": "Che bello! Ancora!",
@@ -169,7 +169,7 @@
     },
     {
       "group": "Voice — Poolside",
-      "type": "voice",
+      "type": "audio",
       "dir": "pool/dialog",
       "name": "sunscreen_ready",
       "text": "Pronta! Ora posso uscire al sole!",
@@ -178,7 +178,7 @@
     },
     {
       "group": "Voice — Tree",
-      "type": "voice",
+      "type": "audio",
       "dir": "tree/dialog",
       "name": "cant_reach",
       "text": "Non ci arrivo!",
@@ -187,7 +187,7 @@
     },
     {
       "group": "Voice — Tree",
-      "type": "voice",
+      "type": "audio",
       "dir": "tree/dialog",
       "name": "need_help",
       "text": "Mi serve aiuto...",
@@ -196,7 +196,7 @@
     },
     {
       "group": "Voice — Tree",
-      "type": "voice",
+      "type": "audio",
       "dir": "tree/dialog",
       "name": "ask_carla",
       "text": "Potrei chiedere a Carla.",
@@ -205,7 +205,7 @@
     },
     {
       "group": "Voice — Tree",
-      "type": "voice",
+      "type": "audio",
       "dir": "tree/dialog",
       "name": "hi_carla",
       "text": "Ciao Carla!",
@@ -214,7 +214,7 @@
     },
     {
       "group": "Voice — Tree",
-      "type": "voice",
+      "type": "audio",
       "dir": "tree/dialog",
       "name": "carla_offer",
       "text": "Ti aiuto se mi porti dell'uva. Prendi questo cestino!",
@@ -223,7 +223,7 @@
     },
     {
       "group": "Voice — Tree",
-      "type": "voice",
+      "type": "audio",
       "dir": "tree/dialog",
       "name": "carla_reminder",
       "text": "Hai gia' il cestino? Portami l'uva dalla vigna!",
@@ -232,7 +232,7 @@
     },
     {
       "group": "Voice — Tree",
-      "type": "voice",
+      "type": "audio",
       "dir": "tree/dialog",
       "name": "carla_thanks",
       "text": "Mmm, che uva buona! Ecco il tuo salvagente!",
@@ -241,7 +241,7 @@
     },
     {
       "group": "Voice — Vine",
-      "type": "voice",
+      "type": "audio",
       "dir": "vine/dialog",
       "name": "already_grapes",
       "text": "Ho gia' l'uva nel cestino.",
@@ -250,7 +250,7 @@
     },
     {
       "group": "Voice — Vine",
-      "type": "voice",
+      "type": "audio",
       "dir": "vine/dialog",
       "name": "nothing_to_pick",
       "text": "Non ho niente per raccoglierle.",
@@ -259,7 +259,7 @@
     },
     {
       "group": "Voice — Vine",
-      "type": "voice",
+      "type": "audio",
       "dir": "vine/dialog",
       "name": "basket_full",
       "text": "Cestino pieno d'uva! Ora torno da Carla.",
@@ -491,14 +491,6 @@
       "group": "Runtime only — Poolside",
       "type": "audio",
       "dir": "pool",
-      "name": "voice",
-      "localized": true,
-      "description": "Per-scene silent voice placeholder (replaced by per-line WAVs as recordings land)."
-    },
-    {
-      "group": "Runtime only — Poolside",
-      "type": "audio",
-      "dir": "pool",
       "name": "wind",
       "sfx": true,
       "description": "The gust that carries the float into the tree."
@@ -540,14 +532,6 @@
       "group": "Runtime only — Tree",
       "type": "audio",
       "dir": "tree",
-      "name": "voice",
-      "localized": true,
-      "description": "Per-scene silent voice placeholder."
-    },
-    {
-      "group": "Runtime only — Tree",
-      "type": "audio",
-      "dir": "tree",
       "name": "caw",
       "sfx": true,
       "description": "Carla's caw."
@@ -560,14 +544,6 @@
       "frames": 3,
       "style": "loop",
       "description": "Placeholder boil for the grape bunch."
-    },
-    {
-      "group": "Runtime only — Vine",
-      "type": "audio",
-      "dir": "vine",
-      "name": "voice",
-      "localized": true,
-      "description": "Per-scene silent voice placeholder."
     },
     {
       "group": "Runtime only — Minigames",

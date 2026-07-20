@@ -48,6 +48,14 @@ void set_active_scene(int scene);
 // with a compile-checked <PREFIX>_SFX_<NAME> index (SCENES.md milestone 4).
 int sfx_play(int index);
 
+// Speak a dialogue line from the current scene's chunk table by its index,
+// through the scene's actor (its `.actor`). The line's text and any audio come
+// from the chunk (a text-only line with no recording still shows its
+// subtitle). Scenes don't call this directly — the generated say_<name>()
+// helpers do, with a compile-checked dialogue-chunk index (SCENES.md
+// milestone 4).
+void scene_say(int index);
+
 void exit_game(void);
 
 void game_init(void);
