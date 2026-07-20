@@ -17,9 +17,7 @@
 #include "gina_state.h"
 #include "sunscreen_minigame.h"
 
-// Asset declarations generated from the adventure manifest (ASSETS.md). The
-// chunks table mixes directories (the chime is shared by both minigames), so
-// it lists per-entry _INIT rows.
+// Asset declarations generated from the adventure manifest (ASSETS.md).
 #include "gina_assets.h"
 
 static ImageData images[GINA_SUNSCREEN_IMAGES_COUNT] =
@@ -41,9 +39,8 @@ static const SceneAnimSpec anim_specs[] = {
 // player paints on, and the completion burst.
 static SceneSprite sprites[2];
 
-static ChunkData chunks[1] = {
-    GINA_MINIGAMES_CHUNK_CHIME_INIT,
-};
+// The scene has no chunk table: its completion chime is in the adventure's
+// shared SFX bank and plays via play_chime() (SCENES.md milestone 4).
 
 // The close-up rect Gina occupies, and the brush grid laid over it.
 #define GINA_X 280
@@ -112,7 +109,7 @@ static void brush_at(int x, int y) {
     gina_state.has_sunscreen = true;
     // The reward beat (#116): chime + confetti burst, then back to the pool.
     celebrating = true;
-    scene_play_sound(&chunks[0]);
+    play_chime();
     play_animation(celebration, back_to_pool);
   }
 }
@@ -182,6 +179,4 @@ Scene sunscreen_minigame_scene = {
     .animations_length = LEN(animations),
     .anim_specs = anim_specs,
     .anim_specs_length = LEN(anim_specs),
-    .chunks = chunks,
-    .chunks_length = LEN(chunks),
 };

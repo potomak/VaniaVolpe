@@ -11,9 +11,18 @@
 #include "playground.h"
 #include "playground_entrance.h"
 
+// Asset declarations generated from the manifest (ASSETS.md): the shared
+// sound-effect bank (SCENES.md milestone 4).
+#include "vania_assets.h"
+
 #define VANIA_FOX_THE_SLIDE_SCENES_LENGTH 4
 
 static Scene scenes[VANIA_FOX_THE_SLIDE_SCENES_LENGTH];
+
+// The adventure's shared SFX, played by scenes via play_<name>() (excavator,
+// shovel, key_reveal, acorns_falling, peg_falling). Loaded once for the whole
+// adventure.
+static ChunkData sfx[VANIA_SFX_COUNT] = VANIA_SFX_INIT;
 
 Adventure vania_fox_the_slide = {
     .id = "vania-fox-the-slide",
@@ -22,6 +31,8 @@ Adventure vania_fox_the_slide = {
     .scenes = scenes,
     .scenes_length = VANIA_FOX_THE_SLIDE_SCENES_LENGTH,
     .entry_scene = INTRO,
+    .sfx = sfx,
+    .sfx_length = VANIA_SFX_COUNT,
 };
 
 void vania_fox_the_slide_register(void) {

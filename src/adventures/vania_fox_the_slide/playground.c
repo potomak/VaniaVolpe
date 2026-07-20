@@ -47,29 +47,24 @@ static Prop *dropped_peg_prop = &props[1]; // peg the squirrel dropped
 // props, the fox) is dynamic and stays in render().
 static SceneSprite sprites[2];
 
-// Sound effects and dialog. Music is declared on the Scene (.music, SCENES.md
-// milestone 4); the framework plays and frees it.
-static ChunkData chunks[9] = {
-    VANIA_PLAYGROUND_CHUNK_ACORNS_FALLING_INIT,
-    VANIA_PLAYGROUND_CHUNK_PEG_FALLING_INIT,
-    // TODO: Record new sound
-    VANIA_PLAYGROUND_CHUNK_PEG_FALLING_INIT,
-    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_FIXED_SLIDE_INIT,
-    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SLIDE_1_INIT,
-    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SLIDE_2_INIT,
-    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SQUIRREL_1_INIT,
-    VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SQUIRREL_2_INIT,
-    VANIA_PLAYGROUND_DIALOG_CHUNK_SLIDING_DOWN_INIT,
-};
-static const ChunkData *acorns_falling_sound = &chunks[0];
-static const ChunkData *peg_falling_sound = &chunks[1];
-static const ChunkData *fix_slide_sound = &chunks[2];
-static const ChunkData *examine_fixed_slide = &chunks[3];
-static const ChunkData *examine_slide_1 = &chunks[4];
-static const ChunkData *examine_slide_2 = &chunks[5];
-static const ChunkData *examine_squirrel_1 = &chunks[6];
-static const ChunkData *examine_squirrel_2 = &chunks[7];
-static const ChunkData *sliding_down = &chunks[8];
+// Just the dialogue lines: the scene's sound effects (acorns_falling,
+// peg_falling) are in the adventure's shared SFX bank now and play via
+// play_<name>() (SCENES.md milestone 4). Music is declared on the Scene
+// (.music); the framework plays and frees it.
+static ChunkData chunks[VANIA_PLAYGROUND_DIALOG_CHUNKS_COUNT] =
+    VANIA_PLAYGROUND_DIALOG_CHUNKS_INIT;
+static const ChunkData *examine_fixed_slide =
+    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_FIXED_SLIDE];
+static const ChunkData *examine_slide_1 =
+    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SLIDE_1];
+static const ChunkData *examine_slide_2 =
+    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SLIDE_2];
+static const ChunkData *examine_squirrel_1 =
+    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SQUIRREL_1];
+static const ChunkData *examine_squirrel_2 =
+    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_EXAMINE_SQUIRREL_2];
+static const ChunkData *sliding_down =
+    &chunks[VANIA_PLAYGROUND_DIALOG_CHUNK_SLIDING_DOWN];
 
 // Mouse position
 static SDL_Point m_pos;
@@ -195,7 +190,9 @@ static void maybe_use_slide(void) {
   if (has_peg) {
     has_peg = false;
     has_slide_been_fixed = true;
-    scene_play_sound(fix_slide_sound);
+    // Placeholder: reuses the peg-falling sound until a fix-slide SFX is
+    // recorded (see the manifest).
+    play_peg_falling();
     // TODO: Wait for sound effect to end before starting to talk
     fox_talk(fox, examine_fixed_slide);
     return;
@@ -223,7 +220,7 @@ static void maybe_get_peg(void) {
   if (has_acorns) {
     has_acorns = false;
     has_peg_been_dropped = true;
-    scene_play_sound(peg_falling_sound);
+    play_peg_falling();
     return;
   }
 
@@ -238,7 +235,7 @@ static void maybe_get_peg(void) {
 
 static void make_acorns_fall(void) {
   have_acorns_fallen = true;
-  scene_play_sound(acorns_falling_sound);
+  play_acorns_falling();
 }
 
 static void pickup_acorns(void) { has_acorns = true; }

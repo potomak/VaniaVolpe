@@ -50,26 +50,19 @@ static SceneSprite sprites[5];
 
 static Fox *fox;
 
-// Sound effects and dialog. Music is declared on the Scene (.music, SCENES.md
-// milestone 4); the framework plays and frees it.
+// Just the dialogue lines: the scene's sound effects (excavator, shovel,
+// key_reveal, and the peg-falling reused for the gate) are in the adventure's
+// shared SFX bank now and play via play_<name>() (SCENES.md milestone 4). Music
+// is declared on the Scene (.music); the framework plays and frees it.
 static int excavator_sound_channel = -1;
-static ChunkData chunks[7] = {
-    VANIA_PLAYGROUND_ENTRANCE_CHUNK_EXCAVATOR_INIT,
-    VANIA_PLAYGROUND_ENTRANCE_CHUNK_SHOVEL_INIT,
-    VANIA_PLAYGROUND_ENTRANCE_CHUNK_KEY_REVEAL_INIT,
-    // I'm reusing the sound effect of the peg falling
-    VANIA_PLAYGROUND_CHUNK_PEG_FALLING_INIT,
-    VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_GATE_1_INIT,
-    VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_GATE_2_INIT,
-    VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_SLIDE_FROM_OUTSIDE_INIT,
-};
-static const ChunkData *excavator_sound = &chunks[0];
-static const ChunkData *shovel_sound = &chunks[1];
-static const ChunkData *key_reveal_sound = &chunks[2];
-static const ChunkData *open_gate_sound = &chunks[3];
-static const ChunkData *examine_gate_1 = &chunks[4];
-static const ChunkData *examine_gate_2 = &chunks[5];
-static const ChunkData *examine_slide_from_outside = &chunks[6];
+static ChunkData chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNKS_COUNT] =
+    VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNKS_INIT;
+static const ChunkData *examine_gate_1 =
+    &chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_GATE_1];
+static const ChunkData *examine_gate_2 =
+    &chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_GATE_2];
+static const ChunkData *examine_slide_from_outside =
+    &chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_SLIDE_FROM_OUTSIDE];
 
 // Mouse position
 static SDL_Point m_pos;
@@ -121,7 +114,7 @@ static void run_excavator(void) {
   // Retrigger from the top: stop a still-playing run before starting again
   // (scene_stop_channel ignores the initial -1 handle).
   scene_stop_channel(excavator_sound_channel);
-  excavator_sound_channel = scene_play_sound(excavator_sound);
+  excavator_sound_channel = play_excavator();
 }
 
 static void init(void) {
@@ -181,7 +174,8 @@ static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
 static void maybe_open_gate(void) {
   // If key is in inventory open gate then go to PLAYGROUND scene
   if (has_key) {
-    scene_play_sound(open_gate_sound);
+    // Placeholder: reuses the peg-falling sound for the gate opening.
+    play_peg_falling();
     play_animation(gate, go_to_playground);
     return;
   }
@@ -199,7 +193,7 @@ static void add_key_to_inventory(void) { has_key = true; }
 
 static void reveal_key(void) {
   has_key_been_revealed = true;
-  scene_play_sound(key_reveal_sound);
+  play_key_reveal();
 }
 
 static void maybe_dig_out_key(void) {
@@ -210,7 +204,7 @@ static void maybe_dig_out_key(void) {
 
   // Play shovel animation and reveal key
   play_animation(shovel, reveal_key);
-  scene_play_sound(shovel_sound);
+  play_shovel();
 }
 
 static void examine_slide(void) {

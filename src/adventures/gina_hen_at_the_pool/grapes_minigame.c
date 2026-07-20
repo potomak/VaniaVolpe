@@ -17,9 +17,7 @@
 #include "gina_state.h"
 #include "grapes_minigame.h"
 
-// Asset declarations generated from the adventure manifest (ASSETS.md). The
-// chunks table mixes directories (the chime is shared by both minigames), so
-// it lists per-entry _INIT rows.
+// Asset declarations generated from the adventure manifest (ASSETS.md).
 #include "gina_assets.h"
 
 static ImageData images[GINA_GRAPES_IMAGES_COUNT] = GINA_GRAPES_IMAGES_INIT;
@@ -39,12 +37,8 @@ static const SceneAnimSpec anim_specs[] = {
 // draws the dynamic grapes (falling under their tweens) and the burst.
 static SceneSprite sprites[1];
 
-static ChunkData chunks[2] = {
-    GINA_GRAPES_CHUNK_POP_INIT,
-    GINA_MINIGAMES_CHUNK_CHIME_INIT,
-};
-static const ChunkData *pop_sound = &chunks[0];
-static const ChunkData *chime_sound = &chunks[1];
+// The scene has no chunk table: its sounds (pop, chime) are in the adventure's
+// shared SFX bank and play via play_<name>() (SCENES.md milestone 4).
 
 #define GRAPE_SIZE 40
 #define GRAPE_COUNT 6
@@ -125,7 +119,7 @@ static void process_input(SDL_Event *event) {
         tween_start(&fall[i], (SDL_FPoint){GRAPE_AT[i].x, GRAPE_AT[i].y},
                     (SDL_FPoint){GRAPE_AT[i].x, WINDOW_HEIGHT}, GRAPE_FALL_MS,
                     TWEEN_EASE_IN, NULL);
-        scene_play_sound(pop_sound);
+        play_pop();
         break;
       }
     }
@@ -151,7 +145,7 @@ static void update(float delta_time) {
   if (gone == GRAPE_COUNT) {
     gina_state.has_grapes = true;
     celebrating = true;
-    scene_play_sound(chime_sound);
+    play_chime();
     play_animation(celebration, back_to_vine);
   }
 }
@@ -201,6 +195,4 @@ Scene grapes_minigame_scene = {
     .animations_length = LEN(animations),
     .anim_specs = anim_specs,
     .anim_specs_length = LEN(anim_specs),
-    .chunks = chunks,
-    .chunks_length = LEN(chunks),
 };

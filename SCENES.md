@@ -251,18 +251,25 @@ a time, never a big-bang rewrite:
      Vania scenes with music migrated (intro/outro share the theme, the two
      playground scenes share theirs); Gina has no music. Zero scenes keep a
      `Mix_Music *`.
-   - **Sound-effect API.** ✅ **Shipped** as a compile-safe framework primitive
-     (`scene_play_sound(const ChunkData *)` → the channel, `scene_stop_channel`
-     to retrigger), not the generated `play_<name>()`/`say_<line>()` wrappers.
-     Every SFX call site in both adventures moved onto it, so **no scene
-     includes `<SDL2_mixer/...>` any more.** The typed `ChunkData *` keeps the
-     compile-time safety (a wrong name is an undeclared identifier); the nullary
-     generated wrappers are deferred because `play_<name>()` needs the shared
-     chime to hold a real generated index in each scene's chunk table (a
-     per-scene `chunk_specs` layer, mirroring `anim_specs`, still to land) and
-     `say_<line>()` needs the scene to carry its actor as data (the `.actor`
-     field milestone 5 introduces) plus per-line voice WAVs Gina doesn't have
-     yet. Tracked as a follow-up.
+   - **Sound effects: generated `play_<name>()` over a shared bank.**
+     ✅ **Shipped.** Each adventure declares its sound effects with `"sfx": true`
+     in the manifest; the generator collects them into an **adventure-wide SFX
+     bank** (`<PREFIX>_SFX_INIT` + a `<PREFIX>_SFX_<NAME>` index per sound) and
+     emits a `static inline play_<name>(void)` for each, over `sfx_play(index)`
+     (`game.c`, playing the current adventure's bank). The bank lives on the
+     `Adventure` (`.sfx`), loaded once in the media pass and freed on teardown —
+     so the shared completion chime is loaded a single time, not per scene. A
+     scene now **carries no sound effects at all**: its chunk table shrinks to
+     just its dialogue voice lines (the two minigames drop the table entirely),
+     and a handler simply calls `play_chime()` / `play_wind()`. The index macro
+     keeps it compile-time-checked (`play_chmie()` won't link); every SFX call
+     site in both adventures moved onto the helpers and **no scene includes
+     `<SDL2_mixer/...>` any more.**
+   - **Dialogue: `say_<line>()`** — still deferred. It needs the scene to carry
+     its actor as data (the `.actor` field milestone 5 introduces) plus per-line
+     voice WAVs and manifest text Gina's shared-placeholder model doesn't have
+     yet. Until then dialogue keeps `gina_say` / `fox_talk` over the scene's own
+     voice chunks. Tracked as a follow-up.
 5. **The input default.**
 
 Migrate both content adventures at each meaningful step to keep the

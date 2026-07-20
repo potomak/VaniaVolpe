@@ -456,6 +456,7 @@
       "type": "audio",
       "dir": "common/minigames",
       "name": "chime",
+      "sfx": true,
       "description": "Success chime both minigames play on completion. Placeholder arpeggio via tools/gen_chime.py.",
       "task": true
     },
@@ -499,6 +500,7 @@
       "type": "audio",
       "dir": "pool",
       "name": "wind",
+      "sfx": true,
       "description": "The gust that carries the float into the tree."
     },
     {
@@ -506,6 +508,7 @@
       "type": "audio",
       "dir": "pool",
       "name": "splash",
+      "sfx": true,
       "description": "The dive splash."
     },
     {
@@ -546,6 +549,7 @@
       "type": "audio",
       "dir": "tree",
       "name": "caw",
+      "sfx": true,
       "description": "Carla's caw."
     },
     {
@@ -570,6 +574,7 @@
       "type": "audio",
       "dir": "grapes",
       "name": "pop",
+      "sfx": true,
       "description": "A grape being picked."
     }
   ]

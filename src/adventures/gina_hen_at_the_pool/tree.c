@@ -50,16 +50,11 @@ static const SceneAnimSpec anim_specs[] = {
 // falling float, the actor, the carried basket and the reward burst.
 static SceneSprite sprites[1];
 
-// The scene's own chunks (voice/caw) plus the shared completion chime (#118),
-// which lives in another dir — so the table lists per-entry _INIT rows and
-// appends the chime after the tree's own chunks.
-static ChunkData chunks[GINA_TREE_CHUNKS_COUNT + 1] = {
-    GINA_TREE_CHUNK_VOICE_INIT,
-    GINA_TREE_CHUNK_CAW_INIT,
-    GINA_MINIGAMES_CHUNK_CHIME_INIT,
-};
+// Just the dialogue voice placeholder: the scene's sound effects (caw, chime)
+// live in the adventure's shared SFX bank now and play via play_<name>()
+// (SCENES.md milestone 4).
+static ChunkData chunks[GINA_TREE_CHUNKS_COUNT] = GINA_TREE_CHUNKS_INIT;
 static const ChunkData *voice(void) { return &chunks[GINA_TREE_CHUNK_VOICE]; }
-static const ChunkData *chime_sound = &chunks[GINA_TREE_CHUNKS_COUNT];
 
 static SDL_Point m_pos;
 
@@ -177,7 +172,7 @@ static void talk_to_carla(void) {
   if (float_falling) {
     return;
   }
-  scene_play_sound(&chunks[GINA_TREE_CHUNK_CAW]);
+  play_caw();
 
   if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
     if (gina_state.has_grapes) {
@@ -186,7 +181,7 @@ static void talk_to_carla(void) {
       // (#118): chime + confetti burst over the float as it comes back.
       gina_state.has_grapes = false;
       gina_say(gina, "Mmm, che uva buona! Ecco il tuo salvagente!", voice());
-      scene_play_sound(chime_sound);
+      play_chime();
       play_animation(celebration, NULL);
       float_falling = true;
       tween_start(&float_tween, (SDL_FPoint){FLOAT_AT.x, FLOAT_AT.y},
