@@ -69,7 +69,14 @@ async function brush(page, s) {
   page.on('console', (m) => { logs.push(m.text()); });
   page.on('pageerror', (e) => { logs.push('PAGEERR ' + e.message); });
 
-  await page.goto(URL, { waitUntil: 'load', timeout: 60000 });
+  // Force the source locale (it_IT): the playthrough scripts assert the
+  // Italian dialogue lines, which now resolve per-locale from their text
+  // sidecars (SCENES.md milestone 4). Without this the headless browser's
+  // navigator.language (en-US) would load the English build, whose dialogue
+  // text isn't authored yet. (URL is a string constant above, so build the
+  // query by hand rather than with the URL constructor.)
+  const testUrl = URL + (URL.includes('?') ? '&' : '?') + 'lang=it';
+  await page.goto(testUrl, { waitUntil: 'load', timeout: 60000 });
   await sleep(12000); // let the wasm boot and assets preload
   await refreshBox(page);
   const canvas = await page.$('#canvas');
