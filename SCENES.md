@@ -5,8 +5,9 @@ are, what's present, and the interactions — and the framework owns the
 plumbing (making and loading animations, drawing the static layer, playing
 sounds, the input default). The spec the implementation follows, the way
 `LIVELINESS.md` and `ASSETS.md` were written before their code. Tracked in the
-backlog (#129); **milestones 1–3 are shipped and milestone 4 is partly
-shipped** — see *Migration plan* below.
+backlog (#129); **milestones 1–3 and 5 are shipped, and milestone 4 is partly
+shipped** (only its `say_<line>()` dialogue helper remains) — see *Migration
+plan* below.
 
 ## The problem
 
@@ -121,12 +122,14 @@ scene's vocabulary, matches the actor helpers, and folds the subtitle text into
 the dialogue case. The enum is the fallback if the generated-function surface
 proves too large.
 
-### Input default
+### Input default (✅ shipped, milestone 5)
 
 The drag + hit-test + walk switch is byte-identical across the walking scenes.
-It becomes the framework default; a scene supplies a `process_input` only for
-something special (the pool's dive input-lock). Most scenes then declare no
-input handler at all.
+It became the framework default (`scene_default_process_input`, run when a scene
+leaves `process_input` NULL and reads its `.actor`); a scene supplies a
+`process_input` only for something special (the pool's dive input-lock, the
+playground's win check). Most walking scenes now declare no input handler at
+all.
 
 ### Declaring a scene
 
@@ -265,12 +268,22 @@ a time, never a big-bang rewrite:
      keeps it compile-time-checked (`play_chmie()` won't link); every SFX call
      site in both adventures moved onto the helpers and **no scene includes
      `<SDL2_mixer/...>` any more.**
-   - **Dialogue: `say_<line>()`** — still deferred. It needs the scene to carry
-     its actor as data (the `.actor` field milestone 5 introduces) plus per-line
-     voice WAVs and manifest text Gina's shared-placeholder model doesn't have
-     yet. Until then dialogue keeps `gina_say` / `fox_talk` over the scene's own
-     voice chunks. Tracked as a follow-up.
-5. **The input default.**
+   - **Dialogue: `say_<line>()`** — still deferred. It needs per-line voice WAVs
+     and manifest text Gina's shared-placeholder model doesn't have yet (the
+     `.actor` field it also needs now exists, from milestone 5). Until then
+     dialogue keeps `gina_say` / `fox_talk` over the scene's own voice chunks.
+     Tracked as a follow-up.
+5. **The input default.** ✅ **Shipped.** The drag + hit-test + walk handler
+   every walking scene repeated is now the framework default
+   (`scene_default_process_input`): the engine runs it for any scene that leaves
+   `process_input` NULL, reading the scene's new `.actor` field (set to the
+   address of the scene's actor pointer, e.g. `.actor = &fox`), its `.walk_grid`
+   and its hotspot table. tree, vine and playground_entrance drop their
+   byte-identical handlers and declare only `.actor`; pool (dive input-lock) and
+   playground (the after-three-slides win check) keep a bespoke `process_input`.
+   Because the default includes drag & drop (LIVELINESS.md Part 2), the fox
+   becomes draggable like the hen — the interaction is unified across both
+   adventures.
 
 Migrate both content adventures at each meaningful step to keep the
 abstractions honest; leave the depth demo inline as the "before" counter-
