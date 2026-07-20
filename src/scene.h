@@ -124,6 +124,12 @@ typedef struct scene_anim_spec {
   Asset data;   // .anim clip table
 } SceneAnimSpec;
 
+// The field order here is deliberate — each `_length` sits next to the array it
+// counts so the struct reads like documentation — over packing tightly for
+// size. `Scene` is instantiated only ~13 times (one per scene), so the padding
+// this costs is irrelevant; silence clang-analyzer's advisory padding check for
+// this struct only.
+// NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 typedef struct scene {
   void (*init)(void);
   bool (*load_media)(SDL_Renderer *renderer);
