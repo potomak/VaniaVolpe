@@ -95,7 +95,9 @@ def validate(root, manifest, entry, rel_dir):
 def emit_group(out, prefix, rel_dir, entries):
     tag = f"{prefix}_{sym(rel_dir)}"
     images = [e for e in entries if e["type"] == "image"]
-    chunks = [e for e in entries if e["type"] == "audio"]
+    # SFX are emitted once in the adventure-wide bank (emit_sfx), not per dir,
+    # so scenes don't carry them in their own chunk tables.
+    chunks = [e for e in entries if e["type"] == "audio" and not e.get("sfx")]
     anims = [e for e in entries if e["type"] == "animation"]
 
     out.append(f"// ── {rel_dir} ─────────────────────────────────────────────")
@@ -159,6 +161,36 @@ def emit_group(out, prefix, rel_dir, entries):
     out.append("")
 
 
+def emit_sfx(out, prefix, sfx):
+    # The adventure's shared sound-effect bank (SCENES.md milestone 4): the
+    # framework loads it once per adventure, and scenes trigger a sound by its
+    # generated nullary helper — play_chime() — instead of holding the chunk in
+    # their own table. The index macro keeps it compile-time-checked (a typo is
+    # an undefined identifier); sfx_play (game.c) plays the current adventure's
+    # bank at that index. Forward-declared here so the header stands alone.
+    if not sfx:
+        return
+    names = [e["name"] for _, e in sfx]
+    dup = next((n for n in names if names.count(n) > 1), None)
+    if dup is not None:
+        die(f'duplicate sfx name "{dup}" — sound-effect names must be unique '
+            f"per adventure (they become play_<name>() helpers)")
+
+    out.append("// ── sound effects (adventure-wide bank; play via "
+               "play_<name>()) ──")
+    out.append("int sfx_play(int index);")
+    for i, (rel_dir, e) in enumerate(sfx):
+        m = f"{prefix}_SFX_{sym(e['name'])}"
+        out.append(f"#define {m} {i}")
+        out.append(f"static inline int play_{e['name']}(void) "
+                   f"{{ return sfx_play({m}); }}")
+    out.append(f"#define {prefix}_SFX_COUNT {len(sfx)}")
+    rows = ", ".join(f'{{NULL, "{e["name"]}.wav", "{rel_dir}"}}'
+                     for rel_dir, e in sfx)
+    out.append(f"#define {prefix}_SFX_INIT {{{rows}}}")
+    out.append("")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--manifest", required=True)
@@ -171,7 +203,10 @@ def main():
     prefix = manifest.get("prefix", sym(manifest["adventure"]))
 
     # Group runtime-relevant entries by their runtime dir, preserving order.
+    # SFX entries are also collected (in manifest order) for the adventure-wide
+    # bank, which emit_sfx renders instead of the per-dir chunk tables.
     groups = {}
+    sfx = []
     for entry in manifest["assets"]:
         if entry["type"] == "voice":
             continue  # per-line recordings: not runtime assets yet
@@ -180,6 +215,10 @@ def main():
         rel_dir = runtime_dir(entry)
         validate(root, manifest, entry, rel_dir)
         groups.setdefault(rel_dir, []).append(entry)
+        if entry.get("sfx"):
+            if entry["type"] != "audio":
+                die(f'sfx entry {rel_dir}/{entry["name"]} is not audio')
+            sfx.append((rel_dir, entry))
 
     guard = f"GEN_{prefix}_ASSETS_H"
     out = [
@@ -192,6 +231,7 @@ def main():
     ]
     for rel_dir in sorted(groups):
         emit_group(out, prefix, rel_dir, groups[rel_dir])
+    emit_sfx(out, prefix, sfx)
     out.append(f"#endif // {guard}")
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)

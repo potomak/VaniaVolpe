@@ -332,30 +332,40 @@ static void free_chunk_data(ChunkData *chunk) {
   lipsync_free_words(&chunk->words);
 }
 
-bool load_scene_chunks(Scene *scene) {
-  for (int i = 0; i < scene->chunks_length; i++) {
+bool load_chunk_table(ChunkData *chunks, int length) {
+  for (int i = 0; i < length; i++) {
     char path[ASSET_PATH_MAX];
     asset_resolve(
         (Asset){
-            .filename = scene->chunks[i].filename,
-            .directory = scene->chunks[i].directory,
+            .filename = chunks[i].filename,
+            .directory = chunks[i].directory,
         },
         path, sizeof(path));
-    scene->chunks[i].chunk = Mix_LoadWAV(path);
-    if (scene->chunks[i].chunk == NULL) {
+    chunks[i].chunk = Mix_LoadWAV(path);
+    if (chunks[i].chunk == NULL) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load %s: %s", path,
                    Mix_GetError());
       // Unwind: free the chunks (and sidecars) that did load before this
       // failure.
       for (int j = 0; j < i; j++) {
-        free_chunk_data(&scene->chunks[j]);
+        free_chunk_data(&chunks[j]);
       }
       return false;
     }
-    load_chunk_sidecars(&scene->chunks[i]);
+    load_chunk_sidecars(&chunks[i]);
   }
 
   return true;
+}
+
+void free_chunk_table(ChunkData *chunks, int length) {
+  for (int i = 0; i < length; i++) {
+    free_chunk_data(&chunks[i]);
+  }
+}
+
+bool load_scene_chunks(Scene *scene) {
+  return load_chunk_table(scene->chunks, scene->chunks_length);
 }
 
 void make_scene_animations(Scene *scene) {
@@ -421,10 +431,6 @@ void free_scene_music(Scene *scene) {
   }
 }
 
-int scene_play_sound(const ChunkData *chunk) {
-  return Mix_PlayChannel(-1, chunk->chunk, 0);
-}
-
 void scene_stop_channel(int channel) {
   if (channel >= 0) {
     Mix_HaltChannel(channel);
@@ -438,9 +444,7 @@ void free_scene_images(Scene *scene) {
 }
 
 void free_scene_chunks(Scene *scene) {
-  for (int i = 0; i < scene->chunks_length; i++) {
-    free_chunk_data(&scene->chunks[i]);
-  }
+  free_chunk_table(scene->chunks, scene->chunks_length);
 }
 
 void free_scene_animations(Scene *scene) {

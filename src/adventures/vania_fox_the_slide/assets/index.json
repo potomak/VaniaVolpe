@@ -150,6 +150,7 @@
       "type": "audio",
       "dir": "playground_entrance",
       "name": "excavator",
+      "sfx": true,
       "description": "The excavator rattling."
     },
     {
@@ -157,6 +158,7 @@
       "type": "audio",
       "dir": "playground_entrance",
       "name": "shovel",
+      "sfx": true,
       "description": "Digging."
     },
     {
@@ -164,6 +166,7 @@
       "type": "audio",
       "dir": "playground_entrance",
       "name": "key_reveal",
+      "sfx": true,
       "description": "The key appearing."
     },
     {
@@ -230,6 +233,7 @@
       "type": "audio",
       "dir": "playground",
       "name": "acorns_falling",
+      "sfx": true,
       "description": "Acorns dropping from the tree."
     },
     {
@@ -237,6 +241,7 @@
       "type": "audio",
       "dir": "playground",
       "name": "peg_falling",
+      "sfx": true,
       "description": "The peg hitting the ground (also reused for the gate and the slide fix)."
     },
     {

@@ -42,6 +42,12 @@ const Scene *scene_instance(int scene);
 
 void set_active_scene(int scene);
 
+// Play a sound effect from the current adventure's shared SFX bank
+// (adventure.h) by its index, returning the channel it started on (or -1).
+// Scenes don't call this directly — the generated play_<name>() helpers do,
+// with a compile-checked <PREFIX>_SFX_<NAME> index (SCENES.md milestone 4).
+int sfx_play(int index);
+
 void exit_game(void);
 
 void game_init(void);

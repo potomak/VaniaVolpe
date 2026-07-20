@@ -124,6 +124,12 @@ typedef struct scene_anim_spec {
   Asset data;   // .anim clip table
 } SceneAnimSpec;
 
+// The field order here is deliberate — each `_length` sits next to the array it
+// counts so the struct reads like documentation — over packing tightly for
+// size. `Scene` is instantiated only ~13 times (one per scene), so the padding
+// this costs is irrelevant; silence clang-analyzer's advisory padding check for
+// this struct only.
+// NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 typedef struct scene {
   void (*init)(void);
   bool (*load_media)(SDL_Renderer *renderer);
@@ -305,6 +311,12 @@ void free_scene_planes(Scene *scene);
 
 bool load_scene_chunks(Scene *scene);
 
+// Load / free a bare ChunkData table (WAV + dialogue sidecars). The scene and
+// the adventure-wide SFX bank (adventure.h) share this so both load the same
+// way; load unwinds already-loaded chunks on the first failure.
+bool load_chunk_table(ChunkData *chunks, int length);
+void free_chunk_table(ChunkData *chunks, int length);
+
 // Make the scene's declarative animations (anim_specs) into its animations[]
 // storage. Called by the engine before the scene's init (so init can hand a
 // made animation to a hotspot's active_anim); a no-op when anim_specs is
@@ -334,15 +346,8 @@ void scene_stop_music(const Scene *scene);
 // Free a scene's music stream (called by the engine on teardown).
 void free_scene_music(Scene *scene);
 
-// Play a sound-effect chunk on the first free channel, returning the channel it
-// started on (or -1 on failure) — the high-level form of Mix_PlayChannel so a
-// scene's handlers never touch SDL_mixer (SCENES.md milestone 4). The chunk is
-// one of the scene's own (a typed ChunkData *, so a wrong name is a compile
-// error). Most callers ignore the return; capture it to later stop the sound.
-int scene_play_sound(const ChunkData *chunk);
-
-// Stop whatever is playing on a channel previously returned by scene_play_sound
-// (e.g. to retrigger a looping SFX from the top). A negative channel is
+// Stop whatever is playing on a channel previously returned by a play_<name>()
+// helper (e.g. to retrigger a looping SFX from the top). A negative channel is
 // ignored, so an un-started handle is safe to pass.
 void scene_stop_channel(int channel);
 

@@ -61,18 +61,11 @@ static const SceneAnimSpec anim_specs[] = {
 // float mid-flight, the actor, the reward burst).
 static SceneSprite sprites[2];
 
-// Sound effects and dialog, plus the shared completion chime (#118). The
-// table mixes dirs (the chime lives in common/minigames), so it lists
-// per-entry _INIT rows rather than the whole-table macro; the chime is
-// appended after the pool's own chunks.
-static ChunkData chunks[GINA_POOL_CHUNKS_COUNT + 1] = {
-    GINA_POOL_CHUNK_VOICE_INIT,
-    GINA_POOL_CHUNK_WIND_INIT,
-    GINA_POOL_CHUNK_SPLASH_INIT,
-    GINA_MINIGAMES_CHUNK_CHIME_INIT,
-};
+// Just the dialogue voice placeholder: the scene's sound effects (wind, splash,
+// chime) live in the adventure's shared SFX bank now and play via play_<name>()
+// (SCENES.md milestone 4).
+static ChunkData chunks[GINA_POOL_CHUNKS_COUNT] = GINA_POOL_CHUNKS_INIT;
 static const ChunkData *voice(void) { return &chunks[GINA_POOL_CHUNK_VOICE]; }
-static const ChunkData *chime_sound = &chunks[GINA_POOL_CHUNKS_COUNT];
 
 static SDL_Point m_pos;
 
@@ -260,7 +253,7 @@ static void collect_goggles(void) {
   gina_state.has_goggles = true;
   // Progress reward (#118): chime + confetti burst over the goggles while she
   // cheers. No input lock — she just picked something up, she isn't leaving.
-  scene_play_sound(chime_sound);
+  play_chime();
   play_animation(celebration, NULL);
   gina_say(gina, "Ho preso gli occhialini!", voice());
 }
@@ -275,7 +268,7 @@ static void float_gone(void) {
 }
 
 static void float_blows_away(void) {
-  scene_play_sound(&chunks[GINA_POOL_CHUNK_WIND]);
+  play_wind();
   // The gust carries the float up and off toward the tree (#107): a hop off
   // the right edge, shrinking as it recedes. The state flips when it lands.
   float_flying = true;
@@ -290,7 +283,7 @@ static void float_blows_away(void) {
 // replay reset that used to happen on the tap.
 static void dive_landed(void) {
   diving = false;
-  scene_play_sound(&chunks[GINA_POOL_CHUNK_SPLASH]);
+  play_splash();
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Gina: Che bello! Ancora!");
   // Replay the adventure in place. The reset happens without leaving the
   // scene (no on_scene_active), so the walkable area must be rebuilt here or

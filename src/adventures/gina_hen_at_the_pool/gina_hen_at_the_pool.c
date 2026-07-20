@@ -13,9 +13,17 @@
 #include "tree.h"
 #include "vine.h"
 
+// Asset declarations generated from the manifest (ASSETS.md): the shared
+// sound-effect bank (SCENES.md milestone 4).
+#include "gina_assets.h"
+
 #define GINA_HEN_AT_THE_POOL_SCENES_LENGTH 5
 
 static Scene scenes[GINA_HEN_AT_THE_POOL_SCENES_LENGTH];
+
+// The adventure's shared SFX, played by scenes via play_<name>() (chime, wind,
+// splash, caw, pop). Loaded once for the whole adventure.
+static ChunkData sfx[GINA_SFX_COUNT] = GINA_SFX_INIT;
 
 Adventure gina_hen_at_the_pool = {
     .id = "gina-hen-at-the-pool",
@@ -27,6 +35,8 @@ Adventure gina_hen_at_the_pool = {
     // Reset the cross-scene puzzle state every time the adventure is entered,
     // so it always starts fresh and is replayable.
     .on_enter = gina_state_reset,
+    .sfx = sfx,
+    .sfx_length = GINA_SFX_COUNT,
 };
 
 void gina_hen_at_the_pool_register(void) {

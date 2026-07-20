@@ -85,6 +85,13 @@ void set_active_scene(int scene) {
   snap_scene_camera();
 }
 
+int sfx_play(int index) {
+  const Adventure *adventure = game.current_adventure;
+  SDL_assert(adventure != NULL);
+  SDL_assert(index >= 0 && index < adventure->sfx_length);
+  return Mix_PlayChannel(-1, adventure->sfx[index].chunk, 0);
+}
+
 void exit_game(void) { game.is_running = false; }
 
 void game_init(void) {
