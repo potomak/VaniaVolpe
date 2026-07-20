@@ -56,8 +56,6 @@ static SceneSprite sprites[1];
 static ChunkData chunks[GINA_TREE_CHUNKS_COUNT] = GINA_TREE_CHUNKS_INIT;
 static const ChunkData *voice(void) { return &chunks[GINA_TREE_CHUNK_VOICE]; }
 
-static SDL_Point m_pos;
-
 static Hen *gina;
 static const SDL_FPoint HEN_START = {400, 480};
 
@@ -202,35 +200,6 @@ static void talk_to_carla(void) {
   gina_say(gina, "Ciao Carla!", voice());
 }
 
-static void process_input(SDL_Event *event) {
-  // Drag & drop (LIVELINESS.md Part 2): dragging the pointer from a press on
-  // Gina picks her up; plain taps fall through to the hotspots.
-  if (walk_actor_drag_event(gina, &walk_grid, event)) {
-    return;
-  }
-  switch (event->type) {
-  case SDL_MOUSEMOTION:
-    m_pos.x = event->motion.x;
-    m_pos.y = event->motion.y;
-    break;
-  case SDL_MOUSEBUTTONDOWN:
-    // Hit-test the click's own coordinates (#64): the cached motion position
-    // can be stale — e.g. a repeated tap with no motion in between while the
-    // camera moved.
-    m_pos.x = event->button.x;
-    m_pos.y = event->button.y;
-    // The hotspot table says what each region does (see init); anything else
-    // is a walk toward the click.
-    if (hotspots_handle_click(hotspots, LEN(hotspots), gina, &walk_grid,
-                              m_pos)) {
-      break;
-    }
-    walk_actor_to(gina, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false,
-                  NULL);
-    break;
-  }
-}
-
 static void update(float delta_time) {
   hen_update(gina, delta_time);
   if (float_falling) {
@@ -272,7 +241,9 @@ static void on_scene_inactive(void) {}
 Scene tree_scene = {
     .init = init,
     .load_media = load_media,
-    .process_input = process_input,
+    // No process_input: the framework's default drag/hit-test/walk handler
+    // drives this scene (SCENES.md milestone 5).
+    .actor = &gina,
     .update = update,
     .render = render,
     .deinit = deinit,

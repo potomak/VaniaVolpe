@@ -64,9 +64,6 @@ static const ChunkData *examine_gate_2 =
 static const ChunkData *examine_slide_from_outside =
     &chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_SLIDE_FROM_OUTSIDE];
 
-// Mouse position
-static SDL_Point m_pos;
-
 // Hotspots
 static const SDL_Rect GATE_HOTSPOT = {471, 144, 217, 184};
 static const SDL_Rect EXCAVATOR_HOTSPOT = {197, 338, 108, 72};
@@ -212,31 +209,6 @@ static void examine_slide(void) {
   fox_talk(fox, examine_slide_from_outside);
 }
 
-static void process_input(SDL_Event *event) {
-  switch (event->type) {
-  case SDL_MOUSEMOTION:
-    // Get mouse position
-    m_pos.x = event->motion.x;
-    m_pos.y = event->motion.y;
-    break;
-  case SDL_MOUSEBUTTONDOWN:
-    // Hit-test the click's own coordinates (#64): the cached motion position
-    // can be stale — e.g. a repeated tap with no motion in between while the
-    // camera moved.
-    m_pos.x = event->button.x;
-    m_pos.y = event->button.y;
-    // The hotspot table says what each region does (see init). Otherwise:
-    // walk to the clicked point (routed around the sandbox), or to the
-    // nearest reachable point if the click is outside the walkable area.
-    if (hotspots_handle_click(hotspots, LEN(hotspots), fox, &walk_grid,
-                              m_pos)) {
-      break;
-    }
-    walk_actor_to(fox, &walk_grid, (SDL_FPoint){m_pos.x, m_pos.y}, false, NULL);
-    break;
-  }
-}
-
 static void update(float delta_time) { fox_update(fox, delta_time); }
 
 static void render(SDL_Renderer *renderer) {
@@ -268,7 +240,10 @@ static void on_scene_inactive(void) {}
 Scene playground_entrance_scene = {
     .init = init,
     .load_media = load_media,
-    .process_input = process_input,
+    // No process_input: the framework's default drag/hit-test/walk handler
+    // drives this scene (SCENES.md milestone 5). This is also what makes the
+    // fox draggable here, like the hen — the default includes drag & drop.
+    .actor = &fox,
     .update = update,
     .render = render,
     .deinit = deinit,

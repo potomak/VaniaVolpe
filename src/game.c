@@ -159,7 +159,14 @@ void game_process_input(SDL_Event *event) {
     return;
   }
 
-  scene_instance(game.current_scene)->process_input(event);
+  // A scene either handles input itself or leaves process_input NULL and gets
+  // the framework's default drag/hit-test/walk handler (SCENES.md milestone 5).
+  const Scene *scene = scene_instance(game.current_scene);
+  if (scene->process_input != NULL) {
+    scene->process_input(event);
+  } else {
+    scene_default_process_input(scene, event);
+  }
 }
 
 void game_update(float delta_time) {

@@ -151,6 +151,15 @@ typedef struct scene {
   SDL_Point *pois;
   int pois_length;
 
+  // The playable actor this scene routes input to (SCENES.md milestone 5),
+  // set to the address of the scene's own actor pointer (`.actor = &fox`) so it
+  // survives the scene struct being copied into the adventure table and tracks
+  // the object made in init. When a scene supplies no process_input, the
+  // framework's default handler (scene_default_process_input) drags and walks
+  // this actor. NULL for scenes with no walkable actor (menus, minigames),
+  // which supply their own process_input.
+  Actor **actor;
+
   // Walkability grid (see walk.h); NULL for scenes with no player movement.
   // Scenes fill it once in init — from a committed walkable.walk mask when
   // one exists, else from their WalkArea rects (walk_grid_init). The debug
@@ -262,6 +271,16 @@ void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
 // immediate hotspots may pass actor/grid as NULL.
 bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
                            Actor *actor, const WalkGrid *grid, SDL_Point p);
+
+// The default scene input handler (SCENES.md milestone 5): the drag + hit-test
+// + walk interaction every walking scene shared. The engine runs it for a scene
+// that supplies no process_input of its own — a press-drag on the actor picks
+// it up (walk_actor_drag_event), a plain tap is dispatched to the hotspot
+// table, and anything else walks the actor toward the click. Uses the scene's
+// `.actor` (which must be set), `.walk_grid` and hotspot table; a scene needing
+// anything more (an input lock, a win check) still writes its own process_input
+// instead.
+void scene_default_process_input(const Scene *scene, SDL_Event *event);
 
 // Sync every hotspot's active_anim to its enabled state (LIVELINESS.md
 // Part 3): it plays while any hotspot carrying it is enabled and freezes
