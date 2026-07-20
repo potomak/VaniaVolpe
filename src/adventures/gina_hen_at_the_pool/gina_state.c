@@ -16,5 +16,5 @@ void gina_state_reset(void) {
   gina_state.has_grapes = false;
   gina_state.announce_sunscreen = false;
   gina_state.announce_grapes = false;
-  gina_state.examine_float_count = 0;
+  gina_state.examine_float_look = FLOAT_LOOK_CANT_REACH;
 }

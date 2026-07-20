@@ -22,6 +22,15 @@ typedef enum float_state {
   FLOAT_RETRIEVED,     // Carla dropped it back to Gina
 } FloatState;
 
+// Which line Gina gives when she examines the float stuck in the tree: each
+// look advances one stage, saturating at the last so every later tap repeats
+// it (tree.c examine_float).
+typedef enum float_look {
+  FLOAT_LOOK_CANT_REACH, // first look: she can't reach it
+  FLOAT_LOOK_NEED_HELP,  // second look: she needs help
+  FLOAT_LOOK_ASK_CARLA,  // third and later: think of asking Carla
+} FloatLook;
+
 typedef struct gina_state {
   bool has_sunscreen;     // applied in the sunscreen minigame; gates moving
   bool has_goggles;       // needed before the pool will let her dive
@@ -34,8 +43,9 @@ typedef struct gina_state {
   bool announce_sunscreen; // pool: she can now go play in the sun
   bool announce_grapes;    // vine: bring the full basket to Carla
 
-  // Repeated-tap dialogue counter for the float stuck up the tree.
-  int examine_float_count;
+  // Which line the next look at the float stuck in the tree gives (see tree.c
+  // examine_float); reset to FLOAT_LOOK_CANT_REACH on entry.
+  FloatLook examine_float_look;
 } GinaState;
 
 extern GinaState gina_state;

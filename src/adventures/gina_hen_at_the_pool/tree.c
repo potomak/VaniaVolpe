@@ -145,18 +145,22 @@ static void go_to_pool(void) { set_active_scene(POOL); }
 static void go_to_vine(void) { set_active_scene(VINE); }
 
 static void examine_float(void) {
-  switch (gina_state.examine_float_count) {
-  case 0:
+  switch (gina_state.examine_float_look) {
+  case FLOAT_LOOK_CANT_REACH:
     say_cant_reach();
     break;
-  case 1:
+  case FLOAT_LOOK_NEED_HELP:
     say_need_help();
     break;
-  default:
+  case FLOAT_LOOK_ASK_CARLA:
     say_ask_carla();
     break;
   }
-  gina_state.examine_float_count++;
+  // Advance one stage, holding at the last so every later tap keeps suggesting
+  // Carla.
+  if (gina_state.examine_float_look < FLOAT_LOOK_ASK_CARLA) {
+    gina_state.examine_float_look++;
+  }
 }
 
 // The float has settled on the ground: only now is it truly retrieved.
