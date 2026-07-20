@@ -70,10 +70,6 @@ void fox_walk_to(Fox *fox, SDL_FPoint position, void (*on_end)(void)) {
   actor_walk_to(fox, position, on_end);
 }
 
-void fox_talk(Fox *fox, const ChunkData *dialog) {
-  actor_talk(fox, dialog, NULL);
-}
-
 void fox_sit(Fox *fox) { actor_play_state(fox, SITTING); }
 
 void fox_wave(Fox *fox) { actor_play_state(fox, WAVING); }

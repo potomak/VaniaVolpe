@@ -18,8 +18,3 @@ void gina_state_reset(void) {
   gina_state.announce_grapes = false;
   gina_state.examine_float_count = 0;
 }
-
-void gina_say(Hen *gina, const char *line, const ChunkData *voice) {
-  // actor_talk logs the line ("Gina: ...") — the headless test's contract.
-  actor_talk(gina, voice, line);
-}

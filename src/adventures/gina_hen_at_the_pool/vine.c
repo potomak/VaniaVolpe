@@ -39,8 +39,10 @@ static const SceneAnimSpec anim_specs[] = {
 // both plays and draws.
 static SceneSprite sprites[1];
 
-static ChunkData chunks[GINA_VINE_CHUNKS_COUNT] = GINA_VINE_CHUNKS_INIT;
-static const ChunkData *voice(void) { return &chunks[GINA_VINE_CHUNK_VOICE]; }
+// The scene's spoken lines (SCENES.md milestone 4): per-line dialogue chunks
+// the framework speaks via generated say_<name>() helpers.
+static ChunkData chunks[GINA_VINE_DIALOG_CHUNKS_COUNT] =
+    GINA_VINE_DIALOG_CHUNKS_INIT;
 
 static Hen *gina;
 static const SDL_FPoint HEN_START = {400, 480};
@@ -102,14 +104,14 @@ static void go_to_pool(void) { set_active_scene(POOL); }
 
 static void pick_grapes(void) {
   if (gina_state.has_grapes) {
-    gina_say(gina, "Ho gia' l'uva nel cestino.", voice());
+    say_already_grapes();
     return;
   }
   if (gina_state.has_basket) {
     set_active_scene(GRAPES_MINIGAME);
     return;
   }
-  gina_say(gina, "Non ho niente per raccoglierle.", voice());
+  say_nothing_to_pick();
 }
 
 static void update(float delta_time) { hen_update(gina, delta_time); }
@@ -128,7 +130,7 @@ static void on_scene_active(void) {
   // Fresh from the grapes minigame (#116): explain what the reward means.
   if (gina_state.announce_grapes) {
     gina_state.announce_grapes = false;
-    gina_say(gina, "Cestino pieno d'uva! Ora torno da Carla.", voice());
+    say_basket_full();
   }
 }
 

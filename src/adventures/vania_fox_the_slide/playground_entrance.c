@@ -50,19 +50,13 @@ static SceneSprite sprites[5];
 
 static Fox *fox;
 
-// Just the dialogue lines: the scene's sound effects (excavator, shovel,
-// key_reveal, and the peg-falling reused for the gate) are in the adventure's
-// shared SFX bank now and play via play_<name>() (SCENES.md milestone 4). Music
-// is declared on the Scene (.music); the framework plays and frees it.
+// The scene's spoken lines, played via generated say_<name>() helpers
+// (SCENES.md milestone 4). Sound effects (excavator, shovel, key_reveal, and
+// the peg-falling reused for the gate) are in the adventure's shared SFX bank
+// (play_<name>()); music is declared on the Scene (.music).
 static int excavator_sound_channel = -1;
 static ChunkData chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNKS_COUNT] =
     VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNKS_INIT;
-static const ChunkData *examine_gate_1 =
-    &chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_GATE_1];
-static const ChunkData *examine_gate_2 =
-    &chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_GATE_2];
-static const ChunkData *examine_slide_from_outside =
-    &chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNK_EXAMINE_SLIDE_FROM_OUTSIDE];
 
 // Hotspots
 static const SDL_Rect GATE_HOTSPOT = {471, 144, 217, 184};
@@ -179,9 +173,9 @@ static void maybe_open_gate(void) {
 
   // Else give hint about where to find the key
   if (examine_gate_count < 1) {
-    fox_talk(fox, examine_gate_1);
+    say_examine_gate_1();
   } else {
-    fox_talk(fox, examine_gate_2);
+    say_examine_gate_2();
   }
   examine_gate_count++;
 }
@@ -206,7 +200,7 @@ static void maybe_dig_out_key(void) {
 
 static void examine_slide(void) {
   // Give hint about finding a key to open the gate
-  fox_talk(fox, examine_slide_from_outside);
+  say_examine_slide_from_outside();
 }
 
 static void update(float delta_time) { fox_update(fox, delta_time); }

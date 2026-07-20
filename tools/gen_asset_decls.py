@@ -112,14 +112,26 @@ def emit_group(out, prefix, rel_dir, entries):
         out.append(f"#define {tag}_IMAGES_COUNT {len(images)}")
         rows = ", ".join(f"{tag}_IMAGE_{sym(e['name'])}_INIT" for e in images)
         out.append(f"#define {tag}_IMAGES_INIT {{{rows}}}")
+    # Chunks in a `*/dialog` dir are spoken lines: the framework plays them
+    # through the scene's actor via a generated say_<name>() helper, and their
+    # WAV is optional (a not-yet-recorded line is text-only), so the INIT sets
+    # optional_audio (SCENES.md milestone 4).
+    dialogue = rel_dir.endswith("dialog")
     if chunks:
         # _FILE feeds ActorSpec filename fields (resolved against the actor's
         # assets_dir); _ASSET feeds asset_resolve (e.g. music streams).
         for i, e in enumerate(chunks):
             m = f"{tag}_CHUNK_{sym(e['name'])}"
             out.append(f"#define {m} {i}")
-            out.append(f'#define {m}_INIT '
-                       f'{{NULL, "{e["name"]}.wav", "{rel_dir}"}}')
+            if dialogue:
+                out.append(f'#define {m}_INIT '
+                           f'{{.filename = "{e["name"]}.wav", '
+                           f'.directory = "{rel_dir}", .optional_audio = true}}')
+                out.append(f"static inline void say_{e['name']}(void) "
+                           f"{{ scene_say({m}); }}")
+            else:
+                out.append(f'#define {m}_INIT '
+                           f'{{NULL, "{e["name"]}.wav", "{rel_dir}"}}')
             out.append(f'#define {m}_FILE "{e["name"]}.wav"')
             out.append(f'#define {m}_ASSET ((Asset){{.filename = '
                        f'"{e["name"]}.wav", .directory = "{rel_dir}"}})')
@@ -229,6 +241,13 @@ def main():
         f"#define {guard}",
         "",
     ]
+    # A generated say_<name>() helper (dialogue dirs) calls scene_say; declare it
+    # once so the header stands alone.
+    has_dialogue = any(
+        rel_dir.endswith("dialog") and any(e["type"] == "audio" for e in entries)
+        for rel_dir, entries in groups.items())
+    if has_dialogue:
+        out += ["void scene_say(int index);", ""]
     for rel_dir in sorted(groups):
         emit_group(out, prefix, rel_dir, groups[rel_dir])
     emit_sfx(out, prefix, sfx)

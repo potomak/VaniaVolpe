@@ -74,10 +74,15 @@ for f in "$VFTS"/it_IT/playground_entrance/dialog/*.wav; do
   silent "$VFTS/en_US/playground_entrance/dialog/$(basename "$f")" 1.5
 done
 
-# ── Gina (gina_hen_at_the_pool): only the per-scene voice.wav is localized ────
-for d in pool tree vine sunscreen grapes; do
-  mkdir -p "$GINA/en_US/$d"
-  silent "$GINA/en_US/$d/voice.wav" 0.6
+# ── Gina (gina_hen_at_the_pool): per-line dialogue lines are localized ───────
+# Each spoken line is its own chunk (SCENES.md milestone 4); mirror every it_IT
+# dialogue WAV with a short silent en_US placeholder (the it_IT .txt subtitle
+# stays it_IT-only, like Vania's dialogue).
+for f in "$GINA"/it_IT/pool/dialog/*.wav "$GINA"/it_IT/tree/dialog/*.wav \
+         "$GINA"/it_IT/vine/dialog/*.wav; do
+  rel="${f#"$GINA"/it_IT/}"
+  mkdir -p "$GINA/en_US/$(dirname "$rel")"
+  silent "$GINA/en_US/$rel" 0.6
 done
 
 echo "Generated en_US placeholders for Vania and Gina."

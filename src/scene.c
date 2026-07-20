@@ -361,23 +361,34 @@ static void free_chunk_data(ChunkData *chunk) {
 bool load_chunk_table(ChunkData *chunks, int length) {
   for (int i = 0; i < length; i++) {
     char path[ASSET_PATH_MAX];
-    asset_resolve(
-        (Asset){
-            .filename = chunks[i].filename,
-            .directory = chunks[i].directory,
-        },
-        path, sizeof(path));
-    chunks[i].chunk = Mix_LoadWAV(path);
-    if (chunks[i].chunk == NULL) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load %s: %s", path,
-                   Mix_GetError());
-      // Unwind: free the chunks (and sidecars) that did load before this
-      // failure.
-      for (int j = 0; j < i; j++) {
-        free_chunk_data(&chunks[j]);
-      }
-      return false;
+    Asset asset = {
+        .filename = chunks[i].filename,
+        .directory = chunks[i].directory,
+    };
+    chunks[i].chunk = NULL;
+    // An optional-audio line (a not-yet-recorded dialogue chunk) that has no
+    // WAV loads as text-only; every other chunk must resolve and load.
+    bool present = true;
+    if (chunks[i].optional_audio) {
+      present = asset_try_resolve(asset, path, sizeof(path));
+    } else {
+      asset_resolve(asset, path, sizeof(path));
     }
+    if (present) {
+      chunks[i].chunk = Mix_LoadWAV(path);
+      if (chunks[i].chunk == NULL && !chunks[i].optional_audio) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load %s: %s",
+                     path, Mix_GetError());
+        // Unwind: free the chunks (and sidecars) that did load before this
+        // failure.
+        for (int j = 0; j < i; j++) {
+          free_chunk_data(&chunks[j]);
+        }
+        return false;
+      }
+    }
+    // Sidecars (text/cues/words) key off the filename, so a text-only line
+    // still gets its subtitle even with no WAV.
     load_chunk_sidecars(&chunks[i]);
   }
 
