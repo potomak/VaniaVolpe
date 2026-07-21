@@ -72,7 +72,8 @@ them.
   animation (see `SPEECH.md`). Needs the Rhubarb CLI on `PATH` or
   `$RHUBARB`; idempotent by mtime, `--force` regenerates.
 - **`gen_asset_decls.py`** — generates the C asset declarations
-  (`build/gen/<adv>_assets.h`) from an adventure's asset manifest
+  (`gen/<adv>_assets.h`, committed; run `make gen` after editing a manifest)
+  from an adventure's asset manifest
   (`assets/index.json`), so migrated scenes declare their image/chunk/animation
   tables from the same file the pipeline and estimator read; validates frame
   counts against the committed `.anim` files. Run automatically by `make`. See
