@@ -14,15 +14,12 @@ extern const ActorSpec HEN_SPEC;
 
 typedef Actor Hen;
 
-Hen *make_hen(SDL_FPoint initial_position);
-
-bool hen_load_media(Hen *hen, SDL_Renderer *renderer);
+// No make/load/free wrappers: the framework owns the actor's lifecycle from
+// HEN_SPEC (#141). A scene declares `.actor_spec = &HEN_SPEC`.
 
 void hen_update(Hen *hen, float delta_time);
 
 void hen_render(Hen *hen, SDL_Renderer *renderer);
-
-void hen_free(Hen *hen);
 
 void hen_walk_to(Hen *hen, SDL_FPoint position, void (*on_end)(void));
 

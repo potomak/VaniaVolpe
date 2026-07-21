@@ -46,9 +46,11 @@ paradigm, it's finishing one that exists:
   the framework dispatches. "Tapping the shovel digs" reads off the table.
 - **`Plane`** — declared, loaded, drawn, freed entirely by the engine.
 - **`ActorSpec`** — the strongest: the fox and hen are almost pure data
-  (`ActorSpec` + an `ActorAnimSpec` list). The scene calls `make_hen` /
-  `hen_update` / `hen_render` and never touches their four sheets' make/load/
-  tick/free.
+  (`ActorSpec` + an `ActorAnimSpec` list). The scene never touches their four
+  sheets' make/load/tick/free, and since #141 (see *Actor lifecycle* below) it
+  no longer even makes, loads or frees the actor itself — it declares
+  `.actor_spec` and the framework owns the whole lifecycle, exactly as it owns a
+  `Plane`.
 
 The through-line: **an `ActorSpec` for scene objects.** Everywhere a scene
 hand-makes and hand-draws an animation, it does manually what the actor engine
@@ -129,6 +131,28 @@ leaves `process_input` NULL and reads its `.actor`); a scene supplies a
 `process_input` only for something special (the pool's dive input-lock, the
 playground's win check). Most walking scenes now declare no input handler at
 all.
+
+### Actor lifecycle (✅ shipped, #141)
+
+Milestone 5 put the actor on the scene (`.actor`, the address of the scene's
+actor pointer). #141 finished the thought: the framework now owns the actor's
+*lifecycle* too, the way it owns a `Plane` or a declared animation. A scene adds
+`.actor_spec` (the `ActorSpec`, e.g. `&HEN_SPEC`) and `.actor_start` (its start
+position); the framework then
+
+- **makes** it with `make_actor(actor_spec, actor_start)` *before* `init`, so
+  `init`, the hotspot table and `camera_init` can reference the actor;
+- **loads** its media in the media-load pass (`actor_load_media`);
+- **frees** it on teardown.
+
+So the per-scene `gina = make_hen(HEN_START);` in `init`, the
+`return hen_load_media(gina, renderer);` `load_media`, and the
+`hen_free(gina)` `deinit` all disappear — a scene whose only `load_media`/`deinit`
+work was the actor drops those functions entirely (both are now optional in the
+`Scene` struct, NULL-guarded by `adventure.c`). The `make_hen`/`make_fox`,
+`*_load_media` and `*_free` wrappers are gone; scenes that reposition the actor
+per activation (pool re-entry, the dive replay, the depth demo) still do that in
+`on_scene_active`, which the framework leaves to the scene.
 
 ### Declaring a scene
 

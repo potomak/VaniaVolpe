@@ -134,8 +134,8 @@ static const SDL_Point EAST_BUSH_POS = {1250, 420};
 static SDL_Point m_pos;
 
 static void init(void) {
-  fox = make_actor(&DEMO_FOX_SPEC, FOX_START);
-
+  // The fox is made by the framework (actor_spec/actor_start below) before
+  // init, so camera_init can anchor to her here.
   camera_init(&camera, SCENE_SIZE, fox);
 
   walk_grid_init(&walk_grid, &WALK_AREA, SCENE_SIZE, NULL);
@@ -146,10 +146,6 @@ static void init(void) {
   props[0] = (Prop){.image = &images[0], .pos = FAR_BUSH_POS, .visible = true};
   props[1] = (Prop){.image = &images[0], .pos = NEAR_BUSH_POS, .visible = true};
   props[2] = (Prop){.image = &images[0], .pos = EAST_BUSH_POS, .visible = true};
-}
-
-static bool load_media(SDL_Renderer *renderer) {
-  return actor_load_media(fox, renderer);
 }
 
 static void process_input(SDL_Event *event) {
@@ -185,8 +181,6 @@ static void render(SDL_Renderer *renderer) {
   render_action_layer(renderer, props, LEN(props), (Actor *[]){fox}, 1);
 }
 
-static void deinit(void) { actor_free(fox); }
-
 static void on_scene_active(void) {
   fox->current_position = FOX_START;
   fox->target_position = FOX_START;
@@ -203,11 +197,14 @@ static void on_scene_inactive(void) {}
 
 Scene field_scene = {
     .init = init,
-    .load_media = load_media,
     .process_input = process_input,
     .update = update,
     .render = render,
-    .deinit = deinit,
+    // The framework owns the fox's lifecycle (#141): made at actor_start before
+    // init (so camera_init can anchor to her), loaded, and freed on teardown.
+    .actor = &fox,
+    .actor_spec = &DEMO_FOX_SPEC,
+    .actor_start = {600, 500},
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .walk_grid = &walk_grid,

@@ -14,15 +14,12 @@ extern const ActorSpec FOX_SPEC;
 
 typedef Actor Fox;
 
-Fox *make_fox(SDL_FPoint initial_position);
-
-bool fox_load_media(Fox *fox, SDL_Renderer *renderer);
+// No make/load/free wrappers: the framework owns the actor's lifecycle from
+// FOX_SPEC (#141). A scene declares `.actor_spec = &FOX_SPEC`.
 
 void fox_update(Fox *fox, float delta_time);
 
 void fox_render(Fox *fox, SDL_Renderer *renderer);
-
-void fox_free(Fox *fox);
 
 void fox_walk_to(Fox *fox, SDL_FPoint position, void (*on_end)(void));
 

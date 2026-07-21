@@ -127,8 +127,8 @@ static bool peg_on_the_ground(void) {
 }
 
 static void init(void) {
-  fox = make_fox((SDL_FPoint){580, 457});
-
+  // The fox is made by the framework (actor_spec/actor_start below) before
+  // init.
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "playground");
 
@@ -167,11 +167,6 @@ static void init(void) {
   pois[i++] = SLIDE_POI;
   pois[i++] = SQUIRREL_POI;
   pois[i++] = ACORNS_POI;
-}
-
-static bool load_media(SDL_Renderer *renderer) {
-  // Music is loaded by the framework from .music; only the fox remains.
-  return fox_load_media(fox, renderer);
 }
 
 static void maybe_use_slide(void) {
@@ -329,8 +324,6 @@ static void render(SDL_Renderer *renderer) {
   render_action_layer(renderer, props, LEN(props), (Actor *[]){fox}, 1);
 }
 
-static void deinit(void) { fox_free(fox); }
-
 static void on_scene_active(void) {
   // Anchor each prop's ground line to its sprite's bottom edge. Image sizes
   // are known here: the framework loads scene images right after load_media,
@@ -358,14 +351,15 @@ static void on_scene_inactive(void) {}
 
 Scene playground_scene = {
     .init = init,
-    .load_media = load_media,
     // Custom process_input for the after-three-slides win check; .actor still
-    // declared so the generated say_<name>() helpers can speak through it.
+    // declared so the generated say_<name>() helpers can speak through it, and
+    // the framework owns the fox's lifecycle (#141).
     .process_input = process_input,
     .actor = &fox,
+    .actor_spec = &FOX_SPEC,
+    .actor_start = {580, 457},
     .update = update,
     .render = render,
-    .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,

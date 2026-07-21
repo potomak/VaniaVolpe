@@ -146,8 +146,7 @@ static void go_to_vine(void);
 static void go_to_tree(void);
 
 static void init(void) {
-  gina = make_hen(HEN_START);
-
+  // Gina is made by the framework (actor_spec/actor_start below) before init.
   rebuild_walk_grid();
 
   sunscreen_boil = animations[GINA_POOL_ANIM_SUNSCREEN_BOIL];
@@ -207,12 +206,6 @@ static void init(void) {
   pois[i++] = GOGGLES_POI;
   pois[i++] = FLOAT_POI;
   pois[i++] = POOL_EDGE_POI;
-}
-
-static bool load_media(SDL_Renderer *renderer) {
-  // The boils and the celebration are loaded by the framework from anim_specs;
-  // only the actor remains for the scene to load.
-  return hen_load_media(gina, renderer);
 }
 
 // ── interactions
@@ -399,8 +392,6 @@ static void render(SDL_Renderer *renderer) {
   }
 }
 
-static void deinit(void) { hen_free(gina); }
-
 static void on_scene_active(void) {
   // Return Gina to her starting spot. Cross-scene progress is preserved (it is
   // reset by the adventure's on_enter, not here), so navigating back from the
@@ -421,15 +412,15 @@ static void on_scene_inactive(void) {}
 
 Scene pool_scene = {
     .init = init,
-    .load_media = load_media,
     // Custom process_input for the dive input-lock; .actor still declared so
     // the generated say_<name>() helpers can speak through it (SCENES.md
-    // m4/m5).
+    // m4/m5), and the framework owns Gina's lifecycle (#141).
     .process_input = process_input,
     .actor = &gina,
+    .actor_spec = &HEN_SPEC,
+    .actor_start = {150, 480},
     .update = update,
     .render = render,
-    .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,
