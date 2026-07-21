@@ -81,11 +81,21 @@ they'll gain a runtime shape when per-line WAVs land.
 ## The generated header
 
 C99 can't read JSON without either a parser dependency or hand-rolled parsing,
-and a toddler game has no business parsing manifests at boot. So — exactly
-like the playthrough scripts (`tools/gen_playtest.py`) — the JSON is consumed
-at **build time**: `make` runs `tools/gen_asset_decls.py`, which writes
-`build/gen/<adv>_assets.h`, and migrated scenes `#include` it. Zero runtime
-parsing, zero new dependencies, and the compiler enforces agreement.
+and a toddler game has no business parsing manifests at boot. So the JSON is
+consumed at **build time**: `make` runs `tools/gen_asset_decls.py`, which writes
+`gen/<adv>_assets.h`, and migrated scenes `#include` it. Zero runtime parsing,
+zero new dependencies, and the compiler enforces agreement.
+
+**The generated headers are committed** (under `gen/`, not the ignored
+`build/`), so their symbols — `play_<name>()`, `say_<name>()`, the
+`_INIT`/`_SPEC`/index macros — resolve in editors and clangd without a build,
+and a manifest change shows its generated effect in the same diff. They stay in
+sync via a rule, not by hand: **after editing a manifest, run `make gen`** and
+commit the result. CI regenerates and fails if the tree changes (a drift guard
+in `test.yml`), so a stale header can't be merged. The manifest remains the
+single source of truth; the committed header is a generated cache of it. (The
+playtest header from `tools/gen_playtest.py` is test-only and stays generated
+under `build/gen/`, uncommitted.)
 
 Per runtime dir the header defines (pool shown; names are
 `<PREFIX>_<DIR>_...`):

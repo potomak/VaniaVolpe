@@ -18,7 +18,7 @@ LOCAL_C_INCLUDES := \
   $(REPO)/src/adventures/vania_fox_the_slide \
   $(REPO)/src/adventures/gina_hen_at_the_pool \
   $(REPO)/src/adventures/depth_demo \
-  $(REPO)/build/gen
+  $(REPO)/gen
 
 LOCAL_SRC_FILES := \
   $(filter-out $(REPO)/src/main_terminal.c $(REPO)/src/terminal.c, \

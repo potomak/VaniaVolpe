@@ -128,8 +128,10 @@ larger than the window with a following camera and parallax planes (see
   scaffolds a complete `en_US` from `it_IT`.
 - **`assets/index.json` is the adventure's asset manifest** (see `ASSETS.md`):
   the game's asset tables are generated from it at build time
-  (`tools/gen_asset_decls.py` → `build/gen/<adv>_assets.h`, included by migrated
-  scenes), and it also drives the art pipeline and the cost estimator. Changing
+  (`tools/gen_asset_decls.py` → `gen/<adv>_assets.h`, included by migrated
+  scenes), and it also drives the art pipeline and the cost estimator. The
+  generated headers are **committed** under `gen/`; after editing a manifest run
+  `make gen` and commit the result (CI fails on drift). Changing
   an animation's frame count means updating the manifest **and** the `.anim` —
   the build fails if they disagree.
 - **Placeholder art & voice have a pipeline.** Each adventure lists the real

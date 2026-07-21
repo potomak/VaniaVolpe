@@ -26,6 +26,16 @@ jobs:
           sudo apt-get install -y \
             libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
+      # The asset headers under gen/ are committed (so their symbols resolve in
+      # editors without a build). Regenerate them from the manifests and fail if
+      # the working tree changes — i.e. someone edited a manifest without
+      # running `make gen` (ASSETS.md).
+      - name: Check committed asset headers are up to date
+        run: |
+          make gen
+          git diff --exit-code -- gen \
+            || { echo "gen/ is stale — run 'make gen' and commit."; exit 1; }
+
       - name: Build the headless test target
         run: make test
 

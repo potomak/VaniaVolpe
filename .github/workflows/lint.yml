@@ -41,7 +41,7 @@ jobs:
           tidy-checks: ""       # use .clang-tidy
           database: "."         # where compile_commands.json lives
           files-changed-only: false
-          ignore: "build|include|src/emscripten"
+          ignore: "build|include|src/emscripten|gen"
           step-summary: true
           thread-comments: true
       # No gating step on steps.linter.outputs.checks-failed → non-blocking.

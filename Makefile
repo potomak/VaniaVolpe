@@ -5,7 +5,7 @@ GINA_DIR = src/adventures/gina_hen_at_the_pool
 DEMO_DIR = src/adventures/depth_demo
 CFLAGS  = -std=c99 -Wall $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer SDL2_ttf) \
           -I./include -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR) \
-          -Ibuild/gen
+          -Ibuild/gen -Igen
 LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image SDL2_mixer SDL2_ttf) -lm
 TARGET  = vaniavolpe
 
@@ -70,10 +70,14 @@ GEN_DIR = build/gen
 GINA_SCRIPT_H = $(GEN_DIR)/gina_script.h
 
 # Asset declarations generated from each adventure's manifest (ASSETS.md):
-# scenes declare their tables from these macros instead of repeating
-# filenames and frame counts inline.
-GINA_ASSETS_H = $(GEN_DIR)/gina_assets.h
-VANIA_ASSETS_H = $(GEN_DIR)/vania_assets.h
+# scenes declare their tables from these macros instead of repeating filenames
+# and frame counts inline. Unlike the other generated files these are committed
+# (under gen/, not build/) so their symbols — play_<name>(), say_<name>(), the
+# _INIT/_SPEC/index macros — resolve in editors/clangd without a build. Run
+# `make gen` after editing a manifest; CI checks they stay in sync (ASSETS.md).
+ASSET_GEN_DIR = gen
+GINA_ASSETS_H = $(ASSET_GEN_DIR)/gina_assets.h
+VANIA_ASSETS_H = $(ASSET_GEN_DIR)/vania_assets.h
 ASSETS_HEADERS = $(GINA_ASSETS_H) $(VANIA_ASSETS_H)
 
 # ── default target (SDL window) ───────────────────────────────────────────────
@@ -113,12 +117,22 @@ test/play_gina.test.o: $(GINA_SCRIPT_H)
 
 # Generate the asset declarations from each adventure's manifest (ASSETS.md).
 $(GINA_ASSETS_H): $(GINA_DIR)/assets/index.json tools/gen_asset_decls.py
-	mkdir -p $(GEN_DIR)
+	mkdir -p $(ASSET_GEN_DIR)
 	python3 tools/gen_asset_decls.py --manifest $< --out $@
 
 $(VANIA_ASSETS_H): $(VFTS_DIR)/assets/index.json tools/gen_asset_decls.py
-	mkdir -p $(GEN_DIR)
+	mkdir -p $(ASSET_GEN_DIR)
 	python3 tools/gen_asset_decls.py --manifest $< --out $@
+
+# Regenerate the committed asset headers (gen/). Run after editing a manifest;
+# CI runs this and fails if the working tree changes (drift guard).
+.PHONY: gen
+gen:
+	mkdir -p $(ASSET_GEN_DIR)
+	python3 tools/gen_asset_decls.py --manifest $(GINA_DIR)/assets/index.json \
+	  --out $(GINA_ASSETS_H)
+	python3 tools/gen_asset_decls.py --manifest $(VFTS_DIR)/assets/index.json \
+	  --out $(VANIA_ASSETS_H)
 
 # Sources migrated to the manifest #include the generated header (all three
 # object flavours build the same source).
@@ -132,7 +146,7 @@ VANIA_MANIFEST_OBJS = $(foreach s,fox intro playground_entrance playground \
 $(VANIA_MANIFEST_OBJS): $(VANIA_ASSETS_H)
 
 %.test.o: %.c
-	$(CC) $(CFLAGS) -Itest -I$(GEN_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -Itest -I$(GEN_DIR) -I$(ASSET_GEN_DIR) -c $< -o $@
 
 # Build and run the smoke test (offscreen video + dummy audio are set by the
 # binary itself). Exits non-zero if the playthrough regresses.
@@ -151,7 +165,7 @@ WEB_CACHE_BUST := $(shell git rev-parse --short HEAD 2>/dev/null || date +%s)
 EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
              -sUSE_SDL_MIXER=2 -sUSE_SDL_TTF=2
 EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./src/emscripten/compat \
-             -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR) -Ibuild/gen
+             -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR) -Ibuild/gen -Igen
 # Preload each adventure's shared (common) layer plus every locale. Per-locale
 # web bundles (download only the chosen language) are a future optimisation.
 EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
