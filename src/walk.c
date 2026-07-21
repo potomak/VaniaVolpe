@@ -547,6 +547,13 @@ void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
 // down: the centre of the first walkable cell at or below `from` in its grid
 // column; a column with no ground below (or a drop outside the scene) falls
 // back to the nearest walkable point overall.
+//
+// This is zone-agnostic: with disconnected walkable zones, a smaller zone
+// stacked above the drag's origin zone in the same column is hit first, so the
+// actor could land on a zone it was never in — the horizontal clamp cannot
+// prevent this (the violation is in the downward scan, not in x). The fix is
+// to make the landing zone-aware, using the origin zone remembered at grab
+// time; tracked with the clamp in #145.
 static SDL_FPoint drop_target(const WalkGrid *grid, SDL_FPoint from) {
   int cx = (int)from.x / WALK_CELL_SIZE;
   if (from.x >= 0 && cx < grid->w) {
