@@ -74,7 +74,7 @@
    "action": "click",
    "x": 0.981,
    "y": 0.542,
-   "wait_ms": 1200,
+   "wait_ms": 3000,
    "note": "go to the tree (right edge)"
   },
   {
@@ -99,7 +99,7 @@
    "action": "click",
    "x": 0.981,
    "y": 0.542,
-   "wait_ms": 1200,
+   "wait_ms": 3000,
    "note": "go to the vine (right edge)"
   },
   {
@@ -164,7 +164,7 @@
    "action": "click",
    "x": 0.019,
    "y": 0.542,
-   "wait_ms": 1200,
+   "wait_ms": 3000,
    "note": "back to the tree (left edge)"
   },
   {
@@ -182,7 +182,7 @@
    "action": "click",
    "x": 0.019,
    "y": 0.542,
-   "wait_ms": 1200,
+   "wait_ms": 3000,
    "note": "back to the pool (left edge)"
   },
   {
