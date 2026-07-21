@@ -64,7 +64,8 @@ static void init(void) {
   sprites[s++] = (SceneSprite){.animation = play_button, .at = {410, 260}};
   sprites[s++] = (SceneSprite){.animation = exit_button, .at = {440, 450}};
 
-  fox = make_fox((SDL_FPoint){322, 317});
+  // The framework made the fox (actor_spec/actor_start below) before init; the
+  // intro just poses her sitting.
   fox_sit(fox);
 
   hotspots[0] = (Hotspot){.rect = PLAY_BUTTON_HOTSPOT,
@@ -72,12 +73,6 @@ static void init(void) {
                           .on_arrive = start_playing};
   hotspots[1] = (Hotspot){
       .rect = EXIT_BUTTON_HOTSPOT, .immediate = true, .on_arrive = exit_game};
-}
-
-static bool load_media(SDL_Renderer *renderer) {
-  // The play/exit buttons are loaded by the framework from anim_specs, the
-  // music from .music; only the fox remains.
-  return fox_load_media(fox, renderer);
 }
 
 static void process_input(SDL_Event *event) {
@@ -117,8 +112,6 @@ static void render(SDL_Renderer *renderer) {
   fox_render(fox, renderer);
 }
 
-static void deinit(void) { fox_free(fox); }
-
 static void on_scene_active(void) {
   stop_animation(play_button);
   stop_animation(exit_button);
@@ -128,11 +121,14 @@ static void on_scene_inactive(void) {}
 
 Scene intro_scene = {
     .init = init,
-    .load_media = load_media,
     .process_input = process_input,
     .update = update,
     .render = render,
-    .deinit = deinit,
+    // The framework owns the fox's lifecycle (#141): it makes her at
+    // actor_start before init, loads her media, and frees her on teardown.
+    .actor = &fox,
+    .actor_spec = &FOX_SPEC,
+    .actor_start = {322, 317},
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,

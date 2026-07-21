@@ -31,14 +31,10 @@ static Fox *fox;
 static SceneSprite sprites[1];
 
 static void init(void) {
-  fox = make_fox((SDL_FPoint){398, 329});
+  // The framework made the fox (actor_spec/actor_start below) before init; the
+  // outro poses her waving.
   fox_wave(fox);
   sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
-}
-
-static bool load_media(SDL_Renderer *renderer) {
-  // Music is loaded by the framework from .music; only the fox remains.
-  return fox_load_media(fox, renderer);
 }
 
 static void process_input(SDL_Event *event) {
@@ -57,19 +53,19 @@ static void render(SDL_Renderer *renderer) {
   fox_render(fox, renderer);
 }
 
-static void deinit(void) { fox_free(fox); }
-
 static void on_scene_active(void) {}
 
 static void on_scene_inactive(void) {}
 
 Scene outro_scene = {
     .init = init,
-    .load_media = load_media,
     .process_input = process_input,
     .update = update,
     .render = render,
-    .deinit = deinit,
+    // The framework owns the fox's lifecycle (#141).
+    .actor = &fox,
+    .actor_spec = &FOX_SPEC,
+    .actor_start = {398, 329},
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .sprites = sprites,

@@ -97,8 +97,7 @@ static void go_to_pool(void);
 static void go_to_vine(void);
 
 static void init(void) {
-  gina = make_hen(HEN_START);
-
+  // Gina is made by the framework (actor_spec/actor_start below) before init.
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
@@ -129,12 +128,6 @@ static void init(void) {
   i = 0;
   pois[i++] = FLOAT_LOOK_POI;
   pois[i++] = CARLA_POI;
-}
-
-static bool load_media(SDL_Renderer *renderer) {
-  // The boils and the celebration are loaded by the framework from anim_specs;
-  // only the actor remains for the scene to load.
-  return hen_load_media(gina, renderer);
 }
 
 // ── interactions
@@ -232,8 +225,6 @@ static void render(SDL_Renderer *renderer) {
   }
 }
 
-static void deinit(void) { hen_free(gina); }
-
 static void on_scene_active(void) {
   gina->current_position = HEN_START;
   gina->target_position = HEN_START;
@@ -243,13 +234,14 @@ static void on_scene_inactive(void) {}
 
 Scene tree_scene = {
     .init = init,
-    .load_media = load_media,
     // No process_input: the framework's default drag/hit-test/walk handler
-    // drives this scene (SCENES.md milestone 5).
+    // drives this scene (SCENES.md milestone 5). The framework also owns Gina's
+    // lifecycle (#141).
     .actor = &gina,
+    .actor_spec = &HEN_SPEC,
+    .actor_start = {400, 480},
     .update = update,
     .render = render,
-    .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,

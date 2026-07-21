@@ -50,21 +50,16 @@ const ActorSpec FOX_SPEC = {
     .talk_shape_frames = MOUTH_SHAPE_COUNT,
 };
 
-Fox *make_fox(SDL_FPoint initial_position) {
-  return make_actor(&FOX_SPEC, initial_position);
-}
-
-bool fox_load_media(Fox *fox, SDL_Renderer *renderer) {
-  return actor_load_media(fox, renderer);
-}
+// The fox's make/load/free are the framework's job now (it makes the actor
+// from FOX_SPEC before init, loads its media, and frees it — #141), so no
+// make_fox/fox_load_media/fox_free wrappers remain; scenes declare
+// `.actor_spec = &FOX_SPEC`.
 
 void fox_update(Fox *fox, float delta_time) { actor_update(fox, delta_time); }
 
 void fox_render(Fox *fox, SDL_Renderer *renderer) {
   actor_render(fox, renderer);
 }
-
-void fox_free(Fox *fox) { actor_free(fox); }
 
 void fox_walk_to(Fox *fox, SDL_FPoint position, void (*on_end)(void)) {
   actor_walk_to(fox, position, on_end);

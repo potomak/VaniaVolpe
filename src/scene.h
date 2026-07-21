@@ -151,14 +151,24 @@ typedef struct scene {
   SDL_Point *pois;
   int pois_length;
 
-  // The playable actor this scene routes input to (SCENES.md milestone 5),
-  // set to the address of the scene's own actor pointer (`.actor = &fox`) so it
-  // survives the scene struct being copied into the adventure table and tracks
-  // the object made in init. When a scene supplies no process_input, the
-  // framework's default handler (scene_default_process_input) drags and walks
-  // this actor. NULL for scenes with no walkable actor (menus, minigames),
-  // which supply their own process_input.
+  // The scene's actor storage: the address of the scene's own actor pointer
+  // (`.actor = &fox`), so it survives the scene struct being copied into the
+  // adventure table and tracks the object the framework makes for it. Used for
+  // three things: the framework writes the made actor through it (see
+  // actor_spec below); the default input handler (scene_default_process_input)
+  // drags and walks it when a scene supplies no process_input; and the say_()
+  // helpers speak through it. NULL for scenes with no actor (menus, minigames).
   Actor **actor;
+
+  // The actor's spec and start position (#141). When actor_spec is set, the
+  // framework owns the actor's whole lifecycle: it makes the actor
+  // (make_actor(actor_spec, actor_start)) before the scene's init — so init,
+  // the hotspot table and camera_init can reference it — loads its media in the
+  // media pass, and frees it on teardown, storing the pointer through `.actor`.
+  // A scene then declares its actor instead of writing the make_*/load/free
+  // calls by hand. NULL (with `.actor` also NULL) for scenes with no actor.
+  const ActorSpec *actor_spec;
+  SDL_FPoint actor_start;
 
   // Walkability grid (see walk.h); NULL for scenes with no player movement.
   // Scenes fill it once in init — from a committed walkable.walk mask when

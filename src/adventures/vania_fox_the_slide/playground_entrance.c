@@ -125,8 +125,8 @@ static void init(void) {
   sprites[s++] = (SceneSprite){
       .image = key, .at = {20, 431}, .visible = key_on_the_ground};
 
-  fox = make_fox((SDL_FPoint){580, 457});
-
+  // The fox is made by the framework (actor_spec/actor_start below) before
+  // init.
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT},
                  "playground_entrance");
@@ -152,12 +152,6 @@ static void init(void) {
   pois[i++] = SHOVEL_POI;
   pois[i++] = KEY_POI;
   pois[i++] = SLIDE_POI;
-}
-
-static bool load_media(SDL_Renderer *renderer) {
-  // The excavator, gate and shovel are loaded by the framework from anim_specs,
-  // the music from .music; only the fox remains.
-  return fox_load_media(fox, renderer);
 }
 
 static void go_to_playground(void) { set_active_scene(PLAYGROUND); }
@@ -218,8 +212,6 @@ static void render(SDL_Renderer *renderer) {
   fox_render(fox, renderer);
 }
 
-static void deinit(void) { fox_free(fox); }
-
 static void on_scene_active(void) {
   // Initialize scene state
   has_key_been_revealed = false;
@@ -233,14 +225,15 @@ static void on_scene_inactive(void) {}
 
 Scene playground_entrance_scene = {
     .init = init,
-    .load_media = load_media,
     // No process_input: the framework's default drag/hit-test/walk handler
     // drives this scene (SCENES.md milestone 5). This is also what makes the
     // fox draggable here, like the hen — the default includes drag & drop.
+    // The framework also owns the fox's lifecycle (#141).
     .actor = &fox,
+    .actor_spec = &FOX_SPEC,
+    .actor_start = {580, 457},
     .update = update,
     .render = render,
-    .deinit = deinit,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,

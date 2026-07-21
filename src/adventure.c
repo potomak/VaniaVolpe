@@ -8,16 +8,24 @@
 
 #include "adventure.h"
 
+#include "actor.h"
 #include "asset.h"
 #include "scene.h"
 
 void adventure_init(const Adventure *adventure) {
   for (int i = 0; i < adventure->scenes_length; i++) {
+    Scene *scene = &adventure->scenes[i];
     // Make the scene's declarative animations before its init, so init can
     // hand one to a hotspot's active_anim (SCENES.md milestone 1). A no-op for
     // scenes that still make their own animations.
-    make_scene_animations(&adventure->scenes[i]);
-    adventure->scenes[i].init();
+    make_scene_animations(scene);
+    // The framework owns the actor's lifecycle when the scene declares a spec
+    // (#141): make it before init so init (hotspots, camera_init) can reference
+    // it. Scenes with no actor leave actor_spec NULL.
+    if (scene->actor_spec != NULL) {
+      *scene->actor = make_actor(scene->actor_spec, scene->actor_start);
+    }
+    scene->init();
   }
 }
 
@@ -33,7 +41,14 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
 
   for (int i = 0; i < adventure->scenes_length; i++) {
     Scene *scene = &adventure->scenes[i];
-    if (!scene->load_media(renderer)) {
+    // Load the actor's media when the framework owns it (#141).
+    if (scene->actor_spec != NULL &&
+        !actor_load_media(*scene->actor, renderer)) {
+      return false;
+    }
+    // load_media is optional now that the framework loads the actor: a scene
+    // whose only media was its actor drops it entirely.
+    if (scene->load_media != NULL && !scene->load_media(renderer)) {
       return false;
     }
     if (!load_scene_images(scene, renderer)) {
@@ -58,7 +73,14 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
 void adventure_deinit(const Adventure *adventure) {
   for (int i = 0; i < adventure->scenes_length; i++) {
     Scene *scene = &adventure->scenes[i];
-    scene->deinit();
+    // deinit is optional now that the framework frees the actor: a scene whose
+    // only teardown was freeing its actor drops it entirely.
+    if (scene->deinit != NULL) {
+      scene->deinit();
+    }
+    if (scene->actor_spec != NULL) {
+      actor_free(*scene->actor);
+    }
     free_scene_images(scene);
     free_scene_planes(scene);
     free_scene_chunks(scene);
