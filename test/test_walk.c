@@ -577,6 +577,52 @@ static void test_drag_and_drop(void) {
   actor_free(gina);
 }
 
+// #140: while dragged, the actor's horizontal position is clamped to the
+// walkable area's extent, so Gina can be lifted up out of the shade but never
+// carried out of it sideways (the pointer may still roam anywhere).
+static void test_drag_clamp_to_walkable(void) {
+  fprintf(stderr, "\n-- drag horizontal clamp unit tests --\n");
+
+  // The shade patch: x 60..260 walkable, so column centres run 65..255.
+  static WalkGrid shade;
+  walk_grid_build(&shade, &POOL_SHADE_AREA, WINDOW_SIZE);
+
+  // The pure helper: values inside the extent pass, values outside snap to
+  // the edge column centres.
+  check(walk_grid_clamp_x(&shade, 150.0F) == 150.0F,
+        "clamp_x leaves a point inside the walkable extent untouched");
+  check(walk_grid_clamp_x(&shade, 0.0F) == 65.0F,
+        "clamp_x snaps a point left of the extent to the left column centre");
+  check(walk_grid_clamp_x(&shade, 700.0F) == 255.0F,
+        "clamp_x snaps a point right of the extent to the right column centre");
+
+  // A grid with no walkable cell leaves x unchanged (nothing to clamp to).
+  static const SDL_Rect NONE_RECTS[] = {{0, 0, 0, 0}};
+  static const WalkArea NONE_AREA = {NONE_RECTS, LEN(NONE_RECTS), NULL, 0};
+  static WalkGrid empty;
+  walk_grid_build(&empty, &NONE_AREA, WINDOW_SIZE);
+  check(walk_grid_clamp_x(&empty, 400.0F) == 400.0F,
+        "clamp_x is a no-op on a grid with no walkable cell");
+
+  // Through the drag event: lift Gina and carry the pointer far to the right;
+  // she rises with it (y unclamped) but her x stops at the shade's edge.
+  Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
+  gina->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  SDL_Event e = mouse_down(150, 480);
+  drag(gina, &shade, &e);
+  e = mouse_motion(700, 200);
+  drag(gina, &shade, &e);
+  check(gina->state == DRAGGED && gina->current_position.x == 255.0F &&
+            gina->current_position.y == 200.0F,
+        "dragging right of the shade clamps x to the edge, y free");
+  // And to the left, past the opposite edge.
+  e = mouse_motion(-50, 300);
+  drag(gina, &shade, &e);
+  check(gina->current_position.x == 65.0F && gina->current_position.y == 300.0F,
+        "dragging left of the shade clamps x to the other edge");
+  actor_free(gina);
+}
+
 int test_walk(void) {
   failures = 0;
   fprintf(stderr, "\n-- walk geometry unit tests --\n");
@@ -597,6 +643,7 @@ int test_walk(void) {
   test_exact_goal_walk(&entrance_grid);
   test_stale_callback_cancelled(&playground_grid);
   test_drag_and_drop();
+  test_drag_clamp_to_walkable();
 
   return failures;
 }

@@ -39,6 +39,25 @@ static bool cell_walkable(const WalkGrid *grid, int cx, int cy) {
   return grid->cells[cy][cx] != 0;
 }
 
+// Cache the horizontal extent of the walkable cells (see WalkGrid). Called
+// once whenever the cells are (re)populated, so the drag clamp reads it in
+// O(1) rather than scanning the grid on every drag event.
+static void cache_walkable_x_extent(WalkGrid *grid) {
+  grid->walkable_min_cx = -1;
+  grid->walkable_max_cx = -1;
+  for (int cx = 0; cx < grid->w; cx++) {
+    for (int cy = 0; cy < grid->h; cy++) {
+      if (grid->cells[cy][cx]) {
+        if (grid->walkable_min_cx < 0) {
+          grid->walkable_min_cx = cx;
+        }
+        grid->walkable_max_cx = cx;
+        break;
+      }
+    }
+  }
+}
+
 void walk_grid_build(WalkGrid *grid, const WalkArea *area,
                      SDL_Point scene_size) {
   grid->w = scene_size.x / WALK_CELL_SIZE;
@@ -66,6 +85,7 @@ void walk_grid_build(WalkGrid *grid, const WalkArea *area,
       grid->cells[cy][cx] = walkable ? 1 : 0;
     }
   }
+  cache_walkable_x_extent(grid);
 }
 
 bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
@@ -130,6 +150,7 @@ bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
     return false; // trailing junk
   }
   *grid = parsed;
+  cache_walkable_x_extent(grid);
   return true;
 }
 
@@ -286,6 +307,28 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
   SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
               "walk_grid_nearest: no walkable cell in the grid");
   return (SDL_FPoint){p.x, p.y};
+}
+
+// Reads the extent cached at build time (WalkGrid.walkable_{min,max}_cx), so
+// this is O(1) — safe to call on every drag event. The whole-grid extent
+// equals the origin zone's extent only while the walkable area is a single
+// connected region (as every shipped scene's is). With disconnected zones the
+// interval spans the gap between them, so a drag could cross it; confining the
+// clamp to the zone the drag started in (flood fill on grab) is tracked in
+// #145.
+float walk_grid_clamp_x(const WalkGrid *grid, float x) {
+  if (grid->walkable_min_cx < 0) {
+    return x; // no walkable cell: nothing to clamp to
+  }
+  float lo = grid->walkable_min_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
+  float hi = grid->walkable_max_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
+  if (x < lo) {
+    return lo;
+  }
+  if (x > hi) {
+    return hi;
+  }
+  return x;
 }
 
 // Octile-distance heuristic in WALK_COST units (admissible for 10/14 costs).
@@ -510,6 +553,13 @@ void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
 // down: the centre of the first walkable cell at or below `from` in its grid
 // column; a column with no ground below (or a drop outside the scene) falls
 // back to the nearest walkable point overall.
+//
+// This is zone-agnostic: with disconnected walkable zones, a smaller zone
+// stacked above the drag's origin zone in the same column is hit first, so the
+// actor could land on a zone it was never in — the horizontal clamp cannot
+// prevent this (the violation is in the downward scan, not in x). The fix is
+// to make the landing zone-aware, using the origin zone remembered at grab
+// time; tracked with the clamp in #145.
 static SDL_FPoint drop_target(const WalkGrid *grid, SDL_FPoint from) {
   int cx = (int)from.x / WALK_CELL_SIZE;
   if (from.x >= 0 && cx < grid->w) {
@@ -551,6 +601,8 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
     SDL_FPoint p = {(float)event->motion.x, (float)event->motion.y};
     if (actor->state == DRAGGED) {
       actor_drag_move(actor, p);
+      actor->current_position.x =
+          walk_grid_clamp_x(grid, actor->current_position.x);
       return true;
     }
     if (actor->drag_armed) {
@@ -573,6 +625,8 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
                          actor->current_position.y - actor->drag_grab.y};
         if (actor_begin_drag(actor)) {
           actor_drag_move(actor, p);
+          actor->current_position.x =
+              walk_grid_clamp_x(grid, actor->current_position.x);
           return true;
         }
       }
