@@ -288,6 +288,38 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
   return (SDL_FPoint){p.x, p.y};
 }
 
+float walk_grid_clamp_x(const WalkGrid *grid, float x) {
+  int min_cx = -1;
+  int max_cx = -1;
+  for (int cx = 0; cx < grid->w; cx++) {
+    bool any = false;
+    for (int cy = 0; cy < grid->h; cy++) {
+      if (grid->cells[cy][cx]) {
+        any = true;
+        break;
+      }
+    }
+    if (any) {
+      if (min_cx < 0) {
+        min_cx = cx;
+      }
+      max_cx = cx;
+    }
+  }
+  if (min_cx < 0) {
+    return x; // no walkable cell: nothing to clamp to
+  }
+  float lo = min_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
+  float hi = max_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
+  if (x < lo) {
+    return lo;
+  }
+  if (x > hi) {
+    return hi;
+  }
+  return x;
+}
+
 // Octile-distance heuristic in WALK_COST units (admissible for 10/14 costs).
 static Uint32 heuristic(int cx, int cy, int gx, int gy) {
   int dx = abs(cx - gx);
@@ -551,6 +583,8 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
     SDL_FPoint p = {(float)event->motion.x, (float)event->motion.y};
     if (actor->state == DRAGGED) {
       actor_drag_move(actor, p);
+      actor->current_position.x =
+          walk_grid_clamp_x(grid, actor->current_position.x);
       return true;
     }
     if (actor->drag_armed) {
@@ -573,6 +607,8 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
                          actor->current_position.y - actor->drag_grab.y};
         if (actor_begin_drag(actor)) {
           actor_drag_move(actor, p);
+          actor->current_position.x =
+              walk_grid_clamp_x(grid, actor->current_position.x);
           return true;
         }
       }

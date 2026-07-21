@@ -78,6 +78,15 @@ bool walk_grid_contains(const WalkGrid *grid, SDL_Point p);
 // with a warning.
 SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p);
 
+// Clamp x to the horizontal extent of the grid's walkable cells — the centre
+// of the leftmost walkable column to the centre of the rightmost. Used while
+// dragging the actor so her horizontal position never leaves the walkable
+// area (e.g. Gina, before the sunscreen, stays within the umbrella's shade)
+// even as the pointer roams outside it. A grid with no walkable cell leaves x
+// unchanged. Clamping to column centres keeps every reachable x over ground,
+// so the straight-down drop scan lands with no horizontal jump.
+float walk_grid_clamp_x(const WalkGrid *grid, float x);
+
 // Fill out[] with up to max_out waypoints from `from` to `to` (excluding
 // `from`, including the final destination). Returns the count (>= 1).
 // Illegal endpoints are snapped to legal ground first; an unreachable goal
@@ -98,11 +107,14 @@ void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
 // sprite arms a drag but still falls through to the scene — a hotspot the
 // actor stands on keeps working for plain taps. Pointer travel past
 // DRAG_START_THRESHOLD then steals the actor (cancelling whatever walk the
-// press started), and the release drops her onto the first walkable cell
-// straight below the drop point (its grid column; no ground below falls
-// back to walk_grid_nearest) — so a drop can never break a walkable-area
-// invariant. Returns true when the event was the drag's (carry or release);
-// consumed events must not reach the hotspots.
+// press started). While carried, her horizontal position is clamped to the
+// grid's walkable extent (walk_grid_clamp_x), so she can be lifted up out of
+// the area vertically but never dragged out of it sideways (e.g. Gina stays
+// within the umbrella's shade before the sunscreen). The release then drops
+// her onto the first walkable cell straight below the drop point (its grid
+// column; no ground below falls back to walk_grid_nearest) — so a drop can
+// never break a walkable-area invariant. Returns true when the event was the
+// drag's (carry or release); consumed events must not reach the hotspots.
 bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
                            const SDL_Event *event);
 
