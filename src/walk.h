@@ -35,6 +35,13 @@ typedef struct walk_grid {
   int w;
   int h;
   Uint8 cells[WALK_GRID_MAX_H][WALK_GRID_MAX_W];
+  // Horizontal extent of the walkable cells (leftmost / rightmost column
+  // holding any walkable cell), cached when the grid is built or parsed so the
+  // drag clamp is O(1) per event instead of scanning the grid. -1 when the
+  // grid has no walkable cell. Recomputed on every rebuild (e.g. the pool's
+  // shade -> strip switch), so it always matches `cells`.
+  int walkable_min_cx;
+  int walkable_max_cx;
 } WalkGrid;
 
 // Rasterise the rects into the grid (called once from the scene's init). A

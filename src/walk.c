@@ -39,6 +39,25 @@ static bool cell_walkable(const WalkGrid *grid, int cx, int cy) {
   return grid->cells[cy][cx] != 0;
 }
 
+// Cache the horizontal extent of the walkable cells (see WalkGrid). Called
+// once whenever the cells are (re)populated, so the drag clamp reads it in
+// O(1) rather than scanning the grid on every drag event.
+static void cache_walkable_x_extent(WalkGrid *grid) {
+  grid->walkable_min_cx = -1;
+  grid->walkable_max_cx = -1;
+  for (int cx = 0; cx < grid->w; cx++) {
+    for (int cy = 0; cy < grid->h; cy++) {
+      if (grid->cells[cy][cx]) {
+        if (grid->walkable_min_cx < 0) {
+          grid->walkable_min_cx = cx;
+        }
+        grid->walkable_max_cx = cx;
+        break;
+      }
+    }
+  }
+}
+
 void walk_grid_build(WalkGrid *grid, const WalkArea *area,
                      SDL_Point scene_size) {
   grid->w = scene_size.x / WALK_CELL_SIZE;
@@ -66,6 +85,7 @@ void walk_grid_build(WalkGrid *grid, const WalkArea *area,
       grid->cells[cy][cx] = walkable ? 1 : 0;
     }
   }
+  cache_walkable_x_extent(grid);
 }
 
 bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
@@ -130,6 +150,7 @@ bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
     return false; // trailing junk
   }
   *grid = parsed;
+  cache_walkable_x_extent(grid);
   return true;
 }
 
@@ -288,34 +309,19 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
   return (SDL_FPoint){p.x, p.y};
 }
 
-// Clamps to the whole grid's walkable-column extent, which equals the origin
-// zone's extent only while the walkable area is a single connected region (as
-// every shipped scene's is). With disconnected zones the interval spans the
-// gap between them, so a drag could cross it; confining the clamp to the zone
-// the drag started in (flood fill on grab) is tracked in #145.
+// Reads the extent cached at build time (WalkGrid.walkable_{min,max}_cx), so
+// this is O(1) — safe to call on every drag event. The whole-grid extent
+// equals the origin zone's extent only while the walkable area is a single
+// connected region (as every shipped scene's is). With disconnected zones the
+// interval spans the gap between them, so a drag could cross it; confining the
+// clamp to the zone the drag started in (flood fill on grab) is tracked in
+// #145.
 float walk_grid_clamp_x(const WalkGrid *grid, float x) {
-  int min_cx = -1;
-  int max_cx = -1;
-  for (int cx = 0; cx < grid->w; cx++) {
-    bool any = false;
-    for (int cy = 0; cy < grid->h; cy++) {
-      if (grid->cells[cy][cx]) {
-        any = true;
-        break;
-      }
-    }
-    if (any) {
-      if (min_cx < 0) {
-        min_cx = cx;
-      }
-      max_cx = cx;
-    }
-  }
-  if (min_cx < 0) {
+  if (grid->walkable_min_cx < 0) {
     return x; // no walkable cell: nothing to clamp to
   }
-  float lo = min_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
-  float hi = max_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
+  float lo = grid->walkable_min_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
+  float hi = grid->walkable_max_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
   if (x < lo) {
     return lo;
   }
