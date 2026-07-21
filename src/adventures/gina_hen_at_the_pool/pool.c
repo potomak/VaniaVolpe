@@ -124,6 +124,10 @@ static const SDL_Point SUNSCREEN_POI = {150, 545};
 static const SDL_Point GOGGLES_POI = {360, 525};
 static const SDL_Point FLOAT_POI = {600, 545};
 static const SDL_Point POOL_EDGE_POI = {400, 460};
+// Where Gina walks before a scene change: tapping a navigation arrow sends her
+// to the edge first, and the scene switches when she arrives (not on the tap).
+static const SDL_Point LEFT_EDGE_POI = {40, 500};
+static const SDL_Point RIGHT_EDGE_POI = {760, 500};
 static SDL_Point pois[4];
 
 // Interactions and hotspot gating (bodies below the loaders). Before the
@@ -191,11 +195,11 @@ static void init(void) {
                             .on_arrive = try_dive};
   hotspots[i++] = (Hotspot){.rect = VINE_NAV_HOTSPOT,
                             .enabled = after_sunscreen,
-                            .immediate = true,
+                            .poi = LEFT_EDGE_POI,
                             .on_arrive = go_to_vine};
   hotspots[i++] = (Hotspot){.rect = TREE_NAV_HOTSPOT,
                             .enabled = after_sunscreen,
-                            .immediate = true,
+                            .poi = RIGHT_EDGE_POI,
                             .on_arrive = go_to_tree};
 
   i = 0;

@@ -61,6 +61,10 @@ static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS), NULL,
 static WalkGrid walk_grid;
 
 static const SDL_Point GRAPES_POI = {400, 470};
+// Where Gina walks before a scene change: tapping a navigation arrow sends her
+// to the edge first, and the scene switches when she arrives (not on the tap).
+static const SDL_Point LEFT_EDGE_POI = {40, 500};
+static const SDL_Point RIGHT_EDGE_POI = {760, 500};
 static SDL_Point pois[1];
 
 // Interactions (bodies below the loaders).
@@ -85,9 +89,9 @@ static void init(void) {
                             .active_anim = grapes_boil,
                             .anim_at = GRAPES_AT};
   hotspots[i++] = (Hotspot){
-      .rect = TREE_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_tree};
+      .rect = TREE_NAV_HOTSPOT, .poi = LEFT_EDGE_POI, .on_arrive = go_to_tree};
   hotspots[i++] = (Hotspot){
-      .rect = POOL_NAV_HOTSPOT, .immediate = true, .on_arrive = go_to_pool};
+      .rect = POOL_NAV_HOTSPOT, .poi = RIGHT_EDGE_POI, .on_arrive = go_to_pool};
 
   pois[0] = GRAPES_POI;
 }
