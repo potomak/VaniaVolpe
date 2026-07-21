@@ -288,6 +288,11 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
   return (SDL_FPoint){p.x, p.y};
 }
 
+// Clamps to the whole grid's walkable-column extent, which equals the origin
+// zone's extent only while the walkable area is a single connected region (as
+// every shipped scene's is). With disconnected zones the interval spans the
+// gap between them, so a drag could cross it; confining the clamp to the zone
+// the drag started in (flood fill on grab) is tracked in #145.
 float walk_grid_clamp_x(const WalkGrid *grid, float x) {
   int min_cx = -1;
   int max_cx = -1;
