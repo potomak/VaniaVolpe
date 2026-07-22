@@ -66,6 +66,16 @@ void scene_default_process_input(const Scene *scene, SDL_Event *event) {
   walk_actor_to(actor, scene->walk_grid, (SDL_FPoint){p.x, p.y}, false, NULL);
 }
 
+void scene_default_update(const Scene *scene, float delta_time) {
+  SDL_assert(scene->actor != NULL);
+  actor_update(*scene->actor, delta_time);
+}
+
+void scene_default_render(const Scene *scene, SDL_Renderer *renderer) {
+  SDL_assert(scene->actor != NULL);
+  actor_render(*scene->actor, renderer);
+}
+
 void sync_hotspot_active_anims(const Scene *scene) {
   for (int i = 0; i < scene->hotspots_length; i++) {
     AnimationData *anim = scene->hotspots[i].active_anim;

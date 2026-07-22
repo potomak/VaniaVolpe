@@ -132,8 +132,19 @@ typedef struct scene_anim_spec {
 // NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 typedef struct scene {
   void (*init)(void);
+  // Optional (see #141): the framework loads the actor and frees it, so a scene
+  // whose only media/teardown was its actor leaves these NULL.
   bool (*load_media)(SDL_Renderer *renderer);
   void (*process_input)(SDL_Event *event);
+  // update / render are optional (#147): NULL lets the framework tick / draw
+  // the scene's `.actor` for it (scene_default_update / scene_default_render).
+  // A scene supplies its own only to interleave the actor with scene-specific
+  // work — order the tick (field's depth variant before it, pool's dive tween
+  // after it) or compose the actor into a dynamic draw layer (the carried key,
+  // props y-sorted with the actor). Such an override ticks / draws the actor
+  // itself (via actor_update / actor_render, or the scene_default_* helper) —
+  // exactly once, since the override replaces the default rather than adding to
+  // it.
   void (*update)(float delta_time);
   void (*render)(SDL_Renderer *renderer);
   void (*deinit)(void);
@@ -291,6 +302,15 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
 // anything more (an input lock, a win check) still writes its own process_input
 // instead.
 void scene_default_process_input(const Scene *scene, SDL_Event *event);
+
+// The default update / render (#147): tick / draw the scene's `.actor`. The
+// engine runs each for a scene that leaves the matching callback NULL (the same
+// shape as scene_default_process_input). A scene with a custom update/render
+// that just wants "the default plus a little" may call these itself instead of
+// repeating the actor_update/actor_render call — but must then not also tick/
+// draw the actor separately, or it would happen twice. Both assert `.actor`.
+void scene_default_update(const Scene *scene, float delta_time);
+void scene_default_render(const Scene *scene, SDL_Renderer *renderer);
 
 // Sync every hotspot's active_anim to its enabled state (LIVELINESS.md
 // Part 3): it plays while any hotspot carrying it is enabled and freezes

@@ -197,7 +197,7 @@ static void talk_to_carla(void) {
 }
 
 static void update(float delta_time) {
-  hen_update(gina, delta_time);
+  actor_update(gina, delta_time);
   if (float_falling) {
     tween_update(&float_tween, delta_time);
   }
@@ -212,7 +212,7 @@ static void render(SDL_Renderer *renderer) {
     SDL_FPoint p = tween_pos(&float_tween);
     render_animation(renderer, float_boil, (SDL_Point){(int)p.x, (int)p.y});
   }
-  hen_render(gina, renderer);
+  actor_render(gina, renderer);
   // Once Carla has handed it over, Gina carries the basket with her.
   if (gina_state.has_basket) {
     render_image(renderer, basket,

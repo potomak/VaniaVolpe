@@ -33,7 +33,7 @@ static SceneSprite sprites[1];
 static void init(void) {
   // The framework made the fox (actor_spec/actor_start below) before init; the
   // outro poses her waving.
-  fox_wave(fox);
+  actor_play_state(fox, WAVING);
   sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
 }
 
@@ -45,13 +45,8 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) { fox_update(fox, delta_time); }
-
-static void render(SDL_Renderer *renderer) {
-  // The end card is a static sprite (drawn by the framework); only the fox is
-  // dynamic.
-  fox_render(fox, renderer);
-}
+// No update/render: the end card is a static sprite and the fox is the only
+// dynamic thing, so the framework ticks and draws her (#147).
 
 static void on_scene_active(void) {}
 
@@ -60,9 +55,8 @@ static void on_scene_inactive(void) {}
 Scene outro_scene = {
     .init = init,
     .process_input = process_input,
-    .update = update,
-    .render = render,
-    // The framework owns the fox's lifecycle (#141).
+    // No update/render: the framework ticks and draws the actor (#147); it also
+    // owns the fox's lifecycle (#141).
     .actor = &fox,
     .actor_spec = &FOX_SPEC,
     .actor_start = {398, 329},

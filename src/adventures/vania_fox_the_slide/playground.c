@@ -265,7 +265,7 @@ static float sigmoid(float x) {
 }
 
 static void update(float delta_time) {
-  fox_update(fox, delta_time);
+  actor_update(fox, delta_time);
 
   float slide_y;
   if (has_started_sliding) {

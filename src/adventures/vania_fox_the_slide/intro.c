@@ -66,7 +66,7 @@ static void init(void) {
 
   // The framework made the fox (actor_spec/actor_start below) before init; the
   // intro just poses her sitting.
-  fox_sit(fox);
+  actor_play_state(fox, SITTING);
 
   hotspots[0] = (Hotspot){.rect = PLAY_BUTTON_HOTSPOT,
                           .immediate = true,
@@ -104,13 +104,8 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) { fox_update(fox, delta_time); }
-
-static void render(SDL_Renderer *renderer) {
-  // The backdrop and buttons are static sprites (drawn by the framework); only
-  // the fox is dynamic.
-  fox_render(fox, renderer);
-}
+// No update/render: the fox is the only dynamic thing, so the framework ticks
+// and draws her (#147); the backdrop and buttons are static sprites.
 
 static void on_scene_active(void) {
   stop_animation(play_button);
@@ -122,9 +117,8 @@ static void on_scene_inactive(void) {}
 Scene intro_scene = {
     .init = init,
     .process_input = process_input,
-    .update = update,
-    .render = render,
-    // The framework owns the fox's lifecycle (#141): it makes her at
+    // No update/render: the framework ticks and draws the actor (#147). The
+    // framework also owns the fox's lifecycle (#141): it makes her at
     // actor_start before init, loads her media, and frees her on teardown.
     .actor = &fox,
     .actor_spec = &FOX_SPEC,

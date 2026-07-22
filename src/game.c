@@ -185,7 +185,14 @@ void game_update(float delta_time) {
   // from process_input).
   sync_hotspot_active_anims(scene_instance(game.current_scene));
   update_scene_animations(*scene_instance(game.current_scene), SDL_GetTicks());
-  scene_instance(game.current_scene)->update(delta_time);
+  // A scene either updates itself or leaves update NULL and the framework ticks
+  // its actor (#147) — the same optional-with-default shape as process_input.
+  const Scene *scene = scene_instance(game.current_scene);
+  if (scene->update != NULL) {
+    scene->update(delta_time);
+  } else if (scene->actor != NULL) {
+    scene_default_update(scene, delta_time);
+  }
 
   // The camera eases after the scene has moved its actor, so it follows this
   // frame's position. Re-fetch: the update may have switched scene (a fresh
@@ -217,7 +224,14 @@ void game_render(SDL_Renderer *renderer) {
   render_set_offset(camera_offset);
   render_scene_sprites(renderer, scene->sprites, scene->sprites_length);
   render_hotspot_anims(renderer, scene);
-  scene->render(renderer);
+  // A scene either draws its dynamic layer or leaves render NULL and the
+  // framework draws its actor (#147), after the static sprites and inside the
+  // same camera offset.
+  if (scene->render != NULL) {
+    scene->render(renderer);
+  } else if (scene->actor != NULL) {
+    scene_default_render(scene, renderer);
+  }
   render_set_offset((SDL_Point){0, 0});
 
   // Foreground planes (in front of the action layer): a parallax > 1 strip

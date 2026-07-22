@@ -50,21 +50,8 @@ const ActorSpec FOX_SPEC = {
     .talk_shape_frames = MOUTH_SHAPE_COUNT,
 };
 
-// The fox's make/load/free are the framework's job now (it makes the actor
-// from FOX_SPEC before init, loads its media, and frees it — #141), so no
-// make_fox/fox_load_media/fox_free wrappers remain; scenes declare
-// `.actor_spec = &FOX_SPEC`.
-
-void fox_update(Fox *fox, float delta_time) { actor_update(fox, delta_time); }
-
-void fox_render(Fox *fox, SDL_Renderer *renderer) {
-  actor_render(fox, renderer);
-}
-
-void fox_walk_to(Fox *fox, SDL_FPoint position, void (*on_end)(void)) {
-  actor_walk_to(fox, position, on_end);
-}
-
-void fox_sit(Fox *fox) { actor_play_state(fox, SITTING); }
-
-void fox_wave(Fox *fox) { actor_play_state(fox, WAVING); }
+// No wrappers: the framework owns the fox's whole lifecycle from FOX_SPEC —
+// make/load/free (#141) and, when a scene declares no update/render, tick/draw
+// (#147). Scenes act on the actor through the generic actor_* API (e.g.
+// actor_update, actor_play_state(fox, SITTING)). A new character is now a spec,
+// not a code file.
