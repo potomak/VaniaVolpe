@@ -197,8 +197,8 @@ static void examine_slide(void) {
   say_examine_slide_from_outside();
 }
 
-static void update(float delta_time) { fox_update(fox, delta_time); }
-
+// No update: the framework ticks the actor (#147). render stays custom to draw
+// the carried key behind the fox.
 static void render(SDL_Renderer *renderer) {
   // Backdrop, machines and the on-ground key are static sprites (drawn by the
   // framework). render() draws the dynamic layer: the key while the fox
@@ -209,7 +209,7 @@ static void render(SDL_Renderer *renderer) {
                              fox->current_position.y - 80});
   }
 
-  fox_render(fox, renderer);
+  actor_render(fox, renderer);
 }
 
 static void on_scene_active(void) {
@@ -232,7 +232,8 @@ Scene playground_entrance_scene = {
     .actor = &fox,
     .actor_spec = &FOX_SPEC,
     .actor_start = {580, 457},
-    .update = update,
+    // No update: the framework ticks the actor (#147). render is custom (the
+    // carried key draws behind the fox).
     .render = render,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,

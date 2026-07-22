@@ -5,8 +5,9 @@ are, what's present, and the interactions — and the framework owns the
 plumbing (making and loading animations, drawing the static layer, playing
 sounds, the input default). The spec the implementation follows, the way
 `LIVELINESS.md` and `ASSETS.md` were written before their code. Tracked in the
-backlog (#129); **all five milestones are shipped** — see *Migration plan*
-below.
+backlog (#129); **all five milestones are shipped**, plus the follow-ups that
+gave the framework the actor's lifecycle (#141) and its tick/draw (#147) — see
+*Migration plan* below.
 
 ## The problem
 
@@ -153,6 +154,37 @@ work was the actor drops those functions entirely (both are now optional in the
 `*_load_media` and `*_free` wrappers are gone; scenes that reposition the actor
 per activation (pool re-entry, the dive replay, the depth demo) still do that in
 `on_scene_active`, which the framework leaves to the scene.
+
+### Actor tick & draw (✅ shipped, #147)
+
+The same pattern finishes `update` and `render`. Both are now **optional**: when
+a scene leaves them NULL the framework ticks and draws the scene's `.actor` for
+it (`scene_default_update` / `scene_default_render`, the update/render twins of
+`scene_default_process_input`, dispatched from `game_update` / `game_render`). A
+scene whose whole `update`/`render` was the actor (`intro`, `outro`, `vine`, and
+`playground_entrance`'s `update`) drops the callback and is now just sprites +
+hotspots + behavior.
+
+A scene keeps its own `update`/`render` only to **interleave** the actor with
+scene-specific work in an order that is part of its behavior:
+
+- `field` sets the depth-band variant *before* the tick; `pool`'s dive tween
+  overwrites the position *after* it;
+- `playground_entrance` draws the carried key *before* the fox; `pool`/`tree`
+  draw the float and celebration *around* the hen; `playground`/`field` draw the
+  actor y-sorted with props via `render_action_layer`.
+
+Those overrides call `actor_update` / `actor_render` (or the `scene_default_*`
+helper) **directly** — the override *replaces* the default, so the actor is
+ticked/drawn exactly once. A single fixed framework order couldn't satisfy both
+the "before" (field) and "after" (pool) cases, which is why the override stays
+the escape hatch, exactly like `process_input`.
+
+The upshot: with lifecycle (#141) and tick/draw (#147) both owned by the
+framework, `fox.c` / `hen.c` are now **pure `ActorSpec` data** — the spec, its
+`ActorAnimSpec` table, and a compile-time frame-count assert, no functions at
+all. A new character really is a new spec, not a new code file; scenes act on the
+actor through the generic `actor_*` API.
 
 ### Declaring a scene
 

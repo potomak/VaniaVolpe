@@ -357,7 +357,7 @@ static void process_input(SDL_Event *event) {
 }
 
 static void update(float delta_time) {
-  hen_update(gina, delta_time);
+  actor_update(gina, delta_time);
   // The dive arc drives Gina's position directly, like Vania's slide; when
   // the final tick fires dive_landed the reset has already repositioned her,
   // so the assignment is skipped (tween_update returns false on that tick).
@@ -385,7 +385,7 @@ static void render(SDL_Renderer *renderer) {
                             (SDL_Point){(int)p.x, (int)p.y},
                             tween_scale(&float_tween));
   }
-  hen_render(gina, renderer);
+  actor_render(gina, renderer);
   // The reward burst over the goggles spot while the chime plays.
   if (celebration->is_playing) {
     render_animation(renderer, celebration, CELEBRATION_AT);

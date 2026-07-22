@@ -41,21 +41,8 @@ const ActorSpec HEN_SPEC = {
     .variants_length = 1,
 };
 
-// The hen's make/load/free are the framework's job now (it makes the actor
-// from HEN_SPEC before init, loads its media, and frees it — #141), so no
-// make_hen/hen_load_media/hen_free wrappers remain; scenes declare
-// `.actor_spec = &HEN_SPEC`.
-
-void hen_update(Hen *hen, float delta_time) { actor_update(hen, delta_time); }
-
-void hen_render(Hen *hen, SDL_Renderer *renderer) {
-  actor_render(hen, renderer);
-}
-
-void hen_walk_to(Hen *hen, SDL_FPoint position, void (*on_end)(void)) {
-  actor_walk_to(hen, position, on_end);
-}
-
-void hen_talk(Hen *hen, const ChunkData *dialog) {
-  actor_talk(hen, dialog, NULL);
-}
+// No wrappers: the framework owns the hen's whole lifecycle from HEN_SPEC —
+// make/load/free (#141) and, when a scene declares no update/render, tick/draw
+// (#147). Scenes act on the actor through the generic actor_* API, and dialogue
+// goes through the generated say_<name>() helpers (scene_say → actor_talk). A
+// new character is now a spec, not a code file.

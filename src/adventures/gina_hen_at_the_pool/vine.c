@@ -111,13 +111,8 @@ static void pick_grapes(void) {
   say_nothing_to_pick();
 }
 
-static void update(float delta_time) { hen_update(gina, delta_time); }
-
-static void render(SDL_Renderer *renderer) {
-  // The background and the grapes boil are the scene's static sprites (drawn
-  // by the framework); only the actor is dynamic.
-  hen_render(gina, renderer);
-}
+// No update/render: the background and grapes boil are static sprites and Gina
+// is the only dynamic thing, so the framework ticks and draws her (#147).
 
 static void on_scene_active(void) {
   gina->current_position = HEN_START;
@@ -133,14 +128,12 @@ static void on_scene_inactive(void) {}
 
 Scene vine_scene = {
     .init = init,
-    // No process_input: the framework's default drag/hit-test/walk handler
-    // drives this scene (SCENES.md milestone 5). The framework also owns Gina's
-    // lifecycle (#141).
+    // No process_input / update / render: the framework's default handlers
+    // drive input, and tick and draw the actor (SCENES.md milestone 5, #147).
+    // The framework also owns Gina's lifecycle (#141).
     .actor = &gina,
     .actor_spec = &HEN_SPEC,
     .actor_start = {400, 480},
-    .update = update,
-    .render = render,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
     .hotspots = hotspots,
