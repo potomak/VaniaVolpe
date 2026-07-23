@@ -144,13 +144,14 @@ typedef struct scene {
   void (*process_input)(SDL_Event *event);
   // update / render are optional (#147): NULL lets the framework tick / draw
   // the scene's `.actor` for it (scene_default_update / scene_default_render).
-  // A scene supplies its own only to interleave the actor with scene-specific
+  // The default render draws the actor alone, or — when the scene declares
+  // `.props` (#149) — the props and actor y-sorted (render_action_layer). A
+  // scene supplies its own only to interleave the actor with scene-specific
   // work — order the tick (field's depth variant before it, pool's dive tween
   // after it) or compose the actor into a dynamic draw layer (the carried key,
-  // props y-sorted with the actor). Such an override ticks / draws the actor
-  // itself (via actor_update / actor_render, or the scene_default_* helper) —
-  // exactly once, since the override replaces the default rather than adding to
-  // it.
+  // the float behind the hen). Such an override ticks / draws the actor itself
+  // (via actor_update / actor_render, or the scene_default_* helper) — exactly
+  // once, since the override replaces the default rather than adding to it.
   void (*update)(float delta_time);
   void (*render)(SDL_Renderer *renderer);
   void (*deinit)(void);
@@ -210,6 +211,18 @@ typedef struct scene {
   // themselves. Built in the scene's init (like the hotspot table).
   SceneSprite *sprites;
   int sprites_length;
+
+  // Props (Prop, DEPTH_AND_CAMERA.md Phase 1): scene objects the actor is
+  // depth-sorted against (passes behind or in front of, by feet-y vs each
+  // prop's baseline). When a scene declares props and leaves `render` NULL, the
+  // framework's default render draws them y-sorted with the actor
+  // (scene_default_render → render_action_layer, #149) — so a scene whose whole
+  // dynamic layer is props + actor drops its render too. A scene that
+  // interleaves other dynamic draws keeps a custom render and draws the action
+  // layer itself. NULL/0 for scenes with no props. Built in init like sprites;
+  // baselines/visibility are the scene's to set (init/on_scene_active/update).
+  Prop *props;
+  int props_length;
 
   // Images
   ImageData *images;

@@ -147,6 +147,14 @@ always draw the fox last" block with a `Prop` table plus one
 (backgrounds, UI) manual as today. **Demo with zero new art:** in
 `playground.c`, make the fallen-acorns pile and the dropped peg props — the
 fox standing above (behind) the pile is then correctly overlapped by it.
+
+Since #149 a scene can go further and **declare** its props on the `Scene`
+(`.props` / `.props_length`): when it also leaves `render` NULL, the framework
+draws the props + actor action layer itself (`scene_default_render` →
+`render_action_layer`), so the scene needs no `render` at all — the depth demo
+(`field.c`) does this. A scene that also has draws which interleave with the
+actor (the playground's carried peg/acorns tracking the fox) keeps its own
+`render` and calls `render_action_layer` there.
 Scenes that don't opt in are untouched.
 
 Acceptance: all builds green; `make test` passes; manual playtest — walk the

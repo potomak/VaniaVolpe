@@ -73,7 +73,16 @@ void scene_default_update(const Scene *scene, float delta_time) {
 
 void scene_default_render(const Scene *scene, SDL_Renderer *renderer) {
   SDL_assert(scene->actor != NULL);
-  actor_render(*scene->actor, renderer);
+  // With props (#149) the actor is depth-sorted among them; without, it's a
+  // plain draw. scene->actor is the address of the scene's single actor
+  // pointer, so it doubles as a one-element actor array for
+  // render_action_layer.
+  if (scene->props_length > 0) {
+    render_action_layer(renderer, scene->props, scene->props_length,
+                        scene->actor, 1);
+  } else {
+    actor_render(*scene->actor, renderer);
+  }
 }
 
 void sync_hotspot_active_anims(const Scene *scene) {
