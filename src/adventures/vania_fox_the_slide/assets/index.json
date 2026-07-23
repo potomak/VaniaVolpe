@@ -43,7 +43,7 @@
     },
     {
       "group": "Runtime — Fox",
-      "type": "audio",
+      "type": "sound",
       "dir": "fox",
       "name": "walking",
       "description": "Vania's footstep loop (the ActorSpec move sound)."
@@ -78,28 +78,28 @@
     },
     {
       "group": "Runtime — Intro",
-      "type": "audio",
+      "type": "sfx",
       "dir": "intro",
       "name": "play_button_click",
       "description": "Play button click."
     },
     {
       "group": "Runtime — Intro",
-      "type": "audio",
+      "type": "sfx",
       "dir": "intro",
       "name": "exit_button_click",
       "description": "Exit button click."
     },
     {
       "group": "Runtime — Music",
-      "type": "audio",
+      "type": "music",
       "dir": "music",
       "name": "intro",
       "description": "Intro/outro music (streamed via Mix_LoadMUS)."
     },
     {
       "group": "Runtime — Music",
-      "type": "audio",
+      "type": "music",
       "dir": "music",
       "name": "playground",
       "description": "Playground music (streamed via Mix_LoadMUS)."
@@ -149,31 +149,28 @@
     },
     {
       "group": "Runtime — Playground entrance",
-      "type": "audio",
+      "type": "sfx",
       "dir": "playground_entrance",
       "name": "excavator",
-      "sfx": true,
       "description": "The excavator rattling."
     },
     {
       "group": "Runtime — Playground entrance",
-      "type": "audio",
+      "type": "sfx",
       "dir": "playground_entrance",
       "name": "shovel",
-      "sfx": true,
       "description": "Digging."
     },
     {
       "group": "Runtime — Playground entrance",
-      "type": "audio",
+      "type": "sfx",
       "dir": "playground_entrance",
       "name": "key_reveal",
-      "sfx": true,
       "description": "The key appearing."
     },
     {
       "group": "Runtime — Playground entrance",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground_entrance/dialog",
       "name": "examine_gate_1",
       "localized": true,
@@ -181,7 +178,7 @@
     },
     {
       "group": "Runtime — Playground entrance",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground_entrance/dialog",
       "name": "examine_gate_2",
       "localized": true,
@@ -189,7 +186,7 @@
     },
     {
       "group": "Runtime — Playground entrance",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground_entrance/dialog",
       "name": "examine_slide_from_outside",
       "localized": true,
@@ -232,23 +229,21 @@
     },
     {
       "group": "Runtime — Playground",
-      "type": "audio",
+      "type": "sfx",
       "dir": "playground",
       "name": "acorns_falling",
-      "sfx": true,
       "description": "Acorns dropping from the tree."
     },
     {
       "group": "Runtime — Playground",
-      "type": "audio",
+      "type": "sfx",
       "dir": "playground",
       "name": "peg_falling",
-      "sfx": true,
       "description": "The peg hitting the ground (also reused for the gate and the slide fix)."
     },
     {
       "group": "Runtime — Playground",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground/dialog",
       "name": "examine_fixed_slide",
       "localized": true,
@@ -256,7 +251,7 @@
     },
     {
       "group": "Runtime — Playground",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground/dialog",
       "name": "examine_slide_1",
       "localized": true,
@@ -264,7 +259,7 @@
     },
     {
       "group": "Runtime — Playground",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground/dialog",
       "name": "examine_slide_2",
       "localized": true,
@@ -272,7 +267,7 @@
     },
     {
       "group": "Runtime — Playground",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground/dialog",
       "name": "examine_squirrel_1",
       "localized": true,
@@ -280,7 +275,7 @@
     },
     {
       "group": "Runtime — Playground",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground/dialog",
       "name": "examine_squirrel_2",
       "localized": true,
@@ -288,7 +283,7 @@
     },
     {
       "group": "Runtime — Playground",
-      "type": "audio",
+      "type": "speech",
       "dir": "playground/dialog",
       "name": "sliding_down",
       "localized": true,

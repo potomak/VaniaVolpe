@@ -55,18 +55,6 @@ void scene_say(int index);
 #define VANIA_INTRO_IMAGE_INTRO_BACKGROUND_INIT {NULL, "intro_background.png", "intro", 0, 0}
 #define VANIA_INTRO_IMAGES_COUNT 1
 #define VANIA_INTRO_IMAGES_INIT {VANIA_INTRO_IMAGE_INTRO_BACKGROUND_INIT}
-#define VANIA_INTRO_CHUNK_PLAY_BUTTON_CLICK 0
-#define VANIA_INTRO_CHUNK_PLAY_BUTTON_CLICK_INIT {NULL, "play_button_click.wav", "intro"}
-#define VANIA_INTRO_CHUNK_PLAY_BUTTON_CLICK_FILE "play_button_click.wav"
-#define VANIA_INTRO_CHUNK_PLAY_BUTTON_CLICK_ASSET ((Asset){.filename = "play_button_click.wav", .directory = "intro"})
-#define VANIA_INTRO_CHUNK_PLAY_BUTTON_CLICK_ASSET_INIT {"play_button_click.wav", "intro"}
-#define VANIA_INTRO_CHUNK_EXIT_BUTTON_CLICK 1
-#define VANIA_INTRO_CHUNK_EXIT_BUTTON_CLICK_INIT {NULL, "exit_button_click.wav", "intro"}
-#define VANIA_INTRO_CHUNK_EXIT_BUTTON_CLICK_FILE "exit_button_click.wav"
-#define VANIA_INTRO_CHUNK_EXIT_BUTTON_CLICK_ASSET ((Asset){.filename = "exit_button_click.wav", .directory = "intro"})
-#define VANIA_INTRO_CHUNK_EXIT_BUTTON_CLICK_ASSET_INIT {"exit_button_click.wav", "intro"}
-#define VANIA_INTRO_CHUNKS_COUNT 2
-#define VANIA_INTRO_CHUNKS_INIT {VANIA_INTRO_CHUNK_PLAY_BUTTON_CLICK_INIT, VANIA_INTRO_CHUNK_EXIT_BUTTON_CLICK_INIT}
 #define VANIA_INTRO_ANIM_PLAY_BUTTON 0
 #define VANIA_INTRO_ANIM_PLAY_BUTTON_FRAMES 3
 #define VANIA_INTRO_ANIM_PLAY_BUTTON_STYLE LOOP
@@ -221,17 +209,21 @@ static inline void say_examine_slide_from_outside(void) { scene_say(VANIA_PLAYGR
 
 // ── sound effects (adventure-wide bank; play via play_<name>()) ──
 int sfx_play(int index);
-#define VANIA_SFX_EXCAVATOR 0
+#define VANIA_SFX_PLAY_BUTTON_CLICK 0
+static inline int play_play_button_click(void) { return sfx_play(VANIA_SFX_PLAY_BUTTON_CLICK); }
+#define VANIA_SFX_EXIT_BUTTON_CLICK 1
+static inline int play_exit_button_click(void) { return sfx_play(VANIA_SFX_EXIT_BUTTON_CLICK); }
+#define VANIA_SFX_EXCAVATOR 2
 static inline int play_excavator(void) { return sfx_play(VANIA_SFX_EXCAVATOR); }
-#define VANIA_SFX_SHOVEL 1
+#define VANIA_SFX_SHOVEL 3
 static inline int play_shovel(void) { return sfx_play(VANIA_SFX_SHOVEL); }
-#define VANIA_SFX_KEY_REVEAL 2
+#define VANIA_SFX_KEY_REVEAL 4
 static inline int play_key_reveal(void) { return sfx_play(VANIA_SFX_KEY_REVEAL); }
-#define VANIA_SFX_ACORNS_FALLING 3
+#define VANIA_SFX_ACORNS_FALLING 5
 static inline int play_acorns_falling(void) { return sfx_play(VANIA_SFX_ACORNS_FALLING); }
-#define VANIA_SFX_PEG_FALLING 4
+#define VANIA_SFX_PEG_FALLING 6
 static inline int play_peg_falling(void) { return sfx_play(VANIA_SFX_PEG_FALLING); }
-#define VANIA_SFX_COUNT 5
-#define VANIA_SFX_INIT {{NULL, "excavator.wav", "playground_entrance"}, {NULL, "shovel.wav", "playground_entrance"}, {NULL, "key_reveal.wav", "playground_entrance"}, {NULL, "acorns_falling.wav", "playground"}, {NULL, "peg_falling.wav", "playground"}}
+#define VANIA_SFX_COUNT 7
+#define VANIA_SFX_INIT {{NULL, "play_button_click.wav", "intro"}, {NULL, "exit_button_click.wav", "intro"}, {NULL, "excavator.wav", "playground_entrance"}, {NULL, "shovel.wav", "playground_entrance"}, {NULL, "key_reveal.wav", "playground_entrance"}, {NULL, "acorns_falling.wav", "playground"}, {NULL, "peg_falling.wav", "playground"}}
 
 #endif // GEN_VANIA_ASSETS_H

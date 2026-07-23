@@ -44,6 +44,16 @@ from urllib.parse import quote
 REPO_OWNER = "potomak"
 REPO_NAME = "VaniaVolpe"
 
+# A framework type's file type (ASSET_TYPES.md): the extension follows from this.
+FILE_TYPE = {
+    "image": "image",
+    "animation": "image",
+    "sfx": "audio",
+    "music": "audio",
+    "speech": "audio",
+    "sound": "audio",
+}
+
 # Files the tool itself drops in a `_inbox/<id>/`; never counted as uploads.
 SCAFFOLD_FILES = {"README.md", ".gitkeep"}
 
@@ -78,9 +88,10 @@ def target_rel(manifest, task):
     if task["type"] == "animation":
         base = f"{assets}/{task['dir']}/{task['name']}"
         return [base + ".png", base + ".anim"]
-    if task["type"] == "voice":
+    if task["type"] == "speech":
+        # A spoken line is recorded per locale (dialogue dirs are locale-resolved).
         return [f"{assets}/{locale}/{task['dir']}/{task['name']}.wav"]
-    ext = ".wav" if task["type"] == "audio" else ".png"
+    ext = ".wav" if FILE_TYPE[task["type"]] == "audio" else ".png"
     return [f"{assets}/{task['dir']}/{task['name']}{ext}"]
 
 
@@ -101,7 +112,7 @@ def status(root, manifest, task):
         if task["type"] == "animation":
             return "uploaded", f"{len(pending)} file(s) uploaded — run consolidate"
         return "uploaded", "uploaded — run consolidate"
-    if task["type"] == "voice":
+    if task["type"] == "speech":
         return "todo", "not recorded"
     if task["type"] == "animation":
         return "todo", "no frames yet"
@@ -119,9 +130,9 @@ def drop_desc(task):
         size = f" ({task['size']})" if task.get("size") else ""
         return (f"the {task['frames']} frame PNGs{size}, in order — filenames "
                 f"only decide frame order, so name them e.g. 01.png, 02.png…")
-    if task["type"] == "voice":
+    if task["type"] == "speech":
         return f"the recorded line as a WAV (any filename; saved as {task['name']}.wav)"
-    if task["type"] == "audio":
+    if FILE_TYPE[task["type"]] == "audio":
         return f"the finished sound as a WAV (any filename; saved as {task['name']}.wav)"
     size = f" ({task['size']})" if task.get("size") else ""
     return f"the finished PNG{size} (any filename)"
