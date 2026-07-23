@@ -174,12 +174,10 @@ static void update(float delta_time) {
   actor_update(fox, delta_time);
 }
 
-static void render(SDL_Renderer *renderer) {
-  // Just the action layer: the engine draws the sky/hills/ground planes behind
-  // this and the foreground bush strip in front. The whole Phase 1 opt-in:
-  // props and actor draw y-sorted in one call.
-  render_action_layer(renderer, props, LEN(props), (Actor *[]){fox}, 1);
-}
+// No render: the whole dynamic layer is props + actor, so the framework draws
+// them y-sorted for us (scene_default_render → render_action_layer, #149). The
+// engine draws the sky/hills/ground planes behind and the foreground bush strip
+// in front.
 
 static void on_scene_active(void) {
   fox->current_position = FOX_START;
@@ -199,7 +197,7 @@ Scene field_scene = {
     .init = init,
     .process_input = process_input,
     .update = update,
-    .render = render,
+    // No render: the framework draws the props + actor action layer (#149).
     // The framework owns the fox's lifecycle (#141): made at actor_start before
     // init (so camera_init can anchor to her), loaded, and freed on teardown.
     .actor = &fox,
@@ -209,6 +207,8 @@ Scene field_scene = {
     .on_scene_inactive = on_scene_inactive,
     .walk_grid = &walk_grid,
     .camera = &camera,
+    .props = props,
+    .props_length = LEN(props),
     .images = images,
     .images_length = LEN(images),
     .bg_planes = bg_planes,
