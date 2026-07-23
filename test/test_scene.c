@@ -198,6 +198,14 @@ int test_scene(void) {
   check(order_is(order, count, (int[]){0, 1}, 2),
         "equal-baseline props keep declaration order");
 
+  // No props: the actor is the whole action layer — the scene_default_render
+  // path for a scene that declares none (#149/#154). The props loop must run
+  // zero times without touching the NULL props pointer.
+  actor->current_position = (SDL_FPoint){400, 300};
+  count = action_layer_order(NULL, 0, &actor, 1, order);
+  check(order_is(order, count, (int[]){0}, 1),
+        "with no props the actor is the only drawable");
+
   actor_free(actor);
 
   // ── depth_variant_for ─────────────────────────────────────────────────────
