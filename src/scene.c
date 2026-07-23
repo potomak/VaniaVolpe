@@ -417,8 +417,15 @@ bool load_scene_chunks(Scene *scene) {
 
 void make_scene_animations(Scene *scene) {
   for (int i = 0; i < scene->anim_specs_length; i++) {
-    scene->animations[i] = make_animation_data(scene->anim_specs[i].frames,
-                                               scene->anim_specs[i].style);
+    const SceneAnimSpec *spec = &scene->anim_specs[i];
+    AnimationData *anim = make_animation_data(spec->frames, spec->style);
+    // Declarative playback config (#150): apply only when set, so a spec that
+    // leaves them 0 keeps make_animation_data's defaults.
+    if (spec->ms_per_frame > 0) {
+      anim->ms_per_frame = spec->ms_per_frame;
+    }
+    anim->max_loop_count = spec->max_loop_count;
+    scene->animations[i] = anim;
   }
 }
 

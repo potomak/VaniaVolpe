@@ -55,6 +55,7 @@ Each entry in `assets`:
 | `frames` | animations: frame count — **validated against the committed `.anim`** |
 | `style` | animations: `loop` (default) or `one_shot` |
 | `ms_per_frame` | animations: frame duration override; `0`/absent = engine default |
+| `max_loop_count` | animations: how many times a `one_shot` loops before it stops; `0`/absent = play once. Applied by the framework via the `_SPEC` initializer (#150) |
 | `size` | authoring hint (`WxH`) shown to the artist |
 | `text` | voice: the line to record |
 | `localized` | the file lives under a locale dir, not `common/` |

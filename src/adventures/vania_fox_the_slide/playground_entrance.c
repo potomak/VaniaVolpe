@@ -109,13 +109,11 @@ static void run_excavator(void) {
 }
 
 static void init(void) {
+  // The excavator (6) and shovel (3) loop counts are declared in the manifest
+  // now and applied by the framework when it makes the animation (#150).
   excavator = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR];
-  // Loop the animation 6 times before stopping
-  excavator->max_loop_count = 6;
   gate = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE];
   shovel = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL];
-  // Loop the animation 3 times before stopping
-  shovel->max_loop_count = 3;
 
   int s = 0;
   sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};

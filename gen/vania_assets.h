@@ -20,7 +20,7 @@ void scene_say(int index);
 #define VANIA_FOX_ANIM_WALKING_DATA_FILE "walking.anim"
 #define VANIA_FOX_ANIM_WALKING_SPRITE_ASSET ((Asset){.filename = "walking.png", .directory = "fox"})
 #define VANIA_FOX_ANIM_WALKING_DATA_ASSET ((Asset){.filename = "walking.anim", .directory = "fox"})
-#define VANIA_FOX_ANIM_WALKING_SPEC {4, LOOP, {"walking.png", "fox"}, {"walking.anim", "fox"}}
+#define VANIA_FOX_ANIM_WALKING_SPEC {4, LOOP, {"walking.png", "fox"}, {"walking.anim", "fox"}, 0, 0}
 #define VANIA_FOX_ANIM_TALKING 1
 #define VANIA_FOX_ANIM_TALKING_FRAMES 7
 #define VANIA_FOX_ANIM_TALKING_STYLE LOOP
@@ -29,7 +29,7 @@ void scene_say(int index);
 #define VANIA_FOX_ANIM_TALKING_DATA_FILE "talking.anim"
 #define VANIA_FOX_ANIM_TALKING_SPRITE_ASSET ((Asset){.filename = "talking.png", .directory = "fox"})
 #define VANIA_FOX_ANIM_TALKING_DATA_ASSET ((Asset){.filename = "talking.anim", .directory = "fox"})
-#define VANIA_FOX_ANIM_TALKING_SPEC {7, LOOP, {"talking.png", "fox"}, {"talking.anim", "fox"}}
+#define VANIA_FOX_ANIM_TALKING_SPEC {7, LOOP, {"talking.png", "fox"}, {"talking.anim", "fox"}, 0, 0}
 #define VANIA_FOX_ANIM_SITTING 2
 #define VANIA_FOX_ANIM_SITTING_FRAMES 3
 #define VANIA_FOX_ANIM_SITTING_STYLE LOOP
@@ -38,7 +38,7 @@ void scene_say(int index);
 #define VANIA_FOX_ANIM_SITTING_DATA_FILE "sitting.anim"
 #define VANIA_FOX_ANIM_SITTING_SPRITE_ASSET ((Asset){.filename = "sitting.png", .directory = "fox"})
 #define VANIA_FOX_ANIM_SITTING_DATA_ASSET ((Asset){.filename = "sitting.anim", .directory = "fox"})
-#define VANIA_FOX_ANIM_SITTING_SPEC {3, LOOP, {"sitting.png", "fox"}, {"sitting.anim", "fox"}}
+#define VANIA_FOX_ANIM_SITTING_SPEC {3, LOOP, {"sitting.png", "fox"}, {"sitting.anim", "fox"}, 0, 0}
 #define VANIA_FOX_ANIM_WAVING 3
 #define VANIA_FOX_ANIM_WAVING_FRAMES 3
 #define VANIA_FOX_ANIM_WAVING_STYLE LOOP
@@ -47,7 +47,7 @@ void scene_say(int index);
 #define VANIA_FOX_ANIM_WAVING_DATA_FILE "waving.anim"
 #define VANIA_FOX_ANIM_WAVING_SPRITE_ASSET ((Asset){.filename = "waving.png", .directory = "fox"})
 #define VANIA_FOX_ANIM_WAVING_DATA_ASSET ((Asset){.filename = "waving.anim", .directory = "fox"})
-#define VANIA_FOX_ANIM_WAVING_SPEC {3, LOOP, {"waving.png", "fox"}, {"waving.anim", "fox"}}
+#define VANIA_FOX_ANIM_WAVING_SPEC {3, LOOP, {"waving.png", "fox"}, {"waving.anim", "fox"}, 0, 0}
 #define VANIA_FOX_ANIMS_COUNT 4
 
 // ── intro ─────────────────────────────────────────────
@@ -75,7 +75,7 @@ void scene_say(int index);
 #define VANIA_INTRO_ANIM_PLAY_BUTTON_DATA_FILE "play_button.anim"
 #define VANIA_INTRO_ANIM_PLAY_BUTTON_SPRITE_ASSET ((Asset){.filename = "play_button.png", .directory = "intro"})
 #define VANIA_INTRO_ANIM_PLAY_BUTTON_DATA_ASSET ((Asset){.filename = "play_button.anim", .directory = "intro"})
-#define VANIA_INTRO_ANIM_PLAY_BUTTON_SPEC {3, LOOP, {"play_button.png", "intro"}, {"play_button.anim", "intro"}}
+#define VANIA_INTRO_ANIM_PLAY_BUTTON_SPEC {3, LOOP, {"play_button.png", "intro"}, {"play_button.anim", "intro"}, 0, 0}
 #define VANIA_INTRO_ANIM_EXIT_BUTTON 1
 #define VANIA_INTRO_ANIM_EXIT_BUTTON_FRAMES 3
 #define VANIA_INTRO_ANIM_EXIT_BUTTON_STYLE LOOP
@@ -84,7 +84,7 @@ void scene_say(int index);
 #define VANIA_INTRO_ANIM_EXIT_BUTTON_DATA_FILE "exit_button.anim"
 #define VANIA_INTRO_ANIM_EXIT_BUTTON_SPRITE_ASSET ((Asset){.filename = "exit_button.png", .directory = "intro"})
 #define VANIA_INTRO_ANIM_EXIT_BUTTON_DATA_ASSET ((Asset){.filename = "exit_button.anim", .directory = "intro"})
-#define VANIA_INTRO_ANIM_EXIT_BUTTON_SPEC {3, LOOP, {"exit_button.png", "intro"}, {"exit_button.anim", "intro"}}
+#define VANIA_INTRO_ANIM_EXIT_BUTTON_SPEC {3, LOOP, {"exit_button.png", "intro"}, {"exit_button.anim", "intro"}, 0, 0}
 #define VANIA_INTRO_ANIMS_COUNT 2
 
 // ── music ─────────────────────────────────────────────
@@ -176,7 +176,7 @@ static inline void say_sliding_down(void) { scene_say(VANIA_PLAYGROUND_DIALOG_CH
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_DATA_FILE "excavator.anim"
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_SPRITE_ASSET ((Asset){.filename = "excavator.png", .directory = "playground_entrance"})
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_DATA_ASSET ((Asset){.filename = "excavator.anim", .directory = "playground_entrance"})
-#define VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_SPEC {4, ONE_SHOT, {"excavator.png", "playground_entrance"}, {"excavator.anim", "playground_entrance"}}
+#define VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_SPEC {4, ONE_SHOT, {"excavator.png", "playground_entrance"}, {"excavator.anim", "playground_entrance"}, 0, 6}
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE 1
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_FRAMES 7
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_STYLE ONE_SHOT
@@ -185,7 +185,7 @@ static inline void say_sliding_down(void) { scene_say(VANIA_PLAYGROUND_DIALOG_CH
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_DATA_FILE "gate.anim"
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_SPRITE_ASSET ((Asset){.filename = "gate.png", .directory = "playground_entrance"})
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_DATA_ASSET ((Asset){.filename = "gate.anim", .directory = "playground_entrance"})
-#define VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_SPEC {7, ONE_SHOT, {"gate.png", "playground_entrance"}, {"gate.anim", "playground_entrance"}}
+#define VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_SPEC {7, ONE_SHOT, {"gate.png", "playground_entrance"}, {"gate.anim", "playground_entrance"}, 0, 0}
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL 2
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_FRAMES 5
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_STYLE ONE_SHOT
@@ -194,7 +194,7 @@ static inline void say_sliding_down(void) { scene_say(VANIA_PLAYGROUND_DIALOG_CH
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_DATA_FILE "shovel.anim"
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPRITE_ASSET ((Asset){.filename = "shovel.png", .directory = "playground_entrance"})
 #define VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_DATA_ASSET ((Asset){.filename = "shovel.anim", .directory = "playground_entrance"})
-#define VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPEC {5, ONE_SHOT, {"shovel.png", "playground_entrance"}, {"shovel.anim", "playground_entrance"}}
+#define VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPEC {5, ONE_SHOT, {"shovel.png", "playground_entrance"}, {"shovel.anim", "playground_entrance"}, 0, 3}
 #define VANIA_PLAYGROUND_ENTRANCE_ANIMS_COUNT 3
 
 // ── playground_entrance/dialog ─────────────────────────────────────────────
