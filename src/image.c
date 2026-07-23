@@ -9,6 +9,7 @@
 #include <SDL2_image/SDL_image.h>
 #include <stdbool.h>
 
+#include "clock.h"
 #include "image.h"
 
 AnimationData *make_animation_data(int frames, AnimationPlaybackStyle style) {
@@ -224,7 +225,7 @@ void play_animation(AnimationData *animation, void (*on_end)(void)) {
   animation->loop_count = 0;
   animation->current_frame = 0;
   animation->is_playing = true;
-  animation->start_time = SDL_GetTicks();
+  animation->start_time = clock_now_ms();
   animation->on_end = on_end;
 }
 

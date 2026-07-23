@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 #include "actor.h"
+#include "clock.h"
 #include "constants.h"
 #include "image.h"
 #include "sound.h"
@@ -97,7 +98,7 @@ static void enter_idle(Actor *actor) {
   actor->state = IDLE;
   Uint32 span = FIDGET_MAX_DELAY_MS - FIDGET_MIN_DELAY_MS;
   actor->next_fidget_at =
-      SDL_GetTicks() + FIDGET_MIN_DELAY_MS + (Uint32)(rand() % (int)(span + 1));
+      clock_now_ms() + FIDGET_MIN_DELAY_MS + (Uint32)(rand() % (int)(span + 1));
 }
 
 // Interrupt a playing fidget: a tap always wins over a peck. The fidget was
@@ -334,7 +335,7 @@ void actor_update(Actor *actor, float delta_time) {
   // of them is a cheap no-op on the stopped ones. Actor animations are always
   // played with no end callback (a ONE_SHOT LANDING sheet stops itself
   // silently), so this never fires a stray callback.
-  int now = SDL_GetTicks();
+  int now = clock_now_ms();
   for (int v = 0; v < actor->spec->variants_length; v++) {
     for (int i = 0; i < ACTOR_STATE_COUNT; i++) {
       if (actor->animations[v][i] != NULL) {
@@ -352,7 +353,7 @@ void actor_update(Actor *actor, float delta_time) {
 
   float dx = actor->target_position.x - actor->current_position.x;
   float dy = actor->target_position.y - actor->current_position.y;
-  float ticks = SDL_GetTicks();
+  float ticks = clock_now_ms();
 
   switch (actor->state) {
   case IDLE: {
@@ -695,7 +696,7 @@ void actor_talk(Actor *actor, const ChunkData *dialog, const char *text) {
   }
   actor->state = TALKING;
   actor->talking_duration = talking_duration;
-  actor->started_talking_at = SDL_GetTicks();
+  actor->started_talking_at = clock_now_ms();
 }
 
 void actor_play_state(Actor *actor, ActorState state) {

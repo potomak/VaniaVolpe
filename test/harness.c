@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "asset.h"
+#include "clock.h"
 #include "constants.h"
 #include "depth_demo.h"
 #include "game.h"
@@ -17,7 +18,12 @@
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
-static Uint32 last_frame_time = 0;
+
+// Fixed timestep for the deterministic virtual clock (#155): every harness
+// frame advances the simulation by exactly this many ms, so the scripted
+// playthrough runs identically regardless of machine speed or load. 16 ms ≈
+// 60 fps — fine enough for the animation/talk timers the assertions depend on.
+#define HARNESS_STEP_MS 16
 
 // Dialogue and messages go through SDL_Log; we install our own log sink so the
 // tests can read the stream back and assert on it. Lines are appended here
@@ -29,6 +35,12 @@ static size_t log_len = 0;
 // ── lifecycle ────────────────────────────────────────────────────────────────
 
 bool harness_init(void) {
+  // Drive the whole simulation off a deterministic virtual clock (#155) instead
+  // of the wall clock, so the scripted playthrough is reproducible. Set before
+  // any actor/animation is created (game_load_media in harness_start_game), so
+  // every start_time is on the virtual clock from the first frame.
+  clock_set_virtual(true);
+
   // Offscreen video + dummy audio: no display server, no sound card. Must be
   // set before SDL_Init so the subsystems pick these drivers.
   SDL_setenv("SDL_VIDEODRIVER", "offscreen", 1);
@@ -124,7 +136,6 @@ bool harness_start_game(void) {
   adventure_switch_to(&hub);
 
   game.is_running = true;
-  last_frame_time = SDL_GetTicks();
   return true;
 }
 
@@ -143,10 +154,12 @@ static void process_input(void) {
 void harness_step_frame(void) {
   process_input();
 
-  Uint32 now = SDL_GetTicks();
-  float delta_time = (now - last_frame_time) / 1000.0;
-  last_frame_time = now;
-  game_update(delta_time);
+  // Fixed timestep on the virtual clock (#155): advance simulated time by
+  // exactly HARNESS_STEP_MS and feed game_update the matching delta, so both
+  // the frame-delta motion and the clock-based animation/talk timers step in
+  // lockstep — no dependence on the wall clock.
+  clock_advance(HARNESS_STEP_MS);
+  game_update(HARNESS_STEP_MS / 1000.0F);
 
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   SDL_RenderClear(renderer);
@@ -154,10 +167,12 @@ void harness_step_frame(void) {
 }
 
 void harness_pump_for(Uint32 ms) {
-  Uint32 until = SDL_GetTicks() + ms;
-  while (game.is_running && SDL_GetTicks() < until) {
+  // Run a fixed number of frames (ceil), not a wall-clock duration, so `ms` of
+  // simulated time always advances the same amount however fast this runs.
+  Uint32 elapsed = 0;
+  while (game.is_running && elapsed < ms) {
     harness_step_frame();
-    SDL_Delay(8);
+    elapsed += HARNESS_STEP_MS;
   }
 }
 
