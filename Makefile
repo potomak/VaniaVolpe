@@ -17,6 +17,7 @@ TARGET_TERMINAL = vaniavolpe_terminal
 # (scenes, the fox actor, the adventure module) live under $(VFTS_DIR).
 GAME_SRCS = \
 	src/game.c \
+	src/clock.c \
 	src/adventure.c \
 	src/hub.c \
 	src/scene.c \

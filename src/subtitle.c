@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "clock.h"
 #include "constants.h"
 #include "lipsync.h"
 
@@ -223,7 +224,7 @@ void subtitle_show(const char *text, const WordTimings *words,
   }
 
   word_cursor = 0;
-  shown_at = SDL_GetTicks();
+  shown_at = clock_now_ms();
   lingers_until = shown_at + duration_ms + SUBTITLE_GRACE_MS;
   active = true;
 }
@@ -232,7 +233,7 @@ void subtitle_render(SDL_Renderer *renderer) {
   if (!active) {
     return;
   }
-  Uint32 now = SDL_GetTicks();
+  Uint32 now = clock_now_ms();
   if (now >= lingers_until) {
     active = false; // textures are freed by the next show/clear/deinit
     return;

@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include "actor.h"
+#include "clock.h"
 #include "scene.h"
 
 #include "test_scene.h"
@@ -371,7 +372,7 @@ int test_scene(void) {
 
   Actor *fidgeter = make_actor(&FIDGET_SPEC, (SDL_FPoint){100, 100});
   check(fidgeter->state == IDLE &&
-            fidgeter->next_fidget_at >= SDL_GetTicks() + FIDGET_MIN_DELAY_MS,
+            fidgeter->next_fidget_at >= clock_now_ms() + FIDGET_MIN_DELAY_MS,
         "a fresh actor is idle with a fidget timer at least MIN_DELAY out");
 
   actor_update(fidgeter, 1.0F / 30.0F);
@@ -396,18 +397,18 @@ int test_scene(void) {
     actor_update(fidgeter, 1.0F / 30.0F);
   }
   check(fidgeter->state == IDLE &&
-            fidgeter->next_fidget_at >= SDL_GetTicks() + FIDGET_MIN_DELAY_MS,
+            fidgeter->next_fidget_at >= clock_now_ms() + FIDGET_MIN_DELAY_MS,
         "arriving re-enters IDLE and re-rolls the fidget timer");
 
   // A finished one-shot fidget returns to IDLE on its own.
   fidgeter->next_fidget_at = 0;
   actor_update(fidgeter, 1.0F / 30.0F);
   AnimationData *beat = fidgeter->fidget_anims[0][fidgeter->active_fidget];
-  beat->start_time = (int)SDL_GetTicks() - 10000; // age it past its runtime
+  beat->start_time = (int)clock_now_ms() - 10000; // age it past its runtime
   actor_update(fidgeter, 1.0F / 30.0F);
   actor_update(fidgeter, 1.0F / 30.0F);
   check(fidgeter->state == IDLE && !beat->is_playing &&
-            fidgeter->next_fidget_at >= SDL_GetTicks() + FIDGET_MIN_DELAY_MS,
+            fidgeter->next_fidget_at >= clock_now_ms() + FIDGET_MIN_DELAY_MS,
         "a finished fidget returns to IDLE with a fresh timer");
 
   // A grab interrupts a fidget too.

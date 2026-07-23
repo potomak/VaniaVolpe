@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "actor.h"
+#include "clock.h"
 #include "constants.h"
 #include "walk.h"
 
@@ -551,7 +552,7 @@ static void test_drag_and_drop(void) {
   check(actor->state == LANDING && actor->animations[0][LANDING]->is_playing,
         "touchdown plays the one-shot landing beat");
   // Age the beat past its runtime so animation_update stops it.
-  actor->animations[0][LANDING]->start_time = (int)SDL_GetTicks() - 1000;
+  actor->animations[0][LANDING]->start_time = (int)clock_now_ms() - 1000;
   actor_update(actor, 1.0F / 30.0F);
   actor_update(actor, 1.0F / 30.0F);
   check(actor->state == IDLE, "the landing beat over, she returns to IDLE");

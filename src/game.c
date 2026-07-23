@@ -9,6 +9,8 @@
 
 // Asset path resolution (adventure assets root)
 #include "asset.h"
+// Simulation clock seam (#155): a deterministic virtual clock under test
+#include "clock.h"
 #include "constants.h"
 // Features for debugging the game
 #include "debug.h"
@@ -184,7 +186,7 @@ void game_update(float delta_time) {
   // the current scene for the update() call (same re-entrancy as a scene switch
   // from process_input).
   sync_hotspot_active_anims(scene_instance(game.current_scene));
-  update_scene_animations(*scene_instance(game.current_scene), SDL_GetTicks());
+  update_scene_animations(*scene_instance(game.current_scene), clock_now_ms());
   // A scene either updates itself or leaves update NULL and the framework ticks
   // its actor (#147) — the same optional-with-default shape as process_input.
   const Scene *scene = scene_instance(game.current_scene);
