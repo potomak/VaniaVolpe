@@ -122,6 +122,12 @@ typedef struct scene_anim_spec {
   AnimationPlaybackStyle style;
   Asset sprite; // sprite sheet PNG
   Asset data;   // .anim clip table
+  // Playback config the framework applies when it makes the animation (#150).
+  // 0 means "keep make_animation_data's default": ms_per_frame falls back to
+  // DEFAULT_MS_PER_FRAME, max_loop_count stays 0 (a one_shot plays once). Both
+  // come from the manifest via the generated _SPEC initializer.
+  int ms_per_frame;
+  int max_loop_count;
 } SceneAnimSpec;
 
 // The field order here is deliberate — each `_length` sits next to the array it

@@ -19,7 +19,7 @@ void scene_say(int index);
 #define GINA_GRAPES_ANIM_CELEBRATION_DATA_FILE "celebration.anim"
 #define GINA_GRAPES_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "grapes"})
 #define GINA_GRAPES_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "grapes"})
-#define GINA_GRAPES_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "grapes"}, {"celebration.anim", "grapes"}}
+#define GINA_GRAPES_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "grapes"}, {"celebration.anim", "grapes"}, 0, 0}
 #define GINA_GRAPES_ANIMS_COUNT 1
 
 // ── hen ─────────────────────────────────────────────
@@ -38,7 +38,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_IDLE_DATA_FILE "idle.anim"
 #define GINA_HEN_ANIM_IDLE_SPRITE_ASSET ((Asset){.filename = "idle.png", .directory = "hen"})
 #define GINA_HEN_ANIM_IDLE_DATA_ASSET ((Asset){.filename = "idle.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_IDLE_SPEC {2, LOOP, {"idle.png", "hen"}, {"idle.anim", "hen"}}
+#define GINA_HEN_ANIM_IDLE_SPEC {2, LOOP, {"idle.png", "hen"}, {"idle.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIM_WALKING 1
 #define GINA_HEN_ANIM_WALKING_FRAMES 4
 #define GINA_HEN_ANIM_WALKING_STYLE LOOP
@@ -47,7 +47,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_WALKING_DATA_FILE "walking.anim"
 #define GINA_HEN_ANIM_WALKING_SPRITE_ASSET ((Asset){.filename = "walking.png", .directory = "hen"})
 #define GINA_HEN_ANIM_WALKING_DATA_ASSET ((Asset){.filename = "walking.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_WALKING_SPEC {4, LOOP, {"walking.png", "hen"}, {"walking.anim", "hen"}}
+#define GINA_HEN_ANIM_WALKING_SPEC {4, LOOP, {"walking.png", "hen"}, {"walking.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIM_TALKING 2
 #define GINA_HEN_ANIM_TALKING_FRAMES 3
 #define GINA_HEN_ANIM_TALKING_STYLE LOOP
@@ -56,7 +56,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_TALKING_DATA_FILE "talking.anim"
 #define GINA_HEN_ANIM_TALKING_SPRITE_ASSET ((Asset){.filename = "talking.png", .directory = "hen"})
 #define GINA_HEN_ANIM_TALKING_DATA_ASSET ((Asset){.filename = "talking.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_TALKING_SPEC {3, LOOP, {"talking.png", "hen"}, {"talking.anim", "hen"}}
+#define GINA_HEN_ANIM_TALKING_SPEC {3, LOOP, {"talking.png", "hen"}, {"talking.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIM_DRAGGED 3
 #define GINA_HEN_ANIM_DRAGGED_FRAMES 2
 #define GINA_HEN_ANIM_DRAGGED_STYLE LOOP
@@ -65,7 +65,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_DRAGGED_DATA_FILE "dragged.anim"
 #define GINA_HEN_ANIM_DRAGGED_SPRITE_ASSET ((Asset){.filename = "dragged.png", .directory = "hen"})
 #define GINA_HEN_ANIM_DRAGGED_DATA_ASSET ((Asset){.filename = "dragged.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_DRAGGED_SPEC {2, LOOP, {"dragged.png", "hen"}, {"dragged.anim", "hen"}}
+#define GINA_HEN_ANIM_DRAGGED_SPEC {2, LOOP, {"dragged.png", "hen"}, {"dragged.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIM_FALLING 4
 #define GINA_HEN_ANIM_FALLING_FRAMES 3
 #define GINA_HEN_ANIM_FALLING_STYLE LOOP
@@ -74,7 +74,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_FALLING_DATA_FILE "falling.anim"
 #define GINA_HEN_ANIM_FALLING_SPRITE_ASSET ((Asset){.filename = "falling.png", .directory = "hen"})
 #define GINA_HEN_ANIM_FALLING_DATA_ASSET ((Asset){.filename = "falling.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_FALLING_SPEC {3, LOOP, {"falling.png", "hen"}, {"falling.anim", "hen"}}
+#define GINA_HEN_ANIM_FALLING_SPEC {3, LOOP, {"falling.png", "hen"}, {"falling.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIM_LANDING 5
 #define GINA_HEN_ANIM_LANDING_FRAMES 3
 #define GINA_HEN_ANIM_LANDING_STYLE LOOP
@@ -83,7 +83,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_LANDING_DATA_FILE "landing.anim"
 #define GINA_HEN_ANIM_LANDING_SPRITE_ASSET ((Asset){.filename = "landing.png", .directory = "hen"})
 #define GINA_HEN_ANIM_LANDING_DATA_ASSET ((Asset){.filename = "landing.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_LANDING_SPEC {3, LOOP, {"landing.png", "hen"}, {"landing.anim", "hen"}}
+#define GINA_HEN_ANIM_LANDING_SPEC {3, LOOP, {"landing.png", "hen"}, {"landing.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIM_PECK 6
 #define GINA_HEN_ANIM_PECK_FRAMES 4
 #define GINA_HEN_ANIM_PECK_STYLE LOOP
@@ -92,7 +92,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_PECK_DATA_FILE "peck.anim"
 #define GINA_HEN_ANIM_PECK_SPRITE_ASSET ((Asset){.filename = "peck.png", .directory = "hen"})
 #define GINA_HEN_ANIM_PECK_DATA_ASSET ((Asset){.filename = "peck.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_PECK_SPEC {4, LOOP, {"peck.png", "hen"}, {"peck.anim", "hen"}}
+#define GINA_HEN_ANIM_PECK_SPEC {4, LOOP, {"peck.png", "hen"}, {"peck.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIM_HEADSHAKE 7
 #define GINA_HEN_ANIM_HEADSHAKE_FRAMES 4
 #define GINA_HEN_ANIM_HEADSHAKE_STYLE LOOP
@@ -101,7 +101,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_HEADSHAKE_DATA_FILE "headshake.anim"
 #define GINA_HEN_ANIM_HEADSHAKE_SPRITE_ASSET ((Asset){.filename = "headshake.png", .directory = "hen"})
 #define GINA_HEN_ANIM_HEADSHAKE_DATA_ASSET ((Asset){.filename = "headshake.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_HEADSHAKE_SPEC {4, LOOP, {"headshake.png", "hen"}, {"headshake.anim", "hen"}}
+#define GINA_HEN_ANIM_HEADSHAKE_SPEC {4, LOOP, {"headshake.png", "hen"}, {"headshake.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIM_BLINK 8
 #define GINA_HEN_ANIM_BLINK_FRAMES 2
 #define GINA_HEN_ANIM_BLINK_STYLE LOOP
@@ -110,7 +110,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_BLINK_DATA_FILE "blink.anim"
 #define GINA_HEN_ANIM_BLINK_SPRITE_ASSET ((Asset){.filename = "blink.png", .directory = "hen"})
 #define GINA_HEN_ANIM_BLINK_DATA_ASSET ((Asset){.filename = "blink.anim", .directory = "hen"})
-#define GINA_HEN_ANIM_BLINK_SPEC {2, LOOP, {"blink.png", "hen"}, {"blink.anim", "hen"}}
+#define GINA_HEN_ANIM_BLINK_SPEC {2, LOOP, {"blink.png", "hen"}, {"blink.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIMS_COUNT 9
 
 // ── minigames ─────────────────────────────────────────────
@@ -130,7 +130,7 @@ void scene_say(int index);
 #define GINA_POOL_ANIM_CELEBRATION_DATA_FILE "celebration.anim"
 #define GINA_POOL_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "pool"})
 #define GINA_POOL_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "pool"})
-#define GINA_POOL_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "pool"}, {"celebration.anim", "pool"}}
+#define GINA_POOL_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "pool"}, {"celebration.anim", "pool"}, 0, 0}
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL 1
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_FRAMES 3
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_STYLE LOOP
@@ -139,7 +139,7 @@ void scene_say(int index);
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_FILE "sunscreen_boil.anim"
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET ((Asset){.filename = "sunscreen_boil.png", .directory = "pool"})
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET ((Asset){.filename = "sunscreen_boil.anim", .directory = "pool"})
-#define GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC {3, LOOP, {"sunscreen_boil.png", "pool"}, {"sunscreen_boil.anim", "pool"}}
+#define GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC {3, LOOP, {"sunscreen_boil.png", "pool"}, {"sunscreen_boil.anim", "pool"}, 0, 0}
 #define GINA_POOL_ANIM_GOGGLES_BOIL 2
 #define GINA_POOL_ANIM_GOGGLES_BOIL_FRAMES 3
 #define GINA_POOL_ANIM_GOGGLES_BOIL_STYLE LOOP
@@ -148,7 +148,7 @@ void scene_say(int index);
 #define GINA_POOL_ANIM_GOGGLES_BOIL_DATA_FILE "goggles_boil.anim"
 #define GINA_POOL_ANIM_GOGGLES_BOIL_SPRITE_ASSET ((Asset){.filename = "goggles_boil.png", .directory = "pool"})
 #define GINA_POOL_ANIM_GOGGLES_BOIL_DATA_ASSET ((Asset){.filename = "goggles_boil.anim", .directory = "pool"})
-#define GINA_POOL_ANIM_GOGGLES_BOIL_SPEC {3, LOOP, {"goggles_boil.png", "pool"}, {"goggles_boil.anim", "pool"}}
+#define GINA_POOL_ANIM_GOGGLES_BOIL_SPEC {3, LOOP, {"goggles_boil.png", "pool"}, {"goggles_boil.anim", "pool"}, 0, 0}
 #define GINA_POOL_ANIM_FLOAT_BOIL 3
 #define GINA_POOL_ANIM_FLOAT_BOIL_FRAMES 3
 #define GINA_POOL_ANIM_FLOAT_BOIL_STYLE LOOP
@@ -157,7 +157,7 @@ void scene_say(int index);
 #define GINA_POOL_ANIM_FLOAT_BOIL_DATA_FILE "float_boil.anim"
 #define GINA_POOL_ANIM_FLOAT_BOIL_SPRITE_ASSET ((Asset){.filename = "float_boil.png", .directory = "pool"})
 #define GINA_POOL_ANIM_FLOAT_BOIL_DATA_ASSET ((Asset){.filename = "float_boil.anim", .directory = "pool"})
-#define GINA_POOL_ANIM_FLOAT_BOIL_SPEC {3, LOOP, {"float_boil.png", "pool"}, {"float_boil.anim", "pool"}}
+#define GINA_POOL_ANIM_FLOAT_BOIL_SPEC {3, LOOP, {"float_boil.png", "pool"}, {"float_boil.anim", "pool"}, 0, 0}
 #define GINA_POOL_ANIMS_COUNT 4
 
 // ── pool/dialog ─────────────────────────────────────────────
@@ -233,7 +233,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_SUNSCREEN_ANIM_CELEBRATION_DATA_FILE "celebration.anim"
 #define GINA_SUNSCREEN_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "sunscreen"})
 #define GINA_SUNSCREEN_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "sunscreen"})
-#define GINA_SUNSCREEN_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "sunscreen"}, {"celebration.anim", "sunscreen"}}
+#define GINA_SUNSCREEN_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "sunscreen"}, {"celebration.anim", "sunscreen"}, 0, 0}
 #define GINA_SUNSCREEN_ANIMS_COUNT 1
 
 // ── tree ─────────────────────────────────────────────
@@ -251,7 +251,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_TREE_ANIM_CELEBRATION_DATA_FILE "celebration.anim"
 #define GINA_TREE_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "tree"})
 #define GINA_TREE_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "tree"})
-#define GINA_TREE_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "tree"}, {"celebration.anim", "tree"}}
+#define GINA_TREE_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "tree"}, {"celebration.anim", "tree"}, 0, 0}
 #define GINA_TREE_ANIM_FLOAT_BOIL 1
 #define GINA_TREE_ANIM_FLOAT_BOIL_FRAMES 3
 #define GINA_TREE_ANIM_FLOAT_BOIL_STYLE LOOP
@@ -260,7 +260,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_TREE_ANIM_FLOAT_BOIL_DATA_FILE "float_boil.anim"
 #define GINA_TREE_ANIM_FLOAT_BOIL_SPRITE_ASSET ((Asset){.filename = "float_boil.png", .directory = "tree"})
 #define GINA_TREE_ANIM_FLOAT_BOIL_DATA_ASSET ((Asset){.filename = "float_boil.anim", .directory = "tree"})
-#define GINA_TREE_ANIM_FLOAT_BOIL_SPEC {3, LOOP, {"float_boil.png", "tree"}, {"float_boil.anim", "tree"}}
+#define GINA_TREE_ANIM_FLOAT_BOIL_SPEC {3, LOOP, {"float_boil.png", "tree"}, {"float_boil.anim", "tree"}, 0, 0}
 #define GINA_TREE_ANIM_CARLA_BOIL 2
 #define GINA_TREE_ANIM_CARLA_BOIL_FRAMES 3
 #define GINA_TREE_ANIM_CARLA_BOIL_STYLE LOOP
@@ -269,7 +269,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_TREE_ANIM_CARLA_BOIL_DATA_FILE "carla_boil.anim"
 #define GINA_TREE_ANIM_CARLA_BOIL_SPRITE_ASSET ((Asset){.filename = "carla_boil.png", .directory = "tree"})
 #define GINA_TREE_ANIM_CARLA_BOIL_DATA_ASSET ((Asset){.filename = "carla_boil.anim", .directory = "tree"})
-#define GINA_TREE_ANIM_CARLA_BOIL_SPEC {3, LOOP, {"carla_boil.png", "tree"}, {"carla_boil.anim", "tree"}}
+#define GINA_TREE_ANIM_CARLA_BOIL_SPEC {3, LOOP, {"carla_boil.png", "tree"}, {"carla_boil.anim", "tree"}, 0, 0}
 #define GINA_TREE_ANIMS_COUNT 3
 
 // ── tree/dialog ─────────────────────────────────────────────
@@ -331,7 +331,7 @@ static inline void say_carla_thanks(void) { scene_say(GINA_TREE_DIALOG_CHUNK_CAR
 #define GINA_VINE_ANIM_GRAPES_BOIL_DATA_FILE "grapes_boil.anim"
 #define GINA_VINE_ANIM_GRAPES_BOIL_SPRITE_ASSET ((Asset){.filename = "grapes_boil.png", .directory = "vine"})
 #define GINA_VINE_ANIM_GRAPES_BOIL_DATA_ASSET ((Asset){.filename = "grapes_boil.anim", .directory = "vine"})
-#define GINA_VINE_ANIM_GRAPES_BOIL_SPEC {3, LOOP, {"grapes_boil.png", "vine"}, {"grapes_boil.anim", "vine"}}
+#define GINA_VINE_ANIM_GRAPES_BOIL_SPEC {3, LOOP, {"grapes_boil.png", "vine"}, {"grapes_boil.anim", "vine"}, 0, 0}
 #define GINA_VINE_ANIMS_COUNT 1
 
 // ── vine/dialog ─────────────────────────────────────────────

@@ -125,6 +125,7 @@
       "name": "excavator",
       "frames": 4,
       "style": "one_shot",
+      "max_loop_count": 6,
       "description": "The toy excavator (runs when tapped)."
     },
     {
@@ -143,6 +144,7 @@
       "name": "shovel",
       "frames": 5,
       "style": "one_shot",
+      "max_loop_count": 3,
       "description": "The shovel digging out the key."
     },
     {
