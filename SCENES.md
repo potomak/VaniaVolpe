@@ -210,8 +210,8 @@ static SceneSprite vine_sprites[] = {
 static Hotspot vine_hotspots[] = {
     { .rect = GRAPES_HOTSPOT, .poi = GRAPES_POI, .on_arrive = pick_grapes,
       .anim = "grapes_boil", .at = GRAPES_AT },
-    { .rect = TREE_NAV, .immediate = true, .on_arrive = go_to_tree },
-    { .rect = POOL_NAV, .immediate = true, .on_arrive = go_to_pool },
+    { .rect = TREE_NAV, .on_tap = go_to_tree },
+    { .rect = POOL_NAV, .on_tap = go_to_pool },
 };
 DECLARE_SCENE(vine, .sprites = vine_sprites, .hotspots = vine_hotspots,
                     .actor = &HEN_SPEC, .walk = VINE_AREA);
