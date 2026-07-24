@@ -55,11 +55,17 @@ static Hotspot hotspots[2];
 
 static void start_playing(void) {
   // The click plays over the transition into the playground entrance (SFX
-  // aren't halted on a scene switch, only music). The Exit button's click
-  // (play_exit_button_click) is deliberately not played: exit_game quits the
-  // loop immediately, so a click there would be cut off before it's heard.
+  // aren't halted on a scene switch, only music).
   play_play_button_click();
   set_active_scene(PLAYGROUND_ENTRANCE);
+}
+
+static void exit_to_hub(void) {
+  // Exit returns to the adventure-selection menu rather than quitting the game:
+  // quitting is now offered by the hub itself. The click plays over the
+  // transition to the hub (it used to be cut off by an immediate quit).
+  play_exit_button_click();
+  return_to_hub();
 }
 
 static void init(void) {
@@ -79,7 +85,7 @@ static void init(void) {
                           .immediate = true,
                           .on_arrive = start_playing};
   hotspots[1] = (Hotspot){
-      .rect = EXIT_BUTTON_HOTSPOT, .immediate = true, .on_arrive = exit_game};
+      .rect = EXIT_BUTTON_HOTSPOT, .immediate = true, .on_arrive = exit_to_hub};
 }
 
 static void process_input(SDL_Event *event) {
@@ -125,6 +131,11 @@ static void process_input(SDL_Event *event) {
 static void on_scene_active(void) {
   stop_animation(play_button);
   stop_animation(exit_button);
+  // Re-pose the fox every time the intro is shown, so replaying the adventure
+  // (or dragging her away, #41) always returns her to her seat. Matches
+  // .actor_start below.
+  fox->current_position = (SDL_FPoint){322, 317};
+  actor_play_state(fox, SITTING);
 }
 
 static void on_scene_inactive(void) {}

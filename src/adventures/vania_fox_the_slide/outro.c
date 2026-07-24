@@ -45,18 +45,26 @@ static void process_input(SDL_Event *event) {
   if (walk_actor_drag_event(fox, NULL, event)) {
     return;
   }
-  // A plain click (not a drag) restarts the adventure. Navigate on release, not
-  // press, so a press that turns into a drag of the fox doesn't also jump back
-  // to the intro before she can be picked up.
+  // A plain click (not a drag) returns to the adventure-selection menu: the
+  // outro is the end of the adventure, so a click leaves it rather than
+  // restarting in place. Navigate on release, not press, so a press that turns
+  // into a drag of the fox doesn't also jump to the hub before she can be
+  // picked up.
   if (event->type == SDL_MOUSEBUTTONUP) {
-    set_active_scene(INTRO);
+    return_to_hub();
   }
 }
 
 // No update/render: the end card is a static sprite and the fox is the only
 // dynamic thing, so the framework ticks and draws her (#147).
 
-static void on_scene_active(void) {}
+static void on_scene_active(void) {
+  // Re-pose the fox every time the outro is shown, so reaching it again (or
+  // dragging her away, #41) always returns her to her waving spot. Matches
+  // .actor_start below.
+  fox->current_position = (SDL_FPoint){398, 329};
+  actor_play_state(fox, WAVING);
+}
 
 static void on_scene_inactive(void) {}
 

@@ -35,6 +35,22 @@ static SDL_Rect menu_button_rect(int index) {
   };
 }
 
+// A placeholder Exit button below the adventure list: the hub is the one place
+// the game is quit from, now that an adventure's own exit returns here instead.
+// Real art is tracked with the rest of the hub in #47.
+#define EXIT_BUTTON_WIDTH 200
+#define EXIT_BUTTON_HEIGHT 60
+#define EXIT_BUTTON_BOTTOM_MARGIN 40
+
+static SDL_Rect exit_button_rect(void) {
+  return (SDL_Rect){
+      .x = (WINDOW_WIDTH - EXIT_BUTTON_WIDTH) / 2,
+      .y = WINDOW_HEIGHT - EXIT_BUTTON_HEIGHT - EXIT_BUTTON_BOTTOM_MARGIN,
+      .w = EXIT_BUTTON_WIDTH,
+      .h = EXIT_BUTTON_HEIGHT,
+  };
+}
+
 static void init(void) {}
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -61,8 +77,12 @@ static void process_input(SDL_Event *event) {
                     "Hub: starting adventure '%s'",
                     content_adventures[i]->title);
         adventure_switch_to(content_adventures[i]);
-        break;
+        return;
       }
+    }
+    SDL_Rect exit_rect = exit_button_rect();
+    if (SDL_PointInRect(&m_pos, &exit_rect)) {
+      exit_game();
     }
     break;
   }
@@ -85,6 +105,13 @@ static void render(SDL_Renderer *renderer) {
     SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
     SDL_RenderDrawRect(renderer, &rect);
   }
+
+  // The placeholder Exit button (a darker red, set apart from the adventures).
+  SDL_Rect exit_rect = exit_button_rect();
+  SDL_SetRenderDrawColor(renderer, 0x80, 0x28, 0x28, 0xFF);
+  SDL_RenderFillRect(renderer, &exit_rect);
+  SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+  SDL_RenderDrawRect(renderer, &exit_rect);
 }
 
 static void deinit(void) {}
