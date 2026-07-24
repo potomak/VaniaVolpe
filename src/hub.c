@@ -51,6 +51,42 @@ static SDL_Rect exit_button_rect(void) {
   };
 }
 
+// A hotspot's on_tap carries no argument, so a fixed set of thunks maps a menu
+// index to its adventure. HUB_MAX_ADVENTURES caps how many rows the menu can
+// show; hub_register builds one row per registered adventure.
+#define HUB_MAX_ADVENTURES 8
+
+static void start_content(int index) {
+  if (index < content_count) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Hub: starting adventure '%s'",
+                content_adventures[index]->title);
+    adventure_switch_to(content_adventures[index]);
+  }
+}
+
+#define HUB_SELECT_THUNK(n)                                                    \
+  static void select_##n(void) { start_content(n); }
+HUB_SELECT_THUNK(0)
+HUB_SELECT_THUNK(1)
+HUB_SELECT_THUNK(2)
+HUB_SELECT_THUNK(3)
+HUB_SELECT_THUNK(4)
+HUB_SELECT_THUNK(5)
+HUB_SELECT_THUNK(6)
+HUB_SELECT_THUNK(7)
+#undef HUB_SELECT_THUNK
+
+static void (*const SELECT_THUNKS[HUB_MAX_ADVENTURES])(void) = {
+    select_0, select_1, select_2, select_3,
+    select_4, select_5, select_6, select_7,
+};
+
+// One row per adventure (on_tap = its thunk) plus the Exit row (on_tap =
+// exit_game). Built in hub_register and dispatched like any scene's hotspots,
+// so they show in the debug overlay and can carry a boil once art exists.
+static Hotspot hotspots[HUB_MAX_ADVENTURES + 1];
+static int hotspots_count;
+
 static void init(void) {}
 
 static bool load_media(SDL_Renderer *renderer) {
@@ -67,23 +103,11 @@ static void process_input(SDL_Event *event) {
   case SDL_MOUSEBUTTONDOWN:
     // Hit-test the click's own coordinates (#64): the cached motion position
     // can be stale — e.g. a repeated tap with no motion in between while the
-    // camera moved.
+    // camera moved. The hub has no actor, so these tap-only hotspots take a
+    // NULL actor/grid.
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
-    for (int i = 0; i < content_count; i++) {
-      SDL_Rect rect = menu_button_rect(i);
-      if (SDL_PointInRect(&m_pos, &rect)) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Hub: starting adventure '%s'",
-                    content_adventures[i]->title);
-        adventure_switch_to(content_adventures[i]);
-        return;
-      }
-    }
-    SDL_Rect exit_rect = exit_button_rect();
-    if (SDL_PointInRect(&m_pos, &exit_rect)) {
-      exit_game();
-    }
+    hotspots_handle_click(hotspots, hotspots_count, NULL, NULL, m_pos);
     break;
   }
 }
@@ -134,6 +158,17 @@ Adventure hub = {
 void hub_register(const Adventure **content, int count) {
   content_adventures = content;
   content_count = count;
+  SDL_assert(count <= HUB_MAX_ADVENTURES);
+
+  // One tap-only hotspot per adventure, then the Exit row.
+  int h = 0;
+  for (int i = 0; i < count && i < HUB_MAX_ADVENTURES; i++) {
+    hotspots[h++] =
+        (Hotspot){.rect = menu_button_rect(i), .on_tap = SELECT_THUNKS[i]};
+  }
+  hotspots[h++] = (Hotspot){.rect = exit_button_rect(), .on_tap = exit_game};
+  hotspots_count = h;
+
   scenes[MENU] = (Scene){
       .init = init,
       .load_media = load_media,
@@ -143,5 +178,7 @@ void hub_register(const Adventure **content, int count) {
       .deinit = deinit,
       .on_scene_active = on_scene_active,
       .on_scene_inactive = on_scene_inactive,
+      .hotspots = hotspots,
+      .hotspots_length = hotspots_count,
   };
 }
