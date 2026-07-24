@@ -444,5 +444,17 @@ int test_scene(void) {
   check(still->state == IDLE, "an actor with no fidgets stays still");
   actor_free(still);
 
+  // ── actor_play_state policy (#43) ─────────────────────────────────────────
+  // Refuses a state with no animation (returns false, leaves the state), and
+  // enters one that has an animation. TWO_VARIANT_SPEC provides IDLE + WALKING
+  // only, so SITTING has no animation.
+  fprintf(stderr, "\nactor_play_state:\n");
+  Actor *poser = make_actor(&TWO_VARIANT_SPEC, (SDL_FPoint){0, 0});
+  check(!actor_play_state(poser, SITTING) && poser->state != SITTING,
+        "actor_play_state refuses a state with no animation");
+  check(actor_play_state(poser, WALKING) && poser->state == WALKING,
+        "actor_play_state enters a state that has an animation");
+  actor_free(poser);
+
   return failures;
 }

@@ -39,10 +39,14 @@ typedef enum actor_state {
   // sheets are optional — a missing one falls back to the idle sheet.
   DRAGGED,
   FALLING,
-  LANDING,
-  // Always last: number of states / size of the animation table.
-  ACTOR_STATE_COUNT,
+  LANDING, // keep last (ACTOR_STATE_COUNT below tracks it)
 } ActorState;
+
+// Number of states / size of the per-state animation table. A macro rather than
+// the enum's last member, so a `switch (state)` built with -Wswitch flags a
+// newly added ActorState instead of silently matching a no-op ACTOR_STATE_COUNT
+// case (see actor_update). Point it at whatever state stays last.
+#define ACTOR_STATE_COUNT (LANDING + 1)
 
 // One animation in a character's spec (a sprite sheet + its .anim metadata).
 typedef struct actor_anim_spec {
@@ -196,8 +200,12 @@ void actor_set_variant(Actor *actor, int variant);
 // spoken line is logged as "<display_name>: <text>".
 void actor_talk(Actor *actor, const ChunkData *dialog, const char *text);
 
-// Play a one-off state animation (e.g. SITTING, WAVING) and hold it.
-void actor_play_state(Actor *actor, ActorState state);
+// Play a one-off state animation (e.g. SITTING, WAVING) and hold it. Refuses
+// (returns false, leaving the actor unchanged) when the current variant has no
+// animation for `state` — entering a state it can't render would be a bug —
+// mirroring how actor_talk / actor_walk_to refuse rather than enter a bad
+// state.
+bool actor_play_state(Actor *actor, ActorState state);
 
 // The sprite's screen-space rectangle (reference frame centred on
 // current_position): the grab target for drag & drop, before padding.
