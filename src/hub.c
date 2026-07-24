@@ -18,8 +18,6 @@ enum hub_scene { MENU };
 static const Adventure **content_adventures = NULL;
 static int content_count = 0;
 
-static SDL_Point m_pos;
-
 // Vertical list of placeholder buttons, one per content adventure.
 #define MENU_BUTTON_WIDTH 440
 #define MENU_BUTTON_HEIGHT 80
@@ -94,23 +92,9 @@ static bool load_media(SDL_Renderer *renderer) {
   return true;
 }
 
-static void process_input(SDL_Event *event) {
-  switch (event->type) {
-  case SDL_MOUSEMOTION:
-    m_pos.x = event->motion.x;
-    m_pos.y = event->motion.y;
-    break;
-  case SDL_MOUSEBUTTONDOWN:
-    // Hit-test the click's own coordinates (#64): the cached motion position
-    // can be stale — e.g. a repeated tap with no motion in between while the
-    // camera moved. The hub has no actor, so these tap-only hotspots take a
-    // NULL actor/grid.
-    m_pos.x = event->button.x;
-    m_pos.y = event->button.y;
-    hotspots_handle_click(hotspots, hotspots_count, NULL, NULL, m_pos);
-    break;
-  }
-}
+// No process_input: the hub declares its hotspots (below) and lets the
+// framework's default handler dispatch taps. It has no actor, so the default
+// skips the drag pickup and walk-to-click and just runs the hotspots.
 
 static void update(float delta_time) { (void)delta_time; }
 
@@ -172,7 +156,7 @@ void hub_register(const Adventure **content, int count) {
   scenes[MENU] = (Scene){
       .init = init,
       .load_media = load_media,
-      .process_input = process_input,
+      // No process_input: the framework default dispatches the hotspots below.
       .update = update,
       .render = render,
       .deinit = deinit,

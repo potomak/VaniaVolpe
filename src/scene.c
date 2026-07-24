@@ -44,14 +44,15 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
 }
 
 void scene_default_process_input(const Scene *scene, SDL_Event *event) {
-  // The default is for walking scenes, which always declare their actor.
-  SDL_assert(scene->actor != NULL);
-  Actor *actor = *scene->actor;
+  // Usually a walking scene, but an actor-less scene (a menu like the hub) uses
+  // this too: it simply skips the drag pickup and the walk-to-click fallback,
+  // which need an actor, and keeps the hotspot dispatch.
+  Actor *actor = scene->actor != NULL ? *scene->actor : NULL;
 
   // Drag & drop (LIVELINESS.md Part 2): a press-drag on the actor picks it up;
   // plain taps fall through to the hotspots, so one the actor stands on still
   // works.
-  if (walk_actor_drag_event(actor, scene->walk_grid, event)) {
+  if (actor != NULL && walk_actor_drag_event(actor, scene->walk_grid, event)) {
     return;
   }
   if (event->type != SDL_MOUSEBUTTONDOWN) {
@@ -60,13 +61,16 @@ void scene_default_process_input(const Scene *scene, SDL_Event *event) {
   // Hit-test the click's own coordinates (#64): a cached motion position can be
   // stale — e.g. a repeated tap with no motion in between while the camera
   // moved. The hotspot table says what each region does; anything else walks
-  // the actor toward the click (routed around blocked ground).
+  // the actor toward the click (routed around blocked ground), or is ignored
+  // when the scene has no actor.
   SDL_Point p = {event->button.x, event->button.y};
   if (hotspots_handle_click(scene->hotspots, scene->hotspots_length, actor,
                             scene->walk_grid, p)) {
     return;
   }
-  walk_actor_to(actor, scene->walk_grid, (SDL_FPoint){p.x, p.y}, false, NULL);
+  if (actor != NULL) {
+    walk_actor_to(actor, scene->walk_grid, (SDL_FPoint){p.x, p.y}, false, NULL);
+  }
 }
 
 void scene_default_update(const Scene *scene, float delta_time) {

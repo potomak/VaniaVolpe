@@ -329,9 +329,10 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
 // that supplies no process_input of its own — a press-drag on the actor picks
 // it up (walk_actor_drag_event), a plain tap is dispatched to the hotspot
 // table, and anything else walks the actor toward the click. Uses the scene's
-// `.actor` (which must be set), `.walk_grid` and hotspot table; a scene needing
-// anything more (an input lock, a win check) still writes its own process_input
-// instead.
+// `.actor`, `.walk_grid` and hotspot table. An actor-less scene (a menu like
+// the hub) may use it too: with no `.actor` it skips the drag and walk-to-click
+// and only dispatches the hotspots. A scene needing anything more (an input
+// lock, a win check, button hover art) still writes its own process_input.
 void scene_default_process_input(const Scene *scene, SDL_Event *event);
 
 // The default update / render (#147): tick / draw the scene's `.actor`. The
