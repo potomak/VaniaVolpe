@@ -41,9 +41,9 @@ static SceneSprite sprites[3];
 
 static Fox *fox;
 
-// Sound effects. Music is declared on the Scene (.music, SCENES.md
-// milestone 4); the framework plays and frees it.
-static ChunkData chunks[VANIA_INTRO_CHUNKS_COUNT] = VANIA_INTRO_CHUNKS_INIT;
+// The button-click SFX live in the adventure's shared bank (play via
+// play_<name>()); music is declared on the Scene (.music, SCENES.md
+// milestone 4). So the intro carries no per-scene chunk table.
 
 // Mouse position
 static SDL_Point m_pos;
@@ -53,7 +53,14 @@ static const SDL_Rect PLAY_BUTTON_HOTSPOT = {443, 285, 268, 118};
 static const SDL_Rect EXIT_BUTTON_HOTSPOT = {436, 430, 277, 103};
 static Hotspot hotspots[2];
 
-static void start_playing(void) { set_active_scene(PLAYGROUND_ENTRANCE); }
+static void start_playing(void) {
+  // The click plays over the transition into the playground entrance (SFX
+  // aren't halted on a scene switch, only music). The Exit button's click
+  // (play_exit_button_click) is deliberately not played: exit_game quits the
+  // loop immediately, so a click there would be cut off before it's heard.
+  play_play_button_click();
+  set_active_scene(PLAYGROUND_ENTRANCE);
+}
 
 static void init(void) {
   play_button = animations[VANIA_INTRO_ANIM_PLAY_BUTTON];
@@ -131,8 +138,6 @@ Scene intro_scene = {
     .sprites_length = LEN(sprites),
     .images = images,
     .images_length = LEN(images),
-    .chunks = chunks,
-    .chunks_length = LEN(chunks),
     .animations = animations,
     .animations_length = LEN(animations),
     .anim_specs = anim_specs,

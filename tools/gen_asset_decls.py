@@ -20,8 +20,12 @@ The generator also validates what it can see:
 Entry dirs: entries still to author ("task": true) use layered dirs
 ("common/pool"); the rest use resolver dirs ("pool"). Both map to the same
 runtime dir (the layer prefix is stripped), which is what the emitted macros
-use. `voice` entries (per-line recordings still to author) are not yet
-runtime assets and are skipped.
+use.
+
+The `type` field names what the framework does with an asset — image,
+animation, sfx (the play_<name>() bank), music (a stream), speech (a spoken
+line, say_<name>()), or sound (a filename-referenced effect, e.g. the actor's
+move sound). See ASSET_TYPES.md.
 
 Usage:
   tools/gen_asset_decls.py --manifest <assets>/index.json --out build/gen/<adv>_assets.h
@@ -33,7 +37,18 @@ import os
 import re
 import sys
 
-EXT = {"image": ".png", "audio": ".wav"}
+# A framework type (what the game does with an asset) determines its file type
+# (what the file physically is) — the manifest authors only the former; the file
+# type, extension and handling derive from this table (ASSET_TYPES.md, #152).
+FILE_TYPE = {
+    "image": "image",
+    "animation": "image",
+    "sfx": "audio",
+    "music": "audio",
+    "speech": "audio",
+    "sound": "audio",
+}
+EXT = {"image": ".png", "audio": ".wav"}  # keyed by file type
 STYLES = {"loop": "LOOP", "one_shot": "ONE_SHOT"}
 
 
@@ -87,7 +102,7 @@ def validate(root, manifest, entry, rel_dir):
                 and find_file(root, manifest, rel_dir, name + ".png") is None):
             die(f"runtime asset {rel_dir}/{name}.png is missing")
     elif not entry.get("task", False):
-        filename = name + EXT[entry["type"]]
+        filename = name + EXT[FILE_TYPE[entry["type"]]]
         if find_file(root, manifest, rel_dir, filename) is None:
             die(f"runtime asset {rel_dir}/{filename} is missing")
 
@@ -95,9 +110,11 @@ def validate(root, manifest, entry, rel_dir):
 def emit_group(out, prefix, rel_dir, entries):
     tag = f"{prefix}_{sym(rel_dir)}"
     images = [e for e in entries if e["type"] == "image"]
-    # SFX are emitted once in the adventure-wide bank (emit_sfx), not per dir,
-    # so scenes don't carry them in their own chunk tables.
-    chunks = [e for e in entries if e["type"] == "audio" and not e.get("sfx")]
+    # The per-dir chunk table holds speech (dialogue lines), music (streams) and
+    # sound (filename-referenced effects like the actor's move sound). SFX are
+    # emitted once in the adventure-wide bank (emit_sfx), not per dir, so scenes
+    # don't carry them in their own chunk tables.
+    chunks = [e for e in entries if e["type"] in ("speech", "music", "sound")]
     anims = [e for e in entries if e["type"] == "animation"]
 
     out.append(f"// ── {rel_dir} ─────────────────────────────────────────────")
@@ -112,18 +129,17 @@ def emit_group(out, prefix, rel_dir, entries):
         out.append(f"#define {tag}_IMAGES_COUNT {len(images)}")
         rows = ", ".join(f"{tag}_IMAGE_{sym(e['name'])}_INIT" for e in images)
         out.append(f"#define {tag}_IMAGES_INIT {{{rows}}}")
-    # Chunks in a `*/dialog` dir are spoken lines: the framework plays them
-    # through the scene's actor via a generated say_<name>() helper, and their
-    # WAV is optional (a not-yet-recorded line is text-only), so the INIT sets
-    # optional_audio (SCENES.md milestone 4).
-    dialogue = rel_dir.endswith("dialog")
+    # A `speech` chunk is a spoken line: the framework plays it through the
+    # scene's actor via a generated say_<name>() helper, and its WAV is optional
+    # (a not-yet-recorded line is text-only), so the INIT sets optional_audio
+    # (SCENES.md milestone 4). music/sound chunks get the plain initializer.
     if chunks:
         # _FILE feeds ActorSpec filename fields (resolved against the actor's
         # assets_dir); _ASSET feeds asset_resolve (e.g. music streams).
         for i, e in enumerate(chunks):
             m = f"{tag}_CHUNK_{sym(e['name'])}"
             out.append(f"#define {m} {i}")
-            if dialogue:
+            if e["type"] == "speech":
                 out.append(f'#define {m}_INIT '
                            f'{{.filename = "{e["name"]}.wav", '
                            f'.directory = "{rel_dir}", .optional_audio = true}}')
@@ -224,16 +240,12 @@ def main():
     groups = {}
     sfx = []
     for entry in manifest["assets"]:
-        if entry["type"] == "voice":
-            continue  # per-line recordings: not runtime assets yet
         if not entry.get("runtime", True):
             continue  # authoring-only: the game shows a derived asset (a boil)
         rel_dir = runtime_dir(entry)
         validate(root, manifest, entry, rel_dir)
         groups.setdefault(rel_dir, []).append(entry)
-        if entry.get("sfx"):
-            if entry["type"] != "audio":
-                die(f'sfx entry {rel_dir}/{entry["name"]} is not audio')
+        if entry["type"] == "sfx":
             sfx.append((rel_dir, entry))
 
     guard = f"GEN_{prefix}_ASSETS_H"
@@ -248,8 +260,8 @@ def main():
     # A generated say_<name>() helper (dialogue dirs) calls scene_say; declare it
     # once so the header stands alone.
     has_dialogue = any(
-        rel_dir.endswith("dialog") and any(e["type"] == "audio" for e in entries)
-        for rel_dir, entries in groups.items())
+        any(e["type"] == "speech" for e in entries)
+        for entries in groups.values())
     if has_dialogue:
         out += ["void scene_say(int index);", ""]
     for rel_dir in sorted(groups):

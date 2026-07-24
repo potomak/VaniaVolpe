@@ -1,12 +1,19 @@
-# Asset types (proposed)
+# Asset types
 
 A refinement of the asset manifest (`ASSETS.md`): make the manifest's `type`
 field name **what the framework does with an asset** directly —
-`image | animation | sfx | music | speech` — instead of spreading that across
-`type`, a flag, and the directory name. The asset's **file type** (`image`,
-`audio`, `text` — what the file physically is) stays a distinct concept, but a
-*derived* one: a projection of `type`, not a second field to author. Proposed;
-tracked in the backlog (#152).
+`image | animation | sfx | music | speech | sound` — instead of spreading that
+across `type`, a flag, and the directory name. The asset's **file type**
+(`image`, `audio`, `text` — what the file physically is) stays a distinct
+concept, but a *derived* one: a projection of `type`, not a second field to
+author. Implemented in #152.
+
+> Implementation note: the spec was drafted with five types; a sixth, **`sound`**,
+> was added for non-bank, filename-referenced audio effects — the actor's move
+> sound, referenced by the `ActorSpec` rather than triggered by code. (UI button
+> clicks, by contrast, are code-triggered and went in the `sfx` bank so a scene
+> plays them with `play_<name>()`.) `sound` shares the generator's plain-chunk
+> handling with `music`.
 
 ## The problem
 
@@ -46,7 +53,7 @@ directory name) is implicit and fragile.
 directory inference:
 
 ```
-type ∈ { image, animation, sfx, music, speech }
+type ∈ { image, animation, sfx, music, speech, sound }
 ```
 
 Old → new:
@@ -58,6 +65,7 @@ Old → new:
 | `type: audio`, `sfx: true` | `type: sfx` (drop the flag) |
 | `type: audio` in a `dialog/` dir | `type: speech` |
 | `type: audio` used as `.music` | `type: music` |
+| `type: audio`, non-bank, referenced by filename (the actor's move sound) | `type: sound` |
 | `type: voice` | `type: speech` + `task: true` |
 
 The `sfx` boolean and the `voice` type both go away. The type no longer depends
@@ -67,8 +75,8 @@ on the directory name.
 
 `type` is what the framework does with the asset; the **file type** is what the
 file physically is — `image` (a PNG), `audio` (a WAV), or `text`. They are
-different axes: `sfx`, `music` and `speech` are all `audio` files; `image` and
-`animation` are both `image` files. And a single `type` can span several files of
+different axes: `sfx`, `music`, `speech` and `sound` are all `audio` files;
+`image` and `animation` are both `image` files. And a single `type` can span several files of
 different file types — an `animation` is a sprite-sheet PNG **and** an `.anim`
 text table; a `speech` is a WAV **and** its subtitle / lip-sync text sidecars.
 
@@ -82,6 +90,7 @@ is derived from `type` by a fixed table the tooling already encodes implicitly:
 | sfx | audio | `<name>.wav` |
 | music | audio | `<name>.wav` |
 | speech | audio + text | `<name>.wav`, `<name>.txt` (+ `.cues` / `.words` lip-sync) |
+| sound | audio | `<name>.wav` |
 
 Authoring both fields would be redundant — and would let a manifest contradict
 itself (`{type: music, file_type: image}`) — and it breaks on the multi-file rows
@@ -111,10 +120,12 @@ rather than from an ad-hoc extension map:
 
 ## Migration
 
-Behavior-preserving. Rewrite each manifest entry's `type` per the table above,
-regenerate `gen/` (the drift guard enforces it), and update `ASSETS.md`'s schema.
-The generated symbols and the emitted C are unchanged — only the manifest's
-spelling and the generator's branching change — so no scene code moves.
+Behavior-preserving, and it was: rewriting each manifest entry's `type` per the
+table above and regenerating left the emitted C **byte-identical** (the drift
+guard confirms it), so no scene code moved. Only the manifest's spelling and the
+generator's branching changed. The generator derives file extensions from the
+`type → file type` table, and `gen_asset_tasks.py` / `consolidate_assets.py`
+branch on `type` (speech = record a line; sfx/music/sound = a finished WAV).
 
 ## Open questions
 
@@ -123,6 +134,13 @@ spelling and the generator's branching change — so no scene code moves.
   locale layout), or drop the requirement entirely? Subtitle `.txt` sidecars and
   the locale rules currently live beside the `dialog/` WAVs, so at minimum the
   layout stays; the *inference* is what this change removes.
-- **`music` vs other streams.** Only music streams today. If a second
-  non-dialogue, non-sfx audio use appears (ambient, stinger), does it get its own
-  type or share `music`/`sfx`? Left open until there's a second case.
+- **`sound` vs `sfx`.** Resolved by adding `sound` for filename-referenced
+  effects (the actor move sound, UI clicks), distinct from the `play_<name>()`
+  bank (`sfx`). The generator handles `sound` exactly like `music` (a plain
+  chunk with `_FILE`/`_ASSET`), so the split is semantic; if the two ever need
+  to diverge, they already have separate type names.
+- **`_inbox` scaffolding.** The type rename changes task ids
+  (`audio-…`/`voice-…` → `speech-…`/`sfx-…`), so the premade `_inbox/<id>/`
+  drop-box folders are now stale (they were already stale from the earlier
+  voice→audio rename). Regenerating them (`gen_asset_tasks.py` with no `--out`)
+  and pruning the orphans is a separate housekeeping step, not done here.

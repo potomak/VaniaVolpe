@@ -9,10 +9,12 @@ every drop-box that has files:
 1. moves the raw inputs to `<assets_root>/_sources/<id>/` (the archive /
    re-stitch source / done-record);
 2. produces the real asset the game loads, from those sources:
-   - animation — stitches the frames (ordered by filename) into
+   - animation        — stitches the frames (ordered by filename) into
      `<dir>/<name>.png` + a matching `<name>.anim`;
-   - voice     — copies the WAV to `<locale>/<dir>/<name>.wav`;
-   - art       — copies the PNG to `<dir>/<name>.png`;
+   - speech           — copies the WAV to `<locale>/<dir>/<name>.wav`;
+   - sfx/music/sound  — copies the WAV to `<dir>/<name>.wav`;
+   - image            — copies the PNG to `<dir>/<name>.png`;
+   (the destination path per type comes from gen_asset_tasks.target_rel.)
 3. clears the drop-box.
 
 It reads the same `assets/index.json` manifests, so a fresh session can run it

@@ -49,7 +49,7 @@ Each entry in `assets`:
 | field | meaning |
 |---|---|
 | `group` | display grouping on the *Assets to author* page (consecutive entries with the same group render together) |
-| `type` | `animation`, `image` (matching the C `ImageData`), `audio`, or `voice` (a spoken line) |
+| `type` | what the framework does with the asset (ASSET_TYPES.md): `image`, `animation`, `sfx` (the `play_<name>()` bank), `music` (a stream), `speech` (a spoken line, `say_<name>()`), or `sound` (a filename-referenced effect, e.g. the actor's move sound). The *file type* (image/audio) is derived from this, not authored |
 | `dir` | where the asset lives (see *directory rules* below) |
 | `name` | base filename, no extension |
 | `frames` | animations: frame count — **validated against the committed `.anim`** |
@@ -57,7 +57,7 @@ Each entry in `assets`:
 | `ms_per_frame` | animations: frame duration override; `0`/absent = engine default |
 | `max_loop_count` | animations: how many times a `one_shot` loops before it stops; `0`/absent = play once. Applied by the framework via the `_SPEC` initializer (#150) |
 | `size` | authoring hint (`WxH`) shown to the artist |
-| `text` | voice: the line to record |
+| `text` | speech: the line to record |
 | `localized` | the file lives under a locale dir, not `common/` |
 | `task` | `true` = **still to author**: gets a drop-box, appears on the page and in the estimate (the game meanwhile shows a placeholder). Default `false`: a finished/runtime-managed asset |
 | `runtime` | `false` = **authoring-only**: an artist makes it, but the game shows a derived asset instead (e.g. the pool stills, which render as boils) |
@@ -75,9 +75,10 @@ the layer the finished file is committed to); the rest use **resolver** dirs
 The generator maps both to the same runtime dir by stripping the `common/`
 prefix, so the emitted macros always hold resolver dirs.
 
-`voice` entries are authoring-only for now (scenes still play a shared
-per-scene `voice.wav` placeholder, declared as a runtime-only `audio` entry);
-they'll gain a runtime shape when per-line WAVs land.
+`speech` entries are the per-line spoken dialogue: the framework speaks each
+through the scene's actor via a generated `say_<name>()` helper (SCENES.md
+milestone 4), and its WAV is optional (a not-yet-recorded line is text-only). A
+`speech` line still to author is just `type: speech` + `task: true`.
 
 ## The generated header
 
