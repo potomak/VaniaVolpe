@@ -87,6 +87,12 @@ void set_active_scene(int scene) {
   snap_scene_camera();
 }
 
+void return_to_hub(void) {
+  if (hub_adventure != NULL && game.current_adventure != hub_adventure) {
+    adventure_switch_to(hub_adventure);
+  }
+}
+
 int sfx_play(int index) {
   const Adventure *adventure = game.current_adventure;
   SDL_assert(adventure != NULL);
@@ -139,7 +145,7 @@ void game_process_input(SDL_Event *event) {
       game.current_adventure != hub_adventure) {
     SDL_Point point = {event->button.x, event->button.y};
     if (SDL_PointInRect(&point, &HUB_BUTTON)) {
-      adventure_switch_to(hub_adventure);
+      return_to_hub();
       return;
     }
   }

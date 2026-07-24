@@ -42,6 +42,12 @@ const Scene *scene_instance(int scene);
 
 void set_active_scene(int scene);
 
+// Return to the hub (the adventure-selection menu) from within an adventure —
+// the same thing the engine's back-to-hub button does. A no-op when the hub
+// isn't registered or is already current. Scenes call this to route their own
+// "exit / done" affordances to the menu instead of quitting the game.
+void return_to_hub(void);
+
 // Play a sound effect from the current adventure's shared SFX bank
 // (adventure.h) by its index, returning the channel it started on (or -1).
 // Scenes don't call this directly — the generated play_<name>() helpers do,
