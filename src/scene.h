@@ -83,12 +83,23 @@ typedef struct hotspot {
   // do nothing (a not-yet-dug key). active_anim (below) plays while any row
   // carrying it is enabled, so this gates the boil too.
   bool (*enabled)(void);
+  // Fired immediately on the tap, with no walk (buttons, navigation arrows,
+  // "already done" lines, the excavator). Independent of on_arrive below — a
+  // hotspot may set on_tap, on_arrive, or both:
+  //   - on_tap only  → act now, the actor stays put (what `immediate` was)
+  //   - on_arrive only → walk to poi, then act
+  //   - both → act now AND walk-then-act
+  // on_tap always fires; on_arrive fires only if the ensuing walk completes (a
+  // re-tap, a drag or a blocked path can cancel it). So keep on_tap
+  // self-contained (an SFX, a spoken line, facing) and put any consequential
+  // state change in on_arrive. Caveat: an on_tap that switches scene must not
+  // be paired with on_arrive — the queued walk would target a torn-down scene.
+  void (*on_tap)(void);
   // Where the actor walks before acting (exact goal, so a POI on blocked
-  // ground is legal — see walk_actor_to). Ignored when immediate.
+  // ground is legal — see walk_actor_to). Only meaningful with on_arrive.
   SDL_Point poi;
-  // true: fire on_arrive on the click itself, with no walk (navigation
-  // arrows, "already done" lines, buttons).
-  bool immediate;
+  // Fired on arrival, after walking to poi. NULL for a tap-only hotspot (use
+  // on_tap). Whether the actor walks is driven by this being set, not a flag.
   void (*on_arrive)(void);
   // Optional animation played while the hotspot is enabled and frozen while it
   // is gated off (LIVELINESS.md Part 3) — Gina's objects use it for their
@@ -304,11 +315,12 @@ void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
                          Actor **actors, int actors_length);
 
 // Dispatch a click at p (scene coordinates) against a hotspot table: the
-// first enabled hotspot containing p wins — the actor walks to its poi and
-// on_arrive fires on arrival (or immediately, for immediate hotspots).
+// first enabled hotspot containing p wins. Its on_tap (if any) fires at once,
+// then — if it has an on_arrive — the actor walks to its poi and on_arrive
+// fires on arrival (see Hotspot: a row may have on_tap, on_arrive, or both).
 // Returns false when no hotspot claimed the click, so the scene can fall
-// through to its default (usually: walk to the click). Scenes with only
-// immediate hotspots may pass actor/grid as NULL.
+// through to its default (usually: walk to the click). Scenes whose matched
+// hotspots are tap-only (no on_arrive) may pass actor/grid as NULL.
 bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
                            Actor *actor, const WalkGrid *grid, SDL_Point p);
 

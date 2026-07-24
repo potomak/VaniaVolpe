@@ -27,11 +27,14 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
     if (!SDL_PointInRect(&p, &hotspot->rect)) {
       continue;
     }
-    if (hotspot->immediate) {
-      if (hotspot->on_arrive != NULL) {
-        hotspot->on_arrive();
-      }
-    } else {
+    // A hotspot acts on the tap, walks-then-acts, or both (see Hotspot). At
+    // least one callback must be set — a row that does nothing would silently
+    // swallow the click.
+    SDL_assert(hotspot->on_tap != NULL || hotspot->on_arrive != NULL);
+    if (hotspot->on_tap != NULL) {
+      hotspot->on_tap();
+    }
+    if (hotspot->on_arrive != NULL) {
       walk_actor_to(actor, grid, (SDL_FPoint){hotspot->poi.x, hotspot->poi.y},
                     true, hotspot->on_arrive);
     }

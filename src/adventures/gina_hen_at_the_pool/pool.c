@@ -170,8 +170,7 @@ static void init(void) {
                             .anim_at = SUNSCREEN_AT};
   hotspots[i++] = (Hotspot){.rect = SUNSCREEN_HOTSPOT,
                             .enabled = after_sunscreen,
-                            .immediate = true,
-                            .on_arrive = say_sunscreen_done,
+                            .on_tap = say_sunscreen_done,
                             .active_anim = sunscreen_boil,
                             .anim_at = SUNSCREEN_AT};
   hotspots[i++] = (Hotspot){.rect = GOGGLES_HOTSPOT,

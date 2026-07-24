@@ -132,8 +132,7 @@ static void init(void) {
   int i = 0;
   hotspots[i++] = (Hotspot){
       .rect = GATE_HOTSPOT, .poi = GATE_POI, .on_arrive = maybe_open_gate};
-  hotspots[i++] = (Hotspot){
-      .rect = EXCAVATOR_HOTSPOT, .immediate = true, .on_arrive = run_excavator};
+  hotspots[i++] = (Hotspot){.rect = EXCAVATOR_HOTSPOT, .on_tap = run_excavator};
   hotspots[i++] = (Hotspot){.rect = SHOVEL_HOTSPOT,
                             .enabled = key_still_buried,
                             .poi = SHOVEL_POI,

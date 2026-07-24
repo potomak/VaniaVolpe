@@ -81,11 +81,8 @@ static void init(void) {
   // intro just poses her sitting.
   actor_play_state(fox, SITTING);
 
-  hotspots[0] = (Hotspot){.rect = PLAY_BUTTON_HOTSPOT,
-                          .immediate = true,
-                          .on_arrive = start_playing};
-  hotspots[1] = (Hotspot){
-      .rect = EXIT_BUTTON_HOTSPOT, .immediate = true, .on_arrive = exit_to_hub};
+  hotspots[0] = (Hotspot){.rect = PLAY_BUTTON_HOTSPOT, .on_tap = start_playing};
+  hotspots[1] = (Hotspot){.rect = EXIT_BUTTON_HOTSPOT, .on_tap = exit_to_hub};
 }
 
 static void process_input(SDL_Event *event) {
@@ -119,7 +116,7 @@ static void process_input(SDL_Event *event) {
     // camera moved.
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
-    // Both buttons are immediate hotspots (no actor walk in the intro).
+    // Both buttons are tap-only hotspots (on_tap; no actor walk in the intro).
     hotspots_handle_click(hotspots, LEN(hotspots), NULL, NULL, m_pos);
     break;
   }
