@@ -83,6 +83,14 @@ static void init(void) {
 }
 
 static void process_input(SDL_Event *event) {
+  // Drag & drop (LIVELINESS.md Part 2, #41): a press-drag on the fox picks her
+  // up here too. The intro has no walkable area, so the drag takes a NULL grid
+  // — she is set back down where released and settles to her sitting idle. A
+  // press that becomes a drag is consumed here; plain taps fall through to the
+  // buttons below.
+  if (walk_actor_drag_event(fox, NULL, event)) {
+    return;
+  }
   switch (event->type) {
   case SDL_MOUSEMOTION:
     // Get mouse position

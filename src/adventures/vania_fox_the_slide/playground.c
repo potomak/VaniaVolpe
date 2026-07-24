@@ -227,6 +227,14 @@ static void pickup_acorns(void) { has_acorns = true; }
 static void pickup_peg(void) { has_peg = true; }
 
 static void process_input(SDL_Event *event) {
+  // Drag & drop (LIVELINESS.md Part 2, #41): a press-drag on the fox picks her
+  // up, like the playground entrance's default handler. Plain taps fall through
+  // to the slide/walk handling below. Suppressed mid-slide: update() is driving
+  // her down the slide (has_started_sliding), so grabbing her would fight that
+  // scripted motion — she can't be picked up until she reaches the bottom.
+  if (!has_started_sliding && walk_actor_drag_event(fox, &walk_grid, event)) {
+    return;
+  }
   switch (event->type) {
   case SDL_MOUSEMOTION:
     // Get mouse position

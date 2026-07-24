@@ -206,6 +206,18 @@ scene coordinates before the scene sees the event, and the camera happily
 follows a dragged actor. On the web, SDL translates single-finger touches
 to mouse events, so this works on a tablet unchanged.
 
+Every scene with the actor opts in the same way, so the gesture is uniform
+across an adventure (#41): scenes that leave `process_input` NULL get the call
+for free from `scene_default_process_input`; scenes with a custom handler
+(the fox's `playground`, `intro`, `outro`) call `walk_actor_drag_event` first
+themselves, exactly as the pool scene does. The **poster scenes** (`intro`,
+`outro`) have no walkable area, so they pass a **NULL grid**: the drag helpers
+treat that as "no ground" — `walk_grid_clamp_x` skips the horizontal clamp and
+the landing scan sets the actor back down where she was released (no fall).
+It is deliberately not framework-wide: Gina's sunscreen minigame uses a
+press-drag on the hen as its own gameplay, so a scene opts into actor drag
+rather than having it forced on every handler.
+
 ### The z-axis question — there is no z
 
 The open question was how to compute the fall height of the dragged

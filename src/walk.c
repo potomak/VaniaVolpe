@@ -317,8 +317,10 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
 // clamp to the zone the drag started in (flood fill on grab) is tracked in
 // #145.
 float walk_grid_clamp_x(const WalkGrid *grid, float x) {
-  if (grid->walkable_min_cx < 0) {
-    return x; // no walkable cell: nothing to clamp to
+  if (grid == NULL || grid->walkable_min_cx < 0) {
+    // No grid at all (a poster scene draggable via a NULL grid, #41) or no
+    // walkable cell: nothing to clamp to.
+    return x;
   }
   float lo = grid->walkable_min_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
   float hi = grid->walkable_max_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
@@ -561,6 +563,12 @@ void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
 // to make the landing zone-aware, using the origin zone remembered at grab
 // time; tracked with the clamp in #145.
 static SDL_FPoint drop_target(const WalkGrid *grid, SDL_FPoint from) {
+  if (grid == NULL) {
+    // A poster scene with no walkable area (intro/outro, #41): there is no
+    // ground to fall onto, so the actor is set back down exactly where the
+    // pointer released her.
+    return from;
+  }
   int cx = (int)from.x / WALK_CELL_SIZE;
   if (from.x >= 0 && cx < grid->w) {
     int start = (int)from.y / WALK_CELL_SIZE;

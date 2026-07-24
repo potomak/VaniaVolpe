@@ -456,5 +456,31 @@ int test_scene(void) {
         "actor_play_state enters a state that has an animation");
   actor_free(poser);
 
+  // ── drag & drop with no walk grid (#41) ───────────────────────────────────
+  // The fox's poster scenes (intro/outro) have no walkable area, so a drag
+  // there takes a NULL grid. A press-drag must still pick the actor up and set
+  // her back down without dereferencing the absent grid.
+  fprintf(stderr, "\ndrag & drop (NULL grid):\n");
+  Actor *dragged = make_actor(&TWO_VARIANT_SPEC, (SDL_FPoint){100, 100});
+  SDL_Event press = {.type = SDL_MOUSEBUTTONDOWN};
+  press.button.x = 100;
+  press.button.y = 100;
+  walk_actor_drag_event(dragged, NULL, &press); // arms the drag
+  SDL_Event motion = {.type = SDL_MOUSEMOTION};
+  motion.motion.x = 130;
+  motion.motion.y = 120;
+  motion.motion.state = SDL_BUTTON_LMASK;
+  bool grabbed =
+      walk_actor_drag_event(dragged, NULL, &motion); // past threshold
+  check(grabbed && dragged->state == DRAGGED,
+        "a press-drag with a NULL grid picks the actor up");
+  SDL_Event release = {.type = SDL_MOUSEBUTTONUP};
+  release.button.x = 130;
+  release.button.y = 120;
+  bool dropped = walk_actor_drag_event(dragged, NULL, &release);
+  check(dropped && dragged->state != DRAGGED,
+        "releasing over a NULL grid sets the actor back down");
+  actor_free(dragged);
+
   return failures;
 }
