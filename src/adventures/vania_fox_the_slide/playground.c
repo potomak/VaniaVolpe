@@ -227,6 +227,12 @@ static void pickup_acorns(void) { has_acorns = true; }
 static void pickup_peg(void) { has_peg = true; }
 
 static void process_input(SDL_Event *event) {
+  // Drag & drop (LIVELINESS.md Part 2, #41): a press-drag on the fox picks her
+  // up, like the playground entrance's default handler. Plain taps fall through
+  // to the slide/walk handling below.
+  if (walk_actor_drag_event(fox, &walk_grid, event)) {
+    return;
+  }
   switch (event->type) {
   case SDL_MOUSEMOTION:
     // Get mouse position

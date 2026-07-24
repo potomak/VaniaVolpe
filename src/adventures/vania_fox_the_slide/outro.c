@@ -38,10 +38,18 @@ static void init(void) {
 }
 
 static void process_input(SDL_Event *event) {
-  switch (event->type) {
-  case SDL_MOUSEBUTTONDOWN:
+  // Drag & drop (LIVELINESS.md Part 2, #41): a press-drag on the fox picks her
+  // up here too. The outro has no walkable area, so the drag takes a NULL grid
+  // — she is set back down where released. A press that becomes a drag is
+  // consumed here.
+  if (walk_actor_drag_event(fox, NULL, event)) {
+    return;
+  }
+  // A plain click (not a drag) restarts the adventure. Navigate on release, not
+  // press, so a press that turns into a drag of the fox doesn't also jump back
+  // to the intro before she can be picked up.
+  if (event->type == SDL_MOUSEBUTTONUP) {
     set_active_scene(INTRO);
-    break;
   }
 }
 
