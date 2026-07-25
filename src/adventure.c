@@ -15,13 +15,12 @@
 void adventure_init(const Adventure *adventure) {
   for (int i = 0; i < adventure->scenes_length; i++) {
     Scene *scene = &adventure->scenes[i];
-    // Make the scene's declarative animations before its init, so init can
-    // hand one to a hotspot's active_anim (SCENES.md milestone 1). A no-op for
-    // scenes that still make their own animations.
+    // Make the scene's declarative animations before its init, so init can hand
+    // one to a hotspot's active_anim. A no-op for scenes that make their own.
     make_scene_animations(scene);
-    // The framework owns the actor's lifecycle when the scene declares a spec
-    // (#141): make it before init so init (hotspots, camera_init) can reference
-    // it. Scenes with no actor leave actor_spec NULL.
+    // The framework owns the actor's lifecycle when the scene declares a spec:
+    // make it before init so init (hotspots, camera_init) can reference it.
+    // Scenes with no actor leave actor_spec NULL.
     if (scene->actor_spec != NULL) {
       *scene->actor = make_actor(scene->actor_spec, scene->actor_start);
     }
@@ -33,7 +32,7 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
   // Resolve this adventure's assets from its own directory.
   asset_set_root(adventure->assets_root);
 
-  // The shared sound-effect bank (SCENES.md milestone 4): loaded once for the
+  // The shared sound-effect bank: loaded once for the
   // whole adventure, before its scenes.
   if (!load_chunk_table(adventure->sfx, adventure->sfx_length)) {
     return false;
@@ -41,13 +40,13 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
 
   for (int i = 0; i < adventure->scenes_length; i++) {
     Scene *scene = &adventure->scenes[i];
-    // Load the actor's media when the framework owns it (#141).
+    // Load the actor's media when the framework owns it.
     if (scene->actor_spec != NULL &&
         !actor_load_media(*scene->actor, renderer)) {
       return false;
     }
-    // load_media is optional now that the framework loads the actor: a scene
-    // whose only media was its actor drops it entirely.
+    // load_media is optional: the framework loads the actor, so a scene whose
+    // only media is its actor can leave it NULL.
     if (scene->load_media != NULL && !scene->load_media(renderer)) {
       return false;
     }
@@ -73,8 +72,8 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
 void adventure_deinit(const Adventure *adventure) {
   for (int i = 0; i < adventure->scenes_length; i++) {
     Scene *scene = &adventure->scenes[i];
-    // deinit is optional now that the framework frees the actor: a scene whose
-    // only teardown was freeing its actor drops it entirely.
+    // deinit is optional: the framework frees the actor, so a scene whose only
+    // teardown is its actor can leave it NULL.
     if (scene->deinit != NULL) {
       scene->deinit();
     }

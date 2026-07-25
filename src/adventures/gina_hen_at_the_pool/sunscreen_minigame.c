@@ -25,22 +25,22 @@ static ImageData images[GINA_SUNSCREEN_IMAGES_COUNT] =
 static const ImageData *background = &images[GINA_SUNSCREEN_IMAGE_BACKGROUND];
 static const ImageData *gina_closeup = &images[GINA_SUNSCREEN_IMAGE_GINA];
 
-// The completion reward (#116): a confetti burst over the close-up while the
-// chime plays, then back to the pool where Gina explains. Declared as data
-// (SCENES.md milestone 1): the framework makes and loads it.
+// The completion reward: a confetti burst over the close-up while the chime
+// plays, then back to the pool where Gina explains. Declared as data; the
+// framework makes and loads it.
 static AnimationData *celebration;
 static AnimationData *animations[GINA_SUNSCREEN_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
     GINA_SUNSCREEN_ANIM_CELEBRATION_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): the backdrop and Gina's
+// The static sprite layer: the backdrop and Gina's
 // close-up. render() draws the dynamic layer over them: the sunscreen the
 // player paints on, and the completion burst.
 static SceneSprite sprites[2];
 
 // The scene has no chunk table: its completion chime is in the adventure's
-// shared SFX bank and plays via play_chime() (SCENES.md milestone 4).
+// shared SFX bank and plays via play_chime().
 
 // The close-up rect Gina occupies, and the brush grid laid over it.
 #define GINA_X 280
@@ -107,7 +107,7 @@ static void brush_at(int x, int y) {
 
   if (painted_count >= (int)(COVERAGE_THRESHOLD * ROWS * COLS)) {
     gina_state.has_sunscreen = true;
-    // The reward beat (#116): chime + confetti burst, then back to the pool.
+    // The reward beat: chime + confetti burst, then back to the pool.
     celebrating = true;
     play_chime();
     play_animation(celebration, back_to_pool);

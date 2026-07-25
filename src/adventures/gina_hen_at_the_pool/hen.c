@@ -41,8 +41,7 @@ const ActorSpec HEN_SPEC = {
     .variants_length = 1,
 };
 
-// No wrappers: the framework owns the hen's whole lifecycle from HEN_SPEC —
-// make/load/free (#141) and, when a scene declares no update/render, tick/draw
-// (#147). Scenes act on the actor through the generic actor_* API, and dialogue
-// goes through the generated say_<name>() helpers (scene_say → actor_talk). A
-// new character is now a spec, not a code file.
+// The hen is just data: HEN_SPEC. The framework owns its lifecycle from the
+// spec; scenes act on it through the generic actor_* API, and dialogue goes
+// through the generated say_<name>() helpers (scene_say → actor_talk). A new
+// character is a spec, not a code file.

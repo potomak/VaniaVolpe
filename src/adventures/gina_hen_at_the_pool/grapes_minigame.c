@@ -24,25 +24,25 @@ static ImageData images[GINA_GRAPES_IMAGES_COUNT] = GINA_GRAPES_IMAGES_INIT;
 static const ImageData *background = &images[GINA_GRAPES_IMAGE_BACKGROUND];
 static const ImageData *grape = &images[GINA_GRAPES_IMAGE_GRAPE];
 
-// The completion reward (#116): a confetti burst over the picked bunch while
-// the chime plays, then back to the vine where Gina explains. Declared as data
-// (SCENES.md milestone 1): the framework makes and loads it.
+// The completion reward: a confetti burst over the picked bunch while the chime
+// plays, then back to the vine where Gina explains. Declared as data; the
+// framework makes and loads it.
 static AnimationData *celebration;
 static AnimationData *animations[GINA_GRAPES_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
     GINA_GRAPES_ANIM_CELEBRATION_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): just the backdrop. render()
+// The static sprite layer: just the backdrop. render()
 // draws the dynamic grapes (falling under their tweens) and the burst.
 static SceneSprite sprites[1];
 
 // The scene has no chunk table: its sounds (pop, chime) are in the adventure's
-// shared SFX bank and play via play_<name>() (SCENES.md milestone 4).
+// shared SFX bank and play via play_<name>().
 
 #define GRAPE_SIZE 40
 #define GRAPE_COUNT 6
-// How long a picked grape takes to drop off the bottom of the screen (#108).
+// How long a picked grape takes to drop off the bottom of the screen.
 #define GRAPE_FALL_MS 550
 
 // Where each grape sits (top-left).
@@ -50,7 +50,7 @@ static const SDL_Point GRAPE_AT[GRAPE_COUNT] = {
     {340, 150}, {400, 160}, {460, 150}, {360, 210}, {430, 210}, {395, 270},
 };
 
-// A tapped grape falls off-screen before it's gone (#108), so each has three
+// A tapped grape falls off-screen before it's gone, so each has three
 // phases and its own fall tween.
 typedef enum grape_phase {
   GRAPE_ON_VINE, // at rest, tappable
@@ -102,7 +102,7 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
-    // Hit-test the click's own coordinates (#64): the cached motion position
+    // Hit-test the click's own coordinates: the cached motion position
     // can be stale — e.g. a repeated tap with no motion in between while the
     // camera moved.
     m_pos.x = event->button.x;
@@ -113,7 +113,7 @@ static void process_input(SDL_Event *event) {
       }
       SDL_Rect r = {GRAPE_AT[i].x, GRAPE_AT[i].y, GRAPE_SIZE, GRAPE_SIZE};
       if (SDL_PointInRect(&m_pos, &r)) {
-        // Pick it: it drops off the bottom of the screen (#108). Completion
+        // Pick it: it drops off the bottom of the screen. Completion
         // is checked in update, once every grape has finished falling.
         phase[i] = GRAPE_FALLING;
         tween_start(&fall[i], (SDL_FPoint){GRAPE_AT[i].x, GRAPE_AT[i].y},
@@ -140,7 +140,7 @@ static void update(float delta_time) {
       gone++;
     }
   }
-  // Every grape picked and landed: the reward beat (#116) — chime + confetti
+  // Every grape picked and landed: the reward beat — chime + confetti
   // burst, then back to the vine.
   if (gone == GRAPE_COUNT) {
     gina_state.has_grapes = true;

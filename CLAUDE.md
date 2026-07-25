@@ -171,3 +171,24 @@ larger than the window with a following camera and parallax planes (see
   issue with what's done and what's left and leave it open. New work surfaced while
   doing a task becomes a new `backlog` issue rather than a TODO left in the tree.
 - Match the existing C style (C99, two-space indent, `lower_snake_case`).
+
+### Comments
+Write comments for someone reading the code now, not for someone reviewing the
+diff that introduced it.
+
+- **No history in the source.** Don't cite issue or PR numbers (`#141`), or
+  migration milestones ("SCENES.md milestone 1"), or narrate what the code used
+  to do and why it changed. That belongs in commit messages and PRs. A living
+  design doc reference (`see MOVEMENT.md`) is fine when it points a reader to a
+  model they'd otherwise have to reconstruct — cite the doc, not the task. The
+  one exception is a pointer to an **open** tracking issue for a known
+  limitation or deferred work (`tracked in #145`): that documents a live TODO,
+  not history.
+- **Don't comment on what isn't there.** A scene that omits `update`/`render`
+  because the framework provides the default needs no comment announcing the
+  omission — absence is the normal case. Explain the non-obvious code that *is*
+  present, not the code that isn't.
+- **Prefer fewer, higher-signal comments.** Good ones explain non-obvious
+  behaviour, invariants, coordinate systems, gotchas, and *why* a surprising
+  choice was made. Skip comments that restate what the code plainly says or
+  justify a past change.

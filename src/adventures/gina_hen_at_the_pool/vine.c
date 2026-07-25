@@ -24,23 +24,20 @@
 static ImageData images[GINA_VINE_IMAGES_COUNT] = GINA_VINE_IMAGES_INIT;
 static const ImageData *background = &images[GINA_VINE_IMAGE_BACKGROUND];
 
-// The grapes boil (LIVELINESS.md Part 3) to show they are tappable; same size
-// as the old still PNG, so the render position is unchanged. Declared as data
-// (SCENES.md milestone 1): the framework makes and loads it: init only aliases
-// the made object, load_media no longer touches it.
+// The grapes boil (LIVELINESS.md) shows the grapes are tappable. Declared as
+// data: the framework makes, loads, ticks and frees it; init only aliases it.
 static AnimationData *grapes_boil;
 static AnimationData *animations[GINA_VINE_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
     GINA_VINE_ANIM_GRAPES_BOIL_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): just the backdrop. The
-// grapes boil is declared on its hotspot (milestone 3), which the framework
-// both plays and draws.
+// Static sprite layer: just the backdrop. The grapes boil is declared on its
+// hotspot, which the framework plays and draws.
 static SceneSprite sprites[1];
 
-// The scene's spoken lines (SCENES.md milestone 4): per-line dialogue chunks
-// the framework speaks via generated say_<name>() helpers.
+// The scene's spoken lines: per-line dialogue chunks the framework speaks via
+// generated say_<name>() helpers.
 static ChunkData chunks[GINA_VINE_DIALOG_CHUNKS_COUNT] =
     GINA_VINE_DIALOG_CHUNKS_INIT;
 
@@ -111,13 +108,10 @@ static void pick_grapes(void) {
   say_nothing_to_pick();
 }
 
-// No update/render: the background and grapes boil are static sprites and Gina
-// is the only dynamic thing, so the framework ticks and draws her (#147).
-
 static void on_scene_active(void) {
   gina->current_position = HEN_START;
   gina->target_position = HEN_START;
-  // Fresh from the grapes minigame (#116): explain what the reward means.
+  // Fresh from the grapes minigame: explain what the reward means.
   if (gina_state.announce_grapes) {
     gina_state.announce_grapes = false;
     say_basket_full();
@@ -128,9 +122,6 @@ static void on_scene_inactive(void) {}
 
 Scene vine_scene = {
     .init = init,
-    // No process_input / update / render: the framework's default handlers
-    // drive input, and tick and draw the actor (SCENES.md milestone 5, #147).
-    // The framework also owns Gina's lifecycle (#141).
     .actor = &gina,
     .actor_spec = &HEN_SPEC,
     .actor_start = {400, 480},

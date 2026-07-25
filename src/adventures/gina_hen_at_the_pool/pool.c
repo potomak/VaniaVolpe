@@ -41,12 +41,11 @@ static const ImageData *water = &images[GINA_POOL_IMAGE_WATER];
 static AnimationData *sunscreen_boil;
 static AnimationData *goggles_boil;
 static AnimationData *float_boil;
-// The progress-reward burst over the goggles (#118): plays once with the
-// chime when she collects them, no input lock (this is a walking scene).
+// The progress-reward burst over the goggles: plays once with the chime when
+// she collects them, no input lock (this is a walking scene).
 static AnimationData *celebration;
-// Declared as data (SCENES.md milestone 1): the framework makes and loads
-// these; init only aliases them, load_media no longer touches them. Order
-// matches the generated indices.
+// Declared as data: the framework makes and loads these; init only aliases
+// them. Order matches the generated indices.
 static AnimationData *animations[GINA_POOL_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
     GINA_POOL_ANIM_CELEBRATION_SPEC,
@@ -55,15 +54,14 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_POOL_ANIM_FLOAT_BOIL_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): backdrop and water. The
-// three object boils are declared on their hotspots (milestone 3) — the
-// framework plays and draws each. render() keeps only the dynamic draws (the
-// float mid-flight, the actor, the reward burst).
+// Static sprite layer: backdrop and water. The three object boils are declared
+// on their hotspots — the framework plays and draws each. render() keeps only
+// the dynamic draws (the float mid-flight, the actor, the reward burst).
 static SceneSprite sprites[2];
 
-// The scene's spoken lines (SCENES.md milestone 4): each is a per-line dialogue
-// chunk the framework speaks via a generated say_<name>() helper. Sound effects
-// live in the adventure's shared SFX bank (play_<name>()).
+// The scene's spoken lines: each is a per-line dialogue chunk the framework
+// speaks via a generated say_<name>() helper. Sound effects live in the
+// adventure's shared SFX bank (play_<name>()).
 static ChunkData chunks[GINA_POOL_DIALOG_CHUNKS_COUNT] =
     GINA_POOL_DIALOG_CHUNKS_INIT;
 
@@ -72,7 +70,7 @@ static SDL_Point m_pos;
 static Hen *gina;
 static const SDL_FPoint HEN_START = {150, 480};
 
-// Scene-object tweens (#107/#119). The float's flight into the tree, and
+// Scene-object tweens. The float's flight into the tree, and
 // Gina's dive arc into the water; the flags gate hotspots/input while each
 // motion runs.
 static Tween float_tween;
@@ -146,7 +144,6 @@ static void go_to_vine(void);
 static void go_to_tree(void);
 
 static void init(void) {
-  // Gina is made by the framework (actor_spec/actor_start below) before init.
   rebuild_walk_grid();
 
   sunscreen_boil = animations[GINA_POOL_ANIM_SUNSCREEN_BOIL];
@@ -245,7 +242,7 @@ static void go_to_tree(void) { set_active_scene(TREE); }
 
 static void collect_goggles(void) {
   gina_state.has_goggles = true;
-  // Progress reward (#118): chime + confetti burst over the goggles while she
+  // Progress reward: chime + confetti burst over the goggles while she
   // cheers. No input lock — she just picked something up, she isn't leaving.
   play_chime();
   play_animation(celebration, NULL);
@@ -262,7 +259,7 @@ static void float_gone(void) {
 
 static void float_blows_away(void) {
   play_wind();
-  // The gust carries the float up and off toward the tree (#107): a hop off
+  // The gust carries the float up and off toward the tree: a hop off
   // the right edge, shrinking as it recedes. The state flips when it lands.
   float_flying = true;
   tween_start(&float_tween, (SDL_FPoint){FLOAT_AT.x, FLOAT_AT.y},
@@ -272,8 +269,8 @@ static void float_blows_away(void) {
   float_tween.to_scale = 0.5F;
 }
 
-// Landing half of the dive (#119): splash, the happy line, and the in-place
-// replay reset that used to happen on the tap.
+// Landing half of the dive: splash, the happy line, and the in-place replay
+// reset.
 static void dive_landed(void) {
   diving = false;
   play_splash();
@@ -288,7 +285,7 @@ static void dive_landed(void) {
 }
 
 static void dive(void) {
-  // The dive arc (#119): a tweened hop from the pool edge into the water.
+  // The dive arc: a tweened hop from the pool edge into the water.
   // Input is ignored until she lands (see process_input).
   diving = true;
   tween_start(&dive_tween, gina->current_position, (SDL_FPoint){400, 190}, 700,
@@ -332,7 +329,7 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
-    // Hit-test the click's own coordinates (#64): the cached motion position
+    // Hit-test the click's own coordinates: the cached motion position
     // can be stale — e.g. a repeated tap with no motion in between while the
     // camera moved.
     m_pos.x = event->button.x;
@@ -400,7 +397,7 @@ static void on_scene_active(void) {
   // The sunscreen may have been applied since init (the minigame scene sets
   // it, then control returns here): pick the state-appropriate walk area.
   rebuild_walk_grid();
-  // Fresh from the sunscreen minigame (#116): explain what the reward means.
+  // Fresh from the sunscreen minigame: explain what the reward means.
   if (gina_state.announce_sunscreen) {
     gina_state.announce_sunscreen = false;
     say_sunscreen_ready();
@@ -413,7 +410,7 @@ Scene pool_scene = {
     .init = init,
     // Custom process_input for the dive input-lock; .actor still declared so
     // the generated say_<name>() helpers can speak through it (SCENES.md
-    // m4/m5), and the framework owns Gina's lifecycle (#141).
+    // m4/m5), and the framework owns Gina's lifecycle.
     .process_input = process_input,
     .actor = &gina,
     .actor_spec = &HEN_SPEC,

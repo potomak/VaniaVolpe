@@ -14,7 +14,7 @@
 #include "vine.h"
 
 // Asset declarations generated from the manifest (ASSETS.md): the shared
-// sound-effect bank (SCENES.md milestone 4).
+// sound-effect bank.
 #include "gina_assets.h"
 
 #define GINA_HEN_AT_THE_POOL_SCENES_LENGTH 5

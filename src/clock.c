@@ -1,6 +1,6 @@
 //
 //  clock.c
-//  The simulation clock seam (see clock.h / #155).
+//  The simulation clock seam (see clock.h).
 //
 
 #include "clock.h"

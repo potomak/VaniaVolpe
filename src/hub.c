@@ -34,8 +34,8 @@ static SDL_Rect menu_button_rect(int index) {
 }
 
 // A placeholder Exit button below the adventure list: the hub is the one place
-// the game is quit from, now that an adventure's own exit returns here instead.
-// Real art is tracked with the rest of the hub in #47.
+// the game is quit from (an adventure's own exit returns here). Real art is
+// tracked with the rest of the hub in #47.
 #define EXIT_BUTTON_WIDTH 200
 #define EXIT_BUTTON_HEIGHT 60
 #define EXIT_BUTTON_BOTTOM_MARGIN 40
@@ -91,10 +91,6 @@ static bool load_media(SDL_Renderer *renderer) {
   (void)renderer;
   return true;
 }
-
-// No process_input: the hub declares its hotspots (below) and lets the
-// framework's default handler dispatch taps. It has no actor, so the default
-// skips the drag pickup and walk-to-click and just runs the hotspots.
 
 static void update(float delta_time) { (void)delta_time; }
 
@@ -156,7 +152,6 @@ void hub_register(const Adventure **content, int count) {
   scenes[MENU] = (Scene){
       .init = init,
       .load_media = load_media,
-      // No process_input: the framework default dispatches the hotspots below.
       .update = update,
       .render = render,
       .deinit = deinit,

@@ -9,7 +9,7 @@
 
 // Asset path resolution (adventure assets root)
 #include "asset.h"
-// Simulation clock seam (#155): a deterministic virtual clock under test
+// Simulation clock seam: a deterministic virtual clock under test
 #include "clock.h"
 #include "constants.h"
 // Features for debugging the game
@@ -176,7 +176,7 @@ void game_process_input(SDL_Event *event) {
   }
 
   // A scene either handles input itself or leaves process_input NULL and gets
-  // the framework's default drag/hit-test/walk handler (SCENES.md milestone 5).
+  // the framework's default drag/hit-test/walk handler.
   const Scene *scene = scene_instance(game.current_scene);
   if (scene->process_input != NULL) {
     scene->process_input(event);
@@ -194,7 +194,7 @@ void game_update(float delta_time) {
   sync_hotspot_active_anims(scene_instance(game.current_scene));
   update_scene_animations(*scene_instance(game.current_scene), clock_now_ms());
   // A scene either updates itself or leaves update NULL and the framework ticks
-  // its actor (#147) — the same optional-with-default shape as process_input.
+  // its actor — the same optional-with-default shape as process_input.
   const Scene *scene = scene_instance(game.current_scene);
   if (scene->update != NULL) {
     scene->update(delta_time);
@@ -233,7 +233,7 @@ void game_render(SDL_Renderer *renderer) {
   render_scene_sprites(renderer, scene->sprites, scene->sprites_length);
   render_hotspot_anims(renderer, scene);
   // A scene either draws its dynamic layer or leaves render NULL and the
-  // framework draws its actor (#147), after the static sprites and inside the
+  // framework draws its actor, after the static sprites and inside the
   // same camera offset.
   if (scene->render != NULL) {
     scene->render(renderer);

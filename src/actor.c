@@ -617,7 +617,7 @@ void actor_set_variant(Actor *actor, int variant) {
   // animation inherits the old one's timing, frame and facing, so a walk or
   // talk continues mid-stride instead of restarting — that continuity is
   // what hides the switch. The old animation is silenced directly rather
-  // than via stop_animation, which would fire its end callback (see #35).
+  // than via stop_animation, which would fire its end callback.
   ActorState state = actor->state;
   if (state == IDLE) {
     state = actor->spec->idle_state;
