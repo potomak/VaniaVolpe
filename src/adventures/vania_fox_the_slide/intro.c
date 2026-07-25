@@ -23,9 +23,8 @@ static ImageData images[VANIA_INTRO_IMAGES_COUNT] = VANIA_INTRO_IMAGES_INIT;
 static const ImageData *background =
     &images[VANIA_INTRO_IMAGE_INTRO_BACKGROUND];
 
-// Animations (declared as data, SCENES.md milestone 1: the framework makes,
-// loads, ticks and frees these; the scene only declares them and aliases the
-// made objects).
+// Animations declared as data: the framework makes, loads, ticks and frees
+// them; the scene aliases the made objects.
 static AnimationData *play_button;
 static AnimationData *exit_button;
 static AnimationData *animations[VANIA_INTRO_ANIMS_COUNT];
@@ -34,16 +33,11 @@ static const SceneAnimSpec anim_specs[] = {
     VANIA_INTRO_ANIM_EXIT_BUTTON_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): backdrop and the two
-// buttons (which animate on hover but are always drawn). render() draws only
-// the fox.
+// Static sprite layer: backdrop and the two buttons (they animate on hover but
+// are always drawn).
 static SceneSprite sprites[3];
 
 static Fox *fox;
-
-// The button-click SFX live in the adventure's shared bank (play via
-// play_<name>()); music is declared on the Scene (.music, SCENES.md
-// milestone 4). So the intro carries no per-scene chunk table.
 
 // Mouse position
 static SDL_Point m_pos;
@@ -61,9 +55,8 @@ static void start_playing(void) {
 }
 
 static void exit_to_hub(void) {
-  // Exit returns to the adventure-selection menu rather than quitting the game:
-  // quitting is now offered by the hub itself. The click plays over the
-  // transition to the hub (it used to be cut off by an immediate quit).
+  // Exit returns to the adventure-selection menu; quitting the game is offered
+  // by the hub itself. The click plays over the transition.
   play_exit_button_click();
   return_to_hub();
 }
@@ -77,8 +70,7 @@ static void init(void) {
   sprites[s++] = (SceneSprite){.animation = play_button, .at = {410, 260}};
   sprites[s++] = (SceneSprite){.animation = exit_button, .at = {440, 450}};
 
-  // The framework made the fox (actor_spec/actor_start below) before init; the
-  // intro just poses her sitting.
+  // Pose the fox sitting.
   actor_play_state(fox, SITTING);
 
   hotspots[0] = (Hotspot){.rect = PLAY_BUTTON_HOTSPOT, .on_tap = start_playing};
@@ -86,11 +78,10 @@ static void init(void) {
 }
 
 static void process_input(SDL_Event *event) {
-  // Drag & drop (LIVELINESS.md Part 2, #41): a press-drag on the fox picks her
-  // up here too. The intro has no walkable area, so the drag takes a NULL grid
-  // — she is set back down where released and settles to her sitting idle. A
-  // press that becomes a drag is consumed here; plain taps fall through to the
-  // buttons below.
+  // Drag & drop (LIVELINESS.md): a press-drag on the fox picks her up. The
+  // intro has no walkable area, so the drag takes a NULL grid — she is set back
+  // down where released. A drag is consumed here; plain taps fall through to
+  // the buttons below.
   if (walk_actor_drag_event(fox, NULL, event)) {
     return;
   }
@@ -111,26 +102,21 @@ static void process_input(SDL_Event *event) {
     }
     break;
   case SDL_MOUSEBUTTONDOWN:
-    // Hit-test the click's own coordinates (#64): the cached motion position
-    // can be stale — e.g. a repeated tap with no motion in between while the
-    // camera moved.
+    // Hit-test the click's own coordinates: the cached motion position can be
+    // stale (a repeated tap with no motion between, while the camera moved).
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
-    // Both buttons are tap-only hotspots (on_tap; no actor walk in the intro).
+    // Tap-only hotspots; the intro has no actor to walk.
     hotspots_handle_click(hotspots, LEN(hotspots), NULL, NULL, m_pos);
     break;
   }
 }
 
-// No update/render: the fox is the only dynamic thing, so the framework ticks
-// and draws her (#147); the backdrop and buttons are static sprites.
-
 static void on_scene_active(void) {
   stop_animation(play_button);
   stop_animation(exit_button);
-  // Re-pose the fox every time the intro is shown, so replaying the adventure
-  // (or dragging her away, #41) always returns her to her seat. Matches
-  // .actor_start below.
+  // Re-pose the fox whenever the intro is shown, so replaying the adventure (or
+  // dragging her away) always returns her to her seat. Matches .actor_start.
   fox->current_position = (SDL_FPoint){322, 317};
   actor_play_state(fox, SITTING);
 }
@@ -140,9 +126,6 @@ static void on_scene_inactive(void) {}
 Scene intro_scene = {
     .init = init,
     .process_input = process_input,
-    // No update/render: the framework ticks and draws the actor (#147). The
-    // framework also owns the fox's lifecycle (#141): it makes her at
-    // actor_start before init, loads her media, and frees her on teardown.
     .actor = &fox,
     .actor_spec = &FOX_SPEC,
     .actor_start = {322, 317},

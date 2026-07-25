@@ -24,7 +24,7 @@ typedef struct adventure {
   // state so the adventure is replayable. May be NULL.
   void (*on_enter)(void);
 
-  // The adventure's shared sound-effect bank (SCENES.md milestone 4): every SFX
+  // The adventure's shared sound-effect bank: every SFX
   // any of its scenes triggers, loaded once here rather than per scene. A scene
   // plays one by its generated play_<name>() helper, which calls sfx_play with
   // the sound's index into this table (the manifest's `sfx: true` entries, via

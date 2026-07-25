@@ -58,7 +58,7 @@ void scene_default_process_input(const Scene *scene, SDL_Event *event) {
   if (event->type != SDL_MOUSEBUTTONDOWN) {
     return;
   }
-  // Hit-test the click's own coordinates (#64): a cached motion position can be
+  // Hit-test the click's own coordinates: a cached motion position can be
   // stale — e.g. a repeated tap with no motion in between while the camera
   // moved. The hotspot table says what each region does; anything else walks
   // the actor toward the click (routed around blocked ground), or is ignored
@@ -80,7 +80,7 @@ void scene_default_update(const Scene *scene, float delta_time) {
 
 void scene_default_render(const Scene *scene, SDL_Renderer *renderer) {
   SDL_assert(scene->actor != NULL);
-  // The actor draws depth-sorted among the scene's props (#149), or alone when
+  // The actor draws depth-sorted among the scene's props, or alone when
   // there are none — render_action_layer handles props_length 0 (its props loop
   // runs zero times, never touching a NULL props pointer). scene->actor is the
   // address of the scene's single actor pointer, so it doubles as a one-element
@@ -432,7 +432,7 @@ void make_scene_animations(Scene *scene) {
   for (int i = 0; i < scene->anim_specs_length; i++) {
     const SceneAnimSpec *spec = &scene->anim_specs[i];
     AnimationData *anim = make_animation_data(spec->frames, spec->style);
-    // Declarative playback config (#150): apply only when set, so a spec that
+    // Declarative playback config: apply only when set, so a spec that
     // leaves them 0 keeps make_animation_data's defaults.
     if (spec->ms_per_frame > 0) {
       anim->ms_per_frame = spec->ms_per_frame;

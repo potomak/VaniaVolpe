@@ -1,9 +1,9 @@
 //
 //  tween.h
-//  Scene-object tweens (#107): animate a position (and optionally a scale)
+//  Scene-object tweens: animate a position (and optionally a scale)
 //  from A to B over a duration with simple easing, ticked from the scene's
 //  update. Actors move through the walk system; this is for everything else —
-//  a float blown into the tree, a grape falling, Gina's dive arc (#119).
+//  a float blown into the tree, a grape falling, Gina's dive arc.
 //
 //  Usage: keep a Tween in the scene, tween_start it on the trigger, tick it
 //  in update (tween_update), and draw the object at tween_pos / tween_scale

@@ -32,11 +32,11 @@ static const ImageData *basket = &images[GINA_TREE_IMAGE_BASKET];
 // old still PNGs, so the render positions are unchanged.
 static AnimationData *float_boil;
 static AnimationData *carla_boil;
-// The progress-reward burst over the float (#118): plays once with the chime
-// when Carla drops it back.
+// The progress-reward burst over the float: plays once with the chime when
+// Carla drops it back.
 static AnimationData *celebration;
-// Declared as data (SCENES.md milestone 1): the framework makes and loads
-// these; init only aliases them. Order matches the generated indices.
+// Declared as data: the framework makes and loads these; init only aliases
+// them. Order matches the generated indices.
 static AnimationData *animations[GINA_TREE_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
     GINA_TREE_ANIM_CELEBRATION_SPEC,
@@ -44,15 +44,15 @@ static const SceneAnimSpec anim_specs[] = {
     GINA_TREE_ANIM_CARLA_BOIL_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): just the backdrop. The
-// stuck float and Carla are boils declared on their hotspots (milestone 3),
-// which the framework plays and draws. render() keeps the dynamic draws: the
-// falling float, the actor, the carried basket and the reward burst.
+// Static sprite layer: just the backdrop. The stuck float and Carla are boils
+// declared on their hotspots, which the framework plays and draws. render()
+// keeps the dynamic draws: the falling float, the actor, the carried basket and
+// the reward burst.
 static SceneSprite sprites[1];
 
-// The scene's spoken lines (SCENES.md milestone 4): per-line dialogue chunks
-// the framework speaks via generated say_<name>() helpers. Sound effects (caw,
-// chime) live in the adventure's shared SFX bank (play_<name>()).
+// The scene's spoken lines: per-line dialogue chunks the framework speaks via
+// generated say_<name>() helpers. Sound effects (caw, chime) live in the
+// adventure's shared SFX bank (play_<name>()).
 static ChunkData chunks[GINA_TREE_DIALOG_CHUNKS_COUNT] =
     GINA_TREE_DIALOG_CHUNKS_INIT;
 
@@ -61,10 +61,10 @@ static const SDL_FPoint HEN_START = {400, 480};
 
 static const SDL_Point FLOAT_AT = {500, 70};
 static const SDL_Point CARLA_AT = {360, 150};
-// The float-return reward burst (#118), centred over the float's fall path.
+// The float-return reward burst, centred over the float's fall path.
 static const SDL_Point CELEBRATION_AT = {425, 130};
 
-// The float's drop from the branches after the trade (#107): a bouncing fall
+// The float's drop from the branches after the trade: a bouncing fall
 // to the ground; the state flips to retrieved when it settles.
 static Tween float_tween;
 static bool float_falling;
@@ -97,7 +97,6 @@ static void go_to_pool(void);
 static void go_to_vine(void);
 
 static void init(void) {
-  // Gina is made by the framework (actor_spec/actor_start below) before init.
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
@@ -171,9 +170,9 @@ static void talk_to_carla(void) {
 
   if (gina_state.float_state == FLOAT_STUCK_IN_TREE) {
     if (gina_state.has_grapes) {
-      // Carla eats the grapes and drops the float back to Gina (#107): it
-      // bounces down from the branches while she says thanks. Progress reward
-      // (#118): chime + confetti burst over the float as it comes back.
+      // Carla eats the grapes and drops the float back to Gina: it bounces down
+      // from the branches while she says thanks, with a chime + confetti burst
+      // over the float as it comes back.
       gina_state.has_grapes = false;
       say_carla_thanks();
       play_chime();
@@ -234,9 +233,6 @@ static void on_scene_inactive(void) {}
 
 Scene tree_scene = {
     .init = init,
-    // No process_input: the framework's default drag/hit-test/walk handler
-    // drives this scene (SCENES.md milestone 5). The framework also owns Gina's
-    // lifecycle (#141).
     .actor = &gina,
     .actor_spec = &HEN_SPEC,
     .actor_start = {400, 480},

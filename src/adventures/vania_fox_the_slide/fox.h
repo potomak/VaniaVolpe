@@ -1,9 +1,9 @@
 //
 //  fox.h
 //  The fox is just a concrete Actor: an ActorSpec (in fox.c), no code. The
-//  framework owns its lifecycle from FOX_SPEC — make/load/free (#141) and
-//  tick/draw (#147) — and scenes act on it through the generic actor_* API. A
-//  new character (e.g. a chicken) is a new spec, not a new code file.
+//  framework owns its lifecycle from FOX_SPEC, and scenes act on it through the
+//  generic actor_* API. A new character (e.g. a chicken) is a new spec, not a
+//  new code file.
 //
 
 #ifndef fox_h

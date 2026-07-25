@@ -32,14 +32,14 @@ typedef struct prop {
   bool visible; // scenes toggle this (e.g. a picked-up item)
 } Prop;
 
-// A static scene sprite (SCENES.md milestone 2): an image or animation drawn
+// A static scene sprite: an image or animation drawn
 // at a fixed scene position, optionally gated by a predicate — the declarative
 // form of a scene's background/boil/button draws. The framework draws the
 // scene's sprite table (in order, skipping gated-off entries) before the
 // scene's own render, which is left to draw only the dynamic action layer (the
 // actor, tweened objects, things that follow the actor, overlays on top).
 // Scenes build the table in their init like the hotspot table, so an animation
-// sprite can reference an object the framework made (SCENES.md milestone 1).
+// sprite can reference an object the framework made.
 typedef struct scene_sprite {
   // Exactly one of image / animation is non-NULL. image is const to match how
   // scenes alias their backgrounds (const ImageData *).
@@ -109,10 +109,10 @@ typedef struct hotspot {
   // play it if ANY of them is enabled (e.g. an object with a before/after
   // pair).
   AnimationData *active_anim;
-  // Where the framework draws active_anim (SCENES.md milestone 3): the boil is
-  // declared once, on the hotspot — the engine both plays it (above) and draws
-  // it here, so a scene no longer lists a separate sprite for it. Top-left,
-  // scene coordinates. Only meaningful when active_anim is set.
+  // Where the framework draws active_anim: the boil is declared once, on the
+  // hotspot — the engine both plays it (above) and draws it here, so a scene
+  // needn't list a separate sprite for it. Top-left, scene coordinates. Only
+  // meaningful when active_anim is set.
   SDL_Point anim_at;
   // Gates the *draw* of active_anim, independent of enabled (which gates the
   // play): an object may be visible-but-frozen before it becomes tappable, or
@@ -121,7 +121,7 @@ typedef struct hotspot {
   bool (*anim_visible)(void);
 } Hotspot;
 
-// A scene animation declared as data (SCENES.md, milestone 1): the framework
+// A scene animation declared as data: the framework
 // makes it (before the scene's init, so init can wire it into a hotspot's
 // active_anim) and loads it (in the media-load pass) from these fields, which
 // come straight from the generated asset header — a scene lists
@@ -133,7 +133,7 @@ typedef struct scene_anim_spec {
   AnimationPlaybackStyle style;
   Asset sprite; // sprite sheet PNG
   Asset data;   // .anim clip table
-  // Playback config the framework applies when it makes the animation (#150).
+  // Playback config the framework applies when it makes the animation.
   // 0 means "keep make_animation_data's default": ms_per_frame falls back to
   // DEFAULT_MS_PER_FRAME, max_loop_count stays 0 (a one_shot plays once). Both
   // come from the manifest via the generated _SPEC initializer.
@@ -149,14 +149,14 @@ typedef struct scene_anim_spec {
 // NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 typedef struct scene {
   void (*init)(void);
-  // Optional (see #141): the framework loads the actor and frees it, so a scene
+  // Optional: the framework loads the actor and frees it, so a scene
   // whose only media/teardown was its actor leaves these NULL.
   bool (*load_media)(SDL_Renderer *renderer);
   void (*process_input)(SDL_Event *event);
-  // update / render are optional (#147): NULL lets the framework tick / draw
+  // update / render are optional: NULL lets the framework tick / draw
   // the scene's `.actor` for it (scene_default_update / scene_default_render).
   // The default render draws the actor alone, or — when the scene declares
-  // `.props` (#149) — the props and actor y-sorted (render_action_layer). A
+  // `.props` — the props and actor y-sorted (render_action_layer). A
   // scene supplies its own only to interleave the actor with scene-specific
   // work — order the tick (field's depth variant before it, pool's dive tween
   // after it) or compose the actor into a dynamic draw layer (the carried key,
@@ -189,7 +189,7 @@ typedef struct scene {
   // helpers speak through it. NULL for scenes with no actor (menus, minigames).
   Actor **actor;
 
-  // The actor's spec and start position (#141). When actor_spec is set, the
+  // The actor's spec and start position. When actor_spec is set, the
   // framework owns the actor's whole lifecycle: it makes the actor
   // (make_actor(actor_spec, actor_start)) before the scene's init — so init,
   // the hotspot table and camera_init can reference it — loads its media in the
@@ -227,7 +227,7 @@ typedef struct scene {
   // depth-sorted against (passes behind or in front of, by feet-y vs each
   // prop's baseline). When a scene declares props and leaves `render` NULL, the
   // framework's default render draws them y-sorted with the actor
-  // (scene_default_render → render_action_layer, #149) — so a scene whose whole
+  // (scene_default_render → render_action_layer) — so a scene whose whole
   // dynamic layer is props + actor drops its render too. A scene that
   // interleaves other dynamic draws keeps a custom render and draws the action
   // layer itself. NULL/0 for scenes with no props. Built in init like sprites;
@@ -243,7 +243,7 @@ typedef struct scene {
   ChunkData *chunks;
   int chunks_length;
 
-  // Declarative background music (SCENES.md milestone 4): the manifest asset of
+  // Declarative background music: the manifest asset of
   // a music stream the framework plays on scene entry and halts on exit, so a
   // scene sets `.music` and drops the whole Mix_LoadMUS/PlayMusic/HaltMusic/
   // FreeMusic lifecycle. A zeroed asset ({0}, no filename) means the scene has
@@ -260,7 +260,7 @@ typedef struct scene {
   AnimationData **animations;
   int animations_length;
 
-  // Declarative animations (SceneAnimSpec, SCENES.md milestone 1): when set,
+  // Declarative animations (SceneAnimSpec): when set,
   // the framework makes these into animations[] before init and loads them in
   // the media pass, so the scene declares them instead of writing the
   // make/load loops. anim_specs_length entries fill animations[0..N); the
@@ -324,7 +324,7 @@ void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
 bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
                            Actor *actor, const WalkGrid *grid, SDL_Point p);
 
-// The default scene input handler (SCENES.md milestone 5): the drag + hit-test
+// The default scene input handler: the drag + hit-test
 // + walk interaction every walking scene shared. The engine runs it for a scene
 // that supplies no process_input of its own — a press-drag on the actor picks
 // it up (walk_actor_drag_event), a plain tap is dispatched to the hotspot
@@ -335,7 +335,7 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
 // lock, a win check, button hover art) still writes its own process_input.
 void scene_default_process_input(const Scene *scene, SDL_Event *event);
 
-// The default update / render (#147): tick / draw the scene's `.actor`. The
+// The default update / render: tick / draw the scene's `.actor`. The
 // engine runs each for a scene that leaves the matching callback NULL (the same
 // shape as scene_default_process_input). A scene with a custom update/render
 // that just wants "the default plus a little" may call these itself instead of
@@ -352,14 +352,14 @@ void scene_default_render(const Scene *scene, SDL_Renderer *renderer);
 // ORing their states.
 void sync_hotspot_active_anims(const Scene *scene);
 
-// Draw every hotspot's active_anim at its anim_at (SCENES.md milestone 3), each
+// Draw every hotspot's active_anim at its anim_at, each
 // distinct animation once, skipping any gated off by anim_visible. Called by
 // the engine in the sprite layer (after render_scene_sprites, before the
 // scene's render), so a scene declares its boils on the hotspots instead of
 // listing them as separate sprites.
 void render_hotspot_anims(SDL_Renderer *renderer, const Scene *scene);
 
-// Draw a scene's static sprite table (SceneSprite, SCENES.md milestone 2): each
+// Draw a scene's static sprite table (SceneSprite): each
 // visible entry in order, an image or an animation at its scene position.
 // Called by the engine before the scene's render, inside the camera offset.
 void render_scene_sprites(SDL_Renderer *renderer, const SceneSprite *sprites,

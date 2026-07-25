@@ -318,7 +318,7 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
 // #145.
 float walk_grid_clamp_x(const WalkGrid *grid, float x) {
   if (grid == NULL || grid->walkable_min_cx < 0) {
-    // No grid at all (a poster scene draggable via a NULL grid, #41) or no
+    // No grid at all (a poster scene draggable via a NULL grid) or no
     // walkable cell: nothing to clamp to.
     return x;
   }
@@ -564,7 +564,7 @@ void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
 // time; tracked with the clamp in #145.
 static SDL_FPoint drop_target(const WalkGrid *grid, SDL_FPoint from) {
   if (grid == NULL) {
-    // A poster scene with no walkable area (intro/outro, #41): there is no
+    // A poster scene with no walkable area (intro/outro): there is no
     // ground to fall onto, so the actor is set back down exactly where the
     // pointer released her.
     return from;

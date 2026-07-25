@@ -11,8 +11,8 @@
 #include "playground.h"
 #include "playground_entrance.h"
 
-// Asset declarations generated from the manifest (ASSETS.md): the shared
-// sound-effect bank (SCENES.md milestone 4).
+// Asset declarations generated from the manifest (ASSETS.md), including the
+// shared sound-effect bank.
 #include "vania_assets.h"
 
 #define VANIA_FOX_THE_SLIDE_SCENES_LENGTH 4

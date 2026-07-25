@@ -29,9 +29,8 @@ static const ImageData *background =
     &images[VANIA_PLAYGROUND_ENTRANCE_IMAGE_PLAYGROUND_ENTRANCE_BACKGROUND];
 static const ImageData *key = &images[VANIA_PLAYGROUND_ENTRANCE_IMAGE_KEY];
 
-// Animations (declared as data, SCENES.md milestone 1: the framework makes,
-// loads, ticks and frees these; the scene aliases the made objects and only
-// sets their loop counts).
+// Animations declared as data: the framework makes, loads, ticks and frees
+// them; the scene aliases the made objects and sets their loop counts.
 static AnimationData *excavator;
 static AnimationData *gate;
 static AnimationData *shovel;
@@ -42,18 +41,17 @@ static const SceneAnimSpec anim_specs[] = {
     VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPEC,
 };
 
-// The static sprite layer (SCENES.md milestone 2): backdrop, the three
-// machines, and the key once it's on the ground (gated by key_on_the_ground).
-// render() keeps the dynamic draws: the carried key (which follows the fox)
-// and the fox.
+// Static sprite layer: backdrop, the three machines, and the key once it's on
+// the ground (gated by key_on_the_ground). render() keeps the dynamic draws:
+// the carried key (which follows the fox) and the fox.
 static SceneSprite sprites[5];
 
 static Fox *fox;
 
-// The scene's spoken lines, played via generated say_<name>() helpers
-// (SCENES.md milestone 4). Sound effects (excavator, shovel, key_reveal, and
-// the peg-falling reused for the gate) are in the adventure's shared SFX bank
-// (play_<name>()); music is declared on the Scene (.music).
+// The scene's spoken lines, played via generated say_<name>() helpers. Sound
+// effects (excavator, shovel, key_reveal, and the peg-falling reused for the
+// gate) are in the adventure's shared SFX bank (play_<name>()); music is
+// declared on the Scene (.music).
 static int excavator_sound_channel = -1;
 static ChunkData chunks[VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNKS_COUNT] =
     VANIA_PLAYGROUND_ENTRANCE_DIALOG_CHUNKS_INIT;
@@ -83,7 +81,7 @@ static SDL_Point pois[4];
 
 // Scene state
 static bool has_key_been_revealed;
-// Inventory (adventure state, formerly on the fox)
+// Inventory (adventure state)
 static bool has_key;
 static int examine_gate_count;
 
@@ -109,8 +107,8 @@ static void run_excavator(void) {
 }
 
 static void init(void) {
-  // The excavator (6) and shovel (3) loop counts are declared in the manifest
-  // now and applied by the framework when it makes the animation (#150).
+  // The excavator (6) and shovel (3) loop counts come from the manifest and are
+  // applied by the framework when it makes the animation.
   excavator = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR];
   gate = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE];
   shovel = animations[VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL];
@@ -123,8 +121,6 @@ static void init(void) {
   sprites[s++] = (SceneSprite){
       .image = key, .at = {20, 431}, .visible = key_on_the_ground};
 
-  // The fox is made by the framework (actor_spec/actor_start below) before
-  // init.
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT},
                  "playground_entrance");
@@ -194,12 +190,10 @@ static void examine_slide(void) {
   say_examine_slide_from_outside();
 }
 
-// No update: the framework ticks the actor (#147). render stays custom to draw
-// the carried key behind the fox.
+// Custom render: the carried key draws behind the fox.
 static void render(SDL_Renderer *renderer) {
-  // Backdrop, machines and the on-ground key are static sprites (drawn by the
-  // framework). render() draws the dynamic layer: the key while the fox
-  // carries it, and the fox.
+  // Backdrop, machines and the on-ground key are static sprites. render() draws
+  // the dynamic layer: the key while the fox carries it, and the fox.
   if (has_key_been_revealed && has_key) {
     render_image(renderer, key,
                  (SDL_Point){fox->current_position.x - 50,
@@ -222,15 +216,9 @@ static void on_scene_inactive(void) {}
 
 Scene playground_entrance_scene = {
     .init = init,
-    // No process_input: the framework's default drag/hit-test/walk handler
-    // drives this scene (SCENES.md milestone 5). This is also what makes the
-    // fox draggable here, like the hen — the default includes drag & drop.
-    // The framework also owns the fox's lifecycle (#141).
     .actor = &fox,
     .actor_spec = &FOX_SPEC,
     .actor_start = {580, 457},
-    // No update: the framework ticks the actor (#147). render is custom (the
-    // carried key draws behind the fox).
     .render = render,
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,

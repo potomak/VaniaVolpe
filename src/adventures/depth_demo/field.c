@@ -134,8 +134,6 @@ static const SDL_Point EAST_BUSH_POS = {1250, 420};
 static SDL_Point m_pos;
 
 static void init(void) {
-  // The fox is made by the framework (actor_spec/actor_start below) before
-  // init, so camera_init can anchor to her here.
   camera_init(&camera, SCENE_SIZE, fox);
 
   walk_grid_init(&walk_grid, &WALK_AREA, SCENE_SIZE, NULL);
@@ -155,7 +153,7 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
-    // Hit-test the click's own coordinates (#64): the cached motion position
+    // Hit-test the click's own coordinates: the cached motion position
     // can be stale — e.g. a repeated tap with no motion in between while the
     // camera moved.
     m_pos.x = event->button.x;
@@ -173,11 +171,6 @@ static void update(float delta_time) {
       fox, depth_variant_for(DEPTH_BANDS, LEN(DEPTH_BANDS), actor_feet_y(fox)));
   actor_update(fox, delta_time);
 }
-
-// No render: the whole dynamic layer is props + actor, so the framework draws
-// them y-sorted for us (scene_default_render → render_action_layer, #149). The
-// engine draws the sky/hills/ground planes behind and the foreground bush strip
-// in front.
 
 static void on_scene_active(void) {
   fox->current_position = FOX_START;
@@ -197,9 +190,6 @@ Scene field_scene = {
     .init = init,
     .process_input = process_input,
     .update = update,
-    // No render: the framework draws the props + actor action layer (#149).
-    // The framework owns the fox's lifecycle (#141): made at actor_start before
-    // init (so camera_init can anchor to her), loaded, and freed on teardown.
     .actor = &fox,
     .actor_spec = &DEMO_FOX_SPEC,
     .actor_start = {600, 500},

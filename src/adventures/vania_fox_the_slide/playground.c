@@ -42,16 +42,14 @@ static Prop props[2];
 static Prop *acorn_pile_prop = &props[0];  // fallen acorns, on the ground
 static Prop *dropped_peg_prop = &props[1]; // peg the squirrel dropped
 
-// The static sprite layer (SCENES.md milestone 2): backdrop and the squirrel.
-// Everything else (the peg and acorns in their many states, the y-sorted
-// props, the fox) is dynamic and stays in render().
+// Static sprite layer: backdrop and the squirrel. Everything else (the peg and
+// acorns in their many states, the y-sorted props, the fox) is dynamic and
+// stays in render().
 static SceneSprite sprites[2];
 
-// The scene's spoken lines, played via generated say_<name>() helpers
-// (SCENES.md milestone 4). Sound effects (acorns_falling, peg_falling) are in
-// the adventure's shared SFX bank (play_<name>()); music is declared on the
-// Scene
-// (.music); the framework plays and frees both.
+// The scene's spoken lines, played via generated say_<name>() helpers. Sound
+// effects (acorns_falling, peg_falling) are in the adventure's shared SFX bank
+// (play_<name>()); music is declared on the Scene (.music).
 static ChunkData chunks[VANIA_PLAYGROUND_DIALOG_CHUNKS_COUNT] =
     VANIA_PLAYGROUND_DIALOG_CHUNKS_INIT;
 
@@ -97,7 +95,7 @@ static const float SLIDE_X_VELOCITY = 100;
 static bool has_slide_been_fixed;
 static bool have_acorns_fallen;
 static bool has_peg_been_dropped;
-// Inventory (adventure state, formerly on the fox)
+// Inventory (adventure state)
 static bool has_peg;
 static bool has_acorns;
 static bool has_started_sliding;
@@ -127,8 +125,6 @@ static bool peg_on_the_ground(void) {
 }
 
 static void init(void) {
-  // The fox is made by the framework (actor_spec/actor_start below) before
-  // init.
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "playground");
 
@@ -227,7 +223,7 @@ static void pickup_acorns(void) { has_acorns = true; }
 static void pickup_peg(void) { has_peg = true; }
 
 static void process_input(SDL_Event *event) {
-  // Drag & drop (LIVELINESS.md Part 2, #41): a press-drag on the fox picks her
+  // Drag & drop (LIVELINESS.md Part 2): a press-drag on the fox picks her
   // up, like the playground entrance's default handler. Plain taps fall through
   // to the slide/walk handling below. Suppressed mid-slide: update() is driving
   // her down the slide (has_started_sliding), so grabbing her would fight that
@@ -242,9 +238,8 @@ static void process_input(SDL_Event *event) {
     m_pos.y = event->motion.y;
     break;
   case SDL_MOUSEBUTTONDOWN:
-    // Hit-test the click's own coordinates (#64): the cached motion position
-    // can be stale — e.g. a repeated tap with no motion in between while the
-    // camera moved.
+    // Hit-test the click's own coordinates: the cached motion position can be
+    // stale (a repeated tap with no motion between, while the camera moved).
     m_pos.x = event->button.x;
     m_pos.y = event->button.y;
     // If has already slid three or more times go to outro
@@ -359,9 +354,9 @@ static void on_scene_inactive(void) {}
 
 Scene playground_scene = {
     .init = init,
-    // Custom process_input for the after-three-slides win check; .actor still
-    // declared so the generated say_<name>() helpers can speak through it, and
-    // the framework owns the fox's lifecycle (#141).
+    // Custom process_input for the after-three-slides win check; .actor is
+    // still declared so the generated say_<name>() helpers can speak through
+    // it.
     .process_input = process_input,
     .actor = &fox,
     .actor_spec = &FOX_SPEC,

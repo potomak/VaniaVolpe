@@ -1,6 +1,6 @@
 //
 //  clock.h
-//  Simulation clock (see #155). The engine reads "now" through clock_now_ms()
+//  Simulation clock. The engine reads "now" through clock_now_ms()
 //  instead of calling SDL_GetTicks() directly, so a test can drive the whole
 //  simulation off a deterministic virtual clock rather than the wall clock.
 //

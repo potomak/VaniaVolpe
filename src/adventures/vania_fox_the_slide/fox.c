@@ -50,8 +50,6 @@ const ActorSpec FOX_SPEC = {
     .talk_shape_frames = MOUTH_SHAPE_COUNT,
 };
 
-// No wrappers: the framework owns the fox's whole lifecycle from FOX_SPEC —
-// make/load/free (#141) and, when a scene declares no update/render, tick/draw
-// (#147). Scenes act on the actor through the generic actor_* API (e.g.
-// actor_update, actor_play_state(fox, SITTING)). A new character is now a spec,
-// not a code file.
+// The fox is just data: FOX_SPEC. The framework owns its lifecycle from the
+// spec, and scenes act on it through the generic actor_* API (e.g.
+// actor_play_state(fox, SITTING)). A new character is a spec, not a code file.

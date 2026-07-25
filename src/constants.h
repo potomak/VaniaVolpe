@@ -14,7 +14,7 @@
 
 #define AUDIO_CHUNK_SIZE 2048
 
-// Channel 0 is reserved for actor dialogue (see #33/#34) so sound effects —
+// Channel 0 is reserved for actor dialogue so sound effects —
 // played on whatever channel is free via Mix_PlayChannel(-1, …) — can't steal
 // or cut off a voice line mid-sentence.
 #define MIXER_CHANNEL_COUNT 16
