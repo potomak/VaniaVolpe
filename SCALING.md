@@ -137,11 +137,11 @@ Two properties fall out:
 `image.c`'s existing `scaled_quad` scales about the **centre** and is therefore
 the wrong helper; this needs a bottom-anchored sibling.
 
-#### Follow-up: standardising pose sizes
+#### Follow-up: standardising pose sizes (tracked in #169)
 
 Non-uniform sheets are handled, not required. Standardising every pose of an
 actor onto one canvas with a common anchor is **not a prerequisite** for
-scaling, but it would pay for itself elsewhere and is worth its own issue:
+scaling, but it would pay for itself elsewhere:
 
 - `actor_sprite_rect` uses the *reference* (move-state) frame for every state,
   so the fox's grab box is 144x117 even while she is SITTING at 96x135 — 24px
