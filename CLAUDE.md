@@ -89,7 +89,10 @@ Backends* for how the harnesses work.
   the Puppeteer browser test that consumes them.
 - Docs: `ARCHITECTURE.md` (deep design, incl. the terminal & headless-test
   backends), `MOVEMENT.md` (walkability grid + A* pathfinding; shipped),
-  `DEPTH_AND_CAMERA.md` (props, depth variants, camera, parallax; shipped),
+  `DEPTH_AND_CAMERA.md` (props, depth variants, camera, parallax; shipped —
+  its depth-variant model is superseded by `SCALING.md`),
+  `SCALING.md` (continuous actor scaling by depth + how it composes with drag
+  & drop; specced, not yet implemented),
   `SPEECH.md` (lip-sync cues + read-along subtitles; code phases shipped),
   `LIVELINESS.md` (idle fidgets, actor drag & drop, boiling hotspots; all shipped,
   character art via the asset pipeline),

@@ -65,17 +65,26 @@ movement plan (`MOVEMENT.md`, #48) are collected in a section at the end.
 - **R8** — The walk grid, `.walk` masks, the mask editor, and the debug
   overlay operate in scene coordinates and scene-sized grids.
 
-Non-goals (out of scope, revisit only if felt): continuous zoom/scaling,
-camera rotation or shake, dead-zone camera tuning, per-pixel occlusion masks,
-animated planes, positional audio, different parallax factors per axis.
+Non-goals (out of scope, revisit only if felt): camera rotation or shake,
+dead-zone camera tuning, per-pixel occlusion masks, animated planes,
+positional audio, different parallax factors per axis. (Continuous scaling was
+a non-goal here; see the reversal below.)
 
 ## Depth: approaches considered
+
+> **Superseded — see `SCALING.md`.** Art direction has since reversed the
+> decision below: continuous render scaling is now the chosen model, and the
+> depth-band / per-variant system is scheduled for retirement. The crispness
+> objection is accepted as a trade; the fringing objection was a solvable bug
+> (colour-keyed texels keep the key RGB, so linear filtering bleeds toward it —
+> fixed by an alpha-bleed pass at load). This section is kept for the reasoning,
+> not as current direction.
 
 - **Continuous render scaling** (classic SCUMM: `scale = f(y)`, one sprite
   set): smooth and art-cheap, but scaled sprites lose the hand-drawn
   crispness (and colour-keyed edges fringe under interpolation) — rejected by
-  art direction.
-- **Discrete depth bands + per-band sprite variants** *(chosen)*: each scene
+  art direction. *(Now chosen; see above.)*
+- **Discrete depth bands + per-band sprite variants** *(was chosen)*: each scene
   divides its floor into 1–3 horizontal bands; each actor provides a full
   sprite set per band, authored at the right size. Engine cost is trivial
   (pick the set by feet y); art stays exactly as drawn. Costs: art effort
