@@ -75,10 +75,12 @@ a non-goal here; see the reversal below.)
 > **Superseded — see `SCALING.md`.** Art direction has since reversed the
 > decision below: continuous render scaling is now the chosen model, and the
 > depth-band / per-variant system is scheduled for retirement. The crispness
-> objection is accepted as a trade; the fringing objection was a solvable bug
-> (colour-keyed texels keep the key RGB, so linear filtering bleeds toward it —
-> fixed by an alpha-bleed pass at load). This section is kept for the reasoning,
-> not as current direction.
+> objection is accepted as a trade; the fringing objection was a solvable bug,
+> though not the one described below — the sprites carry a real alpha channel
+> and the colour key is vestigial (no sprite contains a cyan texel). The halo
+> is black, from transparent texels storing RGB (0,0,0) under straight-alpha
+> interpolation, and is fixed by an alpha-bleed pass at load. This section is
+> kept for the reasoning, not as current direction.
 
 - **Continuous render scaling** (classic SCUMM: `scale = f(y)`, one sprite
   set): smooth and art-cheap, but scaled sprites lose the hand-drawn
