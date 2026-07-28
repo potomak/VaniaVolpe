@@ -482,5 +482,62 @@ int test_scene(void) {
         "releasing over a NULL grid sets the actor back down");
   actor_free(dragged);
 
+  // ── depth scaling (SCALING.md) ────────────────────────────────────────────
+  fprintf(stderr, "\nscale ramp:\n");
+  static const ScaleRamp RAMP = {
+      .y_far = 100, .y_near = 500, .scale_far = 0.5F, .scale_near = 1.0F};
+  check(scale_ramp_at(NULL, 123) == 1.0F,
+        "a scene with no ramp is exactly scale 1");
+  check(scale_ramp_at(&RAMP, 100) == 0.5F, "at y_far the scale is scale_far");
+  check(scale_ramp_at(&RAMP, 500) == 1.0F, "at y_near the scale is scale_near");
+  check(fabsf(scale_ramp_at(&RAMP, 300) - 0.75F) < 0.0001F,
+        "the ramp interpolates linearly between its bounds");
+  check(scale_ramp_at(&RAMP, -50) == 0.5F && scale_ramp_at(&RAMP, 9000) == 1.0F,
+        "the ramp clamps outside its bounds");
+  static const ScaleRamp FLAT = {
+      .y_far = 200, .y_near = 200, .scale_far = 0.3F, .scale_near = 0.8F};
+  check(scale_ramp_at(&FLAT, 200) == 0.8F,
+        "a zero-span ramp doesn't divide by zero");
+
+  fprintf(stderr, "\nscaled draw geometry:\n");
+  // The anchor is the ground-contact point: the quad's bottom edge holds still
+  // while everything above it shrinks toward it.
+  SDL_Point quad_at = {100, 200};
+  // bottom-centre of a 100x100 quad at quad_at
+  SDL_Point foot = {150, 300};
+  SDL_Rect same = scaled_quad_about(quad_at, 100, 100, 1.0F, foot);
+  check(same.x == 100 && same.y == 200 && same.w == 100 && same.h == 100,
+        "scale 1 is exactly the unscaled rect (no ramp changes nothing)");
+  SDL_Rect half = scaled_quad_about(quad_at, 100, 100, 0.5F, foot);
+  check(half.w == 50 && half.h == 50, "a scaled quad shrinks by the factor");
+  check(half.y + half.h == foot.y,
+        "the scaled quad keeps its bottom edge on the anchor");
+  check(half.x + half.w / 2 == foot.x,
+        "the scaled quad stays centred over the anchor");
+
+  fprintf(stderr, "\nactor scale:\n");
+  Actor *scaled = make_actor(&TWO_VARIANT_SPEC, (SDL_FPoint){400, 300});
+  give_reference_frame(scaled, 240);
+  check(actor_scale(scaled) == 1.0F, "an actor with no ramp is scale 1");
+  SDL_Rect natural = actor_sprite_rect(scaled);
+  scaled->scale_ramp = &RAMP;
+  // Feet at 300 + 120 = 420, so the ramp gives 0.5 + (320/400) * 0.5 = 0.9.
+  check(fabsf(actor_scale(scaled) - 0.9F) < 0.0001F,
+        "an actor's scale comes from her feet, not her centre");
+  // She is drawn smaller, but the target is floored at the natural size and
+  // stays centred on the drawn sprite: the padding grows as she shrinks, so a
+  // distant actor never becomes a tiny target for a small finger.
+  SDL_Rect shrunk = actor_sprite_rect(scaled);
+  check(shrunk.w == natural.w && shrunk.h == natural.h,
+        "a shrunk actor keeps a natural-sized grab target");
+  check(shrunk.x + shrunk.w / 2 == (int)scaled->current_position.x,
+        "the grab target stays centred on her");
+  check(shrunk.y > natural.y,
+        "the grab target follows the sprite down as she shrinks to her feet");
+  scaled->current_position.y = -1000; // far past y_far, so scale is scale_far
+  check(actor_sprite_rect(scaled).w == natural.w,
+        "even at the ramp's minimum the target is never below natural size");
+  actor_free(scaled);
+
   return failures;
 }

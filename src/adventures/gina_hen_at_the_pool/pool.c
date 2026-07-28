@@ -105,6 +105,13 @@ static const WalkArea POOLSIDE_AREA = {POOLSIDE_RECTS, LEN(POOLSIDE_RECTS),
 static const WalkArea SHADE_AREA = {SHADE_RECTS, LEN(SHADE_RECTS), NULL, 0};
 static WalkGrid walk_grid;
 
+// Depth (SCALING.md): a gentle ramp across the walkable strip, in feet
+// coordinates (the walk rects above are centre positions; feet sit half a
+// walking frame lower). scale_far is the knob — raise it toward 1 for a
+// flatter backdrop, lower it for more perspective.
+static const ScaleRamp SCALE_RAMP = {
+    .y_far = 490, .y_near = 639, .scale_far = 0.85F, .scale_near = 1.0F};
+
 // Rebuild the grid from the state-appropriate area. Called on scene entry and
 // after any in-scene state change that affects movement (the replay reset in
 // dive(); the sunscreen minigame re-enters through on_scene_active).
@@ -423,6 +430,7 @@ Scene pool_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .scale_ramp = &SCALE_RAMP,
     .walk_grid = &walk_grid,
     .sprites = sprites,
     .sprites_length = LEN(sprites),

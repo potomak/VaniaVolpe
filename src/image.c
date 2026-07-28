@@ -76,11 +76,6 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
     return false;
   }
 
-  // Color key image
-  SDL_SetColorKey(loaded_surface, SDL_TRUE,
-                  SDL_MapRGB(loaded_surface->format, COLOR_KEY_R, COLOR_KEY_G,
-                             COLOR_KEY_B));
-
   // Create texture from surface pixels
   image->texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
   if (image->texture == NULL) {
@@ -89,8 +84,7 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
                  SDL_GetError());
     return false;
   }
-  // Enable alpha blending so transparent-background PNGs (alpha, not just the
-  // cyan key) composite correctly on every driver.
+  // Sprites carry a real alpha channel; blending is what makes them composite.
   SDL_SetTextureBlendMode(image->texture, SDL_BLENDMODE_BLEND);
   // Get image dimensions
   image->width = loaded_surface->w;
@@ -302,6 +296,34 @@ static SDL_Rect scaled_quad(SDL_Point point, int w, int h, float scale) {
   int sh = (int)(h * scale);
   return (SDL_Rect){point.x + render_offset.x + (w - sw) / 2,
                     point.y + render_offset.y + (h - sh) / 2, sw, sh};
+}
+
+SDL_Rect scaled_quad_about(SDL_Point point, int w, int h, float scale,
+                           SDL_Point anchor) {
+  float x = (float)anchor.x + (float)(point.x - anchor.x) * scale;
+  float y = (float)anchor.y + (float)(point.y - anchor.y) * scale;
+  return (SDL_Rect){(int)x + render_offset.x, (int)y + render_offset.y,
+                    (int)((float)w * scale), (int)((float)h * scale)};
+}
+
+void render_animation_scaled_about(SDL_Renderer *renderer,
+                                   AnimationData *animation, SDL_Point point,
+                                   float scale, SDL_Point anchor) {
+  if (animation->image.texture == NULL) {
+    return;
+  }
+  SDL_Rect *clip = &animation->sprite_clips[animation->current_frame];
+  SDL_Rect render_quad =
+      scaled_quad_about(point, clip->w, clip->h, scale, anchor);
+  SDL_RenderCopyEx(renderer, animation->image.texture, clip, &render_quad, 0,
+                   NULL, animation->flip);
+}
+
+void render_image_scaled_about(SDL_Renderer *renderer, const ImageData *image,
+                               SDL_Point point, float scale, SDL_Point anchor) {
+  SDL_Rect render_quad =
+      scaled_quad_about(point, image->width, image->height, scale, anchor);
+  SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
 }
 
 void render_animation_scaled(SDL_Renderer *renderer, AnimationData *animation,

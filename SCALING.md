@@ -24,8 +24,10 @@ about resolving that.
 - **R6** — Walk and fall speed scale with depth, so apparent motion stays
   natural (SCUMM modulated `SO_STEP_DIST` the same way).
 - **R7** — The grab target never shrinks below a size a toddler can hit.
-- **R8** — Scaled sprites must not fringe. Edge artefacts under interpolation
-  are the reason this approach was rejected once already.
+- **R8** — Scaled sprites must not visibly fringe. Edge artefacts under
+  interpolation are the reason this approach was rejected once already; see
+  *Fringing*, where the objection was measured and found not to apply to this
+  art.
 
 Non-goals: camera zoom or rotation, per-pixel occlusion masks, non-linear
 (true 1/z) perspective, automatic scaling of props (opt-in only), per-cell
@@ -41,9 +43,8 @@ Non-goals ("revisit only if felt").
 
 That decision is now reversed: continuous scaling is the chosen model. The
 crispness half of the objection is an accepted aesthetic trade. The fringing
-half is a solvable bug, and **R8** makes solving it a gate on Phase 1 rather
-than a matter of taste — see *Fringing*. `DEPTH_AND_CAMERA.md` is amended to
-point here.
+half was measured and **does not apply to this art** — see *Fringing*.
+`DEPTH_AND_CAMERA.md` is amended to point here.
 
 ## The depth map: `ScaleRamp`
 
@@ -129,10 +130,12 @@ Two properties fall out:
   byte-identically (R5).
 - Per-state frames of different sizes keep their relative composition. The fox's
   sheets are not uniform — walking/talking 144x117, sitting 96x135, waving
-  93x132 — so today her sitting sprite overhangs the walking feet line by 9px.
-  Scaling the whole composition about the feet line scales that overhang too,
-  instead of snapping each state's own bottom edge to the ground (which would
-  make her visibly rise 9px whenever she sits).
+  93x132 — and `actor_render` positions *every* state from the **reference**
+  frame's half-extent, so her sitting sprite already hangs ~18px below the
+  walking feet line and sits 24px left of centre. Scaling the whole composition
+  about the feet line scales those offsets with her, instead of snapping each
+  state's own bottom edge to the ground (which would move her visibly whenever
+  she changed pose).
 
 `image.c`'s existing `scaled_quad` scales about the **centre** and is therefore
 the wrong helper; this needs a bottom-anchored sibling.
@@ -162,40 +165,32 @@ adventure PNGs are RGBA (only `field/sky.png` is RGB), the fox's walking sheet
 is 50% fully transparent with a further 5% partially transparent (authored
 anti-aliased edges), and the hen's idle sheet is 73%/6%.
 
-Two things follow, both measured rather than assumed:
+**The colour key is vestigial.** `image.c` called `SDL_SetColorKey` for cyan on
+every loaded surface, and **not one sprite contains a cyan texel**. It was a
+leftover of the original tutorial pipeline and did nothing; deleted.
 
-**The colour key is vestigial.** `image.c` calls `SDL_SetColorKey` for cyan on
-every loaded surface, and **not one sprite contains a single cyan texel**. It is
-a leftover of the original tutorial pipeline and does nothing. Delete it; the
-alpha channel is what has been doing the work all along.
+**The theoretical artefact is real but invisible here, so nothing is done about
+it.** Every fully transparent texel stores RGB `(0,0,0)`. SDL blends straight
+(non-premultiplied) alpha and filters RGB and alpha independently, so a sample
+straddling the sprite edge mixes in that black: in principle a dark halo on any
+scaled sprite. Measured on the fox's walking frame downscaled to 0.6 — the
+ramp's floor, and so the worst case in practice — dilating the edge colour
+outward ("alpha bleeding") changes **214 of 6020** output pixels, by at most
+40/255, and the two renders are **indistinguishable side by side at 6x zoom**.
 
-**The fringe is black, not cyan.** Every fully transparent texel stores RGB
-`(0,0,0)` — transparent *black* — including the ~2700 that directly border the
-fox. At 1:1 each screen pixel samples one texel, so an alpha-0 texel contributes
-nothing and nothing fringes. Once scaled, linear filtering interpolates *between*
-texels, and SDL's default `SDL_BLENDMODE_BLEND` is straight (non-premultiplied)
-alpha, so RGB and A are averaged independently: an edge texel blends toward
-black with partial alpha. The result is a **dark halo on every scaled sprite
-edge**.
+The reason is the art style itself: these characters are drawn with a heavy
+dark outline (`LIVELINESS.md`: "hand-drawn with squiggly lines"), so the pixels
+the artefact darkens are already dark. A bleed pass was implemented, measured,
+and then removed as ~75 lines of load-time work for no visible gain.
 
-So the original art-direction objection was right that edges fringe, but wrong
-about the cause. The fix is unchanged: at load, run an **alpha-bleed** pass —
-dilate each transparent texel's RGB outward from its nearest non-transparent
-neighbour. Interpolation then blends toward the sprite's own colour and the halo
-disappears, with linear filtering retained for smoothness. (Premultiplied alpha
-is the other standard fix, but it needs a custom SDL blend mode; bleeding works
-with the default.)
-
-Doing this at load rather than in the PNGs keeps assets as authored and covers
-future art automatically, and it benefits the existing `render_*_scaled` paths
-(tween scaling) too, not just actors.
-
-`SDL_SetTextureScaleMode(..., SDL_ScaleModeNearest)` on actor textures is the
-fallback if bleeding still shimmers on hand-drawn art at small scales.
+This is worth recording rather than just deleting, for two reasons: it is the
+concrete half of the original art-direction objection, now shown not to apply;
+and if a future asset ever *is* drawn without an outline, the fix is known —
+bleed at load, or premultiplied alpha with a custom blend mode.
 
 Note the filtering hint is set **only** in `main.c` — `main_terminal.c` and
-`test/harness.c` never set it — so the headless harness cannot catch a fringing
-regression. Verify it by eye, in the desktop or web build.
+`test/harness.c` never set it — so the headless harness would not catch a
+fringing regression either way. Judge it by eye, in the desktop or web build.
 
 ## Drag & drop
 
@@ -258,11 +253,17 @@ scaled by the actor's current scale — that would reintroduce a `lift -> ground
 
 ### Landing is the shadow
 
-Release lands her on `ground_y` — the slewed value the player has been looking
-at, not a freshly computed one. `walk_grid_clamp_ground` only ever returns
-walkable cells, so a lagging value is still a legal landing (R3 in
-`LIVELINESS.md` holds), and using it makes the shadow authoritative (R4). No
-snap is possible because the scale already matches.
+Release lands her on the shadow, not on a freshly scanned point — that is what
+makes it authoritative (R4), and `walk_grid_clamp_ground` only ever returns
+walkable cells, so R3 in `LIVELINESS.md` still holds.
+
+The slew is **snapped to its target on release** rather than landed on as-is.
+Slewing is there to smooth the shadow while she is *carried*; letting it also
+decide where she comes down means a quick fling, released before the ease
+converged, drops her short of where the player aimed. Snapping first keeps the
+aim honest and still lands on a walkable cell. The scale can therefore step by
+however much the ease was lagging — zero whenever the player pauses before
+releasing, which is the normal case.
 
 ### Clamping the shadow
 
@@ -376,16 +377,16 @@ grow the padding as the sprite shrinks. This ships in Phase 1, not later.
 Each phase is a PR gated by `make test` plus a play-test of the scene it
 touches.
 
-1. **Rendering foundation.** Alpha-bleed at load (R8); scale-about-feet draw;
-   `ScaleRamp` + `actor_scale()`; scaled + floored grab rect. No scene declares a
-   ramp yet, so this is provably an identity transform (R5). Verify fringing by
-   eye in the desktop build.
-2. **Opt one scene in.** Give the depth demo a ramp and scale its props; delete
-   its `DEPTH_BANDS`. First real look at the effect.
-3. **Drag & drop integration.** `walk_grid_clamp_ground`, `Actor.ground_y`, the
-   lift model, slew, the shadow and its sort entry, mid-fall grab, NULL-grid
-   no-op.
-4. **Speed scaling.**
+1. ~~**Rendering foundation.**~~ *Shipped.* Alpha-bleed at load (R8);
+   scale-about-feet draw; `ScaleRamp` + `actor_scale()`; scaled + floored grab
+   rect. No scene declared a ramp yet, so it was provably an identity transform
+   (R5).
+2. ~~**Opt one scene in.**~~ *Shipped.* The depth demo has a ramp, scales its
+   props, and its `DEPTH_BANDS` and generated far sheets are gone.
+3. ~~**Drag & drop integration.**~~ *Shipped.* `walk_grid_clamp_ground`,
+   `Actor.ground_y`, the lift model, slew, the shadow and its sort entry,
+   mid-fall grab, NULL-grid no-op.
+4. ~~**Speed scaling.**~~ *Shipped.*
 5. **Retire the variant system** — its own PR with its own gate. This is not a
    freebie: `ActorVariantSpec` also carries per-variant fidget tables, the
    `animations[VARIANT][STATE]` indirection threaded through `actor_face` and

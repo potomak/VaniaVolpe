@@ -94,6 +94,17 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p);
 // so the straight-down drop scan lands with no horizontal jump.
 float walk_grid_clamp_x(const WalkGrid *grid, float x);
 
+// Clamp a desired ground y into the walkable span of the column at x: the
+// desired cell if it is walkable, else the nearest walkable one below, else
+// above. Used by a drag to keep the landing shadow on real ground (SCALING.md)
+// — the upward scan is what lets the actor be carried past the front edge
+// without the shadow ending up beneath her feet. Returns false when the column
+// has no walkable cell at all (or there is no grid), leaving *out_y untouched;
+// callers then hold their last valid value rather than borrowing a point from
+// a column the actor isn't over.
+bool walk_grid_clamp_ground(const WalkGrid *grid, float x, float desired_y,
+                            float *out_y);
+
 // Fill out[] with up to max_out waypoints from `from` to `to` (excluding
 // `from`, including the final destination). Returns the count (>= 1).
 // Illegal endpoints are snapped to legal ground first; an unreachable goal

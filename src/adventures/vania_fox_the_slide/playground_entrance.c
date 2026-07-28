@@ -72,6 +72,13 @@ static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS),
                                    BLOCKED_RECTS, LEN(BLOCKED_RECTS)};
 static WalkGrid walk_grid;
 
+// Depth (SCALING.md): a gentle ramp across the walkable strip, in feet
+// coordinates (the walk rects above are centre positions; feet sit half a
+// walking frame lower). scale_far is the knob — raise it toward 1 for a
+// flatter backdrop, lower it for more perspective.
+static const ScaleRamp SCALE_RAMP = {
+    .y_far = 370, .y_near = 656, .scale_far = 0.85F, .scale_near = 1.0F};
+
 // Points of interest
 static const SDL_Point GATE_POI = {554, 344};
 static const SDL_Point SHOVEL_POI = {258, 507};
@@ -195,9 +202,7 @@ static void render(SDL_Renderer *renderer) {
   // Backdrop, machines and the on-ground key are static sprites. render() draws
   // the dynamic layer: the key while the fox carries it, and the fox.
   if (has_key_been_revealed && has_key) {
-    render_image(renderer, key,
-                 (SDL_Point){fox->current_position.x - 50,
-                             fox->current_position.y - 80});
+    actor_render_carried(fox, renderer, key, (SDL_Point){-50, -80});
   }
 
   actor_render(fox, renderer);
@@ -226,6 +231,7 @@ Scene playground_entrance_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .scale_ramp = &SCALE_RAMP,
     .walk_grid = &walk_grid,
     .walk_mask_dir = "playground_entrance",
     .sprites = sprites,

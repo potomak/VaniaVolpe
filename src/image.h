@@ -13,11 +13,6 @@
 
 #include "asset.h"
 
-// Cyan is the transparent color key for sprite sheets (see load_image).
-#define COLOR_KEY_R 0x00
-#define COLOR_KEY_G 0xFF
-#define COLOR_KEY_B 0xFF
-
 // Default animation speed, 12 FPS. Per-animation overrides live in
 // AnimationData.ms_per_frame / ActorAnimSpec.ms_per_frame.
 #define DEFAULT_MS_PER_FRAME 83
@@ -95,6 +90,24 @@ void render_animation_scaled(SDL_Renderer *renderer, AnimationData *animation,
 
 void render_image_scaled(SDL_Renderer *renderer, const ImageData *image,
                          SDL_Point point, float scale);
+
+// Destination rect for a natural-size w x h draw whose top-left is `point`,
+// with the whole quad scaled about `anchor`: every corner maps to
+// anchor + (corner - anchor) * scale. At scale 1 this is exactly the unscaled
+// rect, so a scene that declares no depth ramp renders unchanged. Split out
+// (like plane_screen_pos) so the geometry can be tested without a renderer.
+SDL_Rect scaled_quad_about(SDL_Point point, int w, int h, float scale,
+                           SDL_Point anchor);
+
+// Draw an animation frame scaled about `anchor` — for an actor, her
+// ground-contact point, so she keeps her feet planted as she shrinks with
+// depth (see SCALING.md).
+void render_animation_scaled_about(SDL_Renderer *renderer,
+                                   AnimationData *animation, SDL_Point point,
+                                   float scale, SDL_Point anchor);
+
+void render_image_scaled_about(SDL_Renderer *renderer, const ImageData *image,
+                               SDL_Point point, float scale, SDL_Point anchor);
 
 // Camera scroll offset, applied to every render_image / render_animation
 // draw. Engine-only (game_render sets it around a scrolling scene's render

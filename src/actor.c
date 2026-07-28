@@ -135,6 +135,14 @@ static void cancel_walk(Actor *actor) {
   actor->on_end_walking = NULL;
 }
 
+// Depth's effect on how fast she moves: a far actor covers fewer screen px per
+// second, so her apparent pace stays natural (SCUMM modulated step distance the
+// same way). Floored so a walk at the ramp's far end still converges.
+static float depth_speed_scale(const Actor *actor) {
+  float scale = actor_scale(actor);
+  return scale < ACTOR_MIN_SPEED_SCALE ? ACTOR_MIN_SPEED_SCALE : scale;
+}
+
 // Touchdown at the end of a drop: play the one-shot LANDING beat when the
 // sheet exists (the LANDING case in actor_update returns to IDLE when it
 // stops), else straight back to IDLE.
@@ -201,6 +209,11 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   actor->drag_grab = (SDL_FPoint){0, 0};
   actor->drag_offset = (SDL_FPoint){0, 0};
   actor->fall_target_y = 0;
+  actor->ground_y = initial_position.y;
+  actor->ground_target_y = initial_position.y;
+  actor->grab_ground_y = initial_position.y;
+  actor->lift_ceiling = DRAG_LIFT_MAX_PX;
+  actor->has_ground = false;
   for (int v = 0; v < ACTOR_MAX_VARIANTS; v++) {
     for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
       actor->fidget_anims[v][i] = NULL;
@@ -219,6 +232,7 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   }
   actor->active_fidget = 0;
   actor->next_fidget_at = 0;
+  actor->scale_ramp = NULL;
   enter_idle(actor); // state IDLE + the first fidget timer roll
   actor_face(actor, WEST);
   return actor;
@@ -231,6 +245,85 @@ float actor_feet_y(const Actor *actor) {
     return actor->current_position.y;
   }
   return actor->current_position.y + reference->sprite_clips[0].h / 2.0F;
+}
+
+float actor_scale(const Actor *actor) {
+  // Depth comes from the ground, never from how high she is held: standing,
+  // that is her feet; airborne, it is the ground she is bound for (SCALING.md).
+  // Reading FALLING from her live y instead would make her grow on the way
+  // down; reading it from the landing keeps the whole gesture one size.
+  float depth;
+  switch (actor->state) {
+  case DRAGGED:
+    depth = actor->ground_y;
+    break;
+  case FALLING:
+  case LANDING:
+    depth = actor->fall_target_y;
+    break;
+  default:
+    depth = actor_feet_y(actor);
+    break;
+  }
+  return scale_ramp_at(actor->scale_ramp, depth);
+}
+
+// How far she can be lifted before the lift stops being height and starts
+// being depth. Expressed against the scene's ramp so the dead zone is the same
+// proportion of the scene's depth range everywhere.
+float actor_lift_ceiling(const Actor *actor) {
+  if (actor->scale_ramp == NULL) {
+    return DRAG_LIFT_MAX_PX;
+  }
+  float span = (float)(actor->scale_ramp->y_near - actor->scale_ramp->y_far);
+  if (span < 0.0F) {
+    span = -span;
+  }
+  return span * DRAG_LIFT_MAX_FRACTION;
+}
+
+bool actor_shadow_visible(const Actor *actor) {
+  // Only while she is genuinely off the ground. LANDING is already down, so it
+  // would just draw a shadow under her feet.
+  return actor->has_ground &&
+         (actor->state == DRAGGED || actor->state == FALLING);
+}
+
+void actor_render_shadow(const Actor *actor, SDL_Renderer *renderer) {
+  AnimationData *reference = reference_animation((Actor *)actor);
+  if (reference == NULL) {
+    return;
+  }
+  float scale = actor_scale(actor);
+  // An ellipse roughly the width of her footprint, flattened. Drawn as
+  // scanlines: SDL has no ellipse primitive, and this needs no art to ship.
+  int rx = (int)((float)reference->sprite_clips[0].w * 0.30F * scale);
+  int ry = (int)((float)rx * 0.32F);
+  if (rx <= 0 || ry <= 0) {
+    return;
+  }
+  SDL_Point offset = render_get_offset();
+  int cx = (int)actor->current_position.x + offset.x;
+  int cy = (int)actor->ground_y + offset.y;
+  // Fade with height, so the gap between her and the shadow reads as lift.
+  float lift = actor->ground_y - actor_feet_y(actor);
+  float fade = 1.0F - lift / 400.0F;
+  if (fade < 0.35F) {
+    fade = 0.35F;
+  }
+  if (fade > 1.0F) {
+    fade = 1.0F;
+  }
+  SDL_BlendMode previous;
+  SDL_GetRenderDrawBlendMode(renderer, &previous);
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, (Uint8)(90.0F * fade));
+  for (int dy = -ry; dy <= ry; dy++) {
+    float t = (float)dy / (float)ry;
+    int half = (int)((float)rx * sqrtf(1.0F - t * t));
+    SDL_RenderDrawLine(renderer, cx - half, cy + dy, cx + half, cy + dy);
+  }
+  SDL_SetRenderDrawBlendMode(renderer, previous);
 }
 
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
@@ -397,12 +490,25 @@ void actor_update(Actor *actor, float delta_time) {
   }
   case SITTING:
   case WAVING:
-  case DRAGGED: // position follows the pointer (actor_drag_move)
     break;
+  case DRAGGED: {
+    // Position follows the pointer (actor_drag_move); the landing shadow eases
+    // toward wherever the drag last put it, so a step in the ground under a
+    // sideways carry glides instead of teleporting.
+    float remaining = actor->ground_target_y - actor->ground_y;
+    float step = DRAG_GROUND_SLEW * delta_time;
+    if (fabsf(remaining) <= step) {
+      actor->ground_y = actor->ground_target_y;
+    } else {
+      actor->ground_y += remaining > 0 ? step : -step;
+    }
+    break;
+  }
   case FALLING: {
-    // Constant-speed descent to the landing target (LIVELINESS.md Part 2).
+    // Constant-speed descent to the landing target (LIVELINESS.md Part 2),
+    // slowed with depth so a distant fall covers fewer screen px.
     float remaining = actor->fall_target_y - actor->current_position.y;
-    float step = FALL_SPEED * delta_time;
+    float step = FALL_SPEED * depth_speed_scale(actor) * delta_time;
     if (remaining <= step) {
       actor->current_position.y = actor->fall_target_y;
       touch_down(actor);
@@ -461,7 +567,8 @@ void actor_update(Actor *actor, float delta_time) {
     // A far variant covers fewer scene px/s, so apparent speed stays
     // natural across depth bands.
     float velocity = actor->spec->velocity *
-                     actor->spec->variants[actor->variant].speed_scale;
+                     actor->spec->variants[actor->variant].speed_scale *
+                     depth_speed_scale(actor);
     actor->current_position =
         (SDL_FPoint){.x = actor->current_position.x +
                           actor->direction.x * velocity * delta_time,
@@ -519,7 +626,25 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
   if (animation == NULL) {
     animation = reference;
   }
-  render_animation(renderer, animation, position);
+  // Scale about the ground-contact point, so she keeps her feet planted as she
+  // shrinks with depth and each state's frame keeps its offset relative to the
+  // reference (the fox's sitting sheet is taller than her walking one and hangs
+  // below the feet line; that overhang scales with her rather than snapping).
+  // At scale 1 this is exactly the unscaled draw.
+  SDL_Point anchor = {(int)actor->current_position.x, (int)actor_feet_y(actor)};
+  render_animation_scaled_about(renderer, animation, position,
+                                actor_scale(actor), anchor);
+}
+
+void actor_render_carried(const Actor *actor, SDL_Renderer *renderer,
+                          const ImageData *image, SDL_Point offset) {
+  SDL_Point at = {(int)actor->current_position.x + offset.x,
+                  (int)actor->current_position.y + offset.y};
+  // The same anchor and scale her sprite is drawn with, so the item keeps its
+  // place on her body and its size relative to her at any depth. At scale 1
+  // this is exactly render_image at `at`.
+  SDL_Point anchor = {(int)actor->current_position.x, (int)actor_feet_y(actor)};
+  render_image_scaled_about(renderer, image, at, actor_scale(actor), anchor);
 }
 
 void actor_free(Actor *actor) {
@@ -727,8 +852,30 @@ SDL_Rect actor_sprite_rect(const Actor *actor) {
   }
   int w = reference->sprite_clips[0].w;
   int h = reference->sprite_clips[0].h;
-  return (SDL_Rect){(int)actor->current_position.x - w / 2,
-                    (int)actor->current_position.y - h / 2, w, h};
+  // The same natural origin, scale and ground anchor actor_render draws with,
+  // so the grab box tracks the sprite instead of drifting off it by
+  // (1 - scale) * h / 2. No render offset here: clicks arrive already
+  // converted to scene coordinates.
+  SDL_Point natural = {(int)actor->current_position.x - w / 2,
+                       (int)actor->current_position.y - h / 2};
+  SDL_Point anchor = {(int)actor->current_position.x, (int)actor_feet_y(actor)};
+  float scale = actor_scale(actor);
+  SDL_Rect rect = {
+      (int)((float)anchor.x + (float)(natural.x - anchor.x) * scale),
+      (int)((float)anchor.y + (float)(natural.y - anchor.y) * scale),
+      (int)((float)w * scale), (int)((float)h * scale)};
+  // Never let the target shrink below the natural size, though. Drag exists
+  // because toddlers try it unprompted, so a grab box that got smaller with
+  // depth would undercut the whole feature. Grow it about its own centre.
+  if (rect.w < w) {
+    rect.x -= (w - rect.w) / 2;
+    rect.w = w;
+  }
+  if (rect.h < h) {
+    rect.y -= (h - rect.h) / 2;
+    rect.h = h;
+  }
+  return rect;
 }
 
 bool actor_begin_drag(Actor *actor) {
@@ -753,6 +900,20 @@ bool actor_begin_drag(Actor *actor) {
   if (dragged != NULL) {
     play_animation(dragged, NULL);
   }
+  // Remember the ground she came from, and start the gesture at whatever
+  // height she already had. Catching her mid-fall would otherwise yank the
+  // shadow up to the ceiling and rescale her on this very frame — the one case
+  // this function exists for.
+  float feet = actor_feet_y(actor);
+  float ground = (actor->state == FALLING || actor->state == LANDING)
+                     ? actor->fall_target_y
+                     : feet;
+  actor->grab_ground_y = ground;
+  actor->ground_y = ground;
+  actor->ground_target_y = ground;
+  float initial_lift = ground - feet;
+  float ceiling = actor_lift_ceiling(actor);
+  actor->lift_ceiling = initial_lift > ceiling ? initial_lift : ceiling;
   actor->state = DRAGGED;
   return true;
 }
@@ -777,8 +938,12 @@ void actor_drop(Actor *actor, SDL_FPoint target) {
   }
   // The column scan preserves x; the nearest-ground fallback may nudge it.
   actor->current_position.x = target.x;
+  // The landing is her depth from here on, so the fall and the landing beat
+  // keep the size she already had while held — release changes nothing.
+  actor->fall_target_y = target.y;
+  actor->ground_y = target.y;
+  actor->ground_target_y = target.y;
   if (target.y > actor->current_position.y + ACTOR_ARRIVE_EPSILON) {
-    actor->fall_target_y = target.y;
     AnimationData *falling = variant_animations(actor)[FALLING];
     if (falling != NULL) {
       play_animation(falling, NULL);

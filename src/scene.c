@@ -85,8 +85,8 @@ void scene_default_render(const Scene *scene, SDL_Renderer *renderer) {
   // runs zero times, never touching a NULL props pointer). scene->actor is the
   // address of the scene's single actor pointer, so it doubles as a one-element
   // actor array.
-  render_action_layer(renderer, scene->props, scene->props_length, scene->actor,
-                      1);
+  render_action_layer(renderer, scene->scale_ramp, scene->props,
+                      scene->props_length, scene->actor, 1);
 }
 
 void sync_hotspot_active_anims(const Scene *scene) {
@@ -159,12 +159,21 @@ int action_layer_order(const Prop *props, int props_length,
   if (props_length + actors_length <= 0) {
     return 0;
   }
-  int keys[props_length + actors_length];
+  int keys[props_length + 2 * actors_length];
   int count = 0;
   for (int i = 0; i < props_length; i++) {
     if (props[i].visible) {
       keys[count] = props[i].baseline;
       out_order[count++] = i;
+    }
+  }
+  // A held actor's shadow sorts on the ground it marks, not on her airborne
+  // feet — otherwise lifting her over a prop would tuck the shadow behind it,
+  // when it lies on the floor in front (SCALING.md).
+  for (int i = 0; i < actors_length; i++) {
+    if (actor_shadow_visible(actors[i])) {
+      keys[count] = (int)actors[i]->ground_y;
+      out_order[count++] = props_length + actors_length + i;
     }
   }
   for (int i = 0; i < actors_length; i++) {
@@ -190,24 +199,41 @@ int action_layer_order(const Prop *props, int props_length,
   return count;
 }
 
-void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
-                         Actor **actors, int actors_length) {
+void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
+                         Prop *props, int props_length, Actor **actors,
+                         int actors_length) {
   if (props_length + actors_length <= 0) {
     return;
   }
-  int order[props_length + actors_length];
+  int order[props_length + 2 * actors_length]; // + a shadow per actor
   int count =
       action_layer_order(props, props_length, actors, actors_length, order);
   for (int i = 0; i < count; i++) {
     if (order[i] < props_length) {
       Prop *prop = &props[order[i]];
+      // A prop's baseline is its depth, so an opted-in prop takes its size from
+      // the scene's ramp there and is scaled about that line — its footing
+      // stays put while it recedes. Scale 1 is the identity, so the two draws
+      // need no special case.
+      float scale =
+          prop->scaled ? scale_ramp_at(ramp, (float)prop->baseline) : 1.0F;
+      int width =
+          prop->animation != NULL
+              ? prop->animation->sprite_clips[prop->animation->current_frame].w
+              : prop->image->width;
+      SDL_Point anchor = {prop->pos.x + width / 2, prop->baseline};
       if (prop->animation != NULL) {
-        render_animation(renderer, prop->animation, prop->pos);
+        render_animation_scaled_about(renderer, prop->animation, prop->pos,
+                                      scale, anchor);
       } else {
-        render_image(renderer, prop->image, prop->pos);
+        render_image_scaled_about(renderer, prop->image, prop->pos, scale,
+                                  anchor);
       }
-    } else {
+    } else if (order[i] < props_length + actors_length) {
       actor_render(actors[order[i] - props_length], renderer);
+    } else {
+      actor_render_shadow(actors[order[i] - props_length - actors_length],
+                          renderer);
     }
   }
 }

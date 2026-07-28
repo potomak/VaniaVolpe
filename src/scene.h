@@ -30,6 +30,12 @@ typedef struct prop {
   // while actor_feet_y < baseline.
   int baseline;
   bool visible; // scenes toggle this (e.g. a picked-up item)
+  // Take size from the scene's depth ramp at this prop's baseline, instead of
+  // drawing at the authored size (SCALING.md). Off by default, because scenery
+  // is normally drawn at the size it should appear — this is for art reused at
+  // several depths, like the demo's one bush image standing at three. Moving
+  // such a prop changes its size, which is the point.
+  bool scaled;
 } Prop;
 
 // A static scene sprite: an image or animation drawn
@@ -199,6 +205,11 @@ typedef struct scene {
   const ActorSpec *actor_spec;
   SDL_FPoint actor_start;
 
+  // Depth map (see SCALING.md): scales the actor by where she stands. NULL —
+  // every scene so far — leaves everything at scale 1. The framework hands it
+  // to the actor it makes for this scene.
+  const ScaleRamp *scale_ramp;
+
   // Walkability grid (see walk.h); NULL for scenes with no player movement.
   // Scenes fill it once in init — from a committed walkable.walk mask when
   // one exists, else from their WalkArea rects (walk_grid_init). The debug
@@ -301,18 +312,21 @@ int depth_variant_for(const DepthBand *bands, int bands_length, float feet_y);
 // Back-to-front draw order of the action layer: visible props and actors
 // sorted by ascending baseline / feet y. On ties props draw first, so an
 // actor standing exactly on a prop's ground line renders in front of it.
-// out_order must hold props_length + actors_length entries and receives
+// out_order must hold props_length + 2 * actors_length entries and receives
 // drawable indices: 0..props_length-1 name props, props_length + i names
-// actors[i]. Returns how many entries were written. Split from
-// render_action_layer so tests can assert the ordering without a renderer.
+// actors[i], and props_length + actors_length + i names actor i's landing
+// shadow — emitted only while she is airborne, and keyed on the ground it
+// marks rather than on her feet. Returns how many entries were written. Split
+// from render_action_layer so tests can assert the ordering without a renderer.
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length, int *out_order);
 
 // Draw visible props and actors in y-order (see action_layer_order). Scenes
 // call this once instead of hand-ordering "props, then the actor last";
 // backgrounds and draws that never overlap an actor stay manual.
-void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
-                         Actor **actors, int actors_length);
+void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
+                         Prop *props, int props_length, Actor **actors,
+                         int actors_length);
 
 // Dispatch a click at p (scene coordinates) against a hotspot table: the
 // first enabled hotspot containing p wins. Its on_tap (if any) fires at once,
