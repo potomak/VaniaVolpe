@@ -34,7 +34,11 @@ All source is in `src/`. Build via `make`:
   `android/`). Needs the Android SDK + NDK and `gradle`; CI
   (`.github/workflows/android.yml`) builds a debug-signed, installable APK
   artifact on every push to `main`. See `TOOLS.md` → *Android build*.
-- `make clean` — removes objects, binaries, and `build/`.
+- `make clean` — removes objects, dependency files, binaries, and `build/`.
+
+Incremental builds track header dependencies (`-MMD -MP`, `.d` files beside the
+objects), so editing a header recompiles everything that includes it — no
+`make clean` needed after a struct or enum change.
 
 `build/` is git-ignored; never commit generated web artifacts.
 

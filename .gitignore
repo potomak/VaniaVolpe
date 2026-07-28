@@ -4,6 +4,7 @@ xcuserdata/
 
 ## Build artefacts
 *.o
+*.d
 vaniavolpe
 vaniavolpe_terminal
 vaniavolpe_test
