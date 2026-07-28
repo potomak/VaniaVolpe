@@ -14,6 +14,7 @@
 
 #include "image.h"
 #include "lipsync.h"
+#include "scaling.h"
 #include "sound.h"
 
 typedef enum horizontal_orientation {
@@ -158,6 +159,10 @@ typedef struct actor {
   AnimationData *fidget_anims[ACTOR_MAX_VARIANTS][ACTOR_MAX_FIDGETS];
   int active_fidget;
   Uint32 next_fidget_at;
+  // The depth ramp of the scene this actor belongs to (SCALING.md), borrowed
+  // from Scene.scale_ramp and set by the framework when it makes the actor.
+  // NULL — every scene today — means she is always drawn at scale 1.
+  const ScaleRamp *scale_ramp;
 } Actor;
 
 Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);
@@ -167,6 +172,12 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);
 // need the feet instead: centre y + half the reference frame height. See
 // DEPTH_AND_CAMERA.md.
 float actor_feet_y(const Actor *actor);
+
+// How large the actor is drawn right now, from her scene's depth ramp
+// (SCALING.md). Exactly 1.0 for a scene that declares none. Cheap enough to
+// call per draw — deliberately not cached, since the grab hit-test reads it
+// during input, before the frame's update has run.
+float actor_scale(const Actor *actor);
 
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer);
 

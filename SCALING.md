@@ -129,10 +129,12 @@ Two properties fall out:
   byte-identically (R5).
 - Per-state frames of different sizes keep their relative composition. The fox's
   sheets are not uniform — walking/talking 144x117, sitting 96x135, waving
-  93x132 — so today her sitting sprite overhangs the walking feet line by 9px.
-  Scaling the whole composition about the feet line scales that overhang too,
-  instead of snapping each state's own bottom edge to the ground (which would
-  make her visibly rise 9px whenever she sits).
+  93x132 — and `actor_render` positions *every* state from the **reference**
+  frame's half-extent, so her sitting sprite already hangs ~18px below the
+  walking feet line and sits 24px left of centre. Scaling the whole composition
+  about the feet line scales those offsets with her, instead of snapping each
+  state's own bottom edge to the ground (which would move her visibly whenever
+  she changed pose).
 
 `image.c`'s existing `scaled_quad` scales about the **centre** and is therefore
 the wrong helper; this needs a bottom-anchored sibling.
@@ -189,6 +191,13 @@ with the default.)
 Doing this at load rather than in the PNGs keeps assets as authored and covers
 future art automatically, and it benefits the existing `render_*_scaled` paths
 (tween scaling) too, not just actors.
+
+Measured on the fox's walking sheet — comparing what straight-alpha bilinear
+produces against the correct premultiplied result, over the 6899 sample
+positions that straddle her edge — bleeding cuts the mean colour error by
+**82%** (0.061 to 0.011). The residue is the ~5% of texels that are *partially*
+transparent, whose exact fix would be premultiplied alpha; it is far below the
+threshold that reads as a halo.
 
 `SDL_SetTextureScaleMode(..., SDL_ScaleModeNearest)` on actor textures is the
 fallback if bleeding still shimmers on hand-drawn art at small scales.

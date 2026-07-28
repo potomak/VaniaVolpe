@@ -199,6 +199,11 @@ typedef struct scene {
   const ActorSpec *actor_spec;
   SDL_FPoint actor_start;
 
+  // Depth map (see SCALING.md): scales the actor by where she stands. NULL —
+  // every scene so far — leaves everything at scale 1. The framework hands it
+  // to the actor it makes for this scene.
+  const ScaleRamp *scale_ramp;
+
   // Walkability grid (see walk.h); NULL for scenes with no player movement.
   // Scenes fill it once in init — from a committed walkable.walk mask when
   // one exists, else from their WalkArea rects (walk_grid_init). The debug

@@ -18,6 +18,7 @@ TARGET_TERMINAL = vaniavolpe_terminal
 GAME_SRCS = \
 	src/game.c \
 	src/clock.c \
+	src/scaling.c \
 	src/adventure.c \
 	src/hub.c \
 	src/scene.c \

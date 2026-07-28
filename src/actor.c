@@ -219,6 +219,7 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   }
   actor->active_fidget = 0;
   actor->next_fidget_at = 0;
+  actor->scale_ramp = NULL;
   enter_idle(actor); // state IDLE + the first fidget timer roll
   actor_face(actor, WEST);
   return actor;
@@ -231,6 +232,14 @@ float actor_feet_y(const Actor *actor) {
     return actor->current_position.y;
   }
   return actor->current_position.y + reference->sprite_clips[0].h / 2.0F;
+}
+
+float actor_scale(const Actor *actor) {
+  // Depth is read from where she stands. A held or falling actor will instead
+  // read it from the ground she is bound for (SCALING.md, drag & drop) — that
+  // arrives with the drag integration; until then there is no airborne case,
+  // because no scene declares a ramp.
+  return scale_ramp_at(actor->scale_ramp, actor_feet_y(actor));
 }
 
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer) {
@@ -519,7 +528,14 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
   if (animation == NULL) {
     animation = reference;
   }
-  render_animation(renderer, animation, position);
+  // Scale about the ground-contact point, so she keeps her feet planted as she
+  // shrinks with depth and each state's frame keeps its offset relative to the
+  // reference (the fox's sitting sheet is taller than her walking one and hangs
+  // below the feet line; that overhang scales with her rather than snapping).
+  // At scale 1 this is exactly the unscaled draw.
+  SDL_Point anchor = {(int)actor->current_position.x, (int)actor_feet_y(actor)};
+  render_animation_scaled_about(renderer, animation, position,
+                                actor_scale(actor), anchor);
 }
 
 void actor_free(Actor *actor) {
@@ -727,8 +743,30 @@ SDL_Rect actor_sprite_rect(const Actor *actor) {
   }
   int w = reference->sprite_clips[0].w;
   int h = reference->sprite_clips[0].h;
-  return (SDL_Rect){(int)actor->current_position.x - w / 2,
-                    (int)actor->current_position.y - h / 2, w, h};
+  // The same natural origin, scale and ground anchor actor_render draws with,
+  // so the grab box tracks the sprite instead of drifting off it by
+  // (1 - scale) * h / 2. No render offset here: clicks arrive already
+  // converted to scene coordinates.
+  SDL_Point natural = {(int)actor->current_position.x - w / 2,
+                       (int)actor->current_position.y - h / 2};
+  SDL_Point anchor = {(int)actor->current_position.x, (int)actor_feet_y(actor)};
+  float scale = actor_scale(actor);
+  SDL_Rect rect = {
+      (int)((float)anchor.x + (float)(natural.x - anchor.x) * scale),
+      (int)((float)anchor.y + (float)(natural.y - anchor.y) * scale),
+      (int)((float)w * scale), (int)((float)h * scale)};
+  // Never let the target shrink below the natural size, though. Drag exists
+  // because toddlers try it unprompted, so a grab box that got smaller with
+  // depth would undercut the whole feature. Grow it about its own centre.
+  if (rect.w < w) {
+    rect.x -= (w - rect.w) / 2;
+    rect.w = w;
+  }
+  if (rect.h < h) {
+    rect.y -= (h - rect.h) / 2;
+    rect.h = h;
+  }
+  return rect;
 }
 
 bool actor_begin_drag(Actor *actor) {
