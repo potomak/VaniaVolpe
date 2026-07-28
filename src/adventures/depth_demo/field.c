@@ -72,13 +72,6 @@ static const ActorAnimSpec DEMO_FOX_ANIMS[] = {
 static const ActorFidgetSpec DEMO_FOX_FIDGETS[] = {
     {"waving.png", "waving.anim", 3, 160}, // slowed so the wave reads
 };
-static const ActorVariantSpec DEMO_FOX_VARIANTS[] = {
-    {.anims = DEMO_FOX_ANIMS,
-     .anims_length = LEN(DEMO_FOX_ANIMS),
-     .speed_scale = 1.0F,
-     .fidgets = DEMO_FOX_FIDGETS,
-     .fidgets_length = LEN(DEMO_FOX_FIDGETS)},
-};
 static const ActorSpec DEMO_FOX_SPEC = {
     .id = "demo_fox",
     .display_name = "Vania",
@@ -86,8 +79,10 @@ static const ActorSpec DEMO_FOX_SPEC = {
     .velocity = 200,
     .idle_state = SITTING,
     .move_state = WALKING,
-    .variants = DEMO_FOX_VARIANTS,
-    .variants_length = LEN(DEMO_FOX_VARIANTS),
+    .anims = DEMO_FOX_ANIMS,
+    .anims_length = LEN(DEMO_FOX_ANIMS),
+    .fidgets = DEMO_FOX_FIDGETS,
+    .fidgets_length = LEN(DEMO_FOX_FIDGETS),
 };
 
 static Actor *fox;

@@ -89,11 +89,6 @@ them.
 - **`gen_en_us_placeholders.sh`** — scaffolds a complete `en_US` locale from
   `it_IT` (silent WAVs, copied images) so the strict locale lookup never
   misses while real translations are pending.
-- **`gen_depth_variants.py`** — emits placeholder far/mid depth-variant
-  sprites (see `DEPTH_AND_CAMERA.md` Phase 2): each frame of a sprite sheet
-  downscaled by `--scale` (nearest-neighbour), repacked vertically with a
-  matching `.anim`. Placeholders to develop depth bands against; real art
-  replaces them file-for-file. Needs Pillow.
 - **`gen_celebration_sheet.py`** — emits a placeholder celebration sheet (a
   confetti burst, one-shot) for a minigame's completion reward (#116);
   `--palette sun|grape` picks the colours. Real drawn frames replace the

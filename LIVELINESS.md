@@ -66,6 +66,12 @@ dormant for her until they land); the depth-demo fox demonstrates it today
 with her waving sheet at both depths (the far copy generated like her other
 far sheets). The design as specced:
 
+> **Note on depth variants.** The per-variant fidget lists described below,
+> and the depth-variant system generally, were retired with `SCALING.md`: an
+> `ActorSpec` now carries one flat fidget list, and depth is a continuous
+> scale rather than a choice between sprite sets. The reasoning is kept as
+> written.
+
 ### Design
 
 A fidget is a short **one-shot** animation played from IDLE, chosen at
@@ -251,10 +257,10 @@ On touchdown: snap feet to the landing y, play LANDING as ONE_SHOT (state
 polls `is_playing`, as fidgets do), then IDLE. If the LANDING sheet is
 missing, go straight to IDLE.
 
-Depth-band scenes: scenes poll `depth_variant_for(feet_y)` every frame, so
-a dragged actor would flip variants mid-air; scenes with bands should skip
-the poll while `state >= DRAGGED` is airborne (one condition). Gina has
-one variant, so this is a note, not work.
+Depth-band scenes: scenes polled `depth_variant_for(feet_y)` every frame, so
+a dragged actor would have flipped variants mid-air. Moot now — depth bands
+are gone (`SCALING.md`), and a held actor takes her depth from the ground
+she will land on rather than from her airborne y.
 
 ### Art (needs-art) & audio (needs-audio)
 

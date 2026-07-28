@@ -62,7 +62,9 @@ not perfect.
   studio-subtitle exact.
 - **R8** — The headless tests keep passing: dialogue lines keep being emitted
   via `SDL_Log` in the existing format (`"Gina: %s"`).
-- **R9** — Works unchanged across all four builds and with the depth-variant
+- **R9** *(depth variants have since been replaced by continuous scaling, see
+  `SCALING.md`; the requirement now reads "at any depth scale")* — Works
+  unchanged across all four builds and with the depth-variant
   and camera specs (`DEPTH_AND_CAMERA.md`): mouth frames apply to the active
   depth variant; overlays are screen-space UI.
 

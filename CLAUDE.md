@@ -61,9 +61,10 @@ Backends* for how the harnesses work.
 ## Repo map
 - `src/` — **common engine / app shell**: `main.c` (desktop entry + game loop),
   `main_terminal.c` + `terminal.c` (libcaca entry), `game.c` + `adventure.h`
-  (adventure registry), `scene.{c,h}` (scene framework: scenes, props, depth
-  bands, parallax planes), `actor.{c,h}` (generic character engine + depth
-  variants), `walk.{c,h}` (walkability grid + A*), `camera.{c,h}` (scrolling
+  (adventure registry), `scene.{c,h}` (scene framework: scenes, props,
+  parallax planes), `actor.{c,h}` (generic character engine),
+  `scaling.{c,h}` (depth ramps), `walk.{c,h}` (walkability grid + A*),
+  `camera.{c,h}` (scrolling
   scenes), `tween.{c,h}` (scene-object position/scale tweens),
   `image.c` (sprite/animation engine + render offset), `sound.c`,
   `lipsync.c` (mouth-cue & word-timing sidecars), `subtitle.c` (dialogue
@@ -79,7 +80,8 @@ Backends* for how the harnesses work.
   and its `assets/` subtree, split into `common/` (shared) and one dir per locale
   (`it_IT/`, `en_US/`); each holds the scene subdirs (`intro/ playground/ …`).
   `src/adventures/depth_demo/` is a one-scene **developer demo**: the reference
-  implementation for props, depth bands, camera and parallax (third hub entry).
+  implementation for props, depth scaling, camera and parallax (third hub
+  entry).
 - `assets/fonts/` — the engine-level subtitle font (Atkinson Hyperlegible, OFL).
 - `include/` — bundled SDL_image / SDL_mixer / SDL_ttf forwarding headers
   (native build).
@@ -89,10 +91,10 @@ Backends* for how the harnesses work.
   the Puppeteer browser test that consumes them.
 - Docs: `ARCHITECTURE.md` (deep design, incl. the terminal & headless-test
   backends), `MOVEMENT.md` (walkability grid + A* pathfinding; shipped),
-  `DEPTH_AND_CAMERA.md` (props, depth variants, camera, parallax; shipped —
-  its depth-variant model is superseded by `SCALING.md`),
+  `DEPTH_AND_CAMERA.md` (props, camera, parallax; shipped — its depth-variant
+  model has been replaced, see `SCALING.md`),
   `SCALING.md` (continuous actor scaling by depth + how it composes with drag
-  & drop; specced, not yet implemented),
+  & drop; shipped),
   `SPEECH.md` (lip-sync cues + read-along subtitles; code phases shipped),
   `LIVELINESS.md` (idle fidgets, actor drag & drop, boiling hotspots; all shipped,
   character art via the asset pipeline),
