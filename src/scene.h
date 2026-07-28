@@ -30,6 +30,12 @@ typedef struct prop {
   // while actor_feet_y < baseline.
   int baseline;
   bool visible; // scenes toggle this (e.g. a picked-up item)
+  // Draw scale (SCALING.md). 0 (or 1) means natural size, which is what every
+  // prop authored at its final on-screen size wants — so this is opt-in and
+  // shipped scenes are untouched. A scene with a depth ramp sets it from
+  // scale_ramp_at(ramp, baseline), the prop's own depth, so scenery recedes
+  // with the actor. Drawn about the prop's bottom-centre, like the actor.
+  float scale;
 } Prop;
 
 // A static scene sprite: an image or animation drawn
@@ -306,10 +312,12 @@ int depth_variant_for(const DepthBand *bands, int bands_length, float feet_y);
 // Back-to-front draw order of the action layer: visible props and actors
 // sorted by ascending baseline / feet y. On ties props draw first, so an
 // actor standing exactly on a prop's ground line renders in front of it.
-// out_order must hold props_length + actors_length entries and receives
+// out_order must hold props_length + 2 * actors_length entries and receives
 // drawable indices: 0..props_length-1 name props, props_length + i names
-// actors[i]. Returns how many entries were written. Split from
-// render_action_layer so tests can assert the ordering without a renderer.
+// actors[i], and props_length + actors_length + i names actor i's landing
+// shadow — emitted only while she is airborne, and keyed on the ground it
+// marks rather than on her feet. Returns how many entries were written. Split
+// from render_action_layer so tests can assert the ordering without a renderer.
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length, int *out_order);
 

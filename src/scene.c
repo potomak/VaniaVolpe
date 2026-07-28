@@ -159,12 +159,21 @@ int action_layer_order(const Prop *props, int props_length,
   if (props_length + actors_length <= 0) {
     return 0;
   }
-  int keys[props_length + actors_length];
+  int keys[props_length + 2 * actors_length];
   int count = 0;
   for (int i = 0; i < props_length; i++) {
     if (props[i].visible) {
       keys[count] = props[i].baseline;
       out_order[count++] = i;
+    }
+  }
+  // A held actor's shadow sorts on the ground it marks, not on her airborne
+  // feet — otherwise lifting her over a prop would tuck the shadow behind it,
+  // when it lies on the floor in front (SCALING.md).
+  for (int i = 0; i < actors_length; i++) {
+    if (actor_shadow_visible(actors[i])) {
+      keys[count] = (int)actors[i]->ground_y;
+      out_order[count++] = props_length + actors_length + i;
     }
   }
   for (int i = 0; i < actors_length; i++) {
@@ -195,19 +204,34 @@ void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
   if (props_length + actors_length <= 0) {
     return;
   }
-  int order[props_length + actors_length];
+  int order[props_length + 2 * actors_length]; // + a shadow per actor
   int count =
       action_layer_order(props, props_length, actors, actors_length, order);
   for (int i = 0; i < count; i++) {
     if (order[i] < props_length) {
       Prop *prop = &props[order[i]];
+      // Scale about the prop's own ground line, so an opted-in prop recedes
+      // without its footing sliding. Unset (or 1) is the natural draw.
+      float scale = prop->scale > 0.0F ? prop->scale : 1.0F;
       if (prop->animation != NULL) {
-        render_animation(renderer, prop->animation, prop->pos);
-      } else {
+        SDL_Rect *clip =
+            &prop->animation->sprite_clips[prop->animation->current_frame];
+        SDL_Point anchor = {prop->pos.x + clip->w / 2, prop->baseline};
+        render_animation_scaled_about(renderer, prop->animation, prop->pos,
+                                      scale, anchor);
+      } else if (scale == 1.0F) {
         render_image(renderer, prop->image, prop->pos);
+      } else {
+        SDL_Point anchor = {prop->pos.x + prop->image->width / 2,
+                            prop->baseline};
+        render_image_scaled_about(renderer, prop->image, prop->pos, scale,
+                                  anchor);
       }
-    } else {
+    } else if (order[i] < props_length + actors_length) {
       actor_render(actors[order[i] - props_length], renderer);
+    } else {
+      actor_render_shadow(actors[order[i] - props_length - actors_length],
+                          renderer);
     }
   }
 }

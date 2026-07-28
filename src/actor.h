@@ -152,6 +152,19 @@ typedef struct actor {
   SDL_FPoint drag_grab;   // pointer position at the arming press
   SDL_FPoint drag_offset; // current_position - drag_grab when the drag began
   float fall_target_y;
+  // Where the actor's depth comes from while she is off the ground
+  // (SCALING.md). ground_y is the landing point the shadow is drawn at and the
+  // scale is read from; it eases toward ground_target_y so a step in the
+  // ground under a sideways drag doesn't teleport the shadow. grab_ground_y is
+  // the ground she was picked up from, held for the whole gesture, so lifting
+  // her within lift_ceiling changes her height without changing her depth.
+  // has_ground is false when the column beneath her has no walkable cell (or
+  // there is no grid at all): the shadow is hidden and the last depth held.
+  float ground_y;
+  float ground_target_y;
+  float grab_ground_y;
+  float lift_ceiling;
+  bool has_ground;
   // Idle fidgets (LIVELINESS.md Part 1): each variant's fidget sheets
   // (ONE_SHOT), which one is playing while FIDGETING, and when the next one
   // fires (re-rolled every time the actor enters IDLE). The active variant's
@@ -178,6 +191,17 @@ float actor_feet_y(const Actor *actor);
 // call per draw — deliberately not cached, since the grab hit-test reads it
 // during input, before the frame's update has run.
 float actor_scale(const Actor *actor);
+
+// How far the actor can be lifted before the lift starts reading as depth
+// (SCALING.md): a fraction of her scene's ramp span, or a flat pixel count in
+// a scene with no ramp.
+float actor_lift_ceiling(const Actor *actor);
+
+// Is the actor off the ground with a known landing point? Then the framework
+// draws her landing shadow, depth-sorted on that point rather than on her
+// airborne feet.
+bool actor_shadow_visible(const Actor *actor);
+void actor_render_shadow(const Actor *actor, SDL_Renderer *renderer);
 
 bool actor_load_media(Actor *actor, SDL_Renderer *renderer);
 

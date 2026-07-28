@@ -562,6 +562,42 @@ void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
 // prevent this (the violation is in the downward scan, not in x). The fix is
 // to make the landing zone-aware, using the origin zone remembered at grab
 // time; tracked with the clamp in #145.
+bool walk_grid_clamp_ground(const WalkGrid *grid, float x, float desired_y,
+                            float *out_y) {
+  if (grid == NULL) {
+    return false;
+  }
+  int cx = (int)x / WALK_CELL_SIZE;
+  if (x < 0 || cx >= grid->w) {
+    return false;
+  }
+  int want = (int)desired_y / WALK_CELL_SIZE;
+  if (desired_y < 0) {
+    want = 0;
+  }
+  if (want >= grid->h) {
+    want = grid->h - 1;
+  }
+  // The desired cell, else the nearest walkable one below it, else above.
+  // Scanning down first keeps a shadow that has drifted into a blocked pocket
+  // landing in front of the obstacle rather than behind it.
+  for (int cy = want; cy < grid->h; cy++) {
+    if (grid->cells[cy][cx]) {
+      *out_y = cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
+      return true;
+    }
+  }
+  for (int cy = want - 1; cy >= 0; cy--) {
+    if (grid->cells[cy][cx]) {
+      *out_y = cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
+      return true;
+    }
+  }
+  // No ground anywhere in this column. Callers hold their last valid value
+  // rather than borrowing a point from a column the actor isn't over.
+  return false;
+}
+
 static SDL_FPoint drop_target(const WalkGrid *grid, SDL_FPoint from) {
   if (grid == NULL) {
     // A poster scene with no walkable area (intro/outro): there is no
@@ -583,6 +619,33 @@ static SDL_FPoint drop_target(const WalkGrid *grid, SDL_FPoint from) {
     }
   }
   return walk_grid_nearest(grid, (SDL_Point){(int)from.x, (int)from.y});
+}
+
+// Where a held actor would land, and therefore how deep into the scene she is
+// (SCALING.md). Lifting her moves her height, not her depth, until the lift
+// exceeds her ceiling — past that the ground she is over starts receding with
+// her, and she shrinks. The result is only a *target*: actor_update eases
+// ground_y toward it, so a sideways carry across a step in the ground glides.
+static void track_drag_ground(Actor *actor, const WalkGrid *grid) {
+  float feet = actor_feet_y(actor);
+  float lift = actor->grab_ground_y - feet;
+  if (lift < 0.0F) {
+    lift = 0.0F; // dragged below where she was picked up: she slides forward
+  }
+  if (lift > actor->lift_ceiling) {
+    lift = actor->lift_ceiling;
+  }
+  float ground = 0.0F;
+  if (walk_grid_clamp_ground(grid, actor->current_position.x, feet + lift,
+                             &ground)) {
+    actor->ground_target_y = ground;
+    actor->has_ground = true;
+  } else {
+    // No ground under this column (or no grid at all, as in the poster
+    // scenes): hide the shadow and hold the last depth rather than borrowing a
+    // point from somewhere she isn't.
+    actor->has_ground = false;
+  }
 }
 
 bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
@@ -611,6 +674,7 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
       actor_drag_move(actor, p);
       actor->current_position.x =
           walk_grid_clamp_x(grid, actor->current_position.x);
+      track_drag_ground(actor, grid);
       return true;
     }
     if (actor->drag_armed) {
@@ -635,6 +699,7 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
           actor_drag_move(actor, p);
           actor->current_position.x =
               walk_grid_clamp_x(grid, actor->current_position.x);
+          track_drag_ground(actor, grid);
           return true;
         }
       }
@@ -644,7 +709,20 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
   case SDL_MOUSEBUTTONUP:
     actor->drag_armed = false;
     if (actor->state == DRAGGED) {
-      actor_drop(actor, drop_target(grid, actor->current_position));
+      // She lands on the ground the drag was pointing at. The slew smooths the
+      // shadow while she is carried, but it must not decide where she comes
+      // down: a quick fling released before it converged would drop her short
+      // of where the player aimed. Snapping first also keeps the landing a
+      // walkable cell, so R3 holds. Without a shadow at all (no grid, or a
+      // column with no ground) fall back to the column scan.
+      SDL_FPoint target;
+      if (actor->has_ground) {
+        actor->ground_y = actor->ground_target_y;
+        target = (SDL_FPoint){actor->current_position.x, actor->ground_y};
+      } else {
+        target = drop_target(grid, actor->current_position);
+      }
+      actor_drop(actor, target);
       return true;
     }
     return false;

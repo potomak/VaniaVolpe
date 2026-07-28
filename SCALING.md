@@ -267,11 +267,17 @@ scaled by the actor's current scale — that would reintroduce a `lift -> ground
 
 ### Landing is the shadow
 
-Release lands her on `ground_y` — the slewed value the player has been looking
-at, not a freshly computed one. `walk_grid_clamp_ground` only ever returns
-walkable cells, so a lagging value is still a legal landing (R3 in
-`LIVELINESS.md` holds), and using it makes the shadow authoritative (R4). No
-snap is possible because the scale already matches.
+Release lands her on the shadow, not on a freshly scanned point — that is what
+makes it authoritative (R4), and `walk_grid_clamp_ground` only ever returns
+walkable cells, so R3 in `LIVELINESS.md` still holds.
+
+The slew is **snapped to its target on release** rather than landed on as-is.
+Slewing is there to smooth the shadow while she is *carried*; letting it also
+decide where she comes down means a quick fling, released before the ease
+converged, drops her short of where the player aimed. Snapping first keeps the
+aim honest and still lands on a walkable cell. The scale can therefore step by
+however much the ease was lagging — zero whenever the player pauses before
+releasing, which is the normal case.
 
 ### Clamping the shadow
 
@@ -385,16 +391,16 @@ grow the padding as the sprite shrinks. This ships in Phase 1, not later.
 Each phase is a PR gated by `make test` plus a play-test of the scene it
 touches.
 
-1. **Rendering foundation.** Alpha-bleed at load (R8); scale-about-feet draw;
-   `ScaleRamp` + `actor_scale()`; scaled + floored grab rect. No scene declares a
-   ramp yet, so this is provably an identity transform (R5). Verify fringing by
-   eye in the desktop build.
-2. **Opt one scene in.** Give the depth demo a ramp and scale its props; delete
-   its `DEPTH_BANDS`. First real look at the effect.
-3. **Drag & drop integration.** `walk_grid_clamp_ground`, `Actor.ground_y`, the
-   lift model, slew, the shadow and its sort entry, mid-fall grab, NULL-grid
-   no-op.
-4. **Speed scaling.**
+1. ~~**Rendering foundation.**~~ *Shipped.* Alpha-bleed at load (R8);
+   scale-about-feet draw; `ScaleRamp` + `actor_scale()`; scaled + floored grab
+   rect. No scene declared a ramp yet, so it was provably an identity transform
+   (R5).
+2. ~~**Opt one scene in.**~~ *Shipped.* The depth demo has a ramp, scales its
+   props, and its `DEPTH_BANDS` and generated far sheets are gone.
+3. ~~**Drag & drop integration.**~~ *Shipped.* `walk_grid_clamp_ground`,
+   `Actor.ground_y`, the lift model, slew, the shadow and its sort entry,
+   mid-fall grab, NULL-grid no-op.
+4. ~~**Speed scaling.**~~ *Shipped.*
 5. **Retire the variant system** — its own PR with its own gate. This is not a
    freebie: `ActorVariantSpec` also carries per-variant fidget tables, the
    `animations[VARIANT][STATE]` indirection threaded through `actor_face` and

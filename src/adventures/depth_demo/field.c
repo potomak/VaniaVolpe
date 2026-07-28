@@ -7,10 +7,12 @@
 //  - Phase 1, y-sorted action layer: the bushes are Props drawn by
 //    render_action_layer, so the fox passes behind or in front of each one
 //    depending on where her feet are relative to its baseline.
-//  - Phase 2, depth bands + sprite variants: the scene declares two
-//    DepthBands; when the fox's feet cross y = 480 she switches between the
-//    hand-drawn near set and a generated 0.6x far set (placeholders from
-//    tools/gen_depth_variants.py), and her walking speed scales to match.
+//  - Phase 2, continuous depth scaling (SCALING.md): the scene declares one
+//    ScaleRamp and the fox is drawn from a single sprite set at a size that
+//    varies smoothly with her feet, walking slower as she recedes. The bushes
+//    opt into the same ramp at their own baselines. Drag her around to see
+//    depth and lift come apart: her landing shadow marks where she will come
+//    down, and she only starts shrinking once lifted past the ceiling.
 //  - Phase 3, camera + scene coordinates: the scene is twice the window's
 //    width. Everything here is authored in scene coordinates — the Camera
 //    handed to the engine below is the only camera-related line in the
@@ -57,40 +59,25 @@ static Plane fg_planes[1] = {
      .origin = {0, 460}},
 };
 
-// ── the demo actor: the fox in two depth variants ────────────────────────────
-// The near set is the fox's own art; the far set is generated from it at 0.6
-// scale. A far variant also walks at 0.6 speed, so her apparent pace doesn't
-// change with her size.
+// ── the demo actor: one sprite set, scaled by depth ──────────────────────────
+// Her own art at its authored size; the engine draws it smaller as she walks
+// away and slows her to match, so no second set of sheets is needed.
 
-static const ActorAnimSpec NEAR_ANIMS[] = {
+static const ActorAnimSpec DEMO_FOX_ANIMS[] = {
     {WALKING, "walking.png", "walking.anim", 4, LOOP},
     {SITTING, "sitting.png", "sitting.anim", 3, LOOP},
 };
-static const ActorAnimSpec FAR_ANIMS[] = {
-    {WALKING, "walking_far.png", "walking_far.anim", 4, LOOP},
-    {SITTING, "sitting_far.png", "sitting_far.anim", 3, LOOP},
-};
-// Idle fidget (LIVELINESS.md Part 1), demonstrating the mechanism with
-// existing art: leave the fox alone for a few seconds and she waves once —
-// at either depth, each variant with its own sheet (the far one generated
-// like the other far sheets).
-static const ActorFidgetSpec NEAR_FIDGETS[] = {
+// Idle fidget (LIVELINESS.md Part 1): leave the fox alone for a few seconds
+// and she waves once, at whatever size her depth gives her.
+static const ActorFidgetSpec DEMO_FOX_FIDGETS[] = {
     {"waving.png", "waving.anim", 3, 160}, // slowed so the wave reads
 };
-static const ActorFidgetSpec FAR_FIDGETS[] = {
-    {"waving_far.png", "waving_far.anim", 3, 160},
-};
 static const ActorVariantSpec DEMO_FOX_VARIANTS[] = {
-    {.anims = NEAR_ANIMS,
-     .anims_length = 2,
+    {.anims = DEMO_FOX_ANIMS,
+     .anims_length = LEN(DEMO_FOX_ANIMS),
      .speed_scale = 1.0F,
-     .fidgets = NEAR_FIDGETS,
-     .fidgets_length = LEN(NEAR_FIDGETS)},
-    {.anims = FAR_ANIMS,
-     .anims_length = 2,
-     .speed_scale = 0.6F,
-     .fidgets = FAR_FIDGETS,
-     .fidgets_length = LEN(FAR_FIDGETS)},
+     .fidgets = DEMO_FOX_FIDGETS,
+     .fidgets_length = LEN(DEMO_FOX_FIDGETS)},
 };
 static const ActorSpec DEMO_FOX_SPEC = {
     .id = "demo_fox",
@@ -100,7 +87,7 @@ static const ActorSpec DEMO_FOX_SPEC = {
     .idle_state = SITTING,
     .move_state = WALKING,
     .variants = DEMO_FOX_VARIANTS,
-    .variants_length = 2,
+    .variants_length = LEN(DEMO_FOX_VARIANTS),
 };
 
 static Actor *fox;
@@ -117,12 +104,12 @@ static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS), NULL,
                                    0};
 static WalkGrid walk_grid;
 
-// ── depth bands (scene data): far set above, near set below ──────────────────
-// y_top is compared against actor_feet_y. Band 0 starts at 0 by convention.
-static const DepthBand DEPTH_BANDS[] = {
-    {0, 1},   // feet above 480: variant 1, the far set
-    {480, 0}, // feet at or below 480: variant 0, the near set
-};
+// ── the depth map (scene data) ───────────────────────────────────────────────
+// Bounds are in feet coordinates: the walkable strip puts her centre between
+// y 260 and 559, and her feet half a walking frame below that. Declared rather
+// than derived so the perspective belongs to the painted ground.
+static const ScaleRamp FIELD_RAMP = {
+    .y_far = 320, .y_near = 620, .scale_far = 0.6F, .scale_near = 1.0F};
 
 // ── props: bushes at both depths and both scene halves
 // ────────────────────────
@@ -147,6 +134,12 @@ static void init(void) {
 }
 
 static void process_input(SDL_Event *event) {
+  // Drag & drop, so the demo also shows how depth and lift interact: a
+  // press-drag picks her up, her shadow marks the landing, and she rescales
+  // only once lifted past the ceiling (SCALING.md).
+  if (walk_actor_drag_event(fox, &walk_grid, event)) {
+    return;
+  }
   switch (event->type) {
   case SDL_MOUSEMOTION:
     m_pos.x = event->motion.x;
@@ -164,14 +157,6 @@ static void process_input(SDL_Event *event) {
   }
 }
 
-static void update(float delta_time) {
-  // The whole Phase 2 opt-in: pick the band under the fox's feet, before her
-  // own update so this frame already renders (and moves) with the right set.
-  actor_set_variant(
-      fox, depth_variant_for(DEPTH_BANDS, LEN(DEPTH_BANDS), actor_feet_y(fox)));
-  actor_update(fox, delta_time);
-}
-
 static void on_scene_active(void) {
   fox->current_position = FOX_START;
   fox->target_position = FOX_START;
@@ -181,6 +166,9 @@ static void on_scene_active(void) {
   // long before any scene becomes active.
   for (int i = 0; i < (int)LEN(props); i++) {
     props[i].baseline = props[i].pos.y + props[i].image->height;
+    // One bush image at three depths: without this the far one would read as
+    // the same size as the near one and the perspective would fall apart.
+    props[i].scale = scale_ramp_at(&FIELD_RAMP, (float)props[i].baseline);
   }
 }
 
@@ -189,12 +177,12 @@ static void on_scene_inactive(void) {}
 Scene field_scene = {
     .init = init,
     .process_input = process_input,
-    .update = update,
     .actor = &fox,
     .actor_spec = &DEMO_FOX_SPEC,
     .actor_start = {600, 500},
     .on_scene_active = on_scene_active,
     .on_scene_inactive = on_scene_inactive,
+    .scale_ramp = &FIELD_RAMP,
     .walk_grid = &walk_grid,
     .camera = &camera,
     .props = props,

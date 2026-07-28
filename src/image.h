@@ -106,6 +106,9 @@ void render_animation_scaled_about(SDL_Renderer *renderer,
                                    AnimationData *animation, SDL_Point point,
                                    float scale, SDL_Point anchor);
 
+void render_image_scaled_about(SDL_Renderer *renderer, const ImageData *image,
+                               SDL_Point point, float scale, SDL_Point anchor);
+
 // Camera scroll offset, applied to every render_image / render_animation
 // draw. Engine-only (game_render sets it around a scrolling scene's render
 // pass and resets it for screen-space UI); scenes never call these — they

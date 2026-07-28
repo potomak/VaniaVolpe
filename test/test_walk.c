@@ -624,6 +624,102 @@ static void test_drag_clamp_to_walkable(void) {
   actor_free(gina);
 }
 
+// Let the landing shadow ease to its target, the way frames would in game:
+// the slew is what keeps a sideways carry from teleporting it.
+static void settle_ground(Actor *actor) {
+  for (int i = 0; i < 12; i++) {
+    actor_update(actor, 0.05F);
+  }
+}
+
+// Depth while dragging (SCALING.md): the landing shadow, and the lift ceiling
+// that separates "picked up" from "moved away".
+static void test_drag_depth(void) {
+  fprintf(stderr, "\n-- drag depth unit tests --\n");
+
+  // The poolside strip: y 430..579 walkable, so column cells 43..57.
+  static WalkGrid grid;
+  walk_grid_build(&grid, &POOL_POOLSIDE_AREA, WINDOW_SIZE);
+
+  float ground = 0.0F;
+  check(walk_grid_clamp_ground(&grid, 400, 500, &ground) && ground == 505.0F,
+        "clamp_ground keeps a y that is already on walkable ground");
+  check(walk_grid_clamp_ground(&grid, 400, 100, &ground) && ground == 435.0F,
+        "clamp_ground drops to the first walkable cell below");
+  check(walk_grid_clamp_ground(&grid, 400, 595, &ground) && ground == 575.0F,
+        "clamp_ground rises to the first walkable cell above");
+  check(!walk_grid_clamp_ground(&grid, 5, 500, &ground),
+        "clamp_ground reports a column with no walkable cell");
+  check(!walk_grid_clamp_ground(NULL, 400, 500, &ground),
+        "clamp_ground is a no-op without a grid");
+
+  // A ramp over the strip, so scale is observable: feet 430 -> 0.5, 630 -> 1.0.
+  static const ScaleRamp RAMP = {
+      .y_far = 430, .y_near = 630, .scale_far = 0.5F, .scale_near = 1.0F};
+  Actor *a = make_actor(&TEST_SPEC, (SDL_FPoint){400, 500});
+  a->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  a->scale_ramp = &RAMP;
+  // Ceiling is a quarter of the ramp's 200px span.
+  check(actor_lift_ceiling(a) == 50.0F,
+        "the lift ceiling is a fraction of the scene's ramp span");
+
+  SDL_Event e = mouse_down(400, 500);
+  drag(a, &grid, &e);
+  e = mouse_motion(400, 480); // 20px up: a lift, well inside the ceiling
+  drag(a, &grid, &e);
+  settle_ground(a);
+  check(a->state == DRAGGED && a->has_ground,
+        "a dragged actor over the strip has a landing shadow");
+  float small_lift_ground = a->ground_y;
+  float held_scale = actor_scale(a);
+
+  e = mouse_motion(400, 455); // 45px up: still inside the 50px ceiling
+  drag(a, &grid, &e);
+  settle_ground(a);
+  check(a->ground_y == small_lift_ground,
+        "lifting within the ceiling leaves her depth where she was picked up");
+  check(actor_scale(a) == held_scale, "so lifting her doesn't rescale her");
+
+  e = mouse_motion(400, 300); // 200px up: well past the ceiling
+  drag(a, &grid, &e);
+  settle_ground(a);
+  check(a->ground_y < small_lift_ground,
+        "lifting past the ceiling starts moving her away");
+  check(actor_scale(a) < held_scale, "and moving away makes her smaller");
+
+  // Release: she lands on the shadow, at the size she already had.
+  float landing = a->ground_target_y;
+  float scale_before_release = actor_scale(a);
+  e = mouse_up(400, 300);
+  drag(a, &grid, &e);
+  check(a->fall_target_y == landing, "she is dropped onto her shadow");
+  check(fabsf(actor_scale(a) - scale_before_release) < 0.0001F,
+        "releasing changes nothing about her size");
+  actor_free(a);
+
+  // Catching her mid-fall must not yank the shadow to the ceiling and rescale
+  // her on the grab frame — the case actor_begin_drag exists for.
+  Actor *falling = make_actor(&TEST_SPEC, (SDL_FPoint){400, 200});
+  falling->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  falling->scale_ramp = &RAMP;
+  e = mouse_down(400, 200);
+  drag(falling, &grid, &e);
+  e = mouse_motion(400, 150);
+  drag(falling, &grid, &e);
+  e = mouse_up(400, 150);
+  drag(falling, &grid, &e);
+  check(falling->state == FALLING, "she is falling before the catch");
+  float mid_fall_scale = actor_scale(falling);
+  e = mouse_down(400, (int)falling->current_position.y);
+  drag(falling, &grid, &e);
+  e = mouse_motion(412, (int)falling->current_position.y - 12);
+  drag(falling, &grid, &e);
+  check(falling->state == DRAGGED, "she can be caught mid-fall");
+  check(fabsf(actor_scale(falling) - mid_fall_scale) < 0.0001F,
+        "catching her mid-fall doesn't rescale her");
+  actor_free(falling);
+}
+
 int test_walk(void) {
   failures = 0;
   fprintf(stderr, "\n-- walk geometry unit tests --\n");
@@ -644,6 +740,7 @@ int test_walk(void) {
   test_exact_goal_walk(&entrance_grid);
   test_stale_callback_cancelled(&playground_grid);
   test_drag_and_drop();
+  test_drag_depth();
   test_drag_clamp_to_walkable();
 
   return failures;
