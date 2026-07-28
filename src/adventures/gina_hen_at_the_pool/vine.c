@@ -99,9 +99,9 @@ static void init(void) {
   pois[0] = GRAPES_POI;
 }
 
-static void go_to_tree(void) { set_active_scene(TREE); }
+static void go_to_tree(void) { set_active_scene(GINA_TREE); }
 
-static void go_to_pool(void) { set_active_scene(POOL); }
+static void go_to_pool(void) { set_active_scene(GINA_POOL); }
 
 static void pick_grapes(void) {
   if (gina_state.has_grapes) {
@@ -109,7 +109,7 @@ static void pick_grapes(void) {
     return;
   }
   if (gina_state.has_basket) {
-    set_active_scene(GRAPES_MINIGAME);
+    set_active_scene(GINA_GRAPES_MINIGAME);
     return;
   }
   say_nothing_to_pick();

@@ -237,15 +237,15 @@ static bool float_resting_at_pool(void) {
 }
 
 static void open_sunscreen_minigame(void) {
-  set_active_scene(SUNSCREEN_MINIGAME);
+  set_active_scene(GINA_SUNSCREEN_MINIGAME);
 }
 
 // The "already applied" tap is the generated say_sunscreen_done() helper
 // directly (see the hotspot table in init) — no wrapper needed.
 
-static void go_to_vine(void) { set_active_scene(VINE); }
+static void go_to_vine(void) { set_active_scene(GINA_VINE); }
 
-static void go_to_tree(void) { set_active_scene(TREE); }
+static void go_to_tree(void) { set_active_scene(GINA_TREE); }
 
 static void collect_goggles(void) {
   gina_state.has_goggles = true;

@@ -89,7 +89,7 @@ static bool load_media(SDL_Renderer *renderer) {
 static void back_to_vine(void) {
   // Gina explains back at the vine (the scene reads the flag on activation).
   gina_state.announce_grapes = true;
-  set_active_scene(VINE);
+  set_active_scene(GINA_VINE);
 }
 
 static void process_input(SDL_Event *event) {
