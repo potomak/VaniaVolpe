@@ -636,6 +636,17 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
                                 actor_scale(actor), anchor);
 }
 
+void actor_render_carried(const Actor *actor, SDL_Renderer *renderer,
+                          const ImageData *image, SDL_Point offset) {
+  SDL_Point at = {(int)actor->current_position.x + offset.x,
+                  (int)actor->current_position.y + offset.y};
+  // The same anchor and scale her sprite is drawn with, so the item keeps its
+  // place on her body and its size relative to her at any depth. At scale 1
+  // this is exactly render_image at `at`.
+  SDL_Point anchor = {(int)actor->current_position.x, (int)actor_feet_y(actor)};
+  render_image_scaled_about(renderer, image, at, actor_scale(actor), anchor);
+}
+
 void actor_free(Actor *actor) {
   for (int v = 0; v < actor->spec->variants_length; v++) {
     for (int i = 0; i < ACTOR_STATE_COUNT; i++) {

@@ -81,6 +81,13 @@ static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS), NULL,
                                    0};
 static WalkGrid walk_grid;
 
+// Depth (SCALING.md): a gentle ramp across the walkable strip, in feet
+// coordinates (the walk rects above are centre positions; feet sit half a
+// walking frame lower). scale_far is the knob — raise it toward 1 for a
+// flatter backdrop, lower it for more perspective.
+static const ScaleRamp SCALE_RAMP = {
+    .y_far = 490, .y_near = 639, .scale_far = 0.85F, .scale_near = 1.0F};
+
 static const SDL_Point FLOAT_LOOK_POI = {500, 470};
 static const SDL_Point CARLA_POI = {400, 470};
 // Where Gina walks before a scene change: tapping a navigation arrow sends her
@@ -214,9 +221,7 @@ static void render(SDL_Renderer *renderer) {
   actor_render(gina, renderer);
   // Once Carla has handed it over, Gina carries the basket with her.
   if (gina_state.has_basket) {
-    render_image(renderer, basket,
-                 (SDL_Point){gina->current_position.x - 55,
-                             gina->current_position.y - 70});
+    actor_render_carried(gina, renderer, basket, (SDL_Point){-55, -70});
   }
   // The reward burst over the returning float while the chime plays.
   if (celebration->is_playing) {
@@ -244,6 +249,7 @@ Scene tree_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .scale_ramp = &SCALE_RAMP,
     .walk_grid = &walk_grid,
     .walk_mask_dir = "tree",
     .sprites = sprites,

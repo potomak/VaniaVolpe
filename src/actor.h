@@ -209,6 +209,14 @@ void actor_update(Actor *actor, float delta_time);
 
 void actor_render(Actor *actor, SDL_Renderer *renderer);
 
+// Draw something the actor is carrying. `offset` is authored against her
+// natural size, relative to current_position, and is scaled and anchored
+// exactly like her sprite — so a carried item stays on her body instead of
+// floating full-size beside a shrunken actor (SCALING.md). Identical to a
+// plain render_image at the offset when her scene has no depth ramp.
+void actor_render_carried(const Actor *actor, SDL_Renderer *renderer,
+                          const ImageData *image, SDL_Point offset);
+
 void actor_free(Actor *actor);
 
 void actor_walk_to(Actor *actor, SDL_FPoint position, void (*on_end)(void));

@@ -76,6 +76,13 @@ static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS),
                                    BLOCKED_RECTS, LEN(BLOCKED_RECTS)};
 static WalkGrid walk_grid;
 
+// Depth (SCALING.md): a gentle ramp across the walkable strip, in feet
+// coordinates (the walk rects above are centre positions; feet sit half a
+// walking frame lower). scale_far is the knob — raise it toward 1 for a
+// flatter backdrop, lower it for more perspective.
+static const ScaleRamp SCALE_RAMP = {
+    .y_far = 391, .y_near = 654, .scale_far = 0.85F, .scale_near = 1.0F};
+
 // Points of interest
 static const SDL_Point SLIDE_POI = {276, 454};
 static const SDL_Point SQUIRREL_POI = {219, 455};
@@ -302,9 +309,7 @@ static void render(SDL_Renderer *renderer) {
 
   if (has_peg_been_dropped) {
     if (has_peg) {
-      render_image(renderer, peg,
-                   (SDL_Point){fox->current_position.x - 20,
-                               fox->current_position.y - 100});
+      actor_render_carried(fox, renderer, peg, (SDL_Point){-20, -100});
     } else if (has_slide_been_fixed) {
       render_image(renderer, fixed_peg, (SDL_Point){267, 263});
     }
@@ -314,9 +319,7 @@ static void render(SDL_Renderer *renderer) {
 
   if (have_acorns_fallen) {
     if (has_acorns) {
-      render_image(renderer, acorns,
-                   (SDL_Point){fox->current_position.x - 50,
-                               fox->current_position.y - 100});
+      actor_render_carried(fox, renderer, acorns, (SDL_Point){-50, -100});
     } else if (has_peg_been_dropped) {
       render_image(renderer, acorns, (SDL_Point){137, 135});
     }
@@ -369,6 +372,7 @@ Scene playground_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
+    .scale_ramp = &SCALE_RAMP,
     .walk_grid = &walk_grid,
     .walk_mask_dir = "playground",
     .sprites = sprites,
