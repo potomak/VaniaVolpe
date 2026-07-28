@@ -1,10 +1,10 @@
 //
 //  test_scene.c
-//  Unit tests for the y-sorted action layer (DEPTH_AND_CAMERA.md Phase 1) and
-//  the depth bands / actor variants (Phase 2): actor_feet_y,
-//  action_layer_order, depth_variant_for, actor_set_variant and the per-band
-//  speed scale. Everything is synthetic — no window, renderer, or assets;
-//  actors get hand-built animation frames where the checks need them.
+//  Unit tests for the y-sorted action layer, parallax planes, hotspot boils,
+//  idle fidgets and depth scaling: actor_feet_y, action_layer_order,
+//  plane_screen_pos, scale_ramp_at and the scaled draw geometry. Everything is
+//  synthetic — no window, renderer, or assets; actors get hand-built animation
+//  frames where the checks need them.
 //
 
 #include <math.h>
@@ -29,9 +29,6 @@ static void check(bool ok, const char *what) {
 
 // A spec with no animations: enough for make_actor, and the no-frames
 // fallback case for actor_feet_y.
-static const ActorVariantSpec BARE_VARIANTS[] = {
-    {.anims = NULL, .anims_length = 0, .speed_scale = 1.0F},
-};
 static const ActorSpec BARE_SPEC = {
     .id = "test_actor",
     .display_name = "Test",
@@ -39,55 +36,34 @@ static const ActorSpec BARE_SPEC = {
     .velocity = 100,
     .idle_state = IDLE,
     .move_state = WALKING,
-    .variants = BARE_VARIANTS,
-    .variants_length = 1,
+    .anims = NULL,
+    .anims_length = 0,
 };
 
-// A two-variant spec whose far variant moves at half speed. The animations
-// are never loaded from disk — make_actor builds their tables from the spec
-// alone, which is all walking and variant switching touch.
-static const ActorAnimSpec VARIANT_ANIMS[] = {
+// A spec with IDLE + WALKING sheets. The animations are never loaded from
+// disk — make_actor builds the table from the spec alone, which is all these
+// checks touch.
+static const ActorAnimSpec ANIMATED_ANIMS[] = {
     {IDLE, "idle.png", "idle.anim", 1, LOOP},
     {WALKING, "walking.png", "walking.anim", 1, LOOP},
 };
-static const ActorVariantSpec TWO_VARIANTS[] = {
-    {.anims = VARIANT_ANIMS, .anims_length = 2, .speed_scale = 1.0F},
-    {.anims = VARIANT_ANIMS, .anims_length = 2, .speed_scale = 0.5F},
-};
-static const ActorSpec TWO_VARIANT_SPEC = {
-    .id = "test_two_variants",
+static const ActorSpec ANIMATED_SPEC = {
+    .id = "test_animated",
     .display_name = "Test",
     .assets_dir = "test",
     .velocity = 100,
     .idle_state = IDLE,
     .move_state = WALKING,
-    .variants = TWO_VARIANTS,
-    .variants_length = 2,
+    .anims = ANIMATED_ANIMS,
+    .anims_length = LEN(ANIMATED_ANIMS),
 };
 
 // A fidgeting spec (LIVELINESS.md Part 1): synthetic fidgets, never loaded
 // from disk — make_actor builds their AnimationData from the spec, which is
-// all the trigger/interrupt logic touches. Fidget lists are per variant:
-// variant 0 has two, variant 1 has none, variant 2 has its own.
+// all the trigger/interrupt logic touches.
 static const ActorFidgetSpec TEST_FIDGETS[] = {
     {"peck.png", "peck.anim", 2, 0},
     {"blink.png", "blink.anim", 1, 0},
-};
-static const ActorFidgetSpec FAR_TEST_FIDGETS[] = {
-    {"peck_far.png", "peck_far.anim", 2, 0},
-};
-static const ActorVariantSpec FIDGET_VARIANTS[] = {
-    {.anims = VARIANT_ANIMS,
-     .anims_length = 2,
-     .speed_scale = 1.0F,
-     .fidgets = TEST_FIDGETS,
-     .fidgets_length = 2},
-    {.anims = VARIANT_ANIMS, .anims_length = 2, .speed_scale = 1.0F},
-    {.anims = VARIANT_ANIMS,
-     .anims_length = 2,
-     .speed_scale = 1.0F,
-     .fidgets = FAR_TEST_FIDGETS,
-     .fidgets_length = 1},
 };
 static const ActorSpec FIDGET_SPEC = {
     .id = "test_fidgeter",
@@ -96,8 +72,10 @@ static const ActorSpec FIDGET_SPEC = {
     .velocity = 100,
     .idle_state = IDLE,
     .move_state = WALKING,
-    .variants = FIDGET_VARIANTS,
-    .variants_length = 3,
+    .anims = ANIMATED_ANIMS,
+    .anims_length = LEN(ANIMATED_ANIMS),
+    .fidgets = TEST_FIDGETS,
+    .fidgets_length = LEN(TEST_FIDGETS),
 };
 
 // Give an actor a WALKING animation with one frame_h-tall frame, so
@@ -105,7 +83,7 @@ static const ActorSpec FIDGET_SPEC = {
 static void give_reference_frame(Actor *actor, int frame_h) {
   AnimationData *animation = make_animation_data(1, LOOP);
   animation->sprite_clips[0] = (SDL_Rect){0, 0, 220, frame_h};
-  actor->animations[0][WALKING] = animation;
+  actor->animations[WALKING] = animation;
 }
 
 // Toggleable predicates for the hotspot active-animation sync test below.
@@ -209,52 +187,13 @@ int test_scene(void) {
 
   actor_free(actor);
 
-  // ── depth_variant_for ─────────────────────────────────────────────────────
+  // ── walk speed ────────────────────────────────────────────────────────────
 
-  // Mirrors the shape a scene would declare: near ground at the bottom,
-  // farther bands higher up (variant indices need not be ordered).
-  const DepthBand bands[] = {{0, 2}, {400, 1}, {520, 0}};
-  check(depth_variant_for(bands, 3, 120.0F) == 2,
-        "feet in the first band pick its variant");
-  check(depth_variant_for(bands, 3, 399.0F) == 2,
-        "feet just above a boundary stay in the earlier band");
-  check(depth_variant_for(bands, 3, 400.0F) == 1,
-        "feet exactly on a boundary enter the later band");
-  check(depth_variant_for(bands, 3, 700.0F) == 0,
-        "feet beyond the last band pick the last variant");
-  const DepthBand offset_bands[] = {{300, 1}};
-  check(depth_variant_for(offset_bands, 1, 100.0F) == 1,
-        "feet above every band fall back to the first band's variant");
-
-  // ── actor_set_variant + speed scale ───────────────────────────────────────
-
-  Actor *walker = make_actor(&TWO_VARIANT_SPEC, (SDL_FPoint){0, 0});
+  Actor *walker = make_actor(&ANIMATED_SPEC, (SDL_FPoint){0, 0});
   actor_walk_to(walker, (SDL_FPoint){100, 0}, NULL);
   actor_update(walker, 0.1F);
   check(fabsf(walker->current_position.x - 10.0F) < 0.001F,
-        "variant 0 walks at the spec velocity");
-
-  // Pin the live walking animation's timing and facing, then switch.
-  AnimationData *near_walk = walker->animations[0][WALKING];
-  AnimationData *far_walk = walker->animations[1][WALKING];
-  near_walk->start_time = 123;
-  near_walk->flip = SDL_FLIP_HORIZONTAL;
-  actor_set_variant(walker, 1);
-  check(walker->variant == 1 && far_walk->is_playing &&
-            far_walk->start_time == 123 &&
-            far_walk->flip == SDL_FLIP_HORIZONTAL,
-        "a variant switch hands the walk cycle over mid-stride");
-  check(!near_walk->is_playing,
-        "the old variant's animation stops without restarting anything");
-
-  actor_update(walker, 0.1F);
-  check(fabsf(walker->current_position.x - 15.0F) < 0.001F,
-        "the far variant's speed scale slows the walk");
-
-  actor_set_variant(walker, 5);
-  actor_set_variant(walker, -1);
-  check(walker->variant == 1, "out-of-range variants are ignored");
-
+        "an actor with no depth ramp walks at the spec velocity");
   actor_free(walker);
 
   // ── planes: parallax offset + coverage ────────────────────────────────────
@@ -381,15 +320,14 @@ int test_scene(void) {
   // Force the timer: the next update picks a fidget and plays it.
   fidgeter->next_fidget_at = 0;
   actor_update(fidgeter, 1.0F / 30.0F);
-  bool playing = fidgeter->fidget_anims[0][fidgeter->active_fidget] != NULL &&
-                 fidgeter->fidget_anims[0][fidgeter->active_fidget]->is_playing;
+  bool playing = fidgeter->fidget_anims[fidgeter->active_fidget] != NULL &&
+                 fidgeter->fidget_anims[fidgeter->active_fidget]->is_playing;
   check(fidgeter->state == FIDGETING && playing &&
             fidgeter->active_fidget >= 0 && fidgeter->active_fidget < 2,
         "the elapsed timer starts one of the spec's fidgets");
 
   // A walk interrupts the fidget instantly and stops its animation.
-  AnimationData *interrupted =
-      fidgeter->fidget_anims[0][fidgeter->active_fidget];
+  AnimationData *interrupted = fidgeter->fidget_anims[fidgeter->active_fidget];
   actor_walk_to(fidgeter, (SDL_FPoint){200, 100}, NULL);
   check(fidgeter->state == WALKING && !interrupted->is_playing,
         "a tap wins over a fidget: the walk starts, the fidget stops");
@@ -403,7 +341,7 @@ int test_scene(void) {
   // A finished one-shot fidget returns to IDLE on its own.
   fidgeter->next_fidget_at = 0;
   actor_update(fidgeter, 1.0F / 30.0F);
-  AnimationData *beat = fidgeter->fidget_anims[0][fidgeter->active_fidget];
+  AnimationData *beat = fidgeter->fidget_anims[fidgeter->active_fidget];
   beat->start_time = (int)clock_now_ms() - 10000; // age it past its runtime
   actor_update(fidgeter, 1.0F / 30.0F);
   actor_update(fidgeter, 1.0F / 30.0F);
@@ -422,19 +360,6 @@ int test_scene(void) {
     actor_update(fidgeter, 1.0F / 30.0F);
   }
 
-  // Fidget lists are per variant: one without any never fidgets, one with
-  // its own uses it.
-  actor_set_variant(fidgeter, 1);
-  fidgeter->next_fidget_at = 0;
-  actor_update(fidgeter, 1.0F / 30.0F);
-  check(fidgeter->state == IDLE, "a variant without fidgets never fidgets");
-  actor_set_variant(fidgeter, 2);
-  fidgeter->next_fidget_at = 0;
-  actor_update(fidgeter, 1.0F / 30.0F);
-  check(fidgeter->state == FIDGETING && fidgeter->active_fidget == 0 &&
-            fidgeter->fidget_anims[2][0] != NULL &&
-            fidgeter->fidget_anims[2][0]->is_playing,
-        "a variant with its own fidgets plays from its own list");
   actor_free(fidgeter);
 
   // An actor with no fidget list never fidgets.
@@ -446,10 +371,10 @@ int test_scene(void) {
 
   // ── actor_play_state policy (#43) ─────────────────────────────────────────
   // Refuses a state with no animation (returns false, leaves the state), and
-  // enters one that has an animation. TWO_VARIANT_SPEC provides IDLE + WALKING
+  // enters one that has an animation. ANIMATED_SPEC provides IDLE + WALKING
   // only, so SITTING has no animation.
   fprintf(stderr, "\nactor_play_state:\n");
-  Actor *poser = make_actor(&TWO_VARIANT_SPEC, (SDL_FPoint){0, 0});
+  Actor *poser = make_actor(&ANIMATED_SPEC, (SDL_FPoint){0, 0});
   check(!actor_play_state(poser, SITTING) && poser->state != SITTING,
         "actor_play_state refuses a state with no animation");
   check(actor_play_state(poser, WALKING) && poser->state == WALKING,
@@ -461,7 +386,7 @@ int test_scene(void) {
   // there takes a NULL grid. A press-drag must still pick the actor up and set
   // her back down without dereferencing the absent grid.
   fprintf(stderr, "\ndrag & drop (NULL grid):\n");
-  Actor *dragged = make_actor(&TWO_VARIANT_SPEC, (SDL_FPoint){100, 100});
+  Actor *dragged = make_actor(&ANIMATED_SPEC, (SDL_FPoint){100, 100});
   SDL_Event press = {.type = SDL_MOUSEBUTTONDOWN};
   press.button.x = 100;
   press.button.y = 100;
@@ -516,7 +441,7 @@ int test_scene(void) {
         "the scaled quad stays centred over the anchor");
 
   fprintf(stderr, "\nactor scale:\n");
-  Actor *scaled = make_actor(&TWO_VARIANT_SPEC, (SDL_FPoint){400, 300});
+  Actor *scaled = make_actor(&ANIMATED_SPEC, (SDL_FPoint){400, 300});
   give_reference_frame(scaled, 240);
   check(actor_scale(scaled) == 1.0F, "an actor with no ramp is scale 1");
   SDL_Rect natural = actor_sprite_rect(scaled);

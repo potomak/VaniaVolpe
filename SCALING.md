@@ -86,7 +86,7 @@ behind `actor_scale()` and need no actor-side change. Not built now.
 ## Where scale comes from
 
 ```c
-float actor_scale(const Actor *a, const ScaleRamp *ramp);
+float actor_scale(const Actor *actor);   // reads actor->scale_ramp
 ```
 
 Computed on demand — it is a clamp and a lerp. It is deliberately **not** cached
@@ -98,7 +98,7 @@ stale after a teleport (`on_scene_active`, the slide, the dive tween).
 |---|---|
 | grounded (IDLE / WALKING / TALKING / ...) | `actor_feet_y(a)` |
 | `DRAGGED` | `a->ground_y` — the shadow |
-| `FALLING` / `LANDING` | `a->ground_y` (the landing, fixed at release) |
+| `FALLING` / `LANDING` | `a->fall_target_y` (the landing, fixed at release) |
 
 `FALLING` must not read her live y, or she would grow as she descends. Because
 the drag's final scale already equals the landing scale, **release changes
@@ -137,8 +137,9 @@ Two properties fall out:
   state's own bottom edge to the ground (which would move her visibly whenever
   she changed pose).
 
-`image.c`'s existing `scaled_quad` scales about the **centre** and is therefore
-the wrong helper; this needs a bottom-anchored sibling.
+`image.c`'s existing `scaled_quad` scales about the **centre**, so this needed a
+bottom-anchored sibling: `scaled_quad_about`, plus the `render_*_scaled_about`
+draws built on it.
 
 #### Follow-up: standardising pose sizes (tracked in #169)
 
@@ -151,7 +152,8 @@ scaling, but it would pay for itself elsewhere:
   too wide on each side and 18px too short. That looseness exists today, in the
   intro, where she is sat the whole time.
 - Drawn feet would equal logical feet in every pose, instead of the sitting
-  sprite hanging 9px below the walking feet line.
+  sprite hanging ~18px below the walking feet line and sitting 24px left of
+  centre.
 - The anchor rule above collapses to "scale about the sprite's bottom edge",
   deleting the per-state overhang case entirely.
 
@@ -387,12 +389,11 @@ touches.
    `Actor.ground_y`, the lift model, slew, the shadow and its sort entry,
    mid-fall grab, NULL-grid no-op.
 4. ~~**Speed scaling.**~~ *Shipped.*
-5. **Retire the variant system** — its own PR with its own gate. This is not a
-   freebie: `ActorVariantSpec` also carries per-variant fidget tables, the
-   `animations[VARIANT][STATE]` indirection threaded through `actor_face` and
-   `actor_load_media`'s parity validation, `actor_set_variant`,
-   `depth_variant_for`, `DepthBand`, `test_scene.c`, `tools/gen_depth_variants.py`
-   and the committed `*_far` art.
+5. ~~**Retire the variant system.**~~ *Shipped.* `ActorVariantSpec`, the
+   `animations[VARIANT][STATE]` indirection, `actor_set_variant`,
+   `depth_variant_for`, `DepthBand`, the per-variant fidget tables and parity
+   validation, `tools/gen_depth_variants.py` and the generated `*_far` art are
+   all gone. An `ActorSpec` now carries one flat `anims` / `fidgets` list.
 
 ## Testing
 

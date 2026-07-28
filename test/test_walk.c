@@ -260,9 +260,6 @@ static void test_pool_state_switch(void) {
 static const ActorAnimSpec TEST_ANIMS[] = {
     {WALKING, "walking.png", "walking.anim", 1, LOOP, 0},
 };
-static const ActorVariantSpec TEST_VARIANTS[] = {
-    {.anims = TEST_ANIMS, .anims_length = LEN(TEST_ANIMS), .speed_scale = 1.0F},
-};
 static const ActorSpec TEST_SPEC = {
     .id = "test",
     .assets_dir = "test",
@@ -271,8 +268,8 @@ static const ActorSpec TEST_SPEC = {
     .move_sound_volume = 0,
     .idle_state = WALKING,
     .move_state = WALKING,
-    .variants = TEST_VARIANTS,
-    .variants_length = 1,
+    .anims = TEST_ANIMS,
+    .anims_length = LEN(TEST_ANIMS),
 };
 
 static bool arrived;
@@ -417,7 +414,7 @@ static void test_drag_and_drop(void) {
   Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
   // make_actor leaves the (never loaded) sprite clips unset; the grab
   // hit-test reads frame 0, so give it the hen's 120x120.
-  actor->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  actor->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
 
   // A press away from the sprite neither arms nor consumes.
   SDL_Event e = mouse_down(500, 100);
@@ -537,8 +534,8 @@ static void test_drag_and_drop(void) {
   actor->state = IDLE;
 
   // With a LANDING sheet the fall ends in the one-shot beat, then IDLE.
-  actor->animations[0][LANDING] = make_animation_data(1, ONE_SHOT);
-  actor->animations[0][LANDING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  actor->animations[LANDING] = make_animation_data(1, ONE_SHOT);
+  actor->animations[LANDING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
   e = mouse_down((int)actor->current_position.x,
                  (int)actor->current_position.y);
   drag(actor, &grid, &e);
@@ -549,10 +546,10 @@ static void test_drag_and_drop(void) {
   for (int i = 0; i < 3000 && actor->state == FALLING; i++) {
     actor_update(actor, 1.0F / 30.0F);
   }
-  check(actor->state == LANDING && actor->animations[0][LANDING]->is_playing,
+  check(actor->state == LANDING && actor->animations[LANDING]->is_playing,
         "touchdown plays the one-shot landing beat");
   // Age the beat past its runtime so animation_update stops it.
-  actor->animations[0][LANDING]->start_time = (int)clock_now_ms() - 1000;
+  actor->animations[LANDING]->start_time = (int)clock_now_ms() - 1000;
   actor_update(actor, 1.0F / 30.0F);
   actor_update(actor, 1.0F / 30.0F);
   check(actor->state == IDLE, "the landing beat over, she returns to IDLE");
@@ -564,7 +561,7 @@ static void test_drag_and_drop(void) {
   static WalkGrid shade;
   walk_grid_build(&shade, &POOL_SHADE_AREA, WINDOW_SIZE);
   Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
-  gina->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  gina->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
   e = mouse_down(150, 480);
   drag(gina, &shade, &e);
   e = mouse_motion(700, 200);
@@ -608,7 +605,7 @@ static void test_drag_clamp_to_walkable(void) {
   // Through the drag event: lift Gina and carry the pointer far to the right;
   // she rises with it (y unclamped) but her x stops at the shade's edge.
   Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
-  gina->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  gina->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
   SDL_Event e = mouse_down(150, 480);
   drag(gina, &shade, &e);
   e = mouse_motion(700, 200);
@@ -657,7 +654,7 @@ static void test_drag_depth(void) {
   static const ScaleRamp RAMP = {
       .y_far = 430, .y_near = 630, .scale_far = 0.5F, .scale_near = 1.0F};
   Actor *a = make_actor(&TEST_SPEC, (SDL_FPoint){400, 500});
-  a->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  a->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
   a->scale_ramp = &RAMP;
   // Ceiling is a quarter of the ramp's 200px span.
   check(actor_lift_ceiling(a) == 50.0F,
@@ -700,7 +697,7 @@ static void test_drag_depth(void) {
   // Catching her mid-fall must not yank the shadow to the ceiling and rescale
   // her on the grab frame — the case actor_begin_drag exists for.
   Actor *falling = make_actor(&TEST_SPEC, (SDL_FPoint){400, 200});
-  falling->animations[0][WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  falling->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
   falling->scale_ramp = &RAMP;
   e = mouse_down(400, 200);
   drag(falling, &grid, &e);
