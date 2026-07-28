@@ -143,7 +143,8 @@ static void touch_down(Actor *actor) {
   }
 }
 
-Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
+Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
+                  const ScaleRamp *scale_ramp) {
   Actor *actor = malloc(sizeof(Actor));
   if (actor == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "make_actor: out of memory");
@@ -204,7 +205,7 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position) {
   }
   actor->active_fidget = 0;
   actor->next_fidget_at = 0;
-  actor->scale_ramp = NULL;
+  actor->scale_ramp = scale_ramp;
   enter_idle(actor); // state IDLE + the first fidget timer roll
   actor_face(actor, WEST);
   return actor;

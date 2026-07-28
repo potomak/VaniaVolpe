@@ -22,12 +22,10 @@ void adventure_init(const Adventure *adventure) {
     // make it before init so init (hotspots, camera_init) can reference it.
     // Scenes with no actor leave actor_spec NULL.
     if (scene->actor_spec != NULL) {
-      *scene->actor = make_actor(scene->actor_spec, scene->actor_start);
-      if (*scene->actor != NULL) {
-        // Each scene owns its own actor instance, so the scene's depth ramp is
-        // simply that actor's ramp for its whole life.
-        (*scene->actor)->scale_ramp = scene->scale_ramp;
-      }
+      // Each scene owns its own actor instance, so the scene's depth ramp is
+      // simply that actor's ramp for its whole life.
+      *scene->actor =
+          make_actor(scene->actor_spec, scene->actor_start, scene->scale_ramp);
     }
     scene->init();
   }
