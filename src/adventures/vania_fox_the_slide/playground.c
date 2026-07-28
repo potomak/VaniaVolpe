@@ -324,7 +324,7 @@ static void render(SDL_Renderer *renderer) {
     render_image(renderer, acorns, (SDL_Point){698, 225});
   }
 
-  render_action_layer(renderer, props, LEN(props), (Actor *[]){fox}, 1);
+  render_action_layer(renderer, NULL, props, LEN(props), (Actor *[]){fox}, 1);
 }
 
 static void on_scene_active(void) {

@@ -128,9 +128,20 @@ static void init(void) {
   // Baselines are set in on_scene_active, once the image heights are known
   // (the ground line is the bottom edge of each sprite). The props share one
   // ImageData — a Prop points into the images table, it doesn't own a copy.
-  props[0] = (Prop){.image = &images[0], .pos = FAR_BUSH_POS, .visible = true};
-  props[1] = (Prop){.image = &images[0], .pos = NEAR_BUSH_POS, .visible = true};
-  props[2] = (Prop){.image = &images[0], .pos = EAST_BUSH_POS, .visible = true};
+  // One bush image standing at three depths: without .scaled the far one would
+  // read as the same size as the near one and the perspective would fall apart.
+  props[0] = (Prop){.image = &images[0],
+                    .pos = FAR_BUSH_POS,
+                    .visible = true,
+                    .scaled = true};
+  props[1] = (Prop){.image = &images[0],
+                    .pos = NEAR_BUSH_POS,
+                    .visible = true,
+                    .scaled = true};
+  props[2] = (Prop){.image = &images[0],
+                    .pos = EAST_BUSH_POS,
+                    .visible = true,
+                    .scaled = true};
 }
 
 static void process_input(SDL_Event *event) {
@@ -166,9 +177,6 @@ static void on_scene_active(void) {
   // long before any scene becomes active.
   for (int i = 0; i < (int)LEN(props); i++) {
     props[i].baseline = props[i].pos.y + props[i].image->height;
-    // One bush image at three depths: without this the far one would read as
-    // the same size as the near one and the perspective would fall apart.
-    props[i].scale = scale_ramp_at(&FIELD_RAMP, (float)props[i].baseline);
   }
 }
 

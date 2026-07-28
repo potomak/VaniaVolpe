@@ -85,8 +85,8 @@ void scene_default_render(const Scene *scene, SDL_Renderer *renderer) {
   // runs zero times, never touching a NULL props pointer). scene->actor is the
   // address of the scene's single actor pointer, so it doubles as a one-element
   // actor array.
-  render_action_layer(renderer, scene->props, scene->props_length, scene->actor,
-                      1);
+  render_action_layer(renderer, scene->scale_ramp, scene->props,
+                      scene->props_length, scene->actor, 1);
 }
 
 void sync_hotspot_active_anims(const Scene *scene) {
@@ -199,8 +199,9 @@ int action_layer_order(const Prop *props, int props_length,
   return count;
 }
 
-void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
-                         Actor **actors, int actors_length) {
+void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
+                         Prop *props, int props_length, Actor **actors,
+                         int actors_length) {
   if (props_length + actors_length <= 0) {
     return;
   }
@@ -210,20 +211,21 @@ void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
   for (int i = 0; i < count; i++) {
     if (order[i] < props_length) {
       Prop *prop = &props[order[i]];
-      // Scale about the prop's own ground line, so an opted-in prop recedes
-      // without its footing sliding. Unset (or 1) is the natural draw.
-      float scale = prop->scale > 0.0F ? prop->scale : 1.0F;
+      // A prop's baseline is its depth, so an opted-in prop takes its size from
+      // the scene's ramp there and is scaled about that line — its footing
+      // stays put while it recedes. Scale 1 is the identity, so the two draws
+      // need no special case.
+      float scale =
+          prop->scaled ? scale_ramp_at(ramp, (float)prop->baseline) : 1.0F;
+      int width =
+          prop->animation != NULL
+              ? prop->animation->sprite_clips[prop->animation->current_frame].w
+              : prop->image->width;
+      SDL_Point anchor = {prop->pos.x + width / 2, prop->baseline};
       if (prop->animation != NULL) {
-        SDL_Rect *clip =
-            &prop->animation->sprite_clips[prop->animation->current_frame];
-        SDL_Point anchor = {prop->pos.x + clip->w / 2, prop->baseline};
         render_animation_scaled_about(renderer, prop->animation, prop->pos,
                                       scale, anchor);
-      } else if (scale == 1.0F) {
-        render_image(renderer, prop->image, prop->pos);
       } else {
-        SDL_Point anchor = {prop->pos.x + prop->image->width / 2,
-                            prop->baseline};
         render_image_scaled_about(renderer, prop->image, prop->pos, scale,
                                   anchor);
       }

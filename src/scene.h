@@ -30,12 +30,12 @@ typedef struct prop {
   // while actor_feet_y < baseline.
   int baseline;
   bool visible; // scenes toggle this (e.g. a picked-up item)
-  // Draw scale (SCALING.md). 0 (or 1) means natural size, which is what every
-  // prop authored at its final on-screen size wants — so this is opt-in and
-  // shipped scenes are untouched. A scene with a depth ramp sets it from
-  // scale_ramp_at(ramp, baseline), the prop's own depth, so scenery recedes
-  // with the actor. Drawn about the prop's bottom-centre, like the actor.
-  float scale;
+  // Take size from the scene's depth ramp at this prop's baseline, instead of
+  // drawing at the authored size (SCALING.md). Off by default, because scenery
+  // is normally drawn at the size it should appear — this is for art reused at
+  // several depths, like the demo's one bush image standing at three. Moving
+  // such a prop changes its size, which is the point.
+  bool scaled;
 } Prop;
 
 // A static scene sprite: an image or animation drawn
@@ -324,8 +324,9 @@ int action_layer_order(const Prop *props, int props_length,
 // Draw visible props and actors in y-order (see action_layer_order). Scenes
 // call this once instead of hand-ordering "props, then the actor last";
 // backgrounds and draws that never overlap an actor stay manual.
-void render_action_layer(SDL_Renderer *renderer, Prop *props, int props_length,
-                         Actor **actors, int actors_length);
+void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
+                         Prop *props, int props_length, Actor **actors,
+                         int actors_length);
 
 // Dispatch a click at p (scene coordinates) against a hotspot table: the
 // first enabled hotspot containing p wins. Its on_tap (if any) fires at once,
