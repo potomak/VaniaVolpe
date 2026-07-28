@@ -155,13 +155,15 @@ typedef struct actor {
   int active_fidget;
   Uint32 next_fidget_at;
   // The depth ramp of the scene this actor belongs to (SCALING.md), borrowed
-  // from Scene.scale_ramp and set by the framework when it makes the actor.
-  // NULL (the poster scenes and minigames) means she is always drawn at
-  // scale 1.
+  // from Scene.scale_ramp. NULL (the poster scenes and minigames) means she is
+  // always drawn at scale 1.
   const ScaleRamp *scale_ramp;
 } Actor;
 
-Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position);
+// scale_ramp is borrowed, not copied: it must outlive the actor. Pass NULL for
+// a scene that declares no depth ramp.
+Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
+                  const ScaleRamp *scale_ramp);
 
 // Scene y of the actor's ground-contact point. current_position is the sprite
 // *centre* (all walk data is authored against it); y-sorting and depth need

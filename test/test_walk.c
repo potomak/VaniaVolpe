@@ -285,7 +285,7 @@ static void run_to_idle(Actor *actor) {
 }
 
 static void test_exact_goal_walk(const WalkGrid *entrance_grid) {
-  Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){580, 457});
+  Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){580, 457}, NULL);
 
   arrived = false;
   walk_actor_to(actor, entrance_grid, SHOVEL_POI, true, on_arrive);
@@ -318,7 +318,7 @@ static void test_stale_callback_cancelled(const WalkGrid *grid) {
   // Regression test for #63: start a walk with a callback, then tap the
   // actor itself. The pending callback must be dropped, not fired from
   // wherever the actor happens to stand.
-  Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){150, 400});
+  Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){150, 400}, NULL);
 
   stale_fired = false;
   walk_actor_to(actor, grid, (SDL_FPoint){700, 400}, true, on_stale);
@@ -411,7 +411,7 @@ static void test_drag_and_drop(void) {
   static WalkGrid grid;
   walk_grid_build(&grid, &POOL_POOLSIDE_AREA, WINDOW_SIZE);
 
-  Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
+  Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480}, NULL);
   // make_actor leaves the (never loaded) sprite clips unset; the grab
   // hit-test reads frame 0, so give it the hen's 120x120.
   actor->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
@@ -560,7 +560,7 @@ static void test_drag_and_drop(void) {
   // the umbrella still lands inside the shade.
   static WalkGrid shade;
   walk_grid_build(&shade, &POOL_SHADE_AREA, WINDOW_SIZE);
-  Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
+  Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480}, NULL);
   gina->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
   e = mouse_down(150, 480);
   drag(gina, &shade, &e);
@@ -604,7 +604,7 @@ static void test_drag_clamp_to_walkable(void) {
 
   // Through the drag event: lift Gina and carry the pointer far to the right;
   // she rises with it (y unclamped) but her x stops at the shade's edge.
-  Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480});
+  Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480}, NULL);
   gina->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
   SDL_Event e = mouse_down(150, 480);
   drag(gina, &shade, &e);
@@ -653,9 +653,8 @@ static void test_drag_depth(void) {
   // A ramp over the strip, so scale is observable: feet 430 -> 0.5, 630 -> 1.0.
   static const ScaleRamp RAMP = {
       .y_far = 430, .y_near = 630, .scale_far = 0.5F, .scale_near = 1.0F};
-  Actor *a = make_actor(&TEST_SPEC, (SDL_FPoint){400, 500});
+  Actor *a = make_actor(&TEST_SPEC, (SDL_FPoint){400, 500}, &RAMP);
   a->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
-  a->scale_ramp = &RAMP;
   // Ceiling is a quarter of the ramp's 200px span.
   check(actor_lift_ceiling(a) == 50.0F,
         "the lift ceiling is a fraction of the scene's ramp span");
@@ -696,9 +695,8 @@ static void test_drag_depth(void) {
 
   // Catching her mid-fall must not yank the shadow to the ceiling and rescale
   // her on the grab frame — the case actor_begin_drag exists for.
-  Actor *falling = make_actor(&TEST_SPEC, (SDL_FPoint){400, 200});
+  Actor *falling = make_actor(&TEST_SPEC, (SDL_FPoint){400, 200}, &RAMP);
   falling->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
-  falling->scale_ramp = &RAMP;
   e = mouse_down(400, 200);
   drag(falling, &grid, &e);
   e = mouse_motion(400, 150);

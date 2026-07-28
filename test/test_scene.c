@@ -118,7 +118,7 @@ int test_scene(void) {
 
   // ── actor_feet_y ──────────────────────────────────────────────────────────
 
-  Actor *actor = make_actor(&BARE_SPEC, (SDL_FPoint){400, 450});
+  Actor *actor = make_actor(&BARE_SPEC, (SDL_FPoint){400, 450}, NULL);
   check(actor_feet_y(actor) == 450.0F,
         "feet y falls back to the centre with no animation frames");
 
@@ -189,7 +189,7 @@ int test_scene(void) {
 
   // ── walk speed ────────────────────────────────────────────────────────────
 
-  Actor *walker = make_actor(&ANIMATED_SPEC, (SDL_FPoint){0, 0});
+  Actor *walker = make_actor(&ANIMATED_SPEC, (SDL_FPoint){0, 0}, NULL);
   actor_walk_to(walker, (SDL_FPoint){100, 0}, NULL);
   actor_update(walker, 0.1F);
   check(fabsf(walker->current_position.x - 10.0F) < 0.001F,
@@ -309,7 +309,7 @@ int test_scene(void) {
 
   fprintf(stderr, "\nidle fidgets:\n");
 
-  Actor *fidgeter = make_actor(&FIDGET_SPEC, (SDL_FPoint){100, 100});
+  Actor *fidgeter = make_actor(&FIDGET_SPEC, (SDL_FPoint){100, 100}, NULL);
   check(fidgeter->state == IDLE &&
             fidgeter->next_fidget_at >= clock_now_ms() + FIDGET_MIN_DELAY_MS,
         "a fresh actor is idle with a fidget timer at least MIN_DELAY out");
@@ -363,7 +363,7 @@ int test_scene(void) {
   actor_free(fidgeter);
 
   // An actor with no fidget list never fidgets.
-  Actor *still = make_actor(&BARE_SPEC, (SDL_FPoint){0, 0});
+  Actor *still = make_actor(&BARE_SPEC, (SDL_FPoint){0, 0}, NULL);
   still->next_fidget_at = 0;
   actor_update(still, 1.0F / 30.0F);
   check(still->state == IDLE, "an actor with no fidgets stays still");
@@ -374,7 +374,7 @@ int test_scene(void) {
   // enters one that has an animation. ANIMATED_SPEC provides IDLE + WALKING
   // only, so SITTING has no animation.
   fprintf(stderr, "\nactor_play_state:\n");
-  Actor *poser = make_actor(&ANIMATED_SPEC, (SDL_FPoint){0, 0});
+  Actor *poser = make_actor(&ANIMATED_SPEC, (SDL_FPoint){0, 0}, NULL);
   check(!actor_play_state(poser, SITTING) && poser->state != SITTING,
         "actor_play_state refuses a state with no animation");
   check(actor_play_state(poser, WALKING) && poser->state == WALKING,
@@ -386,7 +386,7 @@ int test_scene(void) {
   // there takes a NULL grid. A press-drag must still pick the actor up and set
   // her back down without dereferencing the absent grid.
   fprintf(stderr, "\ndrag & drop (NULL grid):\n");
-  Actor *dragged = make_actor(&ANIMATED_SPEC, (SDL_FPoint){100, 100});
+  Actor *dragged = make_actor(&ANIMATED_SPEC, (SDL_FPoint){100, 100}, NULL);
   SDL_Event press = {.type = SDL_MOUSEBUTTONDOWN};
   press.button.x = 100;
   press.button.y = 100;
@@ -441,11 +441,16 @@ int test_scene(void) {
         "the scaled quad stays centred over the anchor");
 
   fprintf(stderr, "\nactor scale:\n");
-  Actor *scaled = make_actor(&ANIMATED_SPEC, (SDL_FPoint){400, 300});
+  Actor *unscaled = make_actor(&ANIMATED_SPEC, (SDL_FPoint){400, 300}, NULL);
+  give_reference_frame(unscaled, 240);
+  check(actor_scale(unscaled) == 1.0F, "an actor with no ramp is scale 1");
+  SDL_Rect natural = actor_sprite_rect(unscaled);
+  actor_free(unscaled);
+
+  // Same spec, same place, but on a ramp: everything below compares against the
+  // unscaled geometry above.
+  Actor *scaled = make_actor(&ANIMATED_SPEC, (SDL_FPoint){400, 300}, &RAMP);
   give_reference_frame(scaled, 240);
-  check(actor_scale(scaled) == 1.0F, "an actor with no ramp is scale 1");
-  SDL_Rect natural = actor_sprite_rect(scaled);
-  scaled->scale_ramp = &RAMP;
   // Feet at 300 + 120 = 420, so the ramp gives 0.5 + (320/400) * 0.5 = 0.9.
   check(fabsf(actor_scale(scaled) - 0.9F) < 0.0001F,
         "an actor's scale comes from her feet, not her centre");

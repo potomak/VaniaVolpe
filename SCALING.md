@@ -141,7 +141,7 @@ Two properties fall out:
 bottom-anchored sibling: `scaled_quad_about`, plus the `render_*_scaled_about`
 draws built on it.
 
-#### Follow-up: standardising pose sizes (tracked in #169)
+#### Considered and not pursued: standardising pose sizes
 
 Non-uniform sheets are handled, not required. Standardising every pose of an
 actor onto one canvas with a common anchor is **not a prerequisite** for
@@ -157,8 +157,8 @@ scaling, but it would pay for itself elsewhere:
 - The anchor rule above collapses to "scale about the sprite's bottom edge",
   deleting the per-state overhang case entirely.
 
-Sequence it **after** the effect is validated (Phase 2), so the art isn't
-re-exported before anyone knows the scaling looks good.
+None of that blocks anything: the scaling shipped and looks right on the
+existing sheets, so the art is left as it is.
 
 ### Fringing (R8)
 

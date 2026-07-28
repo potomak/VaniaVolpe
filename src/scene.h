@@ -197,9 +197,10 @@ typedef struct scene {
 
   // The actor's spec and start position. When actor_spec is set, the
   // framework owns the actor's whole lifecycle: it makes the actor
-  // (make_actor(actor_spec, actor_start)) before the scene's init — so init,
-  // the hotspot table and camera_init can reference it — loads its media in the
-  // media pass, and frees it on teardown, storing the pointer through `.actor`.
+  // (from actor_spec, actor_start and scale_ramp) before the scene's init — so
+  // init, the hotspot table and camera_init can reference it — loads its media
+  // in the media pass, and frees it on teardown, storing the pointer through
+  // `.actor`.
   // A scene then declares its actor instead of writing the make_*/load/free
   // calls by hand. NULL (with `.actor` also NULL) for scenes with no actor.
   const ActorSpec *actor_spec;
