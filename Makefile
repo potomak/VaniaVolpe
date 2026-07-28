@@ -9,6 +9,13 @@ CFLAGS  = -std=c99 -Wall $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer 
 LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image SDL2_mixer SDL2_ttf) -lm
 TARGET  = vaniavolpe
 
+# Header dependency tracking. Without it, editing a header leaves every object
+# that includes it untouched, and the link happily joins translation units that
+# disagree about a struct's layout — a binary that segfaults reading a field at
+# the wrong offset. -MMD writes a .d beside each .o listing the headers it read;
+# -MP adds a phony target per header so deleting one doesn't wedge the build.
+DEPFLAGS = -MMD -MP
+
 CACA_CFLAGS = $(shell pkg-config --cflags caca)
 CACA_LIBS   = $(shell pkg-config --libs   caca)
 TARGET_TERMINAL = vaniavolpe_terminal
@@ -66,6 +73,10 @@ TEST_SRCS = test/main_test.c test/harness.c test/script.c test/play_gina.c \
             $(GAME_SRCS)
 TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))
 
+# One .d per object, across all three object flavours. Included at the bottom of
+# this file, once the rules that create them are known.
+DEPS = $(OBJS:.o=.d) $(TERMINAL_OBJS:.o=.d) $(TEST_OBJS:.o=.d)
+
 # Playthrough scripts are the single source of truth shared with the browser
 # test (test/web); the native test consumes a generated header of each one.
 GEN_DIR = build/gen
@@ -90,7 +101,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 # ── terminal target (libcaca, no display server needed) ───────────────────────
 
@@ -100,7 +111,7 @@ $(TARGET_TERMINAL): $(TERMINAL_OBJS)
 	$(CC) $(TERMINAL_OBJS) $(LDFLAGS) $(CACA_LIBS) -o $@
 
 %.terminal.o: %.c
-	$(CC) $(CFLAGS) $(CACA_CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CACA_CFLAGS) $(DEPFLAGS) -c $< -o $@
 
 # ── headless test target (scripted playthrough, no display server) ────────────
 
@@ -148,7 +159,7 @@ VANIA_MANIFEST_OBJS = $(foreach s,fox intro playground_entrance playground \
 $(VANIA_MANIFEST_OBJS): $(VANIA_ASSETS_H)
 
 %.test.o: %.c
-	$(CC) $(CFLAGS) -Itest -I$(GEN_DIR) -I$(ASSET_GEN_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -Itest -I$(GEN_DIR) -I$(ASSET_GEN_DIR) $(DEPFLAGS) -c $< -o $@
 
 # Build and run the smoke test (offscreen video + dummy audio are set by the
 # binary itself). Exits non-zero if the playthrough regresses.
@@ -193,10 +204,16 @@ EM_LDFLAGS = $(EM_PORTS) -sALLOW_MEMORY_GROWTH=1 $(EM_COMPAT) -lm \
 # Every file packed into index.data; listing them makes the bundle rebuild when
 # art/audio changes (the sources alone wouldn't trigger it).
 WEB_ASSETS = $(shell find $(VFTS_DIR)/assets $(GINA_DIR)/assets -type f)
+# emcc compiles the whole program in one command, so it can't go stale the way
+# separate objects can — but it also produces no .d files, and $(SRCS) alone
+# would leave `make web` a no-op after a header-only edit. Every first-party
+# header (the compat shims included) is a prerequisite instead: coarse, which
+# costs nothing here because any rebuild is a full one.
+WEB_HEADERS = $(shell find src -name '*.h')
 
 web: $(WEB_TARGET)
 
-$(WEB_TARGET): $(SRCS) $(EM_SHELL) $(WEB_ASSETS) $(ASSETS_HEADERS) \
+$(WEB_TARGET): $(SRCS) $(WEB_HEADERS) $(EM_SHELL) $(WEB_ASSETS) $(ASSETS_HEADERS) \
                src/emscripten/catalog.html tools/gen_asset_catalog.py \
                src/emscripten/asset_tasks.html tools/gen_asset_tasks.py \
                src/emscripten/cost_estimate.html \
@@ -237,9 +254,11 @@ android: $(ASSETS_HEADERS)
 
 CLANG_FORMAT ?= clang-format
 # All first-party C sources/headers; the bundled SDL shims under
-# src/emscripten/compat/ and include/ are intentionally left alone.
+# src/emscripten/compat/ and include/ are intentionally left alone, as is
+# anything npm vendored under test/web/node_modules (some packages ship C).
 FORMAT_SRCS = $(shell find src test \( -name '*.c' -o -name '*.h' \) \
-                -not -path 'src/emscripten/compat/*')
+                -not -path 'src/emscripten/compat/*' \
+                -not -path 'test/web/node_modules/*')
 
 # Rewrite sources in place to match .clang-format.
 format:
@@ -252,8 +271,13 @@ format-check:
 # ── housekeeping ──────────────────────────────────────────────────────────────
 
 clean:
-	rm -f $(OBJS) $(TERMINAL_OBJS) $(TEST_OBJS) \
+	rm -f $(OBJS) $(TERMINAL_OBJS) $(TEST_OBJS) $(DEPS) \
 	      $(TARGET) $(TARGET_TERMINAL) $(TARGET_TEST)
 	rm -rf build
 
 .PHONY: all terminal test run-test web android clean format format-check
+
+# The generated dependency files. Leading `-` so the first build, when none of
+# them exist yet, isn't an error. Last, so nothing above depends on them having
+# been read.
+-include $(DEPS)
