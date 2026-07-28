@@ -24,8 +24,10 @@ about resolving that.
 - **R6** — Walk and fall speed scale with depth, so apparent motion stays
   natural (SCUMM modulated `SO_STEP_DIST` the same way).
 - **R7** — The grab target never shrinks below a size a toddler can hit.
-- **R8** — Scaled sprites must not fringe. Edge artefacts under interpolation
-  are the reason this approach was rejected once already.
+- **R8** — Scaled sprites must not visibly fringe. Edge artefacts under
+  interpolation are the reason this approach was rejected once already; see
+  *Fringing*, where the objection was measured and found not to apply to this
+  art.
 
 Non-goals: camera zoom or rotation, per-pixel occlusion masks, non-linear
 (true 1/z) perspective, automatic scaling of props (opt-in only), per-cell
@@ -41,9 +43,8 @@ Non-goals ("revisit only if felt").
 
 That decision is now reversed: continuous scaling is the chosen model. The
 crispness half of the objection is an accepted aesthetic trade. The fringing
-half is a solvable bug, and **R8** makes solving it a gate on Phase 1 rather
-than a matter of taste — see *Fringing*. `DEPTH_AND_CAMERA.md` is amended to
-point here.
+half was measured and **does not apply to this art** — see *Fringing*.
+`DEPTH_AND_CAMERA.md` is amended to point here.
 
 ## The depth map: `ScaleRamp`
 
@@ -164,47 +165,32 @@ adventure PNGs are RGBA (only `field/sky.png` is RGB), the fox's walking sheet
 is 50% fully transparent with a further 5% partially transparent (authored
 anti-aliased edges), and the hen's idle sheet is 73%/6%.
 
-Two things follow, both measured rather than assumed:
+**The colour key is vestigial.** `image.c` called `SDL_SetColorKey` for cyan on
+every loaded surface, and **not one sprite contains a cyan texel**. It was a
+leftover of the original tutorial pipeline and did nothing; deleted.
 
-**The colour key is vestigial.** `image.c` calls `SDL_SetColorKey` for cyan on
-every loaded surface, and **not one sprite contains a single cyan texel**. It is
-a leftover of the original tutorial pipeline and does nothing. Delete it; the
-alpha channel is what has been doing the work all along.
+**The theoretical artefact is real but invisible here, so nothing is done about
+it.** Every fully transparent texel stores RGB `(0,0,0)`. SDL blends straight
+(non-premultiplied) alpha and filters RGB and alpha independently, so a sample
+straddling the sprite edge mixes in that black: in principle a dark halo on any
+scaled sprite. Measured on the fox's walking frame downscaled to 0.6 — the
+ramp's floor, and so the worst case in practice — dilating the edge colour
+outward ("alpha bleeding") changes **214 of 6020** output pixels, by at most
+40/255, and the two renders are **indistinguishable side by side at 6x zoom**.
 
-**The fringe is black, not cyan.** Every fully transparent texel stores RGB
-`(0,0,0)` — transparent *black* — including the ~2700 that directly border the
-fox. At 1:1 each screen pixel samples one texel, so an alpha-0 texel contributes
-nothing and nothing fringes. Once scaled, linear filtering interpolates *between*
-texels, and SDL's default `SDL_BLENDMODE_BLEND` is straight (non-premultiplied)
-alpha, so RGB and A are averaged independently: an edge texel blends toward
-black with partial alpha. The result is a **dark halo on every scaled sprite
-edge**.
+The reason is the art style itself: these characters are drawn with a heavy
+dark outline (`LIVELINESS.md`: "hand-drawn with squiggly lines"), so the pixels
+the artefact darkens are already dark. A bleed pass was implemented, measured,
+and then removed as ~75 lines of load-time work for no visible gain.
 
-So the original art-direction objection was right that edges fringe, but wrong
-about the cause. The fix is unchanged: at load, run an **alpha-bleed** pass —
-dilate each transparent texel's RGB outward from its nearest non-transparent
-neighbour. Interpolation then blends toward the sprite's own colour and the halo
-disappears, with linear filtering retained for smoothness. (Premultiplied alpha
-is the other standard fix, but it needs a custom SDL blend mode; bleeding works
-with the default.)
-
-Doing this at load rather than in the PNGs keeps assets as authored and covers
-future art automatically, and it benefits the existing `render_*_scaled` paths
-(tween scaling) too, not just actors.
-
-Measured on the fox's walking sheet — comparing what straight-alpha bilinear
-produces against the correct premultiplied result, over the 6899 sample
-positions that straddle her edge — bleeding cuts the mean colour error by
-**82%** (0.061 to 0.011). The residue is the ~5% of texels that are *partially*
-transparent, whose exact fix would be premultiplied alpha; it is far below the
-threshold that reads as a halo.
-
-`SDL_SetTextureScaleMode(..., SDL_ScaleModeNearest)` on actor textures is the
-fallback if bleeding still shimmers on hand-drawn art at small scales.
+This is worth recording rather than just deleting, for two reasons: it is the
+concrete half of the original art-direction objection, now shown not to apply;
+and if a future asset ever *is* drawn without an outline, the fix is known —
+bleed at load, or premultiplied alpha with a custom blend mode.
 
 Note the filtering hint is set **only** in `main.c` — `main_terminal.c` and
-`test/harness.c` never set it — so the headless harness cannot catch a fringing
-regression. Verify it by eye, in the desktop or web build.
+`test/harness.c` never set it — so the headless harness would not catch a
+fringing regression either way. Judge it by eye, in the desktop or web build.
 
 ## Drag & drop
 

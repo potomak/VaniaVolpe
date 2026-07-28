@@ -56,98 +56,6 @@ void free_animation(AnimationData *animation) {
   free(animation);
 }
 
-// Dilate sprite colour into fully transparent texels ("alpha bleed").
-//
-// PNG exporters store transparent pixels as (0,0,0,0). SDL blends with straight
-// (non-premultiplied) alpha and filtering averages RGB and alpha independently,
-// so a sample straddling the sprite edge mixes in that black and darkens it —
-// invisible at 1:1, a halo the moment anything is drawn scaled (SCALING.md).
-// Copying the neighbouring colour outward fixes the interpolated colour and
-// leaves alpha untouched, so nothing about the unscaled look changes.
-//
-// Bilinear sampling reads a 2x2 neighbourhood, so one ring is enough; a second
-// pass is nearly free at load time and covers heavier minification.
-#define ALPHA_BLEED_PASSES 2
-
-static void bleed_alpha_edges(SDL_Surface *surface) {
-  const int w = surface->w;
-  const int h = surface->h;
-  const int count = w * h;
-  // SDL_PIXELFORMAT_RGBA32 is byte-order R,G,B,A on every endianness, so the
-  // channels can be indexed directly.
-  Uint8 *pixels = (Uint8 *)surface->pixels;
-  const int pitch = surface->pitch;
-
-  Uint8 *has_colour = SDL_calloc((size_t)count, 1);
-  if (has_colour == NULL) {
-    return; // bleeding is an enhancement; a failed alloc just skips it
-  }
-  int transparent = 0;
-  for (int y = 0; y < h; y++) {
-    for (int x = 0; x < w; x++) {
-      bool opaque = pixels[y * pitch + x * 4 + 3] != 0;
-      has_colour[y * w + x] = opaque;
-      transparent += !opaque;
-    }
-  }
-  // Backgrounds and other fully opaque art need no work.
-  if (transparent == 0) {
-    SDL_free(has_colour);
-    return;
-  }
-
-  Uint8 *next = SDL_malloc((size_t)count);
-  if (next == NULL) {
-    SDL_free(has_colour);
-    return;
-  }
-  for (int pass = 0; pass < ALPHA_BLEED_PASSES; pass++) {
-    SDL_memcpy(next, has_colour, (size_t)count);
-    for (int y = 0; y < h; y++) {
-      for (int x = 0; x < w; x++) {
-        if (has_colour[y * w + x]) {
-          continue;
-        }
-        // Average the neighbours that already carry colour, so a texel in a
-        // concave corner doesn't inherit one arbitrary side.
-        int r = 0;
-        int g = 0;
-        int b = 0;
-        int n = 0;
-        for (int dy = -1; dy <= 1; dy++) {
-          for (int dx = -1; dx <= 1; dx++) {
-            int nx = x + dx;
-            int ny = y + dy;
-            if (nx < 0 || nx >= w || ny < 0 || ny >= h) {
-              continue;
-            }
-            if (!has_colour[ny * w + nx]) {
-              continue;
-            }
-            Uint8 *p = &pixels[ny * pitch + nx * 4];
-            r += p[0];
-            g += p[1];
-            b += p[2];
-            n++;
-          }
-        }
-        if (n == 0) {
-          continue;
-        }
-        Uint8 *p = &pixels[y * pitch + x * 4];
-        p[0] = (Uint8)(r / n);
-        p[1] = (Uint8)(g / n);
-        p[2] = (Uint8)(b / n);
-        // p[3] (alpha) deliberately stays 0 — only the colour is dilated.
-        next[y * w + x] = 1;
-      }
-    }
-    SDL_memcpy(has_colour, next, (size_t)count);
-  }
-  SDL_free(next);
-  SDL_free(has_colour);
-}
-
 // Load image from file and create texture in image
 bool load_image(SDL_Renderer *renderer, ImageData *image) {
   // Free texture if it exists
@@ -166,21 +74,6 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to load image %s: %s",
                  image_path, IMG_GetError());
     return false;
-  }
-
-  // Work in a known channel order so the bleed pass can index bytes directly.
-  // Conversion failing is not fatal: the unconverted surface still makes a
-  // correct texture, it just doesn't get bled.
-  SDL_Surface *rgba =
-      SDL_ConvertSurfaceFormat(loaded_surface, SDL_PIXELFORMAT_RGBA32, 0);
-  if (rgba != NULL) {
-    bleed_alpha_edges(rgba);
-    SDL_FreeSurface(loaded_surface);
-    loaded_surface = rgba;
-  } else {
-    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                "Could not convert %s for alpha bleeding: %s", image_path,
-                SDL_GetError());
   }
 
   // Create texture from surface pixels
