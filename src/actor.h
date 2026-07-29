@@ -203,6 +203,13 @@ void actor_update(Actor *actor, float delta_time);
 
 void actor_render(Actor *actor, SDL_Renderer *renderer);
 
+// The actor plus her landing shadow, for scenes that draw her themselves
+// instead of going through render_action_layer (which emits the shadow as its
+// own depth-sorted entry, so it can sort against props). Without one of these
+// two, a draggable actor has no shadow at all and nothing on screen says where
+// she will come down.
+void actor_render_with_shadow(Actor *actor, SDL_Renderer *renderer);
+
 // Draw something the actor is carrying. `offset` is authored against her
 // natural size, relative to current_position, and is scaled and anchored
 // exactly like her sprite — so a carried item stays on her body instead of

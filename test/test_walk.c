@@ -639,8 +639,18 @@ static void test_drag_depth(void) {
   walk_grid_build(&grid, &POOL_POOLSIDE_AREA, WINDOW_SIZE);
 
   float ground = 0.0F;
-  check(walk_grid_clamp_ground(&grid, 400, 500, &ground) && ground == 505.0F,
+  check(walk_grid_clamp_ground(&grid, 400, 500, &ground) && ground == 500.0F,
         "clamp_ground keeps a y that is already on walkable ground");
+  // Rounding to the cell centre here would quantize the drag shadow to the
+  // 10px grid, which reads as the shadow stepping rather than gliding.
+  bool continuous = true;
+  for (int y = 440; y < 570; y++) {
+    float g = 0.0F;
+    if (!walk_grid_clamp_ground(&grid, 400, (float)y, &g) || g != (float)y) {
+      continuous = false;
+    }
+  }
+  check(continuous, "clamp_ground is continuous across the walkable span");
   check(walk_grid_clamp_ground(&grid, 400, 100, &ground) && ground == 435.0F,
         "clamp_ground drops to the first walkable cell below");
   check(walk_grid_clamp_ground(&grid, 400, 595, &ground) && ground == 575.0F,

@@ -547,6 +547,15 @@ void actor_update(Actor *actor, float delta_time) {
   }
 }
 
+void actor_render_with_shadow(Actor *actor, SDL_Renderer *renderer) {
+  // Shadow first: it lies on the ground, so where the two overlap — a small
+  // lift, her feet close to the mark — she belongs in front of it.
+  if (actor_shadow_visible(actor)) {
+    actor_render_shadow(actor, renderer);
+  }
+  actor_render(actor, renderer);
+}
+
 void actor_render(Actor *actor, SDL_Renderer *renderer) {
   AnimationData *reference = reference_animation(actor);
   if (reference == NULL) {
