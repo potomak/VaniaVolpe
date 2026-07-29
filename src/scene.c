@@ -42,7 +42,7 @@ void scene_default_process_input(const Scene *scene, SDL_Event *event) {
   // Drag & drop (LIVELINESS.md Part 2): a press-drag on the actor picks it up;
   // plain taps fall through to the hotspots, so one the actor stands on still
   // works.
-  if (actor != NULL && walk_actor_drag_event(actor, scene->walk_grid, event)) {
+  if (actor != NULL && actor_drag_event(actor, event)) {
     return;
   }
   if (event->type != SDL_MOUSEBUTTONDOWN) {

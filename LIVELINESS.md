@@ -148,7 +148,11 @@ observable without a renderer.
 
 ## Part 2 — Drag & drop the actor *(shipped)*
 
-Implemented in #96 with three deviations the implementation surfaced:
+Implemented in #96, then rebuilt as a **vertical-only lift** — the original
+carry-anywhere model needed too much machinery to coexist with depth scaling,
+and that machinery kept producing bugs (see *The z-axis question* below).
+
+The deviations the implementation surfaced, and which still hold:
 
 - **The press falls through.** The spec had the drag consume the arming
   press; the headless playthrough immediately caught what that breaks — a
@@ -158,10 +162,10 @@ Implemented in #96 with three deviations the implementation surfaced:
   travel past the threshold then *steals* the actor, cancelling whatever walk
   the press started (grabs cancel walks anyway). A stale press (its release
   went to another scene) is disarmed by the button mask on the next motion.
-- **Centre, not feet.** The landing scan runs on sprite-centre coordinates:
-  the walk grid is authored against the centre (see MOVEMENT.md), so the
-  landing target is computed like every walk target. Same subtraction, same
-  fall height.
+- **Centre, not feet.** `current_position` is the sprite centre, while the
+  ground the shadow marks is a feet line half a reference frame lower
+  (`actor_feet_offset`). Conflating the two put the shadow half a sprite off
+  the landing for a while; it is now the only conversion in the drag path.
 - **She can be caught mid-fall** — a grab is refused only while TALKING, so
   catching her mid-air works, and it's the better toy.
 
@@ -180,87 +184,75 @@ fall back to the idle sheet, via the existing `actor_render` fallback):
   physics excuse (below).
 - `LANDING` — one-shot touchdown beat (feather puff / little squat), then
   IDLE.
-
 ### Picking her up, putting her down
 
-- **Grab:** `SDL_MOUSEBUTTONDOWN` inside the actor's sprite rect (the
-  reference frame centred on `current_position`, padded ~10 px for toddler
-  fingers) *arms* a drag; the first `SDL_MOUSEMOTION` beyond
-  `DRAG_START_THRESHOLD` (~8 px) while held begins it. A press on the
-  actor that never crosses the threshold does nothing on release — which
-  is exactly what tapping the actor does today (she walks to where she
-  already stands), so no behaviour is lost.
-- **Held:** `current_position` follows the pointer 1:1 (with the grab-point
-  offset, so she doesn't snap by half a sprite). An in-flight walk is
-  cancelled at grab time, dropping its callback like any interrupted walk;
-  TALKING refuses the grab, same as it refuses walks. Scene clicks and
-  hotspots never see the press — the drag helper consumes it.
-- **Release:** compute the landing point (below), enter FALLING.
+The gesture is deliberately narrow: **a drag lifts the actor, it does not move
+her.** She goes up, and she comes back down where she was.
 
-Because scenes own `process_input`, the helper lives where actor and grid
-already meet — `walk.c`:
+- **Grab:** `SDL_MOUSEBUTTONDOWN` inside the actor's sprite rect (the reference
+  frame centred on `current_position`, padded ~10 px for toddler fingers)
+  *arms* a drag; an **upward** `SDL_MOUSEMOTION` beyond `DRAG_START_THRESHOLD`
+  (~8 px) while held begins it. A press that never crosses the threshold — or
+  one that pulls sideways or down — does nothing, so taps and swipes still
+  reach the hotspots underneath.
+- **Held:** only `current_position.y` follows the pointer (with the grab-point
+  offset, so she doesn't snap by half a sprite), clamped so she never sinks
+  below the ground she came from. x is ignored entirely. An in-flight walk is
+  cancelled at grab time, dropping its callback like any interrupted walk;
+  TALKING refuses the grab, same as it refuses walks. Scene clicks and hotspots
+  never see the press — the drag helper consumes it.
+- **Release:** she falls back to that same ground, so a drop can never leave her
+  somewhere she could not stand.
+- **She can be caught mid-fall** — a grab is refused only while TALKING, so
+  catching her mid-air works, and it's the better toy. A catch keeps the ground
+  she was already falling to, or each catch would strand her higher.
+
+Because the drag consults no scene geometry, the helper is a plain actor
+operation:
 
 ```c
-// walk.h — call first in process_input, before hotspot dispatch;
-// returns true when the event belonged to the drag (grab, move, release).
-bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
-                           const SDL_Event *event);
+// actor.h — call first in process_input, before hotspot dispatch;
+// returns true when the event belonged to the drag (grab, lift, release).
+bool actor_drag_event(Actor *actor, const SDL_Event *event);
 ```
 
-Camera scenes need nothing special: the engine already converts input to
-scene coordinates before the scene sees the event, and the camera happily
-follows a dragged actor. On the web, SDL translates single-finger touches
-to mouse events, so this works on a tablet unchanged.
+Camera scenes need nothing special: the engine already converts input to scene
+coordinates before the scene sees the event. On the web, SDL translates
+single-finger touches to mouse events, so this works on a tablet unchanged.
 
-Every scene with the actor opts in the same way, so the gesture is uniform
-across an adventure (#41): scenes that leave `process_input` NULL get the call
-for free from `scene_default_process_input`; scenes with a custom handler
-(the fox's `playground`, `intro`, `outro`) call `walk_actor_drag_event` first
-themselves, exactly as the pool scene does. The **poster scenes** (`intro`,
-`outro`) have no walkable area, so they pass a **NULL grid**: the drag helpers
-treat that as "no ground" — `walk_grid_clamp_x` skips the horizontal clamp and
-the landing scan sets the actor back down where she was released (no fall).
-It is deliberately not framework-wide: Gina's sunscreen minigame uses a
-press-drag on the hen as its own gameplay, so a scene opts into actor drag
+Every scene with an actor opts in the same way, so the gesture is uniform across
+an adventure (#41): scenes that leave `process_input` NULL get the call for free
+from `scene_default_process_input`; scenes with a custom handler call
+`actor_drag_event` first themselves. The **poster scenes** (`intro`, `outro`)
+have no walkable area and need none — the ground is wherever the actor is
+standing. It is deliberately not framework-wide: Gina's sunscreen minigame uses
+a press-drag on the hen as its own gameplay, so a scene opts into actor drag
 rather than having it forced on every handler.
 
 ### The z-axis question — there is no z
 
-The open question was how to compute the fall height of the dragged
-position without a z axis. The answer: **the walk grid already is the
-ground.** A drag position is interpreted as "in the air over column x",
-and on release Gina falls straight down until her feet meet the ground:
+The original question was how to compute a fall height without a z axis, and the
+first answer was "the walk grid is the ground": interpret the drag position as
+"in the air over column x" and scan that column downward on release.
 
-- Landing target = the centre of the **first walkable cell at or below the
-  drop point's feet y, in the drop point's grid column** (a straight scan
-  down one column of `WalkGrid.cells`).
-- No walkable cell below (dropped under the poolside strip, or in a
-  column with no ground at all) → fall back to `walk_grid_nearest`; if the
-  nearest legal point is at or above the drop point, skip FALLING and go
-  straight to LANDING there (a short hop rather than an upward "fall").
-- Fall distance = `landing_feet_y - drop_feet_y`, free from the same
-  subtraction — available to scale the landing beat later (bigger puff,
-  an "Ohi!" line past some height), which is polish, not v1.
+That worked, but it made screen-y mean two things at once — height while held,
+depth for scaling — and the machinery to arbitrate between them (a lift dead
+zone, a shadow tracking a scanned landing, a slew to smooth it) was both large
+and a steady source of bugs. See `SCALING.md` → *Drag & drop*.
 
-This also makes **R3** free: the landing scan runs on the scene's *live*
-grid, so pre-sunscreen Gina — whose grid covers only the umbrella's
-shadow — always lands back in the shade no matter where she is dropped,
-and nobody can be dropped into the pool (water is not walkable). The
-puzzle rules and the toy obey the same source of truth.
+The question is now dissolved rather than answered: since a drag cannot move
+her, the ground she will land on is simply the ground she was picked up from.
+Nothing is scanned, nothing is clamped, and her depth — and so her size — is
+constant for the whole gesture.
 
 ### The fall
 
-Constant `FALL_SPEED` (proposed ~420 px/s, `constants.h`), no gravity
-integration: one line of math, and the flap art justifies the terminal-
-velocity-from-frame-one look — a hen doesn't plummet, she flusters down.
-On touchdown: snap feet to the landing y, play LANDING as ONE_SHOT (state
-polls `is_playing`, as fidgets do), then IDLE. If the LANDING sheet is
-missing, go straight to IDLE.
-
-Depth-band scenes: scenes polled `depth_variant_for(feet_y)` every frame, so
-a dragged actor would have flipped variants mid-air. Moot now — depth bands
-are gone (`SCALING.md`), and a held actor takes her depth from the ground
-she will land on rather than from her airborne y.
+Constant `FALL_SPEED` (~420 px/s, `constants.h`), no gravity integration: one
+line of math, and the flap art justifies the terminal-velocity-from-frame-one
+look — a hen doesn't plummet, she flusters down. On touchdown: snap feet to the
+ground, play LANDING as ONE_SHOT (state polls `is_playing`, as fidgets do), then
+IDLE. If the LANDING sheet is missing, go straight to IDLE. Released with no
+lift, she is already home and lands at once — never an upward "fall".
 
 ### Art (needs-art) & audio (needs-audio)
 
@@ -271,12 +263,12 @@ she will land on rather than from her airborne y.
 
 ### Testing
 
-Headless: synthesize the down/motion/up events through
-`walk_actor_drag_event`, assert the position follows, the landing column
-scan (drop over the pool → lands on the strip; drop pre-sunscreen far
-from the umbrella → lands inside the shade rects), and the state chain
-DRAGGED → FALLING → LANDING → IDLE. Browser: extend the Puppeteer script
-with a `mouse.down/move/up` drag once art exists.
+Headless: synthesize the down/motion/up events through `actor_drag_event` and
+assert the invariants — only an upward pull grabs, x never moves, y never sinks
+below the ground, the scale is unchanged throughout, she comes to rest exactly
+where she was picked up, and the state chain DRAGGED → FALLING → LANDING → IDLE.
+Browser: extend the Puppeteer script with a `mouse.down/move/up` drag once art
+exists.
 
 ---
 

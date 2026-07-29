@@ -323,11 +323,11 @@ static void process_input(SDL_Event *event) {
   if (diving) {
     return;
   }
-  // Drag & drop (LIVELINESS.md Part 2): dragging the pointer from a press on
-  // Gina picks her up (plain taps fall through, so hotspots she stands on
-  // keep working). The landing scan runs on the live grid, so a pre-sunscreen
-  // drop always lands back in the shade and nobody lands in the pool.
-  if (walk_actor_drag_event(gina, &walk_grid, event)) {
+  // Drag & drop (LIVELINESS.md Part 2): an upward pull from a press on Gina
+  // lifts her (plain taps fall through, so hotspots she stands on keep
+  // working). She always comes back down where she was, so a pre-sunscreen
+  // lift cannot carry her out of the shade and nobody lands in the pool.
+  if (actor_drag_event(gina, event)) {
     return;
   }
   switch (event->type) {

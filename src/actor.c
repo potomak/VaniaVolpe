@@ -185,15 +185,10 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
   actor->on_end_walking = NULL;
   actor->drag_armed = false;
   actor->drag_grab = (SDL_FPoint){0, 0};
-  actor->drag_offset = (SDL_FPoint){0, 0};
-  actor->fall_target_y = 0;
-  // No sprite is loaded yet, so the feet offset is 0 and these are just her
-  // start; has_ground is false until a drag looks the ground up anyway.
+  actor->drag_offset_y = 0;
+  // Where she stands. No sprite is loaded yet, so the feet offset is still 0;
+  // every grab sets this again from her real feet.
   actor->ground_y = actor_feet_y(actor);
-  actor->ground_target_y = actor->ground_y;
-  actor->grab_ground_y = actor->ground_y;
-  actor->lift_ceiling = DRAG_LIFT_MAX_PX;
-  actor->has_ground = false;
   for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
     actor->fidget_anims[i] = NULL;
   }
@@ -235,8 +230,8 @@ float actor_depth_y(const Actor *actor) {
   case DRAGGED:
   case FALLING:
   case LANDING:
-    // ground_y holds the landing from the drop onward and the slew only runs
-    // while DRAGGED, so it is the same line for all three.
+    // Fixed at the grab and untouched until she is put down, so a whole
+    // lift-and-drop happens at one size.
     return actor->ground_y;
   default:
     return actor_feet_y(actor);
@@ -247,25 +242,17 @@ float actor_scale(const Actor *actor) {
   return scale_ramp_at(actor->scale_ramp, actor_depth_y(actor));
 }
 
-// How far she can be lifted before the lift stops being height and starts
-// being depth. Expressed against the scene's ramp so the dead zone is the same
-// proportion of the scene's depth range everywhere.
-float actor_lift_ceiling(const Actor *actor) {
-  if (actor->scale_ramp == NULL) {
-    return DRAG_LIFT_MAX_PX;
-  }
-  float span = (float)(actor->scale_ramp->y_near - actor->scale_ramp->y_far);
-  if (span < 0.0F) {
-    span = -span;
-  }
-  return span * DRAG_LIFT_MAX_FRACTION;
+// current_position.y at which her feet rest on ground_y — what a drag clamps
+// against and what a drop falls to.
+static float ground_centre_y(const Actor *actor) {
+  return actor->ground_y - actor_feet_offset(actor);
 }
 
 bool actor_shadow_visible(const Actor *actor) {
-  // Only while she is genuinely off the ground. LANDING is already down, so it
-  // would just draw a shadow under her feet.
-  return actor->has_ground &&
-         (actor->state == DRAGGED || actor->state == FALLING);
+  // Only while she is genuinely above her ground. LANDING is already down, and
+  // a grab with no lift would just draw the ellipse under her own feet.
+  return (actor->state == DRAGGED || actor->state == FALLING) &&
+         actor_feet_y(actor) < actor->ground_y - ACTOR_ARRIVE_EPSILON;
 }
 
 void actor_render_shadow(const Actor *actor, SDL_Renderer *renderer) {
@@ -438,26 +425,18 @@ void actor_update(Actor *actor, float delta_time) {
   case SITTING:
   case WAVING:
     break;
-  case DRAGGED: {
-    // Position follows the pointer (actor_drag_move); the landing shadow eases
-    // toward wherever the drag last put it, so a step in the ground under a
-    // sideways carry glides instead of teleporting.
-    float remaining = actor->ground_target_y - actor->ground_y;
-    float step = DRAG_GROUND_SLEW * delta_time;
-    if (fabsf(remaining) <= step) {
-      actor->ground_y = actor->ground_target_y;
-    } else {
-      actor->ground_y += remaining > 0 ? step : -step;
-    }
+  case DRAGGED:
+    // Nothing to advance: her height follows the pointer in actor_drag_move,
+    // and the ground she will return to does not move.
     break;
-  }
   case FALLING: {
     // Constant-speed descent to the landing target (LIVELINESS.md Part 2),
     // slowed with depth so a distant fall covers fewer screen px.
-    float remaining = actor->fall_target_y - actor->current_position.y;
+    float target_y = ground_centre_y(actor);
+    float remaining = target_y - actor->current_position.y;
     float step = FALL_SPEED * depth_speed_scale(actor) * delta_time;
     if (remaining <= step) {
-      actor->current_position.y = actor->fall_target_y;
+      actor->current_position.y = target_y;
       touch_down(actor);
     } else {
       actor->current_position.y += step;
@@ -812,37 +791,90 @@ bool actor_begin_drag(Actor *actor) {
   if (dragged != NULL) {
     play_animation(dragged, NULL);
   }
-  // Remember the ground she came from, and start the gesture at whatever
-  // height she already had. Catching her mid-fall would otherwise yank the
-  // shadow up to the ceiling and rescale her on this very frame — the one case
-  // this function exists for.
-  float feet = actor_feet_y(actor);
-  // fall_target_y is where her *centre* is headed; the ground fields are
-  // ground lines, so it needs converting.
-  float ground = (actor->state == FALLING || actor->state == LANDING)
-                     ? actor->fall_target_y + actor_feet_offset(actor)
-                     : feet;
-  actor->grab_ground_y = ground;
-  actor->ground_y = ground;
-  actor->ground_target_y = ground;
-  float initial_lift = ground - feet;
-  float ceiling = actor_lift_ceiling(actor);
-  actor->lift_ceiling = initial_lift > ceiling ? initial_lift : ceiling;
+  // The ground she will go back to is simply where she is standing. Catching
+  // her mid-fall keeps the ground she was already falling to, so snatching her
+  // out of the air doesn't strand her in mid-air on release.
+  if (actor->state != FALLING && actor->state != LANDING) {
+    actor->ground_y = actor_feet_y(actor);
+  }
   actor->state = DRAGGED;
   return true;
 }
 
-void actor_drag_move(Actor *actor, SDL_FPoint pointer) {
+void actor_drag_move(Actor *actor, float pointer_y) {
   if (actor->state != DRAGGED) {
     return;
   }
   // The grab point stays under the pointer: the offset was taken at the
-  // arming press, so she doesn't snap by half a sprite.
-  actor->current_position.x = pointer.x + actor->drag_offset.x;
-  actor->current_position.y = pointer.y + actor->drag_offset.y;
+  // arming press, so she doesn't snap by half a sprite. x is untouched — the
+  // gesture lifts, it does not carry.
+  float y = pointer_y + actor->drag_offset_y;
+  float floor_y = ground_centre_y(actor);
+  actor->current_position.y = y > floor_y ? floor_y : y;
 }
 
-void actor_drop(Actor *actor, SDL_FPoint target) {
+bool actor_drag_event(Actor *actor, const SDL_Event *event) {
+  switch (event->type) {
+  case SDL_MOUSEBUTTONDOWN: {
+    SDL_Point p = {event->button.x, event->button.y};
+    SDL_Rect grab = actor_sprite_rect(actor);
+    grab.x -= DRAG_GRAB_PADDING;
+    grab.y -= DRAG_GRAB_PADDING;
+    grab.w += 2 * DRAG_GRAB_PADDING;
+    grab.h += 2 * DRAG_GRAB_PADDING;
+    // TALKING refuses the grab like it refuses walks.
+    if (actor->state != TALKING && SDL_PointInRect(&p, &grab)) {
+      actor->drag_armed = true;
+      actor->drag_grab = (SDL_FPoint){(float)p.x, (float)p.y};
+    }
+    // The press always falls through: a hotspot the actor happens to stand on
+    // keeps working for plain taps. If the pointer then pulls up, the drag
+    // steals the actor, cancelling whatever walk the press started.
+    return false;
+  }
+  case SDL_MOUSEMOTION:
+    if (actor->state == DRAGGED) {
+      actor_drag_move(actor, (float)event->motion.y);
+      return true;
+    }
+    if (actor->drag_armed) {
+      // A stale press: the button is no longer held (e.g. the fallen-through
+      // press hit a navigation hotspot and the release went to another scene).
+      // Disarm instead of phantom-grabbing on a later motion.
+      if ((event->motion.state & SDL_BUTTON_LMASK) == 0) {
+        actor->drag_armed = false;
+        return false;
+      }
+      // Only an upward pull starts a drag. A sideways swipe or a downward one
+      // would have nothing to do — she cannot be carried, and she cannot go
+      // below her ground — so leaving those to the scene keeps taps and
+      // hotspots working.
+      if (actor->drag_grab.y - (float)event->motion.y >= DRAG_START_THRESHOLD) {
+        actor->drag_armed = false;
+        // Taken against the arming press, so the grab point stays under the
+        // pointer without a snap, wherever the fallen-through press briefly
+        // walked her meanwhile.
+        actor->drag_offset_y = actor->current_position.y - actor->drag_grab.y;
+        if (actor_begin_drag(actor)) {
+          actor_drag_move(actor, (float)event->motion.y);
+          return true;
+        }
+      }
+    }
+    return false;
+  case SDL_MOUSEBUTTONUP:
+    actor->drag_armed = false;
+    if (actor->state == DRAGGED) {
+      actor_drop(actor);
+      return true;
+    }
+    return false;
+  default:
+    return false;
+  }
+}
+
+void actor_drop(Actor *actor) {
   if (actor->state != DRAGGED) {
     return;
   }
@@ -850,25 +882,19 @@ void actor_drop(Actor *actor, SDL_FPoint target) {
   if (dragged != NULL) {
     stop_animation(dragged);
   }
-  // The column scan preserves x; the nearest-ground fallback may nudge it.
-  actor->current_position.x = target.x;
-  // The landing is her depth from here on, so the fall and the landing beat
-  // keep the size she already had while held — release changes nothing.
-  // target is where her centre comes to rest; the ground fields are the ground
-  // line she comes to rest *on*.
-  actor->fall_target_y = target.y;
-  actor->ground_y = target.y + actor_feet_offset(actor);
-  actor->ground_target_y = actor->ground_y;
-  if (target.y > actor->current_position.y + ACTOR_ARRIVE_EPSILON) {
+  // Straight back down to the ground she was lifted from. Nothing to search
+  // for and nothing to clamp: x never moved, and ground_y was walkable when
+  // she was standing on it.
+  float target_y = ground_centre_y(actor);
+  if (target_y > actor->current_position.y + ACTOR_ARRIVE_EPSILON) {
     AnimationData *falling = actor->animations[FALLING];
     if (falling != NULL) {
       play_animation(falling, NULL);
     }
     actor->state = FALLING;
   } else {
-    // Landing at or above the drop: place her there — a short hop, never an
-    // upward "fall".
-    actor->current_position.y = target.y;
+    // Released without a lift: she is already home.
+    actor->current_position.y = target_y;
     touch_down(actor);
   }
 }

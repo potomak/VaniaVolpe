@@ -34,18 +34,6 @@
 #define DRAG_START_THRESHOLD 8.0f
 #define FALL_SPEED 420.0f
 
-// Depth scaling while dragging (SCALING.md). Lifting the actor changes her
-// height, not her depth, until the lift passes a ceiling — so a small vertical
-// wobble can't rescale her. The ceiling is a fraction of the scene's ramp span
-// rather than a flat pixel count, because 60px is the whole dead zone on a
-// short ramp and a tenth of a tall one; DRAG_LIFT_MAX_PX applies only to a
-// scene with no ramp, where nothing scales anyway.
-#define DRAG_LIFT_MAX_FRACTION 0.25f
-#define DRAG_LIFT_MAX_PX 60.0f
-// How fast the landing shadow eases toward its target, px/s. A column scan is
-// discontinuous in x, so a sideways drag across a step in the ground would
-// otherwise teleport the shadow and jump the scale.
-#define DRAG_GROUND_SLEW 600.0f
 // Depth never slows the actor to a crawl: a floor on the speed factor so a
 // walk at the ramp's far end still converges.
 #define ACTOR_MIN_SPEED_SCALE 0.25f

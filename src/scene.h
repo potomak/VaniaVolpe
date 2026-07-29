@@ -331,7 +331,7 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
 // The default scene input handler: the drag + hit-test
 // + walk interaction every walking scene shared. The engine runs it for a scene
 // that supplies no process_input of its own — a press-drag on the actor picks
-// it up (walk_actor_drag_event), a plain tap is dispatched to the hotspot
+// it up (actor_drag_event), a plain tap is dispatched to the hotspot
 // table, and anything else walks the actor toward the click. Uses the scene's
 // `.actor`, `.walk_grid` and hotspot table. An actor-less scene (a menu like
 // the hub) may use it too: with no `.actor` it skips the drag and walk-to-click

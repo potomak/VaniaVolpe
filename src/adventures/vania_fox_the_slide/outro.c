@@ -35,10 +35,9 @@ static void init(void) {
 }
 
 static void process_input(SDL_Event *event) {
-  // Drag & drop (LIVELINESS.md): a press-drag on the fox picks her up. The
-  // outro has no walkable area, so the drag takes a NULL grid — she is set back
-  // down where released, and the drag is consumed here.
-  if (walk_actor_drag_event(fox, NULL, event)) {
+  // Drag & drop (LIVELINESS.md): an upward pull on the fox lifts her, and
+  // letting go sets her back down. The drag is consumed here.
+  if (actor_drag_event(fox, event)) {
     return;
   }
   // A plain click leaves the adventure for the selection menu. Navigate on

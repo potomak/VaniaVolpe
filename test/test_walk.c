@@ -393,10 +393,6 @@ static SDL_Event mouse_up(int x, int y) {
   return e;
 }
 
-static bool drag(Actor *actor, const WalkGrid *grid, const SDL_Event *e) {
-  return walk_actor_drag_event(actor, grid, e);
-}
-
 // Step the actor until the fall (and any landing beat) resolves to IDLE.
 static void run_out_fall(Actor *actor) {
   for (int i = 0; i < 3000 && actor->state != IDLE; i++) {
@@ -407,332 +403,183 @@ static void run_out_fall(Actor *actor) {
 static void test_drag_and_drop(void) {
   fprintf(stderr, "\n-- drag & drop unit tests --\n");
 
-  // The poolside strip (y 430..580 walkable), the drop testbed.
-  static WalkGrid grid;
-  walk_grid_build(&grid, &POOL_POOLSIDE_AREA, WINDOW_SIZE);
-
+  // A drag needs no walkable area at all: it only lifts the actor and puts her
+  // back. The grid here is just to prove nothing consults it.
   Actor *actor = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480}, NULL);
   // make_actor leaves the (never loaded) sprite clips unset; the grab
   // hit-test reads frame 0, so give it the hen's 120x120.
   actor->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
+  float home_x = actor->current_position.x;
+  float home_feet = actor_feet_y(actor);
 
   // A press away from the sprite neither arms nor consumes.
   SDL_Event e = mouse_down(500, 100);
-  check(!drag(actor, &grid, &e) && !actor->drag_armed,
+  check(!actor_drag_event(actor, &e) && !actor->drag_armed,
         "a press off the sprite is ignored");
 
-  // A press on the sprite arms the drag but still falls through, so a
-  // hotspot the actor stands on keeps working for plain taps; a
-  // sub-threshold wiggle + release stays a tap and changes nothing.
+  // A press on the sprite arms the drag but still falls through, so a hotspot
+  // the actor stands on keeps working for plain taps.
   e = mouse_down(150, 480);
-  bool pressed_through = !drag(actor, &grid, &e) && actor->drag_armed;
-  e = mouse_motion(153, 482);
-  bool wiggle_through = !drag(actor, &grid, &e);
-  e = mouse_up(153, 482);
-  bool released_through = !drag(actor, &grid, &e) && !actor->drag_armed;
+  bool pressed_through = !actor_drag_event(actor, &e) && actor->drag_armed;
+  e = mouse_motion(153, 478);
+  bool wiggle_through = !actor_drag_event(actor, &e);
+  e = mouse_up(153, 478);
+  bool released_through = !actor_drag_event(actor, &e) && !actor->drag_armed;
   check(pressed_through && wiggle_through && released_through &&
-            actor->state == IDLE && actor->current_position.x == 150 &&
-            actor->current_position.y == 480,
+            actor->state == IDLE && actor->current_position.x == home_x &&
+            actor_feet_y(actor) == home_feet,
         "a tap on the actor falls through to the scene untouched");
 
-  // A stale press (button no longer held) disarms instead of grabbing.
+  // Only an upward pull starts a drag: a sideways or downward one leaves the
+  // event to the scene, so swiping across the actor still reaches a hotspot.
   e = mouse_down(150, 480);
-  drag(actor, &grid, &e);
-  e = mouse_motion(400, 100);
+  actor_drag_event(actor, &e);
+  e = mouse_motion(400, 480);
+  check(!actor_drag_event(actor, &e) && actor->state == IDLE,
+        "a sideways pull does not start a drag");
+  e = mouse_motion(150, 560);
+  check(!actor_drag_event(actor, &e) && actor->state == IDLE,
+        "a downward pull does not start a drag");
+
+  // A stale press (button no longer held) disarms instead of grabbing.
+  e = mouse_motion(150, 300);
   e.motion.state = 0; // the release went elsewhere (e.g. a scene switch)
-  check(!drag(actor, &grid, &e) && !actor->drag_armed && actor->state == IDLE,
+  check(!actor_drag_event(actor, &e) && !actor->drag_armed &&
+            actor->state == IDLE,
         "a button-less motion disarms a stale press");
 
-  // Press + travel: the drag begins and she follows the pointer.
+  // Press + upward travel: the drag begins and she rises with the pointer.
   e = mouse_down(150, 480);
-  drag(actor, &grid, &e);
-  e = mouse_motion(400, 100);
-  drag(actor, &grid, &e);
-  check(actor->state == DRAGGED, "pointer travel past the threshold grabs");
-  e = mouse_motion(410, 90);
-  drag(actor, &grid, &e);
-  check(fabsf(actor->current_position.x - 410.0F) <= DRAG_START_THRESHOLD &&
-            fabsf(actor->current_position.y - 90.0F) <= DRAG_START_THRESHOLD,
-        "while dragged she follows the pointer (grab offset aside)");
+  actor_drag_event(actor, &e);
+  e = mouse_motion(150, 400);
+  check(actor_drag_event(actor, &e) && actor->state == DRAGGED,
+        "an upward pull past the threshold grabs");
+  check(actor->current_position.x == home_x, "a drag never moves her sideways");
 
-  // Release over the pool: she falls straight down her column onto the
-  // strip's first walkable cell, at FALL_SPEED, then goes IDLE (no LANDING
-  // sheet in this spec).
-  float drop_x = actor->current_position.x;
-  e = mouse_up(410, 90);
-  drag(actor, &grid, &e);
-  check(actor->state == FALLING, "a release above the ground starts a fall");
+  // Sideways pointer travel is ignored outright; only y is followed.
+  e = mouse_motion(700, 380);
+  actor_drag_event(actor, &e);
+  check(actor->current_position.x == home_x,
+        "even a wild sideways drag leaves x alone");
+  check(fabsf(actor_feet_y(actor) - (home_feet - 100.0F)) <=
+            DRAG_START_THRESHOLD,
+        "her height follows the pointer");
+
+  // She cannot be pushed below the ground she was picked up from.
+  e = mouse_motion(150, 700);
+  actor_drag_event(actor, &e);
+  check(fabsf(actor_feet_y(actor) - home_feet) < 0.001F,
+        "dragging below the ground stops at it");
+  check(!actor_shadow_visible(actor),
+        "with no lift there is no shadow to draw");
+
+  // Lift again: the shadow marks the ground she came from.
+  e = mouse_motion(150, 350);
+  actor_drag_event(actor, &e);
+  check(actor_shadow_visible(actor) && actor->ground_y == home_feet,
+        "held above her ground, the shadow sits on it");
+
+  // Release: she falls back and comes to rest exactly where she was picked up.
+  e = mouse_up(150, 350);
+  check(actor_drag_event(actor, &e) && actor->state == FALLING,
+        "a release above the ground starts a fall");
   float before_y = actor->current_position.y;
   actor_update(actor, 0.1F);
   check(fabsf(actor->current_position.y - (before_y + FALL_SPEED * 0.1F)) <
             0.001F,
         "the fall descends at FALL_SPEED");
   run_out_fall(actor);
-  check(actor->state == IDLE && actor->current_position.x == drop_x &&
-            walk_grid_contains(&grid,
-                               (SDL_Point){(int)actor->current_position.x,
-                                           (int)actor->current_position.y}),
-        "she lands on walkable ground straight below the drop");
+  check(actor->state == IDLE && actor->current_position.x == home_x &&
+            fabsf(actor_feet_y(actor) - home_feet) < 0.001F,
+        "she lands back exactly where she was picked up");
 
-  // Drop below every walkable cell in the column: nearest ground is above,
-  // so she is placed there directly — never an upward "fall".
-  e = mouse_down((int)actor->current_position.x,
-                 (int)actor->current_position.y);
-  drag(actor, &grid, &e);
-  e = mouse_motion(400, 595);
-  drag(actor, &grid, &e);
-  e = mouse_up(400, 595);
-  drag(actor, &grid, &e);
-  check(actor->state != FALLING &&
-            walk_grid_contains(&grid,
-                               (SDL_Point){(int)actor->current_position.x,
-                                           (int)actor->current_position.y}),
-        "a drop under the ground snaps up to the nearest cell, no fall");
-  run_out_fall(actor);
+  // A release with no lift lands her at once rather than "falling" upward.
+  e = mouse_down(150, 480);
+  actor_drag_event(actor, &e);
+  e = mouse_motion(150, 460);
+  actor_drag_event(actor, &e);
+  e = mouse_motion(150, 600); // pushed back down to the ground clamp
+  actor_drag_event(actor, &e);
+  e = mouse_up(150, 600);
+  actor_drag_event(actor, &e);
+  check(actor->state == IDLE && fabsf(actor_feet_y(actor) - home_feet) < 0.001F,
+        "a release with no lift lands her straight away");
 
-  // A grab mid-walk cancels the walk and drops its callback.
-  stale_fired = false;
-  walk_actor_to(actor, &grid, (SDL_FPoint){700, 480}, true, on_stale);
-  check(actor->state == WALKING, "walk with callback starts");
-  e = mouse_down((int)actor->current_position.x,
-                 (int)actor->current_position.y);
-  drag(actor, &grid, &e);
-  e = mouse_motion((int)actor->current_position.x + 20,
-                   (int)actor->current_position.y);
-  drag(actor, &grid, &e);
-  check(actor->state == DRAGGED && actor->on_end_walking == NULL,
-        "a grab mid-walk cancels the walk");
-  for (int i = 0; i < 30; i++) {
-    actor_update(actor, 1.0F / 30.0F);
-  }
-  check(!stale_fired, "the cancelled walk never fires its callback");
-
-  // She can be caught mid-fall.
-  e = mouse_motion(400, 100);
-  drag(actor, &grid, &e); // carry her up high
-  e = mouse_up(400, 100);
-  drag(actor, &grid, &e);
-  check(actor->state == FALLING, "released mid-air she falls again");
-  actor_update(actor, 0.05F);
-  e = mouse_down((int)actor->current_position.x,
-                 (int)actor->current_position.y);
-  drag(actor, &grid, &e);
-  e = mouse_motion((int)actor->current_position.x - 20,
-                   (int)actor->current_position.y);
-  drag(actor, &grid, &e);
-  check(actor->state == DRAGGED, "she can be caught mid-fall");
-  e = mouse_up((int)actor->current_position.x - 20, 480);
-  drag(actor, &grid, &e);
-  run_out_fall(actor);
-
-  // TALKING refuses the grab; the press falls through to the scene.
+  // TALKING refuses the grab, like it refuses walks.
   actor->state = TALKING;
-  e = mouse_down((int)actor->current_position.x,
-                 (int)actor->current_position.y);
-  check(!drag(actor, &grid, &e) && !actor->drag_armed,
-        "TALKING refuses the grab, like walks");
+  e = mouse_down(150, 480);
+  actor_drag_event(actor, &e);
+  check(!actor->drag_armed, "a talking actor cannot be picked up");
   actor->state = IDLE;
 
-  // With a LANDING sheet the fall ends in the one-shot beat, then IDLE.
-  actor->animations[LANDING] = make_animation_data(1, ONE_SHOT);
-  actor->animations[LANDING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
-  e = mouse_down((int)actor->current_position.x,
-                 (int)actor->current_position.y);
-  drag(actor, &grid, &e);
-  e = mouse_motion(300, 100);
-  drag(actor, &grid, &e);
-  e = mouse_up(300, 100);
-  drag(actor, &grid, &e);
-  for (int i = 0; i < 3000 && actor->state == FALLING; i++) {
-    actor_update(actor, 1.0F / 30.0F);
-  }
-  check(actor->state == LANDING && actor->animations[LANDING]->is_playing,
-        "touchdown plays the one-shot landing beat");
-  // Age the beat past its runtime so animation_update stops it.
-  actor->animations[LANDING]->start_time = (int)clock_now_ms() - 1000;
-  actor_update(actor, 1.0F / 30.0F);
-  actor_update(actor, 1.0F / 30.0F);
-  check(actor->state == IDLE, "the landing beat over, she returns to IDLE");
-
   actor_free(actor);
-
-  // Pre-sunscreen invariant (R3): with the shade grid live, a drop far from
-  // the umbrella still lands inside the shade.
-  static WalkGrid shade;
-  walk_grid_build(&shade, &POOL_SHADE_AREA, WINDOW_SIZE);
-  Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480}, NULL);
-  gina->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
-  e = mouse_down(150, 480);
-  drag(gina, &shade, &e);
-  e = mouse_motion(700, 200);
-  drag(gina, &shade, &e);
-  e = mouse_up(700, 200);
-  drag(gina, &shade, &e);
-  run_out_fall(gina);
-  check(walk_grid_contains(&shade, (SDL_Point){(int)gina->current_position.x,
-                                               (int)gina->current_position.y}),
-        "a pre-sunscreen drop lands back inside the shade");
-  actor_free(gina);
 }
 
-// #140: while dragged, the actor's horizontal position is clamped to the
-// walkable area's extent, so Gina can be lifted up out of the shade but never
-// carried out of it sideways (the pointer may still roam anywhere).
-static void test_drag_clamp_to_walkable(void) {
-  fprintf(stderr, "\n-- drag horizontal clamp unit tests --\n");
-
-  // The shade patch: x 60..260 walkable, so column centres run 65..255.
-  static WalkGrid shade;
-  walk_grid_build(&shade, &POOL_SHADE_AREA, WINDOW_SIZE);
-
-  // The pure helper: values inside the extent pass, values outside snap to
-  // the edge column centres.
-  check(walk_grid_clamp_x(&shade, 150.0F) == 150.0F,
-        "clamp_x leaves a point inside the walkable extent untouched");
-  check(walk_grid_clamp_x(&shade, 0.0F) == 65.0F,
-        "clamp_x snaps a point left of the extent to the left column centre");
-  check(walk_grid_clamp_x(&shade, 700.0F) == 255.0F,
-        "clamp_x snaps a point right of the extent to the right column centre");
-
-  // A grid with no walkable cell leaves x unchanged (nothing to clamp to).
-  static const SDL_Rect NONE_RECTS[] = {{0, 0, 0, 0}};
-  static const WalkArea NONE_AREA = {NONE_RECTS, LEN(NONE_RECTS), NULL, 0};
-  static WalkGrid empty;
-  walk_grid_build(&empty, &NONE_AREA, WINDOW_SIZE);
-  check(walk_grid_clamp_x(&empty, 400.0F) == 400.0F,
-        "clamp_x is a no-op on a grid with no walkable cell");
-
-  // Through the drag event: lift Gina and carry the pointer far to the right;
-  // she rises with it (y unclamped) but her x stops at the shade's edge.
-  Actor *gina = make_actor(&TEST_SPEC, (SDL_FPoint){150, 480}, NULL);
-  gina->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
-  SDL_Event e = mouse_down(150, 480);
-  drag(gina, &shade, &e);
-  e = mouse_motion(700, 200);
-  drag(gina, &shade, &e);
-  check(gina->state == DRAGGED && gina->current_position.x == 255.0F &&
-            gina->current_position.y == 200.0F,
-        "dragging right of the shade clamps x to the edge, y free");
-  // And to the left, past the opposite edge.
-  e = mouse_motion(-50, 300);
-  drag(gina, &shade, &e);
-  check(gina->current_position.x == 65.0F && gina->current_position.y == 300.0F,
-        "dragging left of the shade clamps x to the other edge");
-  actor_free(gina);
-}
-
-// Let the landing shadow ease to its target, the way frames would in game:
-// the slew is what keeps a sideways carry from teleporting it.
-static void settle_ground(Actor *actor) {
-  for (int i = 0; i < 12; i++) {
-    actor_update(actor, 0.05F);
-  }
-}
-
-// Depth while dragging (SCALING.md): the landing shadow, and the lift ceiling
-// that separates "picked up" from "moved away".
 static void test_drag_depth(void) {
   fprintf(stderr, "\n-- drag depth unit tests --\n");
 
-  // The poolside strip: y 430..579 walkable, so column cells 43..57.
-  static WalkGrid grid;
-  walk_grid_build(&grid, &POOL_POOLSIDE_AREA, WINDOW_SIZE);
-
-  float ground = 0.0F;
-  check(walk_grid_clamp_ground(&grid, 400, 500, &ground) && ground == 500.0F,
-        "clamp_ground keeps a y that is already on walkable ground");
-  // Rounding to the cell centre here would quantize the drag shadow to the
-  // 10px grid, which reads as the shadow stepping rather than gliding.
-  bool continuous = true;
-  for (int y = 440; y < 570; y++) {
-    float g = 0.0F;
-    if (!walk_grid_clamp_ground(&grid, 400, (float)y, &g) || g != (float)y) {
-      continuous = false;
-    }
-  }
-  check(continuous, "clamp_ground is continuous across the walkable span");
-  check(walk_grid_clamp_ground(&grid, 400, 100, &ground) && ground == 435.0F,
-        "clamp_ground drops to the first walkable cell below");
-  check(walk_grid_clamp_ground(&grid, 400, 595, &ground) && ground == 575.0F,
-        "clamp_ground rises to the first walkable cell above");
-  check(!walk_grid_clamp_ground(&grid, 5, 500, &ground),
-        "clamp_ground reports a column with no walkable cell");
-  check(!walk_grid_clamp_ground(NULL, 400, 500, &ground),
-        "clamp_ground is a no-op without a grid");
-
-  // A ramp over the strip, so scale is observable: feet 430 -> 0.5, 630 -> 1.0.
+  // A ramp over the strip, so any change in depth would be visible as a change
+  // in scale: feet 430 -> 0.5, 630 -> 1.0.
   static const ScaleRamp RAMP = {
       .y_far = 430, .y_near = 630, .scale_far = 0.5F, .scale_near = 1.0F};
   Actor *a = make_actor(&TEST_SPEC, (SDL_FPoint){400, 500}, &RAMP);
   a->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
-  // Ceiling is a quarter of the ramp's 200px span.
-  check(actor_lift_ceiling(a) == 50.0F,
-        "the lift ceiling is a fraction of the scene's ramp span");
+  float standing_scale = actor_scale(a);
+  float home_feet = actor_feet_y(a);
 
   SDL_Event e = mouse_down(400, 500);
-  drag(a, &grid, &e);
-  e = mouse_motion(400, 480); // 20px up: a lift, well inside the ceiling
-  drag(a, &grid, &e);
-  settle_ground(a);
-  check(a->state == DRAGGED && a->has_ground,
-        "a dragged actor over the strip has a landing shadow");
-  float small_lift_ground = a->ground_y;
+  actor_drag_event(a, &e);
+  e = mouse_motion(400, 480);
+  actor_drag_event(a, &e);
+  check(a->state == DRAGGED, "the drag started");
+  check(actor_scale(a) == standing_scale,
+        "lifting her does not change her size");
+
+  // The whole point of the fixed ground: however far she is lifted, her depth
+  // is where she will land, so she is drawn at one size throughout.
+  e = mouse_motion(400, 120);
+  actor_drag_event(a, &e);
+  check(actor_scale(a) == standing_scale,
+        "lifting her far does not change her size either");
+  check(a->ground_y == home_feet, "and her ground has not moved");
+
   float held_scale = actor_scale(a);
-
-  e = mouse_motion(400, 455); // 45px up: still inside the 50px ceiling
-  drag(a, &grid, &e);
-  settle_ground(a);
-  check(a->ground_y == small_lift_ground,
-        "lifting within the ceiling leaves her depth where she was picked up");
-  check(actor_scale(a) == held_scale, "so lifting her doesn't rescale her");
-
-  e = mouse_motion(400, 300); // 200px up: well past the ceiling
-  drag(a, &grid, &e);
-  settle_ground(a);
-  check(a->ground_y < small_lift_ground,
-        "lifting past the ceiling starts moving her away");
-  check(actor_scale(a) < held_scale, "and moving away makes her smaller");
-
-  // Release: she lands on the shadow, at the size she already had. The shadow
-  // is a ground line and fall_target_y places her centre, so what must match is
-  // where her *feet* end up — the bug this pins is the two being conflated.
-  float landing = a->ground_target_y;
-  float scale_before_release = actor_scale(a);
-  e = mouse_up(400, 300);
-  drag(a, &grid, &e);
-  check(a->fall_target_y + actor_feet_offset(a) == landing,
-        "her feet are dropped onto her shadow");
-  check(fabsf(actor_scale(a) - scale_before_release) < 0.0001F,
+  e = mouse_up(400, 120);
+  actor_drag_event(a, &e);
+  check(actor_scale(a) == held_scale,
         "releasing changes nothing about her size");
-  // And end to end: once she has come down, the ground the shadow marked is
-  // the ground she is standing on. Half a sprite of drift here is what a
-  // player sees as "the shadow is in the wrong place".
-  for (int i = 0; i < 200 && a->state != IDLE; i++) {
-    actor_update(a, 0.05F);
-  }
-  check(fabsf(actor_feet_y(a) - landing) < 1.0F,
-        "she comes to rest with her feet on the shadow she was dropped over");
+  run_out_fall(a);
+  check(actor_scale(a) == standing_scale, "and she lands at the size she left");
   actor_free(a);
 
-  // Catching her mid-fall must not yank the shadow to the ceiling and rescale
-  // her on the grab frame — the case actor_begin_drag exists for.
-  Actor *falling = make_actor(&TEST_SPEC, (SDL_FPoint){400, 200}, &RAMP);
+  // Catching her mid-fall must keep the ground she was already bound for,
+  // otherwise a re-grab would strand her wherever she happened to be.
+  Actor *falling = make_actor(&TEST_SPEC, (SDL_FPoint){400, 500}, &RAMP);
   falling->animations[WALKING]->sprite_clips[0] = (SDL_Rect){0, 0, 120, 120};
-  e = mouse_down(400, 200);
-  drag(falling, &grid, &e);
-  e = mouse_motion(400, 150);
-  drag(falling, &grid, &e);
-  e = mouse_up(400, 150);
-  drag(falling, &grid, &e);
+  float ground = actor_feet_y(falling);
+  e = mouse_down(400, 500);
+  actor_drag_event(falling, &e);
+  e = mouse_motion(400, 300);
+  actor_drag_event(falling, &e);
+  e = mouse_up(400, 300);
+  actor_drag_event(falling, &e);
   check(falling->state == FALLING, "she is falling before the catch");
+  actor_update(falling, 0.05F);
   float mid_fall_scale = actor_scale(falling);
   e = mouse_down(400, (int)falling->current_position.y);
-  drag(falling, &grid, &e);
-  e = mouse_motion(412, (int)falling->current_position.y - 12);
-  drag(falling, &grid, &e);
-  check(falling->state == DRAGGED, "she can be caught mid-fall");
-  check(fabsf(actor_scale(falling) - mid_fall_scale) < 0.0001F,
+  actor_drag_event(falling, &e);
+  e = mouse_motion(400, (int)falling->current_position.y - 40);
+  actor_drag_event(falling, &e);
+  check(falling->state == DRAGGED, "she is caught mid-fall");
+  check(falling->ground_y == ground,
+        "catching her keeps the ground she was falling to");
+  check(actor_scale(falling) == mid_fall_scale,
         "catching her mid-fall doesn't rescale her");
+  e = mouse_up(400, (int)falling->current_position.y);
+  actor_drag_event(falling, &e);
+  run_out_fall(falling);
+  check(fabsf(actor_feet_y(falling) - ground) < 0.001F,
+        "and she still lands on it");
   actor_free(falling);
 }
 
@@ -757,7 +604,6 @@ int test_walk(void) {
   test_stale_callback_cancelled(&playground_grid);
   test_drag_and_drop();
   test_drag_depth();
-  test_drag_clamp_to_walkable();
 
   return failures;
 }

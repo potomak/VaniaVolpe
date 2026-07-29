@@ -39,25 +39,6 @@ static bool cell_walkable(const WalkGrid *grid, int cx, int cy) {
   return grid->cells[cy][cx] != 0;
 }
 
-// Cache the horizontal extent of the walkable cells (see WalkGrid). Called
-// once whenever the cells are (re)populated, so the drag clamp reads it in
-// O(1) rather than scanning the grid on every drag event.
-static void cache_walkable_x_extent(WalkGrid *grid) {
-  grid->walkable_min_cx = -1;
-  grid->walkable_max_cx = -1;
-  for (int cx = 0; cx < grid->w; cx++) {
-    for (int cy = 0; cy < grid->h; cy++) {
-      if (grid->cells[cy][cx]) {
-        if (grid->walkable_min_cx < 0) {
-          grid->walkable_min_cx = cx;
-        }
-        grid->walkable_max_cx = cx;
-        break;
-      }
-    }
-  }
-}
-
 void walk_grid_build(WalkGrid *grid, const WalkArea *area,
                      SDL_Point scene_size) {
   grid->w = scene_size.x / WALK_CELL_SIZE;
@@ -85,7 +66,6 @@ void walk_grid_build(WalkGrid *grid, const WalkArea *area,
       grid->cells[cy][cx] = walkable ? 1 : 0;
     }
   }
-  cache_walkable_x_extent(grid);
 }
 
 bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
@@ -150,7 +130,6 @@ bool walk_grid_parse(const char *data, size_t size, WalkGrid *grid) {
     return false; // trailing junk
   }
   *grid = parsed;
-  cache_walkable_x_extent(grid);
   return true;
 }
 
@@ -316,23 +295,6 @@ SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p) {
 // interval spans the gap between them, so a drag could cross it; confining the
 // clamp to the zone the drag started in (flood fill on grab) is tracked in
 // #145.
-float walk_grid_clamp_x(const WalkGrid *grid, float x) {
-  if (grid == NULL || grid->walkable_min_cx < 0) {
-    // No grid at all (a poster scene draggable via a NULL grid) or no
-    // walkable cell: nothing to clamp to.
-    return x;
-  }
-  float lo = grid->walkable_min_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
-  float hi = grid->walkable_max_cx * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
-  if (x < lo) {
-    return lo;
-  }
-  if (x > hi) {
-    return hi;
-  }
-  return x;
-}
-
 // Octile-distance heuristic in WALK_COST units (admissible for 10/14 costs).
 static Uint32 heuristic(int cx, int cy, int gx, int gy) {
   int dx = abs(cx - gx);
@@ -547,206 +509,4 @@ void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
     }
   }
   actor_walk_path(actor, path, count, on_end);
-}
-
-// Landing target for a drop at `from`. Coordinates are the sprite centre —
-// the walk grid is authored against the centre (see MOVEMENT.md), so the
-// landing target is computed like every walk target. The drop falls straight
-// down: the centre of the first walkable cell at or below `from` in its grid
-// column; a column with no ground below (or a drop outside the scene) falls
-// back to the nearest walkable point overall.
-//
-// This is zone-agnostic: with disconnected walkable zones, a smaller zone
-// stacked above the drag's origin zone in the same column is hit first, so the
-// actor could land on a zone it was never in — the horizontal clamp cannot
-// prevent this (the violation is in the downward scan, not in x). The fix is
-// to make the landing zone-aware, using the origin zone remembered at grab
-// time; tracked with the clamp in #145.
-bool walk_grid_clamp_ground(const WalkGrid *grid, float x, float desired_y,
-                            float *out_y) {
-  if (grid == NULL) {
-    return false;
-  }
-  int cx = (int)x / WALK_CELL_SIZE;
-  if (x < 0 || cx >= grid->w) {
-    return false;
-  }
-  int want = (int)desired_y / WALK_CELL_SIZE;
-  // Whether desired_y is a real point in the grid, or was clamped into range
-  // below — a clamped y must not be handed back as if it were walkable ground.
-  bool in_range = desired_y >= 0 && want < grid->h;
-  if (desired_y < 0) {
-    want = 0;
-  }
-  if (want >= grid->h) {
-    want = grid->h - 1;
-  }
-  // Already over walkable ground: keep the y exactly. Rounding to the cell
-  // centre would quantize the result to WALK_CELL_SIZE, and since this is what
-  // the drag shadow follows, the shadow would step down the scene a cell at a
-  // time instead of gliding.
-  if (grid->cells[want][cx]) {
-    *out_y = in_range ? desired_y : cell_center(cx, want).y;
-    return true;
-  }
-  // Otherwise clamp to the nearest walkable cell below, else above, at its
-  // centre — a cell centre is safely inside the cell, and this only happens at
-  // the edges of the walkable span, where a small snap is the point. Scanning
-  // down first keeps a shadow that has drifted into a blocked pocket landing in
-  // front of the obstacle rather than behind it.
-  for (int cy = want + 1; cy < grid->h; cy++) {
-    if (grid->cells[cy][cx]) {
-      *out_y = cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
-      return true;
-    }
-  }
-  for (int cy = want - 1; cy >= 0; cy--) {
-    if (grid->cells[cy][cx]) {
-      *out_y = cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
-      return true;
-    }
-  }
-  // No ground anywhere in this column. Callers hold their last valid value
-  // rather than borrowing a point from a column the actor isn't over.
-  return false;
-}
-
-static SDL_FPoint drop_target(const WalkGrid *grid, SDL_FPoint from) {
-  if (grid == NULL) {
-    // A poster scene with no walkable area (intro/outro): there is no
-    // ground to fall onto, so the actor is set back down exactly where the
-    // pointer released her.
-    return from;
-  }
-  int cx = (int)from.x / WALK_CELL_SIZE;
-  if (from.x >= 0 && cx < grid->w) {
-    int start = (int)from.y / WALK_CELL_SIZE;
-    if (start < 0) {
-      start = 0;
-    }
-    for (int cy = start; cy < grid->h; cy++) {
-      if (grid->cells[cy][cx]) {
-        return (SDL_FPoint){from.x,
-                            cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F};
-      }
-    }
-  }
-  return walk_grid_nearest(grid, (SDL_Point){(int)from.x, (int)from.y});
-}
-
-// Where a held actor would land, and therefore how deep into the scene she is
-// (SCALING.md). Lifting her moves her height, not her depth, until the lift
-// exceeds her ceiling — past that the ground she is over starts receding with
-// her, and she shrinks. The result is only a *target*: actor_update eases
-// ground_y toward it, so a sideways carry across a step in the ground glides.
-static void track_drag_ground(Actor *actor, const WalkGrid *grid) {
-  float feet = actor_feet_y(actor);
-  float lift = actor->grab_ground_y - feet;
-  if (lift < 0.0F) {
-    lift = 0.0F; // dragged below where she was picked up: she slides forward
-  }
-  if (lift > actor->lift_ceiling) {
-    lift = actor->lift_ceiling;
-  }
-  // The grid is indexed by the actor's *centre* (walk data is authored against
-  // current_position), while a ground line is where her feet meet it — half a
-  // frame lower. Ask in the grid's space, answer in the ground's, or the
-  // shadow lands half a sprite off the ground she actually comes down on.
-  float offset = actor_feet_offset(actor);
-  float ground = 0.0F;
-  if (walk_grid_clamp_ground(grid, actor->current_position.x,
-                             feet + lift - offset, &ground)) {
-    actor->ground_target_y = ground + offset;
-    actor->has_ground = true;
-  } else {
-    // No ground under this column (or no grid at all, as in the poster
-    // scenes): hide the shadow and hold the last depth rather than borrowing a
-    // point from somewhere she isn't.
-    actor->has_ground = false;
-  }
-}
-
-bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
-                           const SDL_Event *event) {
-  switch (event->type) {
-  case SDL_MOUSEBUTTONDOWN: {
-    SDL_Point p = {event->button.x, event->button.y};
-    SDL_Rect grab = actor_sprite_rect(actor);
-    grab.x -= DRAG_GRAB_PADDING;
-    grab.y -= DRAG_GRAB_PADDING;
-    grab.w += 2 * DRAG_GRAB_PADDING;
-    grab.h += 2 * DRAG_GRAB_PADDING;
-    // TALKING refuses the grab like it refuses walks.
-    if (actor->state != TALKING && SDL_PointInRect(&p, &grab)) {
-      actor->drag_armed = true;
-      actor->drag_grab = (SDL_FPoint){(float)p.x, (float)p.y};
-    }
-    // The press always falls through: a hotspot the actor happens to stand
-    // on keeps working for plain taps. If the pointer then travels, the
-    // drag steals the actor, cancelling whatever walk the press started.
-    return false;
-  }
-  case SDL_MOUSEMOTION: {
-    SDL_FPoint p = {(float)event->motion.x, (float)event->motion.y};
-    if (actor->state == DRAGGED) {
-      actor_drag_move(actor, p);
-      actor->current_position.x =
-          walk_grid_clamp_x(grid, actor->current_position.x);
-      track_drag_ground(actor, grid);
-      return true;
-    }
-    if (actor->drag_armed) {
-      // A stale press: the button is no longer held (e.g. the fallen-through
-      // press hit a navigation hotspot and the release went to another
-      // scene). Disarm instead of phantom-grabbing on a later motion.
-      if ((event->motion.state & SDL_BUTTON_LMASK) == 0) {
-        actor->drag_armed = false;
-        return false;
-      }
-      float dx = p.x - actor->drag_grab.x;
-      float dy = p.y - actor->drag_grab.y;
-      if (dx * dx + dy * dy >= DRAG_START_THRESHOLD * DRAG_START_THRESHOLD) {
-        actor->drag_armed = false;
-        // The offset is taken against the arming press, so the grab point
-        // stays under the pointer without a snap, wherever the fallen-
-        // through press briefly walked her meanwhile.
-        actor->drag_offset =
-            (SDL_FPoint){actor->current_position.x - actor->drag_grab.x,
-                         actor->current_position.y - actor->drag_grab.y};
-        if (actor_begin_drag(actor)) {
-          actor_drag_move(actor, p);
-          actor->current_position.x =
-              walk_grid_clamp_x(grid, actor->current_position.x);
-          track_drag_ground(actor, grid);
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  case SDL_MOUSEBUTTONUP:
-    actor->drag_armed = false;
-    if (actor->state == DRAGGED) {
-      // She lands on the ground the drag was pointing at. The slew smooths the
-      // shadow while she is carried, but it must not decide where she comes
-      // down: a quick fling released before it converged would drop her short
-      // of where the player aimed. Snapping first also keeps the landing a
-      // walkable cell, so R3 holds. Without a shadow at all (no grid, or a
-      // column with no ground) fall back to the column scan.
-      SDL_FPoint target;
-      if (actor->has_ground) {
-        actor->ground_y = actor->ground_target_y;
-        // actor_drop places her centre, so convert back out of ground space.
-        target = (SDL_FPoint){actor->current_position.x,
-                              actor->ground_y - actor_feet_offset(actor)};
-      } else {
-        target = drop_target(grid, actor->current_position);
-      }
-      actor_drop(actor, target);
-      return true;
-    }
-    return false;
-  default:
-    return false;
-  }
 }

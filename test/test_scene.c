@@ -192,13 +192,11 @@ int test_scene(void) {
   actor->current_position = (SDL_FPoint){400, 300};
   actor->state = DRAGGED;
   actor->ground_y = 600;
-  actor->has_ground = true;
   int lifted[5];
   count = action_layer_order(props, 3, &actor, 1, lifted);
   check(order_is(lifted, count, (int[]){1, 0, 4, 3}, 4),
         "a lifted actor and her shadow both sort at the landing, shadow under");
 
-  actor->has_ground = false;
   actor->state = IDLE;
   actor_free(actor);
 
@@ -370,7 +368,7 @@ int test_scene(void) {
   check(fidgeter->state == FIDGETING, "fidgeting again");
   check(actor_begin_drag(fidgeter) && fidgeter->state == DRAGGED,
         "a grab wins over a fidget");
-  actor_drop(fidgeter, fidgeter->current_position);
+  actor_drop(fidgeter);
   for (int i = 0; i < 30 && fidgeter->state != IDLE; i++) {
     actor_update(fidgeter, 1.0F / 30.0F);
   }
@@ -397,29 +395,33 @@ int test_scene(void) {
   actor_free(poser);
 
   // ── drag & drop with no walk grid (#41) ───────────────────────────────────
-  // The fox's poster scenes (intro/outro) have no walkable area, so a drag
-  // there takes a NULL grid. A press-drag must still pick the actor up and set
-  // her back down without dereferencing the absent grid.
-  fprintf(stderr, "\ndrag & drop (NULL grid):\n");
+  // A drag consults no scene geometry at all, which is what lets the poster
+  // scenes (intro/outro) offer it: the actor is lifted from where she stands
+  // and put back there.
+  fprintf(stderr, "\ndrag & drop (no scene geometry):\n");
   Actor *dragged = make_actor(&ANIMATED_SPEC, (SDL_FPoint){100, 100}, NULL);
+  float home_feet = actor_feet_y(dragged);
   SDL_Event press = {.type = SDL_MOUSEBUTTONDOWN};
   press.button.x = 100;
   press.button.y = 100;
-  walk_actor_drag_event(dragged, NULL, &press); // arms the drag
+  actor_drag_event(dragged, &press); // arms the drag
   SDL_Event motion = {.type = SDL_MOUSEMOTION};
   motion.motion.x = 130;
-  motion.motion.y = 120;
+  motion.motion.y = 80; // upward, past the threshold
   motion.motion.state = SDL_BUTTON_LMASK;
-  bool grabbed =
-      walk_actor_drag_event(dragged, NULL, &motion); // past threshold
-  check(grabbed && dragged->state == DRAGGED,
-        "a press-drag with a NULL grid picks the actor up");
+  check(actor_drag_event(dragged, &motion) && dragged->state == DRAGGED,
+        "a press and an upward pull pick the actor up");
   SDL_Event release = {.type = SDL_MOUSEBUTTONUP};
   release.button.x = 130;
-  release.button.y = 120;
-  bool dropped = walk_actor_drag_event(dragged, NULL, &release);
-  check(dropped && dragged->state != DRAGGED,
-        "releasing over a NULL grid sets the actor back down");
+  release.button.y = 80;
+  check(actor_drag_event(dragged, &release) && dragged->state != DRAGGED,
+        "releasing sets the actor back down");
+  for (int i = 0; i < 200 && dragged->state != IDLE; i++) {
+    actor_update(dragged, 1.0F / 30.0F);
+  }
+  check(dragged->current_position.x == 100 &&
+            fabsf(actor_feet_y(dragged) - home_feet) < 0.001F,
+        "and she comes to rest exactly where she was");
   actor_free(dragged);
 
   // ── depth scaling (SCALING.md) ────────────────────────────────────────────

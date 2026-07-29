@@ -143,7 +143,7 @@ static void process_input(SDL_Event *event) {
   // Drag & drop, so the demo also shows how depth and lift interact: a
   // press-drag picks her up, her shadow marks the landing, and she rescales
   // only once lifted past the ceiling (SCALING.md).
-  if (walk_actor_drag_event(fox, &walk_grid, event)) {
+  if (actor_drag_event(fox, event)) {
     return;
   }
   switch (event->type) {
