@@ -572,16 +572,29 @@ bool walk_grid_clamp_ground(const WalkGrid *grid, float x, float desired_y,
     return false;
   }
   int want = (int)desired_y / WALK_CELL_SIZE;
+  // Whether desired_y is a real point in the grid, or was clamped into range
+  // below — a clamped y must not be handed back as if it were walkable ground.
+  bool in_range = desired_y >= 0 && want < grid->h;
   if (desired_y < 0) {
     want = 0;
   }
   if (want >= grid->h) {
     want = grid->h - 1;
   }
-  // The desired cell, else the nearest walkable one below it, else above.
-  // Scanning down first keeps a shadow that has drifted into a blocked pocket
-  // landing in front of the obstacle rather than behind it.
-  for (int cy = want; cy < grid->h; cy++) {
+  // Already over walkable ground: keep the y exactly. Rounding to the cell
+  // centre would quantize the result to WALK_CELL_SIZE, and since this is what
+  // the drag shadow follows, the shadow would step down the scene a cell at a
+  // time instead of gliding.
+  if (grid->cells[want][cx]) {
+    *out_y = in_range ? desired_y : cell_center(cx, want).y;
+    return true;
+  }
+  // Otherwise clamp to the nearest walkable cell below, else above, at its
+  // centre — a cell centre is safely inside the cell, and this only happens at
+  // the edges of the walkable span, where a small snap is the point. Scanning
+  // down first keeps a shadow that has drifted into a blocked pocket landing in
+  // front of the obstacle rather than behind it.
+  for (int cy = want + 1; cy < grid->h; cy++) {
     if (grid->cells[cy][cx]) {
       *out_y = cy * WALK_CELL_SIZE + WALK_CELL_SIZE / 2.0F;
       return true;
@@ -635,10 +648,15 @@ static void track_drag_ground(Actor *actor, const WalkGrid *grid) {
   if (lift > actor->lift_ceiling) {
     lift = actor->lift_ceiling;
   }
+  // The grid is indexed by the actor's *centre* (walk data is authored against
+  // current_position), while a ground line is where her feet meet it — half a
+  // frame lower. Ask in the grid's space, answer in the ground's, or the
+  // shadow lands half a sprite off the ground she actually comes down on.
+  float offset = actor_feet_offset(actor);
   float ground = 0.0F;
-  if (walk_grid_clamp_ground(grid, actor->current_position.x, feet + lift,
-                             &ground)) {
-    actor->ground_target_y = ground;
+  if (walk_grid_clamp_ground(grid, actor->current_position.x,
+                             feet + lift - offset, &ground)) {
+    actor->ground_target_y = ground + offset;
     actor->has_ground = true;
   } else {
     // No ground under this column (or no grid at all, as in the poster
@@ -718,7 +736,9 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
       SDL_FPoint target;
       if (actor->has_ground) {
         actor->ground_y = actor->ground_target_y;
-        target = (SDL_FPoint){actor->current_position.x, actor->ground_y};
+        // actor_drop places her centre, so convert back out of ground space.
+        target = (SDL_FPoint){actor->current_position.x,
+                              actor->ground_y - actor_feet_offset(actor)};
       } else {
         target = drop_target(grid, actor->current_position);
       }

@@ -136,7 +136,10 @@ typedef struct actor {
   SDL_FPoint drag_offset; // current_position - drag_grab when the drag began
   float fall_target_y;
   // Where the actor's depth comes from while she is off the ground
-  // (SCALING.md). ground_y is the landing point the shadow is drawn at and the
+  // (SCALING.md). These are all *ground* lines — the same space as
+  // actor_feet_y, not the centre space the walk grid is indexed in; walk.c
+  // converts at the grid boundary.
+  // ground_y is the landing point the shadow is drawn at and the
   // scale is read from; it eases toward ground_target_y so a step in the
   // ground under a sideways drag doesn't teleport the shadow. grab_ground_y is
   // the ground she was picked up from, held for the whole gesture, so lifting
@@ -172,6 +175,11 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
 // on the scale it feeds (SCALING.md).
 float actor_feet_y(const Actor *actor);
 
+// The gap actor_feet_y adds to current_position.y — half the reference frame
+// height. What you add to convert a walk-grid y (centre space) into a ground
+// line, or subtract to go back.
+float actor_feet_offset(const Actor *actor);
+
 // How large the actor is drawn right now, from her scene's depth ramp
 // (SCALING.md). Exactly 1.0 for a scene that declares none. Cheap enough to
 // call per draw — deliberately not cached, since the grab hit-test reads it
@@ -194,6 +202,13 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer);
 void actor_update(Actor *actor, float delta_time);
 
 void actor_render(Actor *actor, SDL_Renderer *renderer);
+
+// The actor plus her landing shadow, for scenes that draw her themselves
+// instead of going through render_action_layer (which emits the shadow as its
+// own depth-sorted entry, so it can sort against props). Without one of these
+// two, a draggable actor has no shadow at all and nothing on screen says where
+// she will come down.
+void actor_render_with_shadow(Actor *actor, SDL_Renderer *renderer);
 
 // Draw something the actor is carrying. `offset` is authored against her
 // natural size, relative to current_position, and is scaled and anchored

@@ -226,10 +226,20 @@ whole gesture:
 ```c
 lift_ceiling = max(LIFT_MAX, G - feet_at_grab);   // see "caught mid-fall"
 lift         = clamp(G - feet, 0, lift_ceiling);
-target       = walk_grid_clamp_ground(grid, feet.x, feet + lift);
+// The grid is indexed by the actor's centre; ground_y is a ground line.
+target       = walk_grid_clamp_ground(grid, x, feet + lift - foot_offset)
+               + foot_offset;
 ground_y     = slew(ground_y, target, GROUND_SLEW_PX_PER_S * dt);
 scale        = ramp(ground_y);
 ```
+
+**Two coordinate spaces meet here.** `current_position` — and therefore every
+walk rect and the whole grid — is the sprite's *centre*; `actor_feet_y`, the
+depth ramps and `ground_y` are *ground* lines, half a reference frame lower.
+`foot_offset` above is `actor_feet_offset()`, that half-frame. Everything that
+reads `ground_y` (the shadow, the depth sort, the scale ramp) wants the ground
+line, and only the grid speaks centre space, so the conversion belongs at the
+grid call and at the drop — not in the readers.
 
 With `LIFT_MAX = 60` and a grab from standing (`lift_ceiling == LIFT_MAX`):
 

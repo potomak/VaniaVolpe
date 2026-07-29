@@ -639,8 +639,18 @@ static void test_drag_depth(void) {
   walk_grid_build(&grid, &POOL_POOLSIDE_AREA, WINDOW_SIZE);
 
   float ground = 0.0F;
-  check(walk_grid_clamp_ground(&grid, 400, 500, &ground) && ground == 505.0F,
+  check(walk_grid_clamp_ground(&grid, 400, 500, &ground) && ground == 500.0F,
         "clamp_ground keeps a y that is already on walkable ground");
+  // Rounding to the cell centre here would quantize the drag shadow to the
+  // 10px grid, which reads as the shadow stepping rather than gliding.
+  bool continuous = true;
+  for (int y = 440; y < 570; y++) {
+    float g = 0.0F;
+    if (!walk_grid_clamp_ground(&grid, 400, (float)y, &g) || g != (float)y) {
+      continuous = false;
+    }
+  }
+  check(continuous, "clamp_ground is continuous across the walkable span");
   check(walk_grid_clamp_ground(&grid, 400, 100, &ground) && ground == 435.0F,
         "clamp_ground drops to the first walkable cell below");
   check(walk_grid_clamp_ground(&grid, 400, 595, &ground) && ground == 575.0F,
@@ -683,14 +693,25 @@ static void test_drag_depth(void) {
         "lifting past the ceiling starts moving her away");
   check(actor_scale(a) < held_scale, "and moving away makes her smaller");
 
-  // Release: she lands on the shadow, at the size she already had.
+  // Release: she lands on the shadow, at the size she already had. The shadow
+  // is a ground line and fall_target_y places her centre, so what must match is
+  // where her *feet* end up — the bug this pins is the two being conflated.
   float landing = a->ground_target_y;
   float scale_before_release = actor_scale(a);
   e = mouse_up(400, 300);
   drag(a, &grid, &e);
-  check(a->fall_target_y == landing, "she is dropped onto her shadow");
+  check(a->fall_target_y + actor_feet_offset(a) == landing,
+        "her feet are dropped onto her shadow");
   check(fabsf(actor_scale(a) - scale_before_release) < 0.0001F,
         "releasing changes nothing about her size");
+  // And end to end: once she has come down, the ground the shadow marked is
+  // the ground she is standing on. Half a sprite of drift here is what a
+  // player sees as "the shadow is in the wrong place".
+  for (int i = 0; i < 200 && a->state != IDLE; i++) {
+    actor_update(a, 0.05F);
+  }
+  check(fabsf(actor_feet_y(a) - landing) < 1.0F,
+        "she comes to rest with her feet on the shadow she was dropped over");
   actor_free(a);
 
   // Catching her mid-fall must not yank the shadow to the ceiling and rescale

@@ -187,9 +187,11 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
   actor->drag_grab = (SDL_FPoint){0, 0};
   actor->drag_offset = (SDL_FPoint){0, 0};
   actor->fall_target_y = 0;
-  actor->ground_y = initial_position.y;
-  actor->ground_target_y = initial_position.y;
-  actor->grab_ground_y = initial_position.y;
+  // No sprite is loaded yet, so the feet offset is 0 and these are just her
+  // start; has_ground is false until a drag looks the ground up anyway.
+  actor->ground_y = actor_feet_y(actor);
+  actor->ground_target_y = actor->ground_y;
+  actor->grab_ground_y = actor->ground_y;
   actor->lift_ceiling = DRAG_LIFT_MAX_PX;
   actor->has_ground = false;
   for (int i = 0; i < ACTOR_MAX_FIDGETS; i++) {
@@ -211,13 +213,17 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
   return actor;
 }
 
-float actor_feet_y(const Actor *actor) {
+float actor_feet_offset(const Actor *actor) {
   // reference_animation doesn't mutate; it just returns a mutable animation.
   AnimationData *reference = reference_animation((Actor *)actor);
   if (reference == NULL) {
-    return actor->current_position.y;
+    return 0.0F;
   }
-  return actor->current_position.y + reference->sprite_clips[0].h / 2.0F;
+  return reference->sprite_clips[0].h / 2.0F;
+}
+
+float actor_feet_y(const Actor *actor) {
+  return actor->current_position.y + actor_feet_offset(actor);
 }
 
 float actor_scale(const Actor *actor) {
@@ -228,11 +234,11 @@ float actor_scale(const Actor *actor) {
   float depth;
   switch (actor->state) {
   case DRAGGED:
-    depth = actor->ground_y;
-    break;
   case FALLING:
   case LANDING:
-    depth = actor->fall_target_y;
+    // ground_y holds the landing from the drop onward and the slew only runs
+    // while DRAGGED, so it is the same line for all three.
+    depth = actor->ground_y;
     break;
   default:
     depth = actor_feet_y(actor);
@@ -541,6 +547,15 @@ void actor_update(Actor *actor, float delta_time) {
   }
 }
 
+void actor_render_with_shadow(Actor *actor, SDL_Renderer *renderer) {
+  // Shadow first: it lies on the ground, so where the two overlap — a small
+  // lift, her feet close to the mark — she belongs in front of it.
+  if (actor_shadow_visible(actor)) {
+    actor_render_shadow(actor, renderer);
+  }
+  actor_render(actor, renderer);
+}
+
 void actor_render(Actor *actor, SDL_Renderer *renderer) {
   AnimationData *reference = reference_animation(actor);
   if (reference == NULL) {
@@ -811,8 +826,10 @@ bool actor_begin_drag(Actor *actor) {
   // shadow up to the ceiling and rescale her on this very frame — the one case
   // this function exists for.
   float feet = actor_feet_y(actor);
+  // fall_target_y is where her *centre* is headed; the ground fields are
+  // ground lines, so it needs converting.
   float ground = (actor->state == FALLING || actor->state == LANDING)
-                     ? actor->fall_target_y
+                     ? actor->fall_target_y + actor_feet_offset(actor)
                      : feet;
   actor->grab_ground_y = ground;
   actor->ground_y = ground;
@@ -846,9 +863,11 @@ void actor_drop(Actor *actor, SDL_FPoint target) {
   actor->current_position.x = target.x;
   // The landing is her depth from here on, so the fall and the landing beat
   // keep the size she already had while held — release changes nothing.
+  // target is where her centre comes to rest; the ground fields are the ground
+  // line she comes to rest *on*.
   actor->fall_target_y = target.y;
-  actor->ground_y = target.y;
-  actor->ground_target_y = target.y;
+  actor->ground_y = target.y + actor_feet_offset(actor);
+  actor->ground_target_y = actor->ground_y;
   if (target.y > actor->current_position.y + ACTOR_ARRIVE_EPSILON) {
     AnimationData *falling = actor->animations[FALLING];
     if (falling != NULL) {
