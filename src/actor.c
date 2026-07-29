@@ -422,12 +422,12 @@ void actor_update(Actor *actor, float delta_time) {
     }
     break;
   }
+  // Nothing to advance: SITTING and WAVING are held poses, and a dragged
+  // actor's height follows the pointer in actor_drag_move while the ground she
+  // will return to does not move.
   case SITTING:
   case WAVING:
-    break;
   case DRAGGED:
-    // Nothing to advance: her height follows the pointer in actor_drag_move,
-    // and the ground she will return to does not move.
     break;
   case FALLING: {
     // Constant-speed descent to the landing target (LIVELINESS.md Part 2),
