@@ -113,6 +113,31 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_BLINK_SPEC {2, LOOP, {"blink.png", "hen"}, {"blink.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIMS_COUNT 9
 
+// ── intro ─────────────────────────────────────────────
+#define GINA_INTRO_IMAGE_INTRO_BACKGROUND 0
+#define GINA_INTRO_IMAGE_INTRO_BACKGROUND_INIT {NULL, "intro_background.png", "intro", 0, 0}
+#define GINA_INTRO_IMAGES_COUNT 1
+#define GINA_INTRO_IMAGES_INIT {GINA_INTRO_IMAGE_INTRO_BACKGROUND_INIT}
+#define GINA_INTRO_ANIM_PLAY_BUTTON 0
+#define GINA_INTRO_ANIM_PLAY_BUTTON_FRAMES 3
+#define GINA_INTRO_ANIM_PLAY_BUTTON_STYLE LOOP
+#define GINA_INTRO_ANIM_PLAY_BUTTON_MS_PER_FRAME 0
+#define GINA_INTRO_ANIM_PLAY_BUTTON_SPRITE_FILE "play_button.png"
+#define GINA_INTRO_ANIM_PLAY_BUTTON_DATA_FILE "play_button.anim"
+#define GINA_INTRO_ANIM_PLAY_BUTTON_SPRITE_ASSET ((Asset){.filename = "play_button.png", .directory = "intro"})
+#define GINA_INTRO_ANIM_PLAY_BUTTON_DATA_ASSET ((Asset){.filename = "play_button.anim", .directory = "intro"})
+#define GINA_INTRO_ANIM_PLAY_BUTTON_SPEC {3, LOOP, {"play_button.png", "intro"}, {"play_button.anim", "intro"}, 0, 0}
+#define GINA_INTRO_ANIM_EXIT_BUTTON 1
+#define GINA_INTRO_ANIM_EXIT_BUTTON_FRAMES 3
+#define GINA_INTRO_ANIM_EXIT_BUTTON_STYLE LOOP
+#define GINA_INTRO_ANIM_EXIT_BUTTON_MS_PER_FRAME 0
+#define GINA_INTRO_ANIM_EXIT_BUTTON_SPRITE_FILE "exit_button.png"
+#define GINA_INTRO_ANIM_EXIT_BUTTON_DATA_FILE "exit_button.anim"
+#define GINA_INTRO_ANIM_EXIT_BUTTON_SPRITE_ASSET ((Asset){.filename = "exit_button.png", .directory = "intro"})
+#define GINA_INTRO_ANIM_EXIT_BUTTON_DATA_ASSET ((Asset){.filename = "exit_button.anim", .directory = "intro"})
+#define GINA_INTRO_ANIM_EXIT_BUTTON_SPEC {3, LOOP, {"exit_button.png", "intro"}, {"exit_button.anim", "intro"}, 0, 0}
+#define GINA_INTRO_ANIMS_COUNT 2
+
 // ── minigames ─────────────────────────────────────────────
 
 // ── pool ─────────────────────────────────────────────
@@ -358,17 +383,21 @@ static inline void say_basket_full(void) { scene_say(GINA_VINE_DIALOG_CHUNK_BASK
 
 // ── sound effects (adventure-wide bank; play via play_<name>()) ──
 int sfx_play(int index);
-#define GINA_SFX_CHIME 0
+#define GINA_SFX_PLAY_BUTTON_CLICK 0
+static inline int play_play_button_click(void) { return sfx_play(GINA_SFX_PLAY_BUTTON_CLICK); }
+#define GINA_SFX_EXIT_BUTTON_CLICK 1
+static inline int play_exit_button_click(void) { return sfx_play(GINA_SFX_EXIT_BUTTON_CLICK); }
+#define GINA_SFX_CHIME 2
 static inline int play_chime(void) { return sfx_play(GINA_SFX_CHIME); }
-#define GINA_SFX_WIND 1
+#define GINA_SFX_WIND 3
 static inline int play_wind(void) { return sfx_play(GINA_SFX_WIND); }
-#define GINA_SFX_SPLASH 2
+#define GINA_SFX_SPLASH 4
 static inline int play_splash(void) { return sfx_play(GINA_SFX_SPLASH); }
-#define GINA_SFX_CAW 3
+#define GINA_SFX_CAW 5
 static inline int play_caw(void) { return sfx_play(GINA_SFX_CAW); }
-#define GINA_SFX_POP 4
+#define GINA_SFX_POP 6
 static inline int play_pop(void) { return sfx_play(GINA_SFX_POP); }
-#define GINA_SFX_COUNT 5
-#define GINA_SFX_INIT {{NULL, "chime.wav", "minigames"}, {NULL, "wind.wav", "pool"}, {NULL, "splash.wav", "pool"}, {NULL, "caw.wav", "tree"}, {NULL, "pop.wav", "grapes"}}
+#define GINA_SFX_COUNT 7
+#define GINA_SFX_INIT {{NULL, "play_button_click.wav", "intro"}, {NULL, "exit_button_click.wav", "intro"}, {NULL, "chime.wav", "minigames"}, {NULL, "wind.wav", "pool"}, {NULL, "splash.wav", "pool"}, {NULL, "caw.wav", "tree"}, {NULL, "pop.wav", "grapes"}}
 
 #endif // GEN_GINA_ASSETS_H

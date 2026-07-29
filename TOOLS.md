@@ -103,6 +103,11 @@ them.
   `render_animation` with no position change. Placeholders to develop the
   boiling hotspots against; real traced frames replace them file-for-file.
   Needs Pillow.
+- **`gen_intro_placeholders.py`** — emits a whole placeholder title screen for
+  an adventure: a washed backdrop carrying the title, plus a 3-frame Play and
+  Exit button sheet per locale (frame 1 at rest, 2–3 tilted, which reads as the
+  hover wiggle) and the two click WAVs. The buttons are labelled, so it writes
+  one set per locale with that locale's wording. Needs Pillow.
 
 ## Asset pipeline
 

@@ -11,12 +11,15 @@
 #include "adventure.h"
 
 // Scene indices for this adventure (used by its scenes for transitions).
+// Enumerators are global in C and every adventure's header is in scope at once,
+// so these carry the adventure's prefix — plain INTRO/OUTRO belong to Vania.
 enum gina_hen_at_the_pool_scene {
-  POOL,               // entry: poolside, where the puzzle starts
-  TREE,               // the tree with Carla the crow
-  VINE,               // the grape vine
-  SUNSCREEN_MINIGAME, // brush sunscreen onto Gina
-  GRAPES_MINIGAME,    // pick every grape
+  GINA_INTRO,              // entry: title screen (Play / Exit)
+  GINA_POOL,               // poolside, where the puzzle starts
+  GINA_TREE,               // the tree with Carla the crow
+  GINA_VINE,               // the grape vine
+  GINA_SUNSCREEN_MINIGAME, // brush sunscreen onto Gina
+  GINA_GRAPES_MINIGAME,    // pick every grape
 };
 
 extern Adventure gina_hen_at_the_pool;

@@ -88,7 +88,7 @@ static bool load_media(SDL_Renderer *renderer) {
 static void back_to_pool(void) {
   // Gina explains back at the pool (the scene reads the flag on activation).
   gina_state.announce_sunscreen = true;
-  set_active_scene(POOL);
+  set_active_scene(GINA_POOL);
 }
 
 // Mark the cell under (x, y), if it is over Gina and not already painted.

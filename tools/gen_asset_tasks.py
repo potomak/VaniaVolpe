@@ -81,18 +81,23 @@ def sources_rel(manifest, task):
     return f"{manifest['assets_root']}/_sources/{task_id(task)}"
 
 
+# A localized entry is committed under the reference locale rather than the
+# layer named in `dir`, so its target path needs the locale spliced in. Spoken
+# lines are localized by nature; art says so with the `localized` flag.
+def layer_dir(manifest, task):
+    if task["type"] == "speech" or task.get("localized", False):
+        locale = manifest.get("reference_locale", "it_IT")
+        return f"{locale}/{task['dir']}"
+    return task["dir"]
+
+
 # Repo-relative final asset path(s) the game actually loads.
 def target_rel(manifest, task):
     assets = manifest["assets_root"]
-    locale = manifest.get("reference_locale", "it_IT")
+    rel = f"{assets}/{layer_dir(manifest, task)}/{task['name']}"
     if task["type"] == "animation":
-        base = f"{assets}/{task['dir']}/{task['name']}"
-        return [base + ".png", base + ".anim"]
-    if task["type"] == "speech":
-        # A spoken line is recorded per locale (dialogue dirs are locale-resolved).
-        return [f"{assets}/{locale}/{task['dir']}/{task['name']}.wav"]
-    ext = ".wav" if FILE_TYPE[task["type"]] == "audio" else ".png"
-    return [f"{assets}/{task['dir']}/{task['name']}{ext}"]
+        return [rel + ".png", rel + ".anim"]
+    return [rel + (".wav" if FILE_TYPE[task["type"]] == "audio" else ".png")]
 
 
 def uploaded_files(root, rel_dir):

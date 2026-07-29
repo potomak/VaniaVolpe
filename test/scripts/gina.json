@@ -12,6 +12,17 @@
   },
   {
    "action": "screenshot",
+   "name": "00-intro"
+  },
+  {
+   "action": "click",
+   "x": 0.7125,
+   "y": 0.55,
+   "wait_ms": 1200,
+   "note": "intro Play -> poolside"
+  },
+  {
+   "action": "screenshot",
    "name": "01-pool"
   },
   {

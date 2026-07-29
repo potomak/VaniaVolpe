@@ -267,6 +267,56 @@
       "task": true
     },
     {
+      "group": "Art — Intro",
+      "type": "image",
+      "dir": "intro",
+      "name": "intro_background",
+      "size": "800x600",
+      "localized": true,
+      "description": "Title-screen backdrop. Text-bearing (it carries the adventure title), so one per locale.",
+      "task": true
+    },
+    {
+      "group": "Art — Intro",
+      "type": "animation",
+      "dir": "intro",
+      "name": "play_button",
+      "frames": 3,
+      "style": "loop",
+      "size": "280x120",
+      "localized": true,
+      "description": "The labelled Play button. The frames cycle as a wiggle while the pointer is over it, so draw frame 1 at rest and 2-3 as small deformations. Labelled, so one per locale.",
+      "task": true
+    },
+    {
+      "group": "Art — Intro",
+      "type": "animation",
+      "dir": "intro",
+      "name": "exit_button",
+      "frames": 3,
+      "style": "loop",
+      "size": "265x96",
+      "localized": true,
+      "description": "The labelled Exit button, wiggling on hover like Play. Labelled, so one per locale.",
+      "task": true
+    },
+    {
+      "group": "Audio — Intro",
+      "type": "sfx",
+      "dir": "common/intro",
+      "name": "play_button_click",
+      "description": "Play button click — a bright, short confirm. Placeholder blip via tools/gen_intro_placeholders.py.",
+      "task": true
+    },
+    {
+      "group": "Audio — Intro",
+      "type": "sfx",
+      "dir": "common/intro",
+      "name": "exit_button_click",
+      "description": "Exit button click — softer and lower than Play, so leaving doesn't sound like starting. Placeholder blip via tools/gen_intro_placeholders.py.",
+      "task": true
+    },
+    {
       "group": "Art — Poolside",
       "type": "image",
       "dir": "common/pool",

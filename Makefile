@@ -49,6 +49,7 @@ GAME_SRCS = \
 	$(GINA_DIR)/hen.c \
 	$(GINA_DIR)/gina_state.c \
 	$(GINA_DIR)/gina_hen_at_the_pool.c \
+	$(GINA_DIR)/intro.c \
 	$(GINA_DIR)/pool.c \
 	$(GINA_DIR)/tree.c \
 	$(GINA_DIR)/vine.c \
@@ -149,7 +150,7 @@ gen:
 
 # Sources migrated to the manifest #include the generated header (all three
 # object flavours build the same source).
-GINA_MANIFEST_OBJS = $(foreach s,pool hen tree vine sunscreen_minigame \
+GINA_MANIFEST_OBJS = $(foreach s,intro pool hen tree vine sunscreen_minigame \
   grapes_minigame,$(GINA_DIR)/$(s).o $(GINA_DIR)/$(s).terminal.o \
   $(GINA_DIR)/$(s).test.o)
 $(GINA_MANIFEST_OBJS): $(GINA_ASSETS_H)

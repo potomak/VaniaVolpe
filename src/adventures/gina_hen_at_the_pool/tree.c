@@ -143,9 +143,9 @@ static bool float_is_stuck(void) {
   return gina_state.float_state == FLOAT_STUCK_IN_TREE && !float_falling;
 }
 
-static void go_to_pool(void) { set_active_scene(POOL); }
+static void go_to_pool(void) { set_active_scene(GINA_POOL); }
 
-static void go_to_vine(void) { set_active_scene(VINE); }
+static void go_to_vine(void) { set_active_scene(GINA_VINE); }
 
 static void examine_float(void) {
   switch (gina_state.examine_float_count) {

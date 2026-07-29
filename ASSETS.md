@@ -75,6 +75,13 @@ the layer the finished file is committed to); the rest use **resolver** dirs
 The generator maps both to the same runtime dir by stripping the `common/`
 prefix, so the emitted macros always hold resolver dirs.
 
+**Localized entries are the exception**: they always use resolver dirs, even as
+tasks, because there is no single layer to name — the file is committed once per
+locale. The pipeline splices the reference locale in when it needs a concrete
+path (so a `dir` of `intro` yields `it_IT/intro/play_button.png` to upload
+against). Spoken lines (`speech`) are localized by nature; localized art says so
+with the `localized` flag.
+
 `speech` entries are the per-line spoken dialogue: the framework speaks each
 through the scene's actor via a generated `say_<name>()` helper (SCENES.md
 milestone 4), and its WAV is optional (a not-yet-recorded line is text-only). A
