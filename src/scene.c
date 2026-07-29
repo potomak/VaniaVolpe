@@ -231,11 +231,6 @@ void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
   }
 }
 
-void render_actor(SDL_Renderer *renderer, Actor *actor) {
-  // The ramp is only consulted for scaled props, and there are none here.
-  render_action_layer(renderer, NULL, NULL, 0, &actor, 1);
-}
-
 void render_scene_sprites(SDL_Renderer *renderer, const SceneSprite *sprites,
                           int sprites_length) {
   for (int i = 0; i < sprites_length; i++) {

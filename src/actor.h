@@ -165,8 +165,8 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
 float actor_feet_y(const Actor *actor);
 
 // The gap actor_feet_y adds to current_position.y — half the reference frame
-// height. What you add to convert a walk-grid y (centre space) into a ground
-// line, or subtract to go back.
+// height. Subtract it from a ground line to get the centre y at which her feet
+// rest on it (what a drag clamps against and a drop falls to).
 float actor_feet_offset(const Actor *actor);
 
 // The one y an actor's depth is read from (SCALING.md): her feet on the
@@ -190,8 +190,9 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer);
 
 void actor_update(Actor *actor, float delta_time);
 
-// Draws the actor alone. Scenes want render_actor (scene.h), which puts her
-// through the depth sort together with her landing shadow.
+// Draws the actor alone. Scenes go through render_action_layer (scene.h)
+// instead, which depth-sorts her together with her landing shadow and the
+// scene's props — drawing her with this directly loses the shadow.
 void actor_render(Actor *actor, SDL_Renderer *renderer);
 
 // Draw something the actor is carrying. `offset` is authored against her

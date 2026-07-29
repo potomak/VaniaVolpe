@@ -388,7 +388,7 @@ static void render(SDL_Renderer *renderer) {
                             (SDL_Point){(int)p.x, (int)p.y},
                             tween_scale(&float_tween));
   }
-  render_actor(renderer, gina);
+  render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
   // The reward burst over the goggles spot while the chime plays.
   if (celebration->is_playing) {
     render_animation(renderer, celebration, CELEBRATION_AT);

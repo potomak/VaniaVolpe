@@ -311,13 +311,6 @@ void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
                          Prop *props, int props_length, Actor **actors,
                          int actors_length);
 
-// One actor and her landing shadow, for a scene that draws its own dynamic
-// layer rather than handing the framework a prop table. The same call as
-// above with no props, so there is one place that decides how an actor and
-// her shadow are ordered — drawing her with plain actor_render instead simply
-// loses the shadow.
-void render_actor(SDL_Renderer *renderer, Actor *actor);
-
 // Dispatch a click at p (scene coordinates) against a hotspot table: the
 // first enabled hotspot containing p wins. Its on_tap (if any) fires at once,
 // then — if it has an on_arrive — the actor walks to its poi and on_arrive
