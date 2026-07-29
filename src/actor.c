@@ -226,25 +226,25 @@ float actor_feet_y(const Actor *actor) {
   return actor->current_position.y + actor_feet_offset(actor);
 }
 
-float actor_scale(const Actor *actor) {
+float actor_depth_y(const Actor *actor) {
   // Depth comes from the ground, never from how high she is held: standing,
   // that is her feet; airborne, it is the ground she is bound for (SCALING.md).
   // Reading FALLING from her live y instead would make her grow on the way
   // down; reading it from the landing keeps the whole gesture one size.
-  float depth;
   switch (actor->state) {
   case DRAGGED:
   case FALLING:
   case LANDING:
     // ground_y holds the landing from the drop onward and the slew only runs
     // while DRAGGED, so it is the same line for all three.
-    depth = actor->ground_y;
-    break;
+    return actor->ground_y;
   default:
-    depth = actor_feet_y(actor);
-    break;
+    return actor_feet_y(actor);
   }
-  return scale_ramp_at(actor->scale_ramp, depth);
+}
+
+float actor_scale(const Actor *actor) {
+  return scale_ramp_at(actor->scale_ramp, actor_depth_y(actor));
 }
 
 // How far she can be lifted before the lift stops being height and starts
@@ -545,15 +545,6 @@ void actor_update(Actor *actor, float delta_time) {
     break;
   }
   }
-}
-
-void actor_render_with_shadow(Actor *actor, SDL_Renderer *renderer) {
-  // Shadow first: it lies on the ground, so where the two overlap — a small
-  // lift, her feet close to the mark — she belongs in front of it.
-  if (actor_shadow_visible(actor)) {
-    actor_render_shadow(actor, renderer);
-  }
-  actor_render(actor, renderer);
 }
 
 void actor_render(Actor *actor, SDL_Renderer *renderer) {

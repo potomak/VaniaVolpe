@@ -157,17 +157,20 @@ int action_layer_order(const Prop *props, int props_length,
       out_order[count++] = i;
     }
   }
-  // A held actor's shadow sorts on the ground it marks, not on her airborne
-  // feet — otherwise lifting her over a prop would tuck the shadow behind it,
-  // when it lies on the floor in front (SCALING.md).
+  // Both an actor and her shadow sort on her depth (actor_depth_y) — the
+  // ground she stands on, or while airborne the ground she is bound for. That
+  // is the same line her size comes from, so a lifted actor and her shadow
+  // stay together against the props: neither tucks behind something the
+  // landing point is in front of (SCALING.md). Shadows are inserted first and
+  // the sort is stable, so an actor's shadow draws just under her.
   for (int i = 0; i < actors_length; i++) {
     if (actor_shadow_visible(actors[i])) {
-      keys[count] = (int)actors[i]->ground_y;
+      keys[count] = (int)actor_depth_y(actors[i]);
       out_order[count++] = props_length + actors_length + i;
     }
   }
   for (int i = 0; i < actors_length; i++) {
-    keys[count] = (int)actor_feet_y(actors[i]);
+    keys[count] = (int)actor_depth_y(actors[i]);
     out_order[count++] = props_length + i;
   }
 
@@ -226,6 +229,11 @@ void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
                           renderer);
     }
   }
+}
+
+void render_actor(SDL_Renderer *renderer, Actor *actor) {
+  // The ramp is only consulted for scaled props, and there are none here.
+  render_action_layer(renderer, NULL, NULL, 0, &actor, 1);
 }
 
 void render_scene_sprites(SDL_Renderer *renderer, const SceneSprite *sprites,

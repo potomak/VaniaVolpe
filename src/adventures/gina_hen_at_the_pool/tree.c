@@ -218,7 +218,7 @@ static void render(SDL_Renderer *renderer) {
     SDL_FPoint p = tween_pos(&float_tween);
     render_animation(renderer, float_boil, (SDL_Point){(int)p.x, (int)p.y});
   }
-  actor_render_with_shadow(gina, renderer);
+  render_actor(renderer, gina);
   // Once Carla has handed it over, Gina carries the basket with her.
   if (gina_state.has_basket) {
     actor_render_carried(gina, renderer, basket, (SDL_Point){-55, -70});

@@ -185,6 +185,21 @@ int test_scene(void) {
   check(order_is(order, count, (int[]){0}, 1),
         "with no props the actor is the only drawable");
 
+  // A lifted actor: held high (feet at 420) but bound for the ground at 600,
+  // in front of both props. She and her shadow sort on that landing, not on
+  // her airborne feet, so both draw in front — and the shadow (index
+  // props_length + actors_length + 0 = 4) draws just under her (index 3).
+  actor->current_position = (SDL_FPoint){400, 300};
+  actor->state = DRAGGED;
+  actor->ground_y = 600;
+  actor->has_ground = true;
+  int lifted[5];
+  count = action_layer_order(props, 3, &actor, 1, lifted);
+  check(order_is(lifted, count, (int[]){1, 0, 4, 3}, 4),
+        "a lifted actor and her shadow both sort at the landing, shadow under");
+
+  actor->has_ground = false;
+  actor->state = IDLE;
   actor_free(actor);
 
   // ── walk speed ────────────────────────────────────────────────────────────

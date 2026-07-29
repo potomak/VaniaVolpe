@@ -94,11 +94,13 @@ per frame: `actor_sprite_rect` is called from `walk_actor_drag_event` during
 *input*, which would read a value cached by the previous frame's update, and go
 stale after a teleport (`on_scene_active`, the slide, the dive tween).
 
+All of it goes through one function, `actor_depth_y(a)`, so the scale and the
+depth sort can never read different lines:
+
 | state | depth read from |
 |---|---|
 | grounded (IDLE / WALKING / TALKING / ...) | `actor_feet_y(a)` |
-| `DRAGGED` | `a->ground_y` — the shadow |
-| `FALLING` / `LANDING` | `a->fall_target_y` (the landing, fixed at release) |
+| `DRAGGED` / `FALLING` / `LANDING` | `a->ground_y` — the shadow. Fixed at release: only the drag slews it |
 
 `FALLING` must not read her live y, or she would grow as she descends. Because
 the drag's final scale already equals the landing scale, **release changes
@@ -335,11 +337,14 @@ this must be a no-op there.
 
 - Drawn only while `state == DRAGGED || state == FALLING`. Not `>= DRAGGED`,
   which would include `LANDING`, where she is already on the ground.
-- Sorted on **`ground_y`**, not `actor_feet_y`. A shadow drawn in the actor's
-  sort slot uses her *airborne* y and would be occluded by props she is plainly
-  in front of — drag the fox high above the playground's acorn pile and her
-  shadow, on the ground in front of it, would draw behind it. This makes the
-  shadow a third drawable kind in `action_layer_order`.
+- Sorted on **`actor_depth_y`** — her feet when grounded, `ground_y` when
+  airborne — which is the same value her scale reads, so size and sort cannot
+  disagree. Sorting a lifted actor (or her shadow) on her *airborne* y would
+  occlude her behind props she is plainly in front of: drag the fox high above
+  the playground's acorn pile and both she and the shadow on the ground in
+  front of it would draw behind it. The shadow is a third drawable kind in
+  `action_layer_order`, inserted before the actors so the stable sort keeps a
+  shadow just under its own actor.
 - Scaled by the same `ramp(ground_y)`, and offset by `render_get_offset()` if
   drawn as a raw primitive rather than through `render_image` — easy to miss,
   and wrong only in camera scenes.

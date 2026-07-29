@@ -180,6 +180,12 @@ float actor_feet_y(const Actor *actor);
 // line, or subtract to go back.
 float actor_feet_offset(const Actor *actor);
 
+// The one y an actor's depth is read from (SCALING.md): her feet on the
+// ground, or — while she is airborne — the ground she is bound for. Her size
+// and her place in the depth sort both come from this, so they cannot
+// disagree.
+float actor_depth_y(const Actor *actor);
+
 // How large the actor is drawn right now, from her scene's depth ramp
 // (SCALING.md). Exactly 1.0 for a scene that declares none. Cheap enough to
 // call per draw — deliberately not cached, since the grab hit-test reads it
@@ -201,14 +207,9 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer);
 
 void actor_update(Actor *actor, float delta_time);
 
+// Draws the actor alone. Scenes want render_actor (scene.h), which puts her
+// through the depth sort together with her landing shadow.
 void actor_render(Actor *actor, SDL_Renderer *renderer);
-
-// The actor plus her landing shadow, for scenes that draw her themselves
-// instead of going through render_action_layer (which emits the shadow as its
-// own depth-sorted entry, so it can sort against props). Without one of these
-// two, a draggable actor has no shadow at all and nothing on screen says where
-// she will come down.
-void actor_render_with_shadow(Actor *actor, SDL_Renderer *renderer);
 
 // Draw something the actor is carrying. `offset` is authored against her
 // natural size, relative to current_position, and is scaled and anchored

@@ -297,9 +297,10 @@ typedef struct scene {
 // out_order must hold props_length + 2 * actors_length entries and receives
 // drawable indices: 0..props_length-1 name props, props_length + i names
 // actors[i], and props_length + actors_length + i names actor i's landing
-// shadow — emitted only while she is airborne, and keyed on the ground it
-// marks rather than on her feet. Returns how many entries were written. Split
-// from render_action_layer so tests can assert the ordering without a renderer.
+// shadow — emitted only while she is airborne. Actors and shadows alike key on
+// actor_depth_y, so a lifted actor sorts with her shadow at the landing point.
+// Returns how many entries were written. Split from render_action_layer so
+// tests can assert the ordering without a renderer.
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length, int *out_order);
 
@@ -309,6 +310,13 @@ int action_layer_order(const Prop *props, int props_length,
 void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
                          Prop *props, int props_length, Actor **actors,
                          int actors_length);
+
+// One actor and her landing shadow, for a scene that draws its own dynamic
+// layer rather than handing the framework a prop table. The same call as
+// above with no props, so there is one place that decides how an actor and
+// her shadow are ordered — drawing her with plain actor_render instead simply
+// loses the shadow.
+void render_actor(SDL_Renderer *renderer, Actor *actor);
 
 // Dispatch a click at p (scene coordinates) against a hotspot table: the
 // first enabled hotspot containing p wins. Its on_tap (if any) fires at once,
