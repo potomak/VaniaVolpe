@@ -635,10 +635,15 @@ static void track_drag_ground(Actor *actor, const WalkGrid *grid) {
   if (lift > actor->lift_ceiling) {
     lift = actor->lift_ceiling;
   }
+  // The grid is indexed by the actor's *centre* (walk data is authored against
+  // current_position), while a ground line is where her feet meet it — half a
+  // frame lower. Ask in the grid's space, answer in the ground's, or the
+  // shadow lands half a sprite off the ground she actually comes down on.
+  float offset = actor_feet_offset(actor);
   float ground = 0.0F;
-  if (walk_grid_clamp_ground(grid, actor->current_position.x, feet + lift,
-                             &ground)) {
-    actor->ground_target_y = ground;
+  if (walk_grid_clamp_ground(grid, actor->current_position.x,
+                             feet + lift - offset, &ground)) {
+    actor->ground_target_y = ground + offset;
     actor->has_ground = true;
   } else {
     // No ground under this column (or no grid at all, as in the poster
@@ -718,7 +723,9 @@ bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
       SDL_FPoint target;
       if (actor->has_ground) {
         actor->ground_y = actor->ground_target_y;
-        target = (SDL_FPoint){actor->current_position.x, actor->ground_y};
+        // actor_drop places her centre, so convert back out of ground space.
+        target = (SDL_FPoint){actor->current_position.x,
+                              actor->ground_y - actor_feet_offset(actor)};
       } else {
         target = drop_target(grid, actor->current_position);
       }

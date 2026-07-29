@@ -683,14 +683,25 @@ static void test_drag_depth(void) {
         "lifting past the ceiling starts moving her away");
   check(actor_scale(a) < held_scale, "and moving away makes her smaller");
 
-  // Release: she lands on the shadow, at the size she already had.
+  // Release: she lands on the shadow, at the size she already had. The shadow
+  // is a ground line and fall_target_y places her centre, so what must match is
+  // where her *feet* end up — the bug this pins is the two being conflated.
   float landing = a->ground_target_y;
   float scale_before_release = actor_scale(a);
   e = mouse_up(400, 300);
   drag(a, &grid, &e);
-  check(a->fall_target_y == landing, "she is dropped onto her shadow");
+  check(a->fall_target_y + actor_feet_offset(a) == landing,
+        "her feet are dropped onto her shadow");
   check(fabsf(actor_scale(a) - scale_before_release) < 0.0001F,
         "releasing changes nothing about her size");
+  // And end to end: once she has come down, the ground the shadow marked is
+  // the ground she is standing on. Half a sprite of drift here is what a
+  // player sees as "the shadow is in the wrong place".
+  for (int i = 0; i < 200 && a->state != IDLE; i++) {
+    actor_update(a, 0.05F);
+  }
+  check(fabsf(actor_feet_y(a) - landing) < 1.0F,
+        "she comes to rest with her feet on the shadow she was dropped over");
   actor_free(a);
 
   // Catching her mid-fall must not yank the shadow to the ceiling and rescale

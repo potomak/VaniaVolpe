@@ -136,7 +136,10 @@ typedef struct actor {
   SDL_FPoint drag_offset; // current_position - drag_grab when the drag began
   float fall_target_y;
   // Where the actor's depth comes from while she is off the ground
-  // (SCALING.md). ground_y is the landing point the shadow is drawn at and the
+  // (SCALING.md). These are all *ground* lines — the same space as
+  // actor_feet_y, not the centre space the walk grid is indexed in; walk.c
+  // converts at the grid boundary.
+  // ground_y is the landing point the shadow is drawn at and the
   // scale is read from; it eases toward ground_target_y so a step in the
   // ground under a sideways drag doesn't teleport the shadow. grab_ground_y is
   // the ground she was picked up from, held for the whole gesture, so lifting
@@ -171,6 +174,11 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
 // on the *natural* frame height, not the drawn one — otherwise it would depend
 // on the scale it feeds (SCALING.md).
 float actor_feet_y(const Actor *actor);
+
+// The gap actor_feet_y adds to current_position.y — half the reference frame
+// height. What you add to convert a walk-grid y (centre space) into a ground
+// line, or subtract to go back.
+float actor_feet_offset(const Actor *actor);
 
 // How large the actor is drawn right now, from her scene's depth ramp
 // (SCALING.md). Exactly 1.0 for a scene that declares none. Cheap enough to
