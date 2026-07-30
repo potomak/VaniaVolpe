@@ -186,12 +186,23 @@
    "action": "click",
    "x": 0.494,
    "y": 0.308,
-   "wait_ms": 3000,
-   "note": "give Carla the grapes -> float back"
+   "wait_ms": 3500,
+   "note": "give Carla the grapes -> she flaps up, the float bounces to the grass"
   },
   {
    "action": "screenshot",
-   "name": "05-float-retrieved"
+   "name": "05-float-on-the-ground"
+  },
+  {
+   "action": "click",
+   "x": 0.681,
+   "y": 0.767,
+   "wait_ms": 3000,
+   "note": "pick the float up off the grass -> she wears it"
+  },
+  {
+   "action": "screenshot",
+   "name": "05b-float-retrieved"
   },
   {
    "action": "click",

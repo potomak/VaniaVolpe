@@ -32,16 +32,22 @@ static const ImageData *background = &images[GINA_TREE_IMAGE_BACKGROUND];
 // old still PNGs, so the render positions are unchanged.
 static AnimationData *float_boil;
 static AnimationData *carla_boil;
+// The same float, now lying on the grass. A second instance of the same boil,
+// because one AnimationData carries one anim_at and this one squiggles in a
+// different place from the stuck float above.
+static AnimationData *ground_float_boil;
 // The progress-reward burst over the float: plays once with the chime when
 // Carla drops it back.
 static AnimationData *celebration;
 // Declared as data: the framework makes and loads these; init only aliases
 // them. Order matches the generated indices.
-static AnimationData *animations[GINA_TREE_ANIMS_COUNT];
+#define TREE_ANIM_GROUND_FLOAT GINA_TREE_ANIMS_COUNT
+static AnimationData *animations[GINA_TREE_ANIMS_COUNT + 1];
 static const SceneAnimSpec anim_specs[] = {
     GINA_TREE_ANIM_CELEBRATION_SPEC,
     GINA_TREE_ANIM_FLOAT_BOIL_SPEC,
     GINA_TREE_ANIM_CARLA_BOIL_SPEC,
+    GINA_TREE_ANIM_FLOAT_BOIL_SPEC,
 };
 
 // Static sprite layer: just the backdrop. The stuck float and Carla are boils
@@ -64,16 +70,24 @@ static const SDL_Point CARLA_AT = {360, 150};
 // The float-return reward burst, centred over the float's fall path.
 static const SDL_Point CELEBRATION_AT = {425, 130};
 
-// The float's drop from the branches after the trade: a bouncing fall
-// to the ground; the state flips to retrieved when it settles.
+// Where the float ends up once Carla knocks it loose: the top of the walkable
+// strip, right under the branches it fell from.
+static const SDL_Point GROUND_FLOAT_AT = {500, 430};
+
+// The trade's two motions. Carla flaps up off her branch — that is what
+// dislodges the float — and settles back; the float bounces down to the grass
+// and stays there until Gina picks it up.
 static Tween float_tween;
 static bool float_falling;
+static Tween carla_tween;
+static bool carla_flying;
 
 static const SDL_Rect FLOAT_HOTSPOT = {500, 70, 90, 60};
+static const SDL_Rect GROUND_FLOAT_HOTSPOT = {500, 430, 90, 60};
 static const SDL_Rect CARLA_HOTSPOT = {360, 150, 70, 70};
 static const SDL_Rect POOL_NAV_HOTSPOT = {0, 200, 30, 250};
 static const SDL_Rect VINE_NAV_HOTSPOT = {770, 200, 30, 250};
-static Hotspot hotspots[4];
+static Hotspot hotspots[5];
 
 // Walk geometry: the ground strip under the tree; no blocked areas.
 static const SDL_Rect WALKABLE_RECTS[] = {{20, 430, 760, 150}};
@@ -98,7 +112,10 @@ static SDL_Point pois[2];
 
 // Interactions and hotspot gating (bodies below the loaders).
 static bool float_is_stuck(void);
+static bool float_is_on_ground(void);
+static bool carla_is_perched(void);
 static void examine_float(void);
+static void pick_up_float(void);
 static void talk_to_carla(void);
 static void go_to_pool(void);
 static void go_to_vine(void);
@@ -109,6 +126,7 @@ static void init(void) {
 
   float_boil = animations[GINA_TREE_ANIM_FLOAT_BOIL];
   carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL];
+  ground_float_boil = animations[TREE_ANIM_GROUND_FLOAT];
   celebration = animations[GINA_TREE_ANIM_CELEBRATION];
 
   sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
@@ -121,11 +139,19 @@ static void init(void) {
                             .active_anim = float_boil,
                             .anim_at = FLOAT_AT,
                             .anim_visible = float_is_stuck};
+  hotspots[i++] = (Hotspot){.rect = GROUND_FLOAT_HOTSPOT,
+                            .enabled = float_is_on_ground,
+                            .poi = FLOAT_LOOK_POI,
+                            .on_arrive = pick_up_float,
+                            .active_anim = ground_float_boil,
+                            .anim_at = GROUND_FLOAT_AT,
+                            .anim_visible = float_is_on_ground};
   hotspots[i++] = (Hotspot){.rect = CARLA_HOTSPOT,
                             .poi = CARLA_POI,
                             .on_arrive = talk_to_carla,
                             .active_anim = carla_boil,
-                            .anim_at = CARLA_AT};
+                            .anim_at = CARLA_AT,
+                            .anim_visible = carla_is_perched};
   hotspots[i++] = (Hotspot){
       .rect = POOL_NAV_HOTSPOT, .poi = LEFT_EDGE_POI, .on_arrive = go_to_pool};
   hotspots[i++] = (Hotspot){
@@ -142,6 +168,14 @@ static void init(void) {
 static bool float_is_stuck(void) {
   return gina_state.float_state == FLOAT_STUCK_IN_TREE && !float_falling;
 }
+
+static bool float_is_on_ground(void) {
+  return gina_state.float_state == FLOAT_ON_GROUND;
+}
+
+// Carla is on her branch except while she is up in the air; the scene draws her
+// flight itself, so the framework's boil draw stands down for it.
+static bool carla_is_perched(void) { return !carla_flying; }
 
 static void go_to_pool(void) { set_active_scene(GINA_POOL); }
 
@@ -162,11 +196,18 @@ static void examine_float(void) {
   gina_state.examine_float_count++;
 }
 
-// The float has settled on the ground: only now is it truly retrieved.
+// The float has settled on the grass. The puzzle is solved — Carla has been
+// paid and the float is down — but it is not Gina's until she goes and gets it.
 static void float_dropped(void) {
   float_falling = false;
-  gina_state.float_state = FLOAT_RETRIEVED;
+  gina_state.float_state = FLOAT_ON_GROUND;
 }
+
+// Carla is back on her branch, so the framework resumes drawing her boil.
+static void carla_landed(void) { carla_flying = false; }
+
+// Gina walks over and takes it: from here she wears it (see gina_worn).
+static void pick_up_float(void) { gina_state.float_state = FLOAT_RETRIEVED; }
 
 static void talk_to_carla(void) {
   // While the float is mid-fall the trade already happened; ignore the tap.
@@ -186,10 +227,19 @@ static void talk_to_carla(void) {
       say_carla_thanks();
       play_chime();
       play_animation(celebration, NULL);
+      // Carla flaps up off her branch — that is what shakes the float loose —
+      // and settles back. A tween from her perch to itself is a pure vertical
+      // hop, since the arc is added on top of the (here zero) path.
+      carla_flying = true;
+      tween_start(&carla_tween, (SDL_FPoint){CARLA_AT.x, CARLA_AT.y},
+                  (SDL_FPoint){CARLA_AT.x, CARLA_AT.y}, 800, TWEEN_EASE_OUT,
+                  carla_landed);
+      carla_tween.arc_height = 60;
+      // The float bounces down to the grass and waits there to be picked up.
       float_falling = true;
       tween_start(&float_tween, (SDL_FPoint){FLOAT_AT.x, FLOAT_AT.y},
-                  (SDL_FPoint){FLOAT_AT.x, 430}, 900, TWEEN_BOUNCE,
-                  float_dropped);
+                  (SDL_FPoint){GROUND_FLOAT_AT.x, GROUND_FLOAT_AT.y}, 900,
+                  TWEEN_BOUNCE, float_dropped);
       return;
     }
     if (!gina_state.has_basket) {
@@ -209,6 +259,9 @@ static void update(float delta_time) {
   if (float_falling) {
     tween_update(&float_tween, delta_time);
   }
+  if (carla_flying) {
+    tween_update(&carla_tween, delta_time);
+  }
 }
 
 static void render(SDL_Renderer *renderer) {
@@ -219,6 +272,12 @@ static void render(SDL_Renderer *renderer) {
     // The drop: the float bounces down from the branches.
     SDL_FPoint p = tween_pos(&float_tween);
     render_animation(renderer, float_boil, (SDL_Point){(int)p.x, (int)p.y});
+  }
+  if (carla_flying) {
+    // Her hop off the branch and back; the framework's boil draw is gated off
+    // for the duration (carla_is_perched).
+    SDL_FPoint p = tween_pos(&carla_tween);
+    render_animation(renderer, carla_boil, (SDL_Point){(int)p.x, (int)p.y});
   }
   render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
   gina_render_worn(renderer, gina);

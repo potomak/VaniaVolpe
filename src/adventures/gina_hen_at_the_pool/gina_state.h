@@ -19,7 +19,8 @@
 typedef enum float_state {
   FLOAT_AT_POOL,       // by the pool, ready to be played with
   FLOAT_STUCK_IN_TREE, // a gust of wind blew it into the tree
-  FLOAT_RETRIEVED,     // Carla dropped it back to Gina
+  FLOAT_ON_GROUND,     // Carla knocked it loose; it lies under the tree
+  FLOAT_RETRIEVED,     // Gina picked it up and now wears it
 } FloatState;
 
 typedef struct gina_state {

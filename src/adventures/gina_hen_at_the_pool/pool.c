@@ -358,6 +358,9 @@ static void try_dive(void) {
     say_float_by_pool();
     return;
   case FLOAT_STUCK_IN_TREE:
+  case FLOAT_ON_GROUND:
+    // Either up in the branches or lying under them: still at the tree, still
+    // to be fetched, so the same line covers both.
     say_float_in_tree();
     return;
   case FLOAT_RETRIEVED:
