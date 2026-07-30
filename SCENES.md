@@ -152,7 +152,7 @@ So the per-scene `gina = make_hen(HEN_START);` in `init`, the
 work was the actor drops those functions entirely (both are now optional in the
 `Scene` struct, NULL-guarded by `adventure.c`). The `make_hen`/`make_fox`,
 `*_load_media` and `*_free` wrappers are gone; scenes that reposition the actor
-per activation (pool re-entry, the dive replay, the depth demo) still do that in
+per activation (pool re-entry, the end card, the depth demo) still do that in
 `on_scene_active`, which the framework leaves to the scene.
 
 ### Actor tick & draw (✅ shipped, #147)
@@ -168,8 +168,8 @@ hotspots + behavior.
 A scene keeps its own `update`/`render` only to **interleave** the actor with
 scene-specific work in an order that is part of its behavior:
 
-- `field` sets the depth-band variant *before* the tick; `pool`'s dive tween
-  overwrites the position *after* it;
+- `pool`'s dive and climb tweens overwrite the position *after* the tick, and it
+  swaps her sprite for the floating sheet while she bobs;
 - `playground_entrance` draws the carried key *before* the fox; `pool`/`tree`
   draw the float and celebration *around* the hen; `playground`/`field` draw the
   actor y-sorted with props via `render_action_layer`.
@@ -235,7 +235,7 @@ and must not fight the framework:
 
 - the dive arc and float tweens (a custom `update` + a dynamic draw)
 - the sunscreen paint grid, the grape-fall states
-- the `try_dive` state machine, the walk-grid rebuild on sunscreen
+- the `try_dive` / dive-phase state machine, the walk-grid rebuild on sunscreen
 - Gina y-sorted with props via `render_action_layer`
 
 So every layer keeps a clean opt-out: a scene may still supply

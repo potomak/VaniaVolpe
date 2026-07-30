@@ -96,6 +96,17 @@
       "task": true
     },
     {
+      "group": "Gina animations",
+      "type": "animation",
+      "dir": "common/hen",
+      "name": "floating",
+      "frames": 3,
+      "style": "loop",
+      "size": "120x120",
+      "description": "Gina afloat in the pool after her dive: a gentle bob, seen from the side, water line across her middle. Placeholder wobble via tools/gen_boil_sheet.py over a cropped idle frame.",
+      "task": true
+    },
+    {
       "group": "Voice — Poolside",
       "type": "speech",
       "dir": "pool/dialog",
@@ -163,7 +174,7 @@
       "type": "speech",
       "dir": "pool/dialog",
       "name": "dive_again",
-      "text": "Che bello! Ancora!",
+      "text": "Che divertente! Ancora!",
       "description": "Splashes in and wants to go again (adventure replays).",
       "task": true
     },
@@ -305,7 +316,17 @@
       "type": "sfx",
       "dir": "common/intro",
       "name": "play_button_click",
-      "description": "Play button click — a bright, short confirm. Placeholder blip via tools/gen_intro_placeholders.py.",
+      "description": "Play button click — a bright, short confirm. Placeholder blip via tools/gen_card_placeholders.py.",
+      "task": true
+    },
+    {
+      "group": "Art — Outro",
+      "type": "image",
+      "dir": "outro",
+      "name": "outro_background",
+      "size": "800x600",
+      "localized": true,
+      "description": "The end card, shown after Gina's last dive. Text-bearing (title plus a closing line), so one per locale.",
       "task": true
     },
     {
@@ -313,7 +334,7 @@
       "type": "sfx",
       "dir": "common/intro",
       "name": "exit_button_click",
-      "description": "Exit button click — softer and lower than Play, so leaving doesn't sound like starting. Placeholder blip via tools/gen_intro_placeholders.py.",
+      "description": "Exit button click — softer and lower than Play, so leaving doesn't sound like starting. Placeholder blip via tools/gen_card_placeholders.py.",
       "task": true
     },
     {

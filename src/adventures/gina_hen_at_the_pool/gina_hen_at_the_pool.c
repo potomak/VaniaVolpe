@@ -9,6 +9,7 @@
 #include "gina_state.h"
 #include "grapes_minigame.h"
 #include "intro.h"
+#include "outro.h"
 #include "pool.h"
 #include "sunscreen_minigame.h"
 #include "tree.h"
@@ -18,7 +19,7 @@
 // sound-effect bank.
 #include "gina_assets.h"
 
-#define GINA_HEN_AT_THE_POOL_SCENES_LENGTH 6
+#define GINA_HEN_AT_THE_POOL_SCENES_LENGTH 7
 
 static Scene scenes[GINA_HEN_AT_THE_POOL_SCENES_LENGTH];
 
@@ -47,4 +48,5 @@ void gina_hen_at_the_pool_register(void) {
   scenes[GINA_VINE] = vine_scene;
   scenes[GINA_SUNSCREEN_MINIGAME] = sunscreen_minigame_scene;
   scenes[GINA_GRAPES_MINIGAME] = grapes_minigame_scene;
+  scenes[GINA_OUTRO] = gina_outro_scene;
 }
