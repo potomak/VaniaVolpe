@@ -44,14 +44,18 @@ static AnimationData *float_boil;
 // The progress-reward burst over the goggles: plays once with the chime when
 // she collects them, no input lock (this is a walking scene).
 static AnimationData *celebration;
+// Gina bobbing in the water after a dive. Her own sheet (common/hen) rather
+// than a pool object, so it sits past the pool dir's indices; the scene draws
+// it in place of her sprite while she floats.
+static AnimationData *floating;
 // Declared as data: the framework makes and loads these; init only aliases
-// them. Order matches the generated indices.
-static AnimationData *animations[GINA_POOL_ANIMS_COUNT];
+// them. Order matches the generated indices, with the hen sheet appended.
+#define POOL_ANIM_FLOATING GINA_POOL_ANIMS_COUNT
+static AnimationData *animations[GINA_POOL_ANIMS_COUNT + 1];
 static const SceneAnimSpec anim_specs[] = {
-    GINA_POOL_ANIM_CELEBRATION_SPEC,
-    GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC,
-    GINA_POOL_ANIM_GOGGLES_BOIL_SPEC,
-    GINA_POOL_ANIM_FLOAT_BOIL_SPEC,
+    GINA_POOL_ANIM_CELEBRATION_SPEC,  GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC,
+    GINA_POOL_ANIM_GOGGLES_BOIL_SPEC, GINA_POOL_ANIM_FLOAT_BOIL_SPEC,
+    GINA_HEN_ANIM_FLOATING_SPEC,
 };
 
 // Static sprite layer: backdrop and water. The three object boils are declared
@@ -70,16 +74,45 @@ static SDL_Point m_pos;
 static Hen *gina;
 static const SDL_FPoint HEN_START = {150, 480};
 
-// Scene-object tweens. The float's flight into the tree, and
-// Gina's dive arc into the water; the flags gate hotspots/input while each
-// motion runs.
+// Scene-object tweens. The float's flight into the tree, and Gina's dive; the
+// flags below gate hotspots/input while each motion runs.
 static Tween float_tween;
 static bool float_flying;
 static Tween dive_tween;
-static bool diving;
+
+// The ending (#120). A dive is an arc into the water, a few seconds bobbing,
+// then a hop back to the edge and the happy line — from there a tap dives
+// again, until she has had DIVES_BEFORE_OUTRO of them and the end card takes
+// over.
+typedef enum dive_phase {
+  DIVE_NONE,     // normal play
+  DIVE_ENTERING, // the arc into the water
+  DIVE_FLOATING, // bobbing, on a timer
+  DIVE_CLIMBING, // the hop back to the edge
+  DIVE_AGAIN,    // back on the edge: a tap goes again
+} DivePhase;
+static DivePhase dive_phase;
+static float floating_seconds_left;
+static int dive_count;
+
+#define DIVES_BEFORE_OUTRO 3
+#define FLOATING_SECONDS 2.0f
+#define DIVE_ARC_MS 700
+#define CLIMB_OUT_MS 600
+
+// True while a dive is playing itself out and input should be ignored. The
+// DIVE_AGAIN pause is deliberately not included: that is when a tap is wanted.
+static bool dive_in_progress(void) {
+  return dive_phase == DIVE_ENTERING || dive_phase == DIVE_FLOATING ||
+         dive_phase == DIVE_CLIMBING;
+}
 
 // Object positions (top-left, matching each placeholder's size).
 static const SDL_Point WATER_AT = {170, 40};
+// Where she comes to rest in the water. Her 120px sheet is drawn centred here,
+// so this sits high enough that she is inside the pool rect (WATER_AT +
+// 460x180, i.e. y 40..220) instead of straddling its lower edge.
+static const SDL_FPoint FLOAT_IN_WATER = {400, 160};
 static const SDL_Point SUNSCREEN_AT = {120, 500};
 static const SDL_Point GOGGLES_AT = {330, 470};
 static const SDL_Point FLOAT_AT = {560, 470};
@@ -157,6 +190,7 @@ static void init(void) {
   goggles_boil = animations[GINA_POOL_ANIM_GOGGLES_BOIL];
   float_boil = animations[GINA_POOL_ANIM_FLOAT_BOIL];
   celebration = animations[GINA_POOL_ANIM_CELEBRATION];
+  floating = animations[POOL_ANIM_FLOATING];
 
   int s = 0;
   sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
@@ -276,27 +310,40 @@ static void float_blows_away(void) {
   float_tween.to_scale = 0.5F;
 }
 
-// Landing half of the dive: splash, the happy line, and the in-place replay
-// reset.
-static void dive_landed(void) {
-  diving = false;
-  play_splash();
+// She has come back out and said her line. Either the card, or round again.
+static void dive_finished(void) {
+  dive_count++;
+  if (dive_count >= DIVES_BEFORE_OUTRO) {
+    set_active_scene(GINA_OUTRO);
+    return;
+  }
+  dive_phase = DIVE_AGAIN;
   say_dive_again();
-  // Replay the adventure in place. The reset happens without leaving the
-  // scene (no on_scene_active), so the walkable area must be rebuilt here or
-  // Gina could roam the whole poolside before reapplying the sunscreen.
-  gina_state_reset();
-  rebuild_walk_grid();
-  gina->current_position = HEN_START;
-  gina->target_position = HEN_START;
+}
+
+// Out of the water: a hop back to the edge she jumped from.
+static void climb_out(void) {
+  dive_phase = DIVE_CLIMBING;
+  tween_start(&dive_tween, gina->current_position,
+              (SDL_FPoint){POOL_EDGE_POI.x, POOL_EDGE_POI.y}, CLIMB_OUT_MS,
+              TWEEN_EASE_OUT, dive_finished);
+  dive_tween.arc_height = 70;
+}
+
+// She has hit the water: splash, then bob for a couple of seconds.
+static void dive_entered(void) {
+  play_splash();
+  dive_phase = DIVE_FLOATING;
+  floating_seconds_left = FLOATING_SECONDS;
+  play_animation(floating, NULL);
 }
 
 static void dive(void) {
-  // The dive arc: a tweened hop from the pool edge into the water.
-  // Input is ignored until she lands (see process_input).
-  diving = true;
-  tween_start(&dive_tween, gina->current_position, (SDL_FPoint){400, 190}, 700,
-              TWEEN_EASE_IN, dive_landed);
+  // The dive arc: a tweened hop from the pool edge into the water. Input is
+  // ignored until she is back out (see process_input).
+  dive_phase = DIVE_ENTERING;
+  tween_start(&dive_tween, gina->current_position, FLOAT_IN_WATER, DIVE_ARC_MS,
+              TWEEN_EASE_IN, dive_entered);
   dive_tween.arc_height = 100;
 }
 
@@ -319,8 +366,16 @@ static void try_dive(void) {
 }
 
 static void process_input(SDL_Event *event) {
-  // Mid-dive nothing is clickable; the replay reset re-enables input.
-  if (diving) {
+  // Nothing is clickable while a dive plays itself out.
+  if (dive_in_progress()) {
+    return;
+  }
+  // After a dive, a tap anywhere goes again — she is already at the edge, so
+  // there is nothing to walk to first.
+  if (dive_phase == DIVE_AGAIN) {
+    if (event->type == SDL_MOUSEBUTTONDOWN) {
+      dive();
+    }
     return;
   }
   // Drag & drop (LIVELINESS.md Part 2): an upward pull from a press on Gina
@@ -361,12 +416,20 @@ static void process_input(SDL_Event *event) {
 
 static void update(float delta_time) {
   actor_update(gina, delta_time);
-  // The dive arc drives Gina's position directly, like Vania's slide; when
-  // the final tick fires dive_landed the reset has already repositioned her,
-  // so the assignment is skipped (tween_update returns false on that tick).
-  if (diving && tween_update(&dive_tween, delta_time)) {
+  // The dive and climb arcs drive Gina's position directly, like Vania's
+  // slide. tween_update returns false on the tick that fires the end callback,
+  // so the assignment is skipped once the next phase has repositioned her.
+  if ((dive_phase == DIVE_ENTERING || dive_phase == DIVE_CLIMBING) &&
+      tween_update(&dive_tween, delta_time)) {
     gina->current_position = tween_pos(&dive_tween);
     gina->target_position = gina->current_position;
+  }
+  if (dive_phase == DIVE_FLOATING) {
+    floating_seconds_left -= delta_time;
+    if (floating_seconds_left <= 0.0F) {
+      stop_animation(floating);
+      climb_out();
+    }
   }
   if (float_flying) {
     tween_update(&float_tween, delta_time);
@@ -388,7 +451,15 @@ static void render(SDL_Renderer *renderer) {
                             (SDL_Point){(int)p.x, (int)p.y},
                             tween_scale(&float_tween));
   }
-  render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
+  if (dive_phase == DIVE_FLOATING) {
+    // Bobbing in the water: her own sheet, centred where the dive left her,
+    // instead of the standing sprite the action layer would draw.
+    render_animation(renderer, floating,
+                     (SDL_Point){(int)gina->current_position.x - 60,
+                                 (int)gina->current_position.y - 60});
+  } else {
+    render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
+  }
   // The reward burst over the goggles spot while the chime plays.
   if (celebration->is_playing) {
     render_animation(renderer, celebration, CELEBRATION_AT);
@@ -401,6 +472,10 @@ static void on_scene_active(void) {
   // tree or vine keeps the puzzle state.
   gina->current_position = HEN_START;
   gina->target_position = HEN_START;
+  // The dive sequence is scene-local: entering the poolside always starts
+  // outside it, with no dives counted.
+  dive_phase = DIVE_NONE;
+  dive_count = 0;
   // The sunscreen may have been applied since init (the minigame scene sets
   // it, then control returns here): pick the state-appropriate walk area.
   rebuild_walk_grid();

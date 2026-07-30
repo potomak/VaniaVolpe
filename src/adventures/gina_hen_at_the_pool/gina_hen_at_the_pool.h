@@ -20,6 +20,7 @@ enum gina_hen_at_the_pool_scene {
   GINA_VINE,               // the grape vine
   GINA_SUNSCREEN_MINIGAME, // brush sunscreen onto Gina
   GINA_GRAPES_MINIGAME,    // pick every grape
+  GINA_OUTRO,              // the end card, after her last dive
 };
 
 extern Adventure gina_hen_at_the_pool;

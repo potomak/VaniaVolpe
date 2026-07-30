@@ -111,7 +111,16 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_BLINK_SPRITE_ASSET ((Asset){.filename = "blink.png", .directory = "hen"})
 #define GINA_HEN_ANIM_BLINK_DATA_ASSET ((Asset){.filename = "blink.anim", .directory = "hen"})
 #define GINA_HEN_ANIM_BLINK_SPEC {2, LOOP, {"blink.png", "hen"}, {"blink.anim", "hen"}, 0, 0}
-#define GINA_HEN_ANIMS_COUNT 9
+#define GINA_HEN_ANIM_FLOATING 9
+#define GINA_HEN_ANIM_FLOATING_FRAMES 3
+#define GINA_HEN_ANIM_FLOATING_STYLE LOOP
+#define GINA_HEN_ANIM_FLOATING_MS_PER_FRAME 0
+#define GINA_HEN_ANIM_FLOATING_SPRITE_FILE "floating.png"
+#define GINA_HEN_ANIM_FLOATING_DATA_FILE "floating.anim"
+#define GINA_HEN_ANIM_FLOATING_SPRITE_ASSET ((Asset){.filename = "floating.png", .directory = "hen"})
+#define GINA_HEN_ANIM_FLOATING_DATA_ASSET ((Asset){.filename = "floating.anim", .directory = "hen"})
+#define GINA_HEN_ANIM_FLOATING_SPEC {3, LOOP, {"floating.png", "hen"}, {"floating.anim", "hen"}, 0, 0}
+#define GINA_HEN_ANIMS_COUNT 10
 
 // ── intro ─────────────────────────────────────────────
 #define GINA_INTRO_IMAGE_INTRO_BACKGROUND 0
@@ -139,6 +148,12 @@ void scene_say(int index);
 #define GINA_INTRO_ANIMS_COUNT 2
 
 // ── minigames ─────────────────────────────────────────────
+
+// ── outro ─────────────────────────────────────────────
+#define GINA_OUTRO_IMAGE_OUTRO_BACKGROUND 0
+#define GINA_OUTRO_IMAGE_OUTRO_BACKGROUND_INIT {NULL, "outro_background.png", "outro", 0, 0}
+#define GINA_OUTRO_IMAGES_COUNT 1
+#define GINA_OUTRO_IMAGES_INIT {GINA_OUTRO_IMAGE_OUTRO_BACKGROUND_INIT}
 
 // ── pool ─────────────────────────────────────────────
 #define GINA_POOL_IMAGE_BACKGROUND 0

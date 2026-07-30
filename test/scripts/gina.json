@@ -200,12 +200,42 @@
    "action": "click",
    "x": 0.5,
    "y": 0.217,
-   "wait_ms": 4000,
-   "note": "dive! (tween arc into the water, then splash + line + replay reset)"
+   "wait_ms": 2000,
+   "note": "dive! (walks to the edge, then the arc into the water)"
   },
   {
    "action": "screenshot",
-   "name": "06-dive"
+   "name": "06-dive-floating"
+  },
+  {
+   "action": "wait",
+   "wait_ms": 4000,
+   "note": "she bobs, hops back out, and says the line"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.5,
+   "wait_ms": 5500,
+   "note": "a tap anywhere dives again (2 of 3)"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.5,
+   "wait_ms": 5500,
+   "note": "and again (3 of 3) -> the end card"
+  },
+  {
+   "action": "screenshot",
+   "name": "07-outro"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.5,
+   "wait_ms": 1500,
+   "note": "a tap on the end card returns to the hub"
   }
  ],
  "expect": [
@@ -220,6 +250,6 @@
   "Prendi questo cestino",
   "Cestino pieno d'uva",
   "Ecco il tuo salvagente",
-  "Che bello! Ancora"
+  "Che divertente! Ancora"
  ]
 }
