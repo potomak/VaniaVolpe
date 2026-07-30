@@ -18,6 +18,7 @@
 
 #include "gina_hen_at_the_pool.h"
 #include "gina_state.h"
+#include "gina_worn.h"
 #include "hen.h"
 #include "pool.h"
 
@@ -459,6 +460,7 @@ static void render(SDL_Renderer *renderer) {
                                  (int)gina->current_position.y - 60});
   } else {
     render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
+    gina_render_worn(renderer, gina);
   }
   // The reward burst over the goggles spot while the chime plays.
   if (celebration->is_playing) {

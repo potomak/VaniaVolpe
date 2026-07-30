@@ -12,6 +12,7 @@
 #include "image.h"
 
 #include "gina_hen_at_the_pool.h"
+#include "gina_worn.h"
 #include "hen.h"
 #include "outro.h"
 
@@ -46,6 +47,13 @@ static void process_input(SDL_Event *event) {
   }
 }
 
+// Custom render only so she still has her goggles and float on the card — she
+// reached it wearing them.
+static void render(SDL_Renderer *renderer) {
+  render_action_layer(renderer, NULL, NULL, 0, &hen, 1);
+  gina_render_worn(renderer, hen);
+}
+
 static void on_scene_active(void) {
   // Re-pose her whenever the card is shown, so reaching it again (or dragging
   // her away) always returns her to her spot. Matches .actor_start.
@@ -59,6 +67,7 @@ static void on_scene_inactive(void) {}
 Scene gina_outro_scene = {
     .init = init,
     .process_input = process_input,
+    .render = render,
     .actor = &hen,
     .actor_spec = &HEN_SPEC,
     .actor_start = {400, 430},

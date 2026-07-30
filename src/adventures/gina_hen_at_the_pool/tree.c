@@ -17,6 +17,7 @@
 
 #include "gina_hen_at_the_pool.h"
 #include "gina_state.h"
+#include "gina_worn.h"
 #include "hen.h"
 #include "tree.h"
 
@@ -219,6 +220,7 @@ static void render(SDL_Renderer *renderer) {
     render_animation(renderer, float_boil, (SDL_Point){(int)p.x, (int)p.y});
   }
   render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
+  gina_render_worn(renderer, gina);
   // Once Carla has handed it over, Gina carries the basket with her.
   if (gina_state.has_basket) {
     actor_render_carried(gina, renderer, basket, (SDL_Point){-55, -70});

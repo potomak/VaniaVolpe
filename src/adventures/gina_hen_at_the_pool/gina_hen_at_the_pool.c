@@ -7,6 +7,7 @@
 #include "gina_hen_at_the_pool.h"
 
 #include "gina_state.h"
+#include "gina_worn.h"
 #include "grapes_minigame.h"
 #include "intro.h"
 #include "outro.h"
@@ -39,6 +40,10 @@ Adventure gina_hen_at_the_pool = {
     .on_enter = gina_state_reset,
     .sfx = sfx,
     .sfx_length = GINA_SFX_COUNT,
+    // What Gina wears once she has collected it: shared, because it follows her
+    // from scene to scene (see gina_worn.h).
+    .images = gina_worn_images,
+    .images_length = GINA_HEN_IMAGES_COUNT,
 };
 
 void gina_hen_at_the_pool_register(void) {

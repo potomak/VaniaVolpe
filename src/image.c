@@ -97,6 +97,25 @@ bool load_image(SDL_Renderer *renderer, ImageData *image) {
   return true;
 }
 
+bool load_image_table(SDL_Renderer *renderer, ImageData *images, int length) {
+  for (int i = 0; i < length; i++) {
+    if (!load_image(renderer, &images[i])) {
+      // Unwind: free the images that did load before this failure.
+      for (int j = 0; j < i; j++) {
+        free_image_texture(&images[j]);
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+void free_image_table(ImageData *images, int length) {
+  for (int i = 0; i < length; i++) {
+    free_image_texture(&images[i]);
+  }
+}
+
 // Load animation sprite clips
 //
 // Data format:

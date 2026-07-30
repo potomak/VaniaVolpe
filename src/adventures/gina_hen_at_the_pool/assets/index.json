@@ -278,6 +278,24 @@
       "task": true
     },
     {
+      "group": "Art — Worn items",
+      "type": "image",
+      "dir": "common/hen",
+      "name": "goggles_worn",
+      "size": "120x120",
+      "description": "The swimming goggles as Gina wears them, drawn on her own 120x120 frame so the overlay registers with her sprite: goggles over her eye, transparent everywhere else. Placeholder via tools/gen_worn_placeholders.py.",
+      "task": true
+    },
+    {
+      "group": "Art — Worn items",
+      "type": "image",
+      "dir": "common/hen",
+      "name": "float_worn",
+      "size": "120x120",
+      "description": "The pool float as Gina wears it, on her own 120x120 frame: the ring around her middle, transparent everywhere else. Placeholder via tools/gen_worn_placeholders.py.",
+      "task": true
+    },
+    {
       "group": "Art — Intro",
       "type": "image",
       "dir": "intro",

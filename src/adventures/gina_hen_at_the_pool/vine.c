@@ -15,6 +15,7 @@
 
 #include "gina_hen_at_the_pool.h"
 #include "gina_state.h"
+#include "gina_worn.h"
 #include "hen.h"
 #include "vine.h"
 
@@ -127,8 +128,16 @@ static void on_scene_active(void) {
 
 static void on_scene_inactive(void) {}
 
+// Custom render only so her kit draws over her; everything else here is
+// sprites and hotspots the framework handles.
+static void render(SDL_Renderer *renderer) {
+  render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
+  gina_render_worn(renderer, gina);
+}
+
 Scene vine_scene = {
     .init = init,
+    .render = render,
     .actor = &gina,
     .actor_spec = &HEN_SPEC,
     .actor_start = {400, 480},

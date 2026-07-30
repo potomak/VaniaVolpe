@@ -32,6 +32,16 @@ typedef struct adventure {
   // on teardown. NULL/0 for an adventure with no sound effects (e.g. the hub).
   ChunkData *sfx;
   int sfx_length;
+
+  // The adventure's shared image bank, the visual counterpart of sfx above:
+  // art that belongs to the adventure rather than to any one scene, because it
+  // follows the player between them — the items Gina wears once she has
+  // collected them. A scene-owned image would die with its scene, and every
+  // scene that wanted it would need its own copy. Loaded once in the media pass
+  // and freed on teardown. NULL/0 when all of an adventure's art is
+  // scene-local.
+  ImageData *images;
+  int images_length;
 } Adventure;
 
 // Lifecycle for a whole adventure: each delegates to every one of its scenes,

@@ -63,6 +63,12 @@ void free_animation(AnimationData *animation);
 
 bool load_image(SDL_Renderer *renderer, ImageData *image);
 
+// Load (or free) a whole table of images — a scene's, or an adventure's shared
+// bank. On the first failure the images that already loaded are freed, so the
+// caller can fail the media pass without leaking textures.
+bool load_image_table(SDL_Renderer *renderer, ImageData *images, int length);
+void free_image_table(ImageData *images, int length);
+
 bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
                     Asset sprite_asset, Asset data_asset);
 

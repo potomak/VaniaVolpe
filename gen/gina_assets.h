@@ -23,6 +23,12 @@ void scene_say(int index);
 #define GINA_GRAPES_ANIMS_COUNT 1
 
 // ── hen ─────────────────────────────────────────────
+#define GINA_HEN_IMAGE_GOGGLES_WORN 0
+#define GINA_HEN_IMAGE_GOGGLES_WORN_INIT {NULL, "goggles_worn.png", "hen", 0, 0}
+#define GINA_HEN_IMAGE_FLOAT_WORN 1
+#define GINA_HEN_IMAGE_FLOAT_WORN_INIT {NULL, "float_worn.png", "hen", 0, 0}
+#define GINA_HEN_IMAGES_COUNT 2
+#define GINA_HEN_IMAGES_INIT {GINA_HEN_IMAGE_GOGGLES_WORN_INIT, GINA_HEN_IMAGE_FLOAT_WORN_INIT}
 #define GINA_HEN_CHUNK_WALKING 0
 #define GINA_HEN_CHUNK_WALKING_INIT {NULL, "walking.wav", "hen"}
 #define GINA_HEN_CHUNK_WALKING_FILE "walking.wav"
