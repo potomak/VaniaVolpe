@@ -26,6 +26,11 @@ static void render_overlay(SDL_Renderer *renderer, const Hen *gina,
 }
 
 void gina_render_worn(SDL_Renderer *renderer, const Hen *gina) {
+  // Carla's basket, from her offer until Gina hands it back full of grapes.
+  if (gina_state.has_basket) {
+    render_overlay(renderer, gina,
+                   &gina_worn_images[GINA_HEN_IMAGE_BASKET_CARRIED]);
+  }
   if (gina_state.has_goggles) {
     render_overlay(renderer, gina,
                    &gina_worn_images[GINA_HEN_IMAGE_GOGGLES_WORN]);

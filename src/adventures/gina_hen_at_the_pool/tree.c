@@ -26,7 +26,6 @@
 
 static ImageData images[GINA_TREE_IMAGES_COUNT] = GINA_TREE_IMAGES_INIT;
 static const ImageData *background = &images[GINA_TREE_IMAGE_BACKGROUND];
-static const ImageData *basket = &images[GINA_TREE_IMAGE_BASKET];
 
 // The tappable objects boil (LIVELINESS.md Part 3): the stuck float squiggles
 // while it can be examined, Carla while she can be talked to. Same size as the
@@ -47,7 +46,7 @@ static const SceneAnimSpec anim_specs[] = {
 
 // Static sprite layer: just the backdrop. The stuck float and Carla are boils
 // declared on their hotspots, which the framework plays and draws. render()
-// keeps the dynamic draws: the falling float, the actor, the carried basket and
+// keeps the dynamic draws: the falling float, the actor and her kit, and
 // the reward burst.
 static SceneSprite sprites[1];
 
@@ -181,7 +180,9 @@ static void talk_to_carla(void) {
       // Carla eats the grapes and drops the float back to Gina: it bounces down
       // from the branches while she says thanks, with a chime + confetti burst
       // over the float as it comes back.
+      // The grapes go over in the basket, so both leave her at once.
       gina_state.has_grapes = false;
+      gina_state.has_basket = false;
       say_carla_thanks();
       play_chime();
       play_animation(celebration, NULL);
@@ -213,7 +214,7 @@ static void update(float delta_time) {
 static void render(SDL_Renderer *renderer) {
   // Backdrop, the stuck float and Carla are static sprites (drawn by the
   // framework). render() draws the dynamic layer: the falling float, the
-  // actor, the carried basket and the reward burst.
+  // actor and whatever she is carrying, and the reward burst.
   if (float_falling) {
     // The drop: the float bounces down from the branches.
     SDL_FPoint p = tween_pos(&float_tween);
@@ -221,10 +222,6 @@ static void render(SDL_Renderer *renderer) {
   }
   render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
   gina_render_worn(renderer, gina);
-  // Once Carla has handed it over, Gina carries the basket with her.
-  if (gina_state.has_basket) {
-    actor_render_carried(gina, renderer, basket, (SDL_Point){-55, -70});
-  }
   // The reward burst over the returning float while the chime plays.
   if (celebration->is_playing) {
     render_animation(renderer, celebration, CELEBRATION_AT);

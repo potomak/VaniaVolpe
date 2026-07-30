@@ -114,6 +114,10 @@
    "note": "go to the vine (right edge)"
   },
   {
+   "action": "screenshot",
+   "name": "03b-vine-carrying-basket"
+  },
+  {
    "action": "click",
    "x": 0.5,
    "y": 0.4,

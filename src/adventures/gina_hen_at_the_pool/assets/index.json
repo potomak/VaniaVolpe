@@ -290,6 +290,15 @@
       "group": "Art — Worn items",
       "type": "image",
       "dir": "common/hen",
+      "name": "basket_carried",
+      "size": "120x120",
+      "description": "Carla's basket as Gina carries it, on her own 120x120 frame: the basket hanging from her beak, transparent everywhere else. She has it from Carla's offer until she hands it back full of grapes. Placeholder via tools/gen_worn_placeholders.py.",
+      "task": true
+    },
+    {
+      "group": "Art — Worn items",
+      "type": "image",
+      "dir": "common/hen",
       "name": "float_worn",
       "size": "120x120",
       "description": "The pool float as Gina wears it, on her own 120x120 frame: the ring around her middle, transparent everywhere else. Placeholder via tools/gen_worn_placeholders.py.",
@@ -441,15 +450,6 @@
       "size": "90x60",
       "description": "The float, caught in the branches.",
       "runtime": false,
-      "task": true
-    },
-    {
-      "group": "Art — Tree",
-      "type": "image",
-      "dir": "common/tree",
-      "name": "basket",
-      "size": "50x40",
-      "description": "The basket Carla hands over (Gina carries it).",
       "task": true
     },
     {

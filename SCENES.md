@@ -324,9 +324,9 @@ a time, never a big-bang rewrite:
      site in both adventures moved onto the helpers and **no scene includes
      `<SDL2_mixer/...>` any more.**
    - **Cross-scene art: a shared image bank.** ✅ **Shipped.** The visual twin of
-     the SFX bank, and for the same reason: an item Gina keeps once she has
-     collected it (her goggles, her pool float) has to be drawn in every scene
-     she visits afterwards, including the end card. A scene-owned image dies
+     the SFX bank, and for the same reason: an item Gina keeps once she has it
+     (her goggles, her pool float, Carla's basket) has to be drawn in every
+     scene she visits afterwards, including the end card. A scene-owned image dies
      with its scene and would need a copy per scene, so those live on the
      `Adventure` (`.images`), loaded once in the media pass and freed on teardown
      (`load_image_table` / `free_image_table`, which `load_scene_images` now
