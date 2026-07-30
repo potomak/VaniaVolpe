@@ -78,11 +78,10 @@ static void init(void) {
 }
 
 static void process_input(SDL_Event *event) {
-  // Drag & drop (LIVELINESS.md): a press-drag on Gina picks her up. The intro
-  // has no walkable area, so the drag takes a NULL grid — she is set back down
-  // where released. A drag is consumed here; plain taps fall through to the
-  // buttons below.
-  if (walk_actor_drag_event(hen, NULL, event)) {
+  // Drag & drop (LIVELINESS.md): an upward pull on Gina lifts her, and letting
+  // go sets her back on her spot. A drag is consumed here; plain taps fall
+  // through to the buttons below.
+  if (actor_drag_event(hen, event)) {
     return;
   }
   switch (event->type) {

@@ -297,9 +297,10 @@ typedef struct scene {
 // out_order must hold props_length + 2 * actors_length entries and receives
 // drawable indices: 0..props_length-1 name props, props_length + i names
 // actors[i], and props_length + actors_length + i names actor i's landing
-// shadow — emitted only while she is airborne, and keyed on the ground it
-// marks rather than on her feet. Returns how many entries were written. Split
-// from render_action_layer so tests can assert the ordering without a renderer.
+// shadow — emitted only while she is airborne. Actors and shadows alike key on
+// actor_depth_y, so a lifted actor sorts with her shadow at the landing point.
+// Returns how many entries were written. Split from render_action_layer so
+// tests can assert the ordering without a renderer.
 int action_layer_order(const Prop *props, int props_length,
                        Actor *const *actors, int actors_length, int *out_order);
 
@@ -323,7 +324,7 @@ bool hotspots_handle_click(const Hotspot *hotspots, int hotspots_length,
 // The default scene input handler: the drag + hit-test
 // + walk interaction every walking scene shared. The engine runs it for a scene
 // that supplies no process_input of its own — a press-drag on the actor picks
-// it up (walk_actor_drag_event), a plain tap is dispatched to the hotspot
+// it up (actor_drag_event), a plain tap is dispatched to the hotspot
 // table, and anything else walks the actor toward the click. Uses the scene's
 // `.actor`, `.walk_grid` and hotspot table. An actor-less scene (a menu like
 // the hub) may use it too: with no `.actor` it skips the drag and walk-to-click

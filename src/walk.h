@@ -35,13 +35,6 @@ typedef struct walk_grid {
   int w;
   int h;
   Uint8 cells[WALK_GRID_MAX_H][WALK_GRID_MAX_W];
-  // Horizontal extent of the walkable cells (leftmost / rightmost column
-  // holding any walkable cell), cached when the grid is built or parsed so the
-  // drag clamp is O(1) per event instead of scanning the grid. -1 when the
-  // grid has no walkable cell. Recomputed on every rebuild (e.g. the pool's
-  // shade -> strip switch), so it always matches `cells`.
-  int walkable_min_cx;
-  int walkable_max_cx;
 } WalkGrid;
 
 // Rasterise the rects into the grid (called once from the scene's init). A
@@ -85,26 +78,6 @@ bool walk_grid_contains(const WalkGrid *grid, SDL_Point p);
 // with a warning.
 SDL_FPoint walk_grid_nearest(const WalkGrid *grid, SDL_Point p);
 
-// Clamp x to the horizontal extent of the grid's walkable cells — the centre
-// of the leftmost walkable column to the centre of the rightmost. Used while
-// dragging the actor so her horizontal position never leaves the walkable
-// area (e.g. Gina, before the sunscreen, stays within the umbrella's shade)
-// even as the pointer roams outside it. A grid with no walkable cell leaves x
-// unchanged. Clamping to column centres keeps every reachable x over ground,
-// so the straight-down drop scan lands with no horizontal jump.
-float walk_grid_clamp_x(const WalkGrid *grid, float x);
-
-// Clamp a desired ground y into the walkable span of the column at x: the
-// desired cell if it is walkable, else the nearest walkable one below, else
-// above. Used by a drag to keep the landing shadow on real ground (SCALING.md)
-// — the upward scan is what lets the actor be carried past the front edge
-// without the shadow ending up beneath her feet. Returns false when the column
-// has no walkable cell at all (or there is no grid), leaving *out_y untouched;
-// callers then hold their last valid value rather than borrowing a point from
-// a column the actor isn't over.
-bool walk_grid_clamp_ground(const WalkGrid *grid, float x, float desired_y,
-                            float *out_y);
-
 // Fill out[] with up to max_out waypoints from `from` to `to` (excluding
 // `from`, including the final destination). Returns the count (>= 1).
 // Illegal endpoints are snapped to legal ground first; an unreachable goal
@@ -119,21 +92,5 @@ int walk_grid_find_path(const WalkGrid *grid, SDL_FPoint from, SDL_FPoint to,
 // first (fall-through clicks).
 void walk_actor_to(Actor *actor, const WalkGrid *grid, SDL_FPoint goal,
                    bool exact_goal, void (*on_end)(void));
-
-// Drag & drop (LIVELINESS.md Part 2). Scenes call this first in
-// process_input, with their live grid. A press on the actor's (padded)
-// sprite arms a drag but still falls through to the scene — a hotspot the
-// actor stands on keeps working for plain taps. Pointer travel past
-// DRAG_START_THRESHOLD then steals the actor (cancelling whatever walk the
-// press started). While carried, her horizontal position is clamped to the
-// grid's walkable extent (walk_grid_clamp_x), so she can be lifted up out of
-// the area vertically but never dragged out of it sideways (e.g. Gina stays
-// within the umbrella's shade before the sunscreen). The release then drops
-// her onto the first walkable cell straight below the drop point (its grid
-// column; no ground below falls back to walk_grid_nearest) — so a drop can
-// never break a walkable-area invariant. Returns true when the event was the
-// drag's (carry or release); consumed events must not reach the hotspots.
-bool walk_actor_drag_event(Actor *actor, const WalkGrid *grid,
-                           const SDL_Event *event);
 
 #endif /* walk_h */

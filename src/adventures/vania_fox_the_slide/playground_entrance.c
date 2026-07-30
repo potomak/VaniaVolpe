@@ -205,7 +205,7 @@ static void render(SDL_Renderer *renderer) {
     actor_render_carried(fox, renderer, key, (SDL_Point){-50, -80});
   }
 
-  actor_render_with_shadow(fox, renderer);
+  render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &fox, 1);
 }
 
 static void on_scene_active(void) {

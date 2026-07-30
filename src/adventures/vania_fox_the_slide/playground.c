@@ -235,7 +235,7 @@ static void process_input(SDL_Event *event) {
   // to the slide/walk handling below. Suppressed mid-slide: update() is driving
   // her down the slide (has_started_sliding), so grabbing her would fight that
   // scripted motion — she can't be picked up until she reaches the bottom.
-  if (!has_started_sliding && walk_actor_drag_event(fox, &walk_grid, event)) {
+  if (!has_started_sliding && actor_drag_event(fox, event)) {
     return;
   }
   switch (event->type) {

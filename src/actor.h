@@ -127,30 +127,19 @@ typedef struct actor {
   // Fired once when the current walk reaches its target; per-instance so two
   // actors walking at once don't clobber each other's callback. NULL when idle.
   void (*on_end_walking)(void);
-  // Drag & drop (LIVELINESS.md Part 2). A press over the sprite arms a drag
-  // (managed by walk_actor_drag_event); drag_offset keeps the grab point
-  // under the pointer while DRAGGED; fall_target_y is the centre y the actor
-  // descends to while FALLING.
+  // Drag & drop (LIVELINESS.md Part 2), managed by actor_drag_event. A press
+  // over the sprite arms a drag; an upward pull past the threshold starts one.
+  // A drag is purely vertical: only current_position.y changes, and never
+  // below ground_y, so the actor cannot be *moved* by dragging — only lifted
+  // and let go.
   bool drag_armed;
-  SDL_FPoint drag_grab;   // pointer position at the arming press
-  SDL_FPoint drag_offset; // current_position - drag_grab when the drag began
-  float fall_target_y;
-  // Where the actor's depth comes from while she is off the ground
-  // (SCALING.md). These are all *ground* lines — the same space as
-  // actor_feet_y, not the centre space the walk grid is indexed in; walk.c
-  // converts at the grid boundary.
-  // ground_y is the landing point the shadow is drawn at and the
-  // scale is read from; it eases toward ground_target_y so a step in the
-  // ground under a sideways drag doesn't teleport the shadow. grab_ground_y is
-  // the ground she was picked up from, held for the whole gesture, so lifting
-  // her within lift_ceiling changes her height without changing her depth.
-  // has_ground is false when the column beneath her has no walkable cell (or
-  // there is no grid at all): the shadow is hidden and the last depth held.
+  SDL_FPoint drag_grab; // pointer position at the arming press
+  float drag_offset_y;  // current_position.y - pointer.y when the drag began
+  // The ground she was picked up from, in feet space (actor_feet_y). Fixed for
+  // the whole gesture: the shadow is drawn on it, she falls back to it, and her
+  // depth — and so her size — is read from it, which is why a drag never
+  // rescales her (SCALING.md).
   float ground_y;
-  float ground_target_y;
-  float grab_ground_y;
-  float lift_ceiling;
-  bool has_ground;
   // Idle fidgets (LIVELINESS.md Part 1): the spec's fidget sheets (ONE_SHOT),
   // which one is playing while FIDGETING, and when the next one fires
   // (re-rolled every time the actor enters IDLE).
@@ -176,9 +165,15 @@ Actor *make_actor(const ActorSpec *spec, SDL_FPoint initial_position,
 float actor_feet_y(const Actor *actor);
 
 // The gap actor_feet_y adds to current_position.y — half the reference frame
-// height. What you add to convert a walk-grid y (centre space) into a ground
-// line, or subtract to go back.
+// height. Subtract it from a ground line to get the centre y at which her feet
+// rest on it (what a drag clamps against and a drop falls to).
 float actor_feet_offset(const Actor *actor);
+
+// The one y an actor's depth is read from (SCALING.md): her feet on the
+// ground, or — while she is airborne — the ground she is bound for. Her size
+// and her place in the depth sort both come from this, so they cannot
+// disagree.
+float actor_depth_y(const Actor *actor);
 
 // How large the actor is drawn right now, from her scene's depth ramp
 // (SCALING.md). Exactly 1.0 for a scene that declares none. Cheap enough to
@@ -186,14 +181,8 @@ float actor_feet_offset(const Actor *actor);
 // during input, before the frame's update has run.
 float actor_scale(const Actor *actor);
 
-// How far the actor can be lifted before the lift starts reading as depth
-// (SCALING.md): a fraction of her scene's ramp span, or a flat pixel count in
-// a scene with no ramp.
-float actor_lift_ceiling(const Actor *actor);
-
-// Is the actor off the ground with a known landing point? Then the framework
-// draws her landing shadow, depth-sorted on that point rather than on her
-// airborne feet.
+// Is the actor being held above the ground she came from? Then the framework
+// draws her landing shadow there — the gap between her and it is the lift.
 bool actor_shadow_visible(const Actor *actor);
 void actor_render_shadow(const Actor *actor, SDL_Renderer *renderer);
 
@@ -201,14 +190,10 @@ bool actor_load_media(Actor *actor, SDL_Renderer *renderer);
 
 void actor_update(Actor *actor, float delta_time);
 
+// Draws the actor alone. Scenes go through render_action_layer (scene.h)
+// instead, which depth-sorts her together with her landing shadow and the
+// scene's props — drawing her with this directly loses the shadow.
 void actor_render(Actor *actor, SDL_Renderer *renderer);
-
-// The actor plus her landing shadow, for scenes that draw her themselves
-// instead of going through render_action_layer (which emits the shadow as its
-// own depth-sorted entry, so it can sort against props). Without one of these
-// two, a draggable actor has no shadow at all and nothing on screen says where
-// she will come down.
-void actor_render_with_shadow(Actor *actor, SDL_Renderer *renderer);
 
 // Draw something the actor is carrying. `offset` is authored against her
 // natural size, relative to current_position, and is scaled and anchored
@@ -248,15 +233,26 @@ bool actor_play_state(Actor *actor, ActorState state);
 // current_position): the grab target for drag & drop, before padding.
 SDL_Rect actor_sprite_rect(const Actor *actor);
 
-// Start dragging (LIVELINESS.md Part 2): interrupts a walk (dropping its
-// callback) or catches the actor mid-fall; refused while TALKING (returns
-// false), like walks are. The actor then follows actor_drag_move until
-// actor_drop. Scenes don't call these directly — walk_actor_drag_event does.
+// Drag & drop (LIVELINESS.md Part 2). A press over the sprite arms a drag; an
+// upward pull past DRAG_START_THRESHOLD starts one, so a tap or a sideways
+// swipe still reaches the hotspots underneath. Returns true once it has taken
+// the actor over, which is a scene's cue to stop handling the event.
+//
+// The gesture only lifts her: x never moves and y never goes below the ground
+// she was picked up from, so releasing always sets her back down exactly where
+// she was. That is the whole model — there is no landing to search for, and a
+// drag needs no walkable area at all, which is why the poster scenes can use it
+// too.
+bool actor_drag_event(Actor *actor, const SDL_Event *event);
+
+// The pieces actor_drag_event drives; separate so tests can step a gesture.
+// actor_begin_drag interrupts a walk (dropping its callback) or catches the
+// actor mid-fall, and is refused while TALKING (returns false), like walks are.
 bool actor_begin_drag(Actor *actor);
-void actor_drag_move(Actor *actor, SDL_FPoint pointer);
-// Release at the landing target (centre coordinates, from the walk grid —
-// see walk_actor_drag_event): below the actor starts a FALLING descent; at
-// or above snaps there directly (a short hop, never an upward "fall").
-void actor_drop(Actor *actor, SDL_FPoint target);
+// Lift her to follow the pointer, clamped so she never sinks below ground_y.
+void actor_drag_move(Actor *actor, float pointer_y);
+// Let go: she falls back to ground_y, or lands straight away if she is already
+// there (a release with no lift, never an upward "fall").
+void actor_drop(Actor *actor);
 
 #endif /* actor_h */

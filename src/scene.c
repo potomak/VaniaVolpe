@@ -42,7 +42,7 @@ void scene_default_process_input(const Scene *scene, SDL_Event *event) {
   // Drag & drop (LIVELINESS.md Part 2): a press-drag on the actor picks it up;
   // plain taps fall through to the hotspots, so one the actor stands on still
   // works.
-  if (actor != NULL && walk_actor_drag_event(actor, scene->walk_grid, event)) {
+  if (actor != NULL && actor_drag_event(actor, event)) {
     return;
   }
   if (event->type != SDL_MOUSEBUTTONDOWN) {
@@ -157,17 +157,20 @@ int action_layer_order(const Prop *props, int props_length,
       out_order[count++] = i;
     }
   }
-  // A held actor's shadow sorts on the ground it marks, not on her airborne
-  // feet — otherwise lifting her over a prop would tuck the shadow behind it,
-  // when it lies on the floor in front (SCALING.md).
+  // Both an actor and her shadow sort on her depth (actor_depth_y) — the
+  // ground she stands on, or while airborne the ground she is bound for. That
+  // is the same line her size comes from, so a lifted actor and her shadow
+  // stay together against the props: neither tucks behind something the
+  // landing point is in front of (SCALING.md). Shadows are inserted first and
+  // the sort is stable, so an actor's shadow draws just under her.
   for (int i = 0; i < actors_length; i++) {
     if (actor_shadow_visible(actors[i])) {
-      keys[count] = (int)actors[i]->ground_y;
+      keys[count] = (int)actor_depth_y(actors[i]);
       out_order[count++] = props_length + actors_length + i;
     }
   }
   for (int i = 0; i < actors_length; i++) {
-    keys[count] = (int)actor_feet_y(actors[i]);
+    keys[count] = (int)actor_depth_y(actors[i]);
     out_order[count++] = props_length + i;
   }
 

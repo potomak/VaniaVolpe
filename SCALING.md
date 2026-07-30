@@ -90,19 +90,21 @@ float actor_scale(const Actor *actor);   // reads actor->scale_ramp
 ```
 
 Computed on demand — it is a clamp and a lerp. It is deliberately **not** cached
-per frame: `actor_sprite_rect` is called from `walk_actor_drag_event` during
+per frame: `actor_sprite_rect` is called from `actor_drag_event` during
 *input*, which would read a value cached by the previous frame's update, and go
 stale after a teleport (`on_scene_active`, the slide, the dive tween).
+
+All of it goes through one function, `actor_depth_y(a)`, so the scale and the
+depth sort can never read different lines:
 
 | state | depth read from |
 |---|---|
 | grounded (IDLE / WALKING / TALKING / ...) | `actor_feet_y(a)` |
-| `DRAGGED` | `a->ground_y` — the shadow |
-| `FALLING` / `LANDING` | `a->fall_target_y` (the landing, fixed at release) |
+| `DRAGGED` / `FALLING` / `LANDING` | `a->ground_y` — the shadow, fixed at the grab |
 
-`FALLING` must not read her live y, or she would grow as she descends. Because
-the drag's final scale already equals the landing scale, **release changes
-nothing visually** (R3).
+`FALLING` must not read her live y, or she would grow as she descends. Since
+`ground_y` is fixed for the whole gesture, grab, lift, release, fall and landing
+all happen at one size — **release changes nothing visually** (R3).
 
 ## Rendering
 
@@ -193,161 +195,71 @@ bleed at load, or premultiplied alpha with a custom blend mode.
 Note the filtering hint is set **only** in `main.c` — `main_terminal.c` and
 `test/harness.c` never set it — so the headless harness would not catch a
 fringing regression either way. Judge it by eye, in the desktop or web build.
-
 ## Drag & drop
 
-### The conflict
+### The conflict, and how it is dissolved
 
-- Scaling says: **y is depth**, `scale = ramp(y)`.
-- Drag & drop says (`LIVELINESS.md`, *"The z-axis question — there is no z"*):
-  while held, **y is height** over column x, and release scans down that column
-  for ground.
+Scaling wants **screen y to mean depth**: further up the screen is further away,
+and smaller. Drag & drop originally wanted y to mean **height**: pick the actor
+up, carry her, drop her somewhere else. One axis cannot mean both, and every
+attempt to let it (a lift dead-zone, a shadow tracking a scanned landing, a
+slew to smooth the result) bought the ambiguity at the price of a lot of
+machinery — and a series of bugs in it.
 
-Both cannot own y. Two models were tried and rejected before the one below:
+The model now removes the conflict instead of managing it: **a drag does not
+move the actor.** It only lifts her, and lets her fall back.
 
-- **Scale from the raw column-scan landing** (`scale = ramp(drop_target(pos).y)`).
-  Over walkable ground `drop_target` returns her *own* y, so the fall is always
-  zero and lift is unrepresentable; dragging up shrinks her to the minimum and
-  pins there.
-- **Inject a constant lift at grab.** Creates a `LIFT` px translation the instant
-  the 8px drag threshold is crossed — a discontinuity needing a tween to hide.
+- **x never changes.** The pointer's horizontal travel is ignored outright.
+- **y only rises.** She is clamped at the ground she was picked up from, so a
+  downward pull does nothing; a drag only starts on an *upward* pull past
+  `DRAG_START_THRESHOLD`, leaving taps and sideways swipes to the scene.
+- **The ground is fixed at the grab** (`Actor.ground_y`, in feet space). The
+  shadow is drawn there, she falls back to there, and her depth is read from
+  there — so **a drag never rescales her**. Lift and depth stop competing
+  because a lift is no longer a change in depth.
 
-### The model: sprite is held, shadow is ground
-
-The resolution is a second on-screen quantity. The **sprite** shows where she is
-held; a drawn **shadow** shows where she will land. Depth and scale read off the
-shadow; the gap between them reads as height. The shadow also makes the model
-self-explanatory: while it sits still she is being lifted, once it slides back
-she is moving away.
-
-Per drag event, with `G` = the ground y captured at grab and held fixed for the
-whole gesture:
-
-```c
-lift_ceiling = max(LIFT_MAX, G - feet_at_grab);   // see "caught mid-fall"
-lift         = clamp(G - feet, 0, lift_ceiling);
-// The grid is indexed by the actor's centre; ground_y is a ground line.
-target       = walk_grid_clamp_ground(grid, x, feet + lift - foot_offset)
-               + foot_offset;
-ground_y     = slew(ground_y, target, GROUND_SLEW_PX_PER_S * dt);
-scale        = ramp(ground_y);
-```
-
-**Two coordinate spaces meet here.** `current_position` — and therefore every
-walk rect and the whole grid — is the sprite's *centre*; `actor_feet_y`, the
-depth ramps and `ground_y` are *ground* lines, half a reference frame lower.
-`foot_offset` above is `actor_feet_offset()`, that half-frame. Everything that
-reads `ground_y` (the shadow, the depth sort, the scale ramp) wants the ground
-line, and only the grid speaks centre space, so the conversion belongs at the
-grid call and at the drop — not in the readers.
-
-With `LIFT_MAX = 60` and a grab from standing (`lift_ceiling == LIFT_MAX`):
-
-| drag | lift | ground | scale |
-|---|---|---|---|
-| none | 0 | `G` | unchanged |
-| up 30 | 30 | **`G`** | **unchanged** |
-| up 60 | 60 | `G` | unchanged |
-| up 100 | 60 (capped) | `G - 40` | smaller |
-| down 20 | 0 | `G + 20` | bigger |
-
-No pop at grab; **no rescale at all until `LIFT_MAX` is exceeded**; `lift` and
-`ground` are both continuous at the transition; the gesture is reversible with
-no hysteresis in y; and the fall distance is whatever lift the player gave her —
-a small hop, or a long flutter if she is carried high. Small accidental vertical
-wobble cannot rescale her, which matters for an imprecise finger.
-
-`LIFT_MAX` is expressed as a **fraction of the ramp's y span**, not a raw
-constant: 60px is a 100% dead zone on a scene whose ramp spans 60px and a 10%
-one on a scene spanning 600px. Keep it in scene px at a fixed fraction, not
-scaled by the actor's current scale — that would reintroduce a `lift -> ground
--> scale -> lift` cycle needing a frame of lag to resolve.
-
-### Landing is the shadow
-
-Release lands her on the shadow, not on a freshly scanned point — that is what
-makes it authoritative (R4), and `walk_grid_clamp_ground` only ever returns
-walkable cells, so R3 in `LIVELINESS.md` still holds.
-
-The slew is **snapped to its target on release** rather than landed on as-is.
-Slewing is there to smooth the shadow while she is *carried*; letting it also
-decide where she comes down means a quick fling, released before the ease
-converged, drops her short of where the player aimed. Snapping first keeps the
-aim honest and still lands on a walkable cell. The scale can therefore step by
-however much the ease was lagging — zero whenever the player pauses before
-releasing, which is the normal case.
-
-### Clamping the shadow
-
-A separate helper, so the release path's `drop_target` keeps its current
-semantics:
+Everything else follows. There is no landing to search for, so no column scan
+and no clamp; the ground was walkable when she was standing on it, so a drop
+can't break a walkable-area invariant; and since no scene geometry is consulted,
+the poster scenes (intro, outro) get drag & drop for free. `actor_drag_event`
+takes no walk grid at all.
 
 ```c
-// Clamp a desired ground y into the walkable span of column x:
-// the cell itself if walkable, else the first walkable below, else the first
-// above. Returns false when the column has no walkable cell at all.
-bool walk_grid_clamp_ground(const WalkGrid *g, float x, float desired_y,
-                            float *out_y);
+// The whole model.
+ground_y = feet at grab;                       // fixed for the gesture
+y        = min(pointer_y + grab_offset, ground_y - foot_offset);
+scale    = ramp(ground_y);                     // constant
+// release:
+fall to ground_y - foot_offset
 ```
 
-The upward scan is what lets her be dragged past the band's front edge without
-`lift` going negative. When the column has **no** walkable cell, hold the last
-valid `ground_y` and **hide the shadow** rather than inventing a ground point
-somewhere she is not — `walk_grid_nearest` returns a cell in a *different*
-column, which would put the shadow sideways of her and derive the scale from a
-place she is not over. (This is unreachable in shipped scenes: every column
-within the `#144` x-clamp is covered. It is specified so it stays harmless.)
-
-### Slew
-
-`ground_y` moves toward its target at a bounded rate (`GROUND_SLEW_PX_PER_S`,
-around 600). This is not polish — the column scan makes `ground` a
-*discontinuous* function of x, so horizontal motion across a step in ground
-height would teleport the shadow and jump the scale with no vertical input at
-all. In the playground, dragging across x = 710 at feet y = 400 steps the ground
-from ~335 to ~495 between two adjacent columns. Slewing turns that into a ~270ms
-glide, and covers the hidden-shadow case above on the way back.
-
-Only `ground_y` is slewed. Scale and the shadow both derive from it, so they
-stay consistent by construction.
+`foot_offset` is `actor_feet_offset()`: `current_position` is the sprite
+*centre*, while `ground_y` and the depth ramps are *ground* lines half a
+reference frame lower. That conversion is the only arithmetic left.
 
 ### Caught mid-fall
 
-`actor_begin_drag` deliberately catches an actor in mid-air (`LIVELINESS.md`
-calls it "the better toy"; `test_walk.c` asserts it). A gesture that begins with
-her already 300px above her landing point would, with a fixed `LIFT_MAX = 60`,
-compute `lift = 60` and yank `ground` up 240px on the grab frame — a large
-instant rescale, violating R3.
-
-Hence `lift_ceiling = max(LIFT_MAX, G - feet_at_grab)`: the ceiling starts at
-whatever height she already had, so the gesture begins continuous, and
-`LIFT_MAX` governs only gestures that start on the ground. The same rule covers
-re-grabbing after a lift-and-release.
-
-### Scenes with no walk grid
-
-The intro and outro pass a `NULL` grid to the drag helpers (poster scenes with
-no walkable area). There is no ground map, so: no ramp, `scale == 1.0`, no
-shadow, and the drop lands where released — exactly today's behaviour. All of
-this must be a no-op there.
+Grabbing her while she is still falling keeps the ground she was already bound
+for, rather than taking her current mid-air feet as the new ground — otherwise
+each catch would strand her a little higher than the last. In code that is the
+whole special case: `actor_begin_drag` sets `ground_y` only when she is not
+already `FALLING` or `LANDING`.
 
 ### Shadow rendering
 
-- Drawn only while `state == DRAGGED || state == FALLING`. Not `>= DRAGGED`,
-  which would include `LANDING`, where she is already on the ground.
-- Sorted on **`ground_y`**, not `actor_feet_y`. A shadow drawn in the actor's
-  sort slot uses her *airborne* y and would be occluded by props she is plainly
-  in front of — drag the fox high above the playground's acorn pile and her
-  shadow, on the ground in front of it, would draw behind it. This makes the
-  shadow a third drawable kind in `action_layer_order`.
-- Scaled by the same `ramp(ground_y)`, and offset by `render_get_offset()` if
-  drawn as a raw primitive rather than through `render_image` — easy to miss,
-  and wrong only in camera scenes.
+Drawn only while she is genuinely above her ground (`actor_shadow_visible`), so
+a grab with no lift doesn't stamp an ellipse under her own feet.
 
-Art: a soft ellipse. Procedurally drawable, or a placeholder PNG generated like
-the boil sheets, so it need not block on an artist. An always-on shadow (not
-just while dragging) would ground the actor at every depth and is a natural
-follow-up, deliberately out of scope here.
+- A flat, soft ellipse roughly her footprint's width, drawn as scanlines — SDL
+  has no ellipse primitive, and this needs no art to ship.
+- Alpha fades as the gap grows, so the distance reads as height.
+- Sorted with her on `actor_depth_y` (see *Where scale comes from*), and offset
+  by `render_get_offset()` — it is a raw primitive, not a `render_image`, so the
+  camera offset has to be applied explicitly. Easy to miss, and wrong only in
+  camera scenes.
+
+An always-on shadow (not just while dragging) would ground the actor at every
+depth and is a natural follow-up, deliberately out of scope here.
 
 ## Speed (R6)
 
@@ -395,8 +307,9 @@ touches.
    (R5).
 2. ~~**Opt one scene in.**~~ *Shipped.* The depth demo has a ramp, scales its
    props, and its `DEPTH_BANDS` and generated far sheets are gone.
-3. ~~**Drag & drop integration.**~~ *Shipped.* `walk_grid_clamp_ground`,
-   `Actor.ground_y`, the lift model, slew, the shadow and its sort entry,
+3. ~~**Drag & drop integration.**~~ *Shipped, then simplified.* The lift model,
+   the landing scan, the x-clamp and the slew are gone: a drag is vertical-only
+   over a ground fixed at the grab. `Actor.ground_y`, the shadow and its sort entry,
    mid-fall grab, NULL-grid no-op.
 4. ~~**Speed scaling.**~~ *Shipped.*
 5. ~~**Retire the variant system.**~~ *Shipped.* `ActorVariantSpec`, the
@@ -413,10 +326,10 @@ tests of its own, not just the playthrough:
 
 - `scale_ramp_at`: endpoints, midpoint, clamping outside the range, NULL ramp
   returns exactly 1.0.
-- The lift formula: the table above, including continuity at
-  `feet == G - LIFT_MAX` and the mid-fall `lift_ceiling` case.
-- `walk_grid_clamp_ground`: cell walkable; first walkable below; first walkable
-  above (dragged past the front edge); empty column returns false.
+- The drag invariants: x never moves, y never goes below `ground_y`, the scale
+  is identical at every point of a gesture, and she comes to rest exactly where
+  she was picked up. Plus the mid-fall catch, which must keep the ground she was
+  already bound for.
 - The render anchor: at `s == 1` the destination rect equals today's, for a
   state whose frame differs from the reference (sitting).
 - Speed: a scaled walk still terminates at its target.
