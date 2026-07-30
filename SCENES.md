@@ -323,6 +323,19 @@ a time, never a big-bang rewrite:
      keeps it compile-time-checked (`play_chmie()` won't link); every SFX call
      site in both adventures moved onto the helpers and **no scene includes
      `<SDL2_mixer/...>` any more.**
+   - **Cross-scene art: a shared image bank.** ✅ **Shipped.** The visual twin of
+     the SFX bank, and for the same reason: an item Gina keeps once she has it
+     (her goggles, her pool float, Carla's basket) has to be drawn in every
+     scene she visits afterwards, including the end card. A scene-owned image dies
+     with its scene and would need a copy per scene, so those live on the
+     `Adventure` (`.images`), loaded once in the media pass and freed on teardown
+     (`load_image_table` / `free_image_table`, which `load_scene_images` now
+     delegates to as well). The Gina adventure points `.images` at
+     `gina_worn_images`; `gina_render_worn` reads `gina_state` and draws whatever
+     she has, so a scene adds one call after drawing her and nothing has to be
+     kept in sync. The bank holds the shared `common/items` art — the same
+     drawing a scene shows lying on the ground — so an item is authored once and
+     keeps its size whether it is at her feet or in her wings.
    - **Dialogue: generated `say_<line>()`.** ✅ **Shipped.** Each spoken line is
      a per-line dialogue chunk in a `<scene>/dialog` dir; the generator emits a
      `static inline say_<name>(void)` over `scene_say(index)` (game.c), which

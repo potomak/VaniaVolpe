@@ -63,6 +63,12 @@ void free_animation(AnimationData *animation);
 
 bool load_image(SDL_Renderer *renderer, ImageData *image);
 
+// Load (or free) a whole table of images — a scene's, or an adventure's shared
+// bank. On the first failure the images that already loaded are freed, so the
+// caller can fail the media pass without leaking textures.
+bool load_image_table(SDL_Renderer *renderer, ImageData *images, int length);
+void free_image_table(ImageData *images, int length);
+
 bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
                     Asset sprite_asset, Asset data_asset);
 
@@ -106,8 +112,11 @@ void render_animation_scaled_about(SDL_Renderer *renderer,
                                    AnimationData *animation, SDL_Point point,
                                    float scale, SDL_Point anchor);
 
+// `flip` mirrors the art in place, for drawing something registered against a
+// mirrored sprite (see actor_render_carried).
 void render_image_scaled_about(SDL_Renderer *renderer, const ImageData *image,
-                               SDL_Point point, float scale, SDL_Point anchor);
+                               SDL_Point point, float scale, SDL_Point anchor,
+                               SDL_RendererFlip flip);
 
 // Camera scroll offset, applied to every render_image / render_animation
 // draw. Engine-only (game_render sets it around a scrolling scene's render

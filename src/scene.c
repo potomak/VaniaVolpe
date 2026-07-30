@@ -220,7 +220,7 @@ void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
                                       scale, anchor);
       } else {
         render_image_scaled_about(renderer, prop->image, prop->pos, scale,
-                                  anchor);
+                                  anchor, SDL_FLIP_NONE);
       }
     } else if (order[i] < props_length + actors_length) {
       actor_render(actors[order[i] - props_length], renderer);
@@ -247,17 +247,7 @@ void render_scene_sprites(SDL_Renderer *renderer, const SceneSprite *sprites,
 }
 
 bool load_scene_images(Scene *scene, SDL_Renderer *renderer) {
-  for (int i = 0; i < scene->images_length; i++) {
-    if (!load_image(renderer, &scene->images[i])) {
-      // Unwind: free the images that did load before this failure.
-      for (int j = 0; j < i; j++) {
-        free_image_texture(&scene->images[j]);
-      }
-      return false;
-    }
-  }
-
-  return true;
+  return load_image_table(renderer, scene->images, scene->images_length);
 }
 
 SDL_Point plane_screen_pos(const Plane *plane, SDL_FPoint camera_pos) {
@@ -524,9 +514,7 @@ void scene_stop_channel(int channel) {
 }
 
 void free_scene_images(Scene *scene) {
-  for (int i = 0; i < scene->images_length; i++) {
-    free_image_texture(&scene->images[i]);
-  }
+  free_image_table(scene->images, scene->images_length);
 }
 
 void free_scene_chunks(Scene *scene) {

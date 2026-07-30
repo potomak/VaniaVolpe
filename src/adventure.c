@@ -35,9 +35,12 @@ bool adventure_load_media(const Adventure *adventure, SDL_Renderer *renderer) {
   // Resolve this adventure's assets from its own directory.
   asset_set_root(adventure->assets_root);
 
-  // The shared sound-effect bank: loaded once for the
-  // whole adventure, before its scenes.
+  // The shared banks: loaded once for the whole adventure, before its scenes.
   if (!load_chunk_table(adventure->sfx, adventure->sfx_length)) {
+    return false;
+  }
+  if (!load_image_table(renderer, adventure->images,
+                        adventure->images_length)) {
     return false;
   }
 
@@ -90,4 +93,5 @@ void adventure_deinit(const Adventure *adventure) {
     free_scene_music(scene);
   }
   free_chunk_table(adventure->sfx, adventure->sfx_length);
+  free_image_table(adventure->images, adventure->images_length);
 }

@@ -515,6 +515,37 @@ static void test_drag_and_drop(void) {
   actor_free(actor);
 }
 
+// A carried item is authored against the unflipped sheet, so it has to follow
+// the actor around when she turns — otherwise a basket held at her beak is
+// drawn out behind her tail.
+static void test_carried_mirroring(void) {
+  fprintf(stderr, "\n-- carried item placement --\n");
+
+  Actor *a = make_actor(&TEST_SPEC, (SDL_FPoint){400, 500}, NULL);
+  // An item 50 wide held 30 to the west of her centre, so it spans -55..-5.
+  const SDL_Point held = {-55, 2};
+  const int width = 50;
+
+  // Walking west leaves the sheets unflipped, the orientation they are drawn
+  // in.
+  SDL_FPoint westward = {100, 500};
+  actor_walk_path(a, &westward, 1, NULL);
+  SDL_Point west = actor_carried_at(a, held, width);
+  check(west.x == 400 - 55, "facing west, the item sits where it was authored");
+
+  // Turning east must reflect the item's whole span about her centre, not just
+  // its corner: -55..-5 becomes 5..55.
+  SDL_FPoint eastward = {700, 500};
+  actor_walk_path(a, &eastward, 1, NULL);
+  SDL_Point east = actor_carried_at(a, held, width);
+  check(east.x == 400 + 5, "facing east, it mirrors to her other side");
+  check(east.x - 400 == -(west.x - 400) - width,
+        "the mirrored span is the reflection of the authored one");
+  check(east.y == west.y, "turning never moves it vertically");
+
+  actor_free(a);
+}
+
 static void test_drag_depth(void) {
   fprintf(stderr, "\n-- drag depth unit tests --\n");
 
@@ -604,6 +635,7 @@ int test_walk(void) {
   test_stale_callback_cancelled(&playground_grid);
   test_drag_and_drop();
   test_drag_depth();
+  test_carried_mirroring();
 
   return failures;
 }
