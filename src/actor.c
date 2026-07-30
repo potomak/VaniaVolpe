@@ -19,7 +19,7 @@
 
 // The frame the sprite is positioned and measured from. All of an actor's
 // frames are assumed to share a size (as the original fox did).
-static AnimationData *reference_animation(Actor *actor) {
+static AnimationData *reference_animation(const Actor *actor) {
   if (actor->animations[actor->spec->move_state]) {
     return actor->animations[actor->spec->move_state];
   }
@@ -32,6 +32,13 @@ static AnimationData *reference_animation(Actor *actor) {
     }
   }
   return NULL;
+}
+
+// The sheets are drawn facing WEST; actor_face mirrors them to face EAST, so
+// the sprite's own flip is where the actor's facing is recorded.
+static bool actor_is_mirrored(const Actor *actor) {
+  const AnimationData *sprite = reference_animation(actor);
+  return sprite != NULL && sprite->flip == SDL_FLIP_HORIZONTAL;
 }
 
 // Face every animation, including the fidgets, so a state change mid-walk
@@ -560,15 +567,27 @@ void actor_render(Actor *actor, SDL_Renderer *renderer) {
                                 actor_scale(actor), anchor);
 }
 
+SDL_Point actor_carried_at(const Actor *actor, SDL_Point offset, int width) {
+  // `offset` places the item against the unflipped (west-facing) sheet, so when
+  // the actor turns east its side of her centre has to mirror — otherwise a
+  // thing held at her beak is drawn out behind her tail. Mirroring a top-left
+  // corner means reflecting the whole width, not just the x.
+  int dx = actor_is_mirrored(actor) ? -offset.x - width : offset.x;
+  return (SDL_Point){(int)actor->current_position.x + dx,
+                     (int)actor->current_position.y + offset.y};
+}
+
 void actor_render_carried(const Actor *actor, SDL_Renderer *renderer,
                           const ImageData *image, SDL_Point offset) {
-  SDL_Point at = {(int)actor->current_position.x + offset.x,
-                  (int)actor->current_position.y + offset.y};
+  SDL_Point at = actor_carried_at(actor, offset, image->width);
   // The same anchor and scale her sprite is drawn with, so the item keeps its
   // place on her body and its size relative to her at any depth. At scale 1
-  // this is exactly render_image at `at`.
+  // this is exactly render_image at `at`. The art mirrors with her too, so a
+  // handle or a strap keeps pointing the way she faces.
   SDL_Point anchor = {(int)actor->current_position.x, (int)actor_feet_y(actor)};
-  render_image_scaled_about(renderer, image, at, actor_scale(actor), anchor);
+  render_image_scaled_about(renderer, image, at, actor_scale(actor), anchor,
+                            actor_is_mirrored(actor) ? SDL_FLIP_HORIZONTAL
+                                                     : SDL_FLIP_NONE);
 }
 
 void actor_free(Actor *actor) {

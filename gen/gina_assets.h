@@ -23,14 +23,6 @@ void scene_say(int index);
 #define GINA_GRAPES_ANIMS_COUNT 1
 
 // ── hen ─────────────────────────────────────────────
-#define GINA_HEN_IMAGE_GOGGLES_WORN 0
-#define GINA_HEN_IMAGE_GOGGLES_WORN_INIT {NULL, "goggles_worn.png", "hen", 0, 0}
-#define GINA_HEN_IMAGE_BASKET_CARRIED 1
-#define GINA_HEN_IMAGE_BASKET_CARRIED_INIT {NULL, "basket_carried.png", "hen", 0, 0}
-#define GINA_HEN_IMAGE_FLOAT_WORN 2
-#define GINA_HEN_IMAGE_FLOAT_WORN_INIT {NULL, "float_worn.png", "hen", 0, 0}
-#define GINA_HEN_IMAGES_COUNT 3
-#define GINA_HEN_IMAGES_INIT {GINA_HEN_IMAGE_GOGGLES_WORN_INIT, GINA_HEN_IMAGE_BASKET_CARRIED_INIT, GINA_HEN_IMAGE_FLOAT_WORN_INIT}
 #define GINA_HEN_CHUNK_WALKING 0
 #define GINA_HEN_CHUNK_WALKING_INIT {NULL, "walking.wav", "hen"}
 #define GINA_HEN_CHUNK_WALKING_FILE "walking.wav"
@@ -155,6 +147,35 @@ void scene_say(int index);
 #define GINA_INTRO_ANIM_EXIT_BUTTON_SPEC {3, LOOP, {"exit_button.png", "intro"}, {"exit_button.anim", "intro"}, 0, 0}
 #define GINA_INTRO_ANIMS_COUNT 2
 
+// ── items ─────────────────────────────────────────────
+#define GINA_ITEMS_IMAGE_GOGGLES 0
+#define GINA_ITEMS_IMAGE_GOGGLES_INIT {NULL, "goggles.png", "items", 0, 0}
+#define GINA_ITEMS_IMAGE_FLOAT 1
+#define GINA_ITEMS_IMAGE_FLOAT_INIT {NULL, "float.png", "items", 0, 0}
+#define GINA_ITEMS_IMAGE_BASKET 2
+#define GINA_ITEMS_IMAGE_BASKET_INIT {NULL, "basket.png", "items", 0, 0}
+#define GINA_ITEMS_IMAGES_COUNT 3
+#define GINA_ITEMS_IMAGES_INIT {GINA_ITEMS_IMAGE_GOGGLES_INIT, GINA_ITEMS_IMAGE_FLOAT_INIT, GINA_ITEMS_IMAGE_BASKET_INIT}
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL 0
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL_FRAMES 3
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL_STYLE LOOP
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL_MS_PER_FRAME 0
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL_SPRITE_FILE "goggles_boil.png"
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL_DATA_FILE "goggles_boil.anim"
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL_SPRITE_ASSET ((Asset){.filename = "goggles_boil.png", .directory = "items"})
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL_DATA_ASSET ((Asset){.filename = "goggles_boil.anim", .directory = "items"})
+#define GINA_ITEMS_ANIM_GOGGLES_BOIL_SPEC {3, LOOP, {"goggles_boil.png", "items"}, {"goggles_boil.anim", "items"}, 0, 0}
+#define GINA_ITEMS_ANIM_FLOAT_BOIL 1
+#define GINA_ITEMS_ANIM_FLOAT_BOIL_FRAMES 3
+#define GINA_ITEMS_ANIM_FLOAT_BOIL_STYLE LOOP
+#define GINA_ITEMS_ANIM_FLOAT_BOIL_MS_PER_FRAME 0
+#define GINA_ITEMS_ANIM_FLOAT_BOIL_SPRITE_FILE "float_boil.png"
+#define GINA_ITEMS_ANIM_FLOAT_BOIL_DATA_FILE "float_boil.anim"
+#define GINA_ITEMS_ANIM_FLOAT_BOIL_SPRITE_ASSET ((Asset){.filename = "float_boil.png", .directory = "items"})
+#define GINA_ITEMS_ANIM_FLOAT_BOIL_DATA_ASSET ((Asset){.filename = "float_boil.anim", .directory = "items"})
+#define GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC {3, LOOP, {"float_boil.png", "items"}, {"float_boil.anim", "items"}, 0, 0}
+#define GINA_ITEMS_ANIMS_COUNT 2
+
 // ── minigames ─────────────────────────────────────────────
 
 // ── outro ─────────────────────────────────────────────
@@ -188,25 +209,7 @@ void scene_say(int index);
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET ((Asset){.filename = "sunscreen_boil.png", .directory = "pool"})
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET ((Asset){.filename = "sunscreen_boil.anim", .directory = "pool"})
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC {3, LOOP, {"sunscreen_boil.png", "pool"}, {"sunscreen_boil.anim", "pool"}, 0, 0}
-#define GINA_POOL_ANIM_GOGGLES_BOIL 2
-#define GINA_POOL_ANIM_GOGGLES_BOIL_FRAMES 3
-#define GINA_POOL_ANIM_GOGGLES_BOIL_STYLE LOOP
-#define GINA_POOL_ANIM_GOGGLES_BOIL_MS_PER_FRAME 0
-#define GINA_POOL_ANIM_GOGGLES_BOIL_SPRITE_FILE "goggles_boil.png"
-#define GINA_POOL_ANIM_GOGGLES_BOIL_DATA_FILE "goggles_boil.anim"
-#define GINA_POOL_ANIM_GOGGLES_BOIL_SPRITE_ASSET ((Asset){.filename = "goggles_boil.png", .directory = "pool"})
-#define GINA_POOL_ANIM_GOGGLES_BOIL_DATA_ASSET ((Asset){.filename = "goggles_boil.anim", .directory = "pool"})
-#define GINA_POOL_ANIM_GOGGLES_BOIL_SPEC {3, LOOP, {"goggles_boil.png", "pool"}, {"goggles_boil.anim", "pool"}, 0, 0}
-#define GINA_POOL_ANIM_FLOAT_BOIL 3
-#define GINA_POOL_ANIM_FLOAT_BOIL_FRAMES 3
-#define GINA_POOL_ANIM_FLOAT_BOIL_STYLE LOOP
-#define GINA_POOL_ANIM_FLOAT_BOIL_MS_PER_FRAME 0
-#define GINA_POOL_ANIM_FLOAT_BOIL_SPRITE_FILE "float_boil.png"
-#define GINA_POOL_ANIM_FLOAT_BOIL_DATA_FILE "float_boil.anim"
-#define GINA_POOL_ANIM_FLOAT_BOIL_SPRITE_ASSET ((Asset){.filename = "float_boil.png", .directory = "pool"})
-#define GINA_POOL_ANIM_FLOAT_BOIL_DATA_ASSET ((Asset){.filename = "float_boil.anim", .directory = "pool"})
-#define GINA_POOL_ANIM_FLOAT_BOIL_SPEC {3, LOOP, {"float_boil.png", "pool"}, {"float_boil.anim", "pool"}, 0, 0}
-#define GINA_POOL_ANIMS_COUNT 4
+#define GINA_POOL_ANIMS_COUNT 2
 
 // ── pool/dialog ─────────────────────────────────────────────
 #define GINA_POOL_DIALOG_CHUNK_SHADE_REMINDER 0
@@ -298,16 +301,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_TREE_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "tree"})
 #define GINA_TREE_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "tree"})
 #define GINA_TREE_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "tree"}, {"celebration.anim", "tree"}, 0, 0}
-#define GINA_TREE_ANIM_FLOAT_BOIL 1
-#define GINA_TREE_ANIM_FLOAT_BOIL_FRAMES 3
-#define GINA_TREE_ANIM_FLOAT_BOIL_STYLE LOOP
-#define GINA_TREE_ANIM_FLOAT_BOIL_MS_PER_FRAME 0
-#define GINA_TREE_ANIM_FLOAT_BOIL_SPRITE_FILE "float_boil.png"
-#define GINA_TREE_ANIM_FLOAT_BOIL_DATA_FILE "float_boil.anim"
-#define GINA_TREE_ANIM_FLOAT_BOIL_SPRITE_ASSET ((Asset){.filename = "float_boil.png", .directory = "tree"})
-#define GINA_TREE_ANIM_FLOAT_BOIL_DATA_ASSET ((Asset){.filename = "float_boil.anim", .directory = "tree"})
-#define GINA_TREE_ANIM_FLOAT_BOIL_SPEC {3, LOOP, {"float_boil.png", "tree"}, {"float_boil.anim", "tree"}, 0, 0}
-#define GINA_TREE_ANIM_CARLA_BOIL 2
+#define GINA_TREE_ANIM_CARLA_BOIL 1
 #define GINA_TREE_ANIM_CARLA_BOIL_FRAMES 3
 #define GINA_TREE_ANIM_CARLA_BOIL_STYLE LOOP
 #define GINA_TREE_ANIM_CARLA_BOIL_MS_PER_FRAME 0
@@ -316,7 +310,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_TREE_ANIM_CARLA_BOIL_SPRITE_ASSET ((Asset){.filename = "carla_boil.png", .directory = "tree"})
 #define GINA_TREE_ANIM_CARLA_BOIL_DATA_ASSET ((Asset){.filename = "carla_boil.anim", .directory = "tree"})
 #define GINA_TREE_ANIM_CARLA_BOIL_SPEC {3, LOOP, {"carla_boil.png", "tree"}, {"carla_boil.anim", "tree"}, 0, 0}
-#define GINA_TREE_ANIMS_COUNT 3
+#define GINA_TREE_ANIMS_COUNT 2
 
 // ── tree/dialog ─────────────────────────────────────────────
 #define GINA_TREE_DIALOG_CHUNK_CANT_REACH 0

@@ -28,8 +28,9 @@ static ImageData images[GINA_TREE_IMAGES_COUNT] = GINA_TREE_IMAGES_INIT;
 static const ImageData *background = &images[GINA_TREE_IMAGE_BACKGROUND];
 
 // The tappable objects boil (LIVELINESS.md Part 3): the stuck float squiggles
-// while it can be examined, Carla while she can be talked to. Same size as the
-// old still PNGs, so the render positions are unchanged.
+// while it can be examined, Carla while she can be talked to. The float plays
+// the shared common/items sheet — it is the same float she loses at the pool
+// and goes on to wear.
 static AnimationData *float_boil;
 static AnimationData *carla_boil;
 // The same float, now lying on the grass. A second instance of the same boil,
@@ -40,14 +41,16 @@ static AnimationData *ground_float_boil;
 // Carla drops it back.
 static AnimationData *celebration;
 // Declared as data: the framework makes and loads these; init only aliases
-// them. Order matches the generated indices.
-#define TREE_ANIM_GROUND_FLOAT GINA_TREE_ANIMS_COUNT
-static AnimationData *animations[GINA_TREE_ANIMS_COUNT + 1];
+// them. The tree dir's own sheets come first, then the borrowed float sheets,
+// which is why those get names here rather than generated indices.
+#define TREE_ANIM_FLOAT (GINA_TREE_ANIMS_COUNT)
+#define TREE_ANIM_GROUND_FLOAT (GINA_TREE_ANIMS_COUNT + 1)
+static AnimationData *animations[GINA_TREE_ANIMS_COUNT + 2];
 static const SceneAnimSpec anim_specs[] = {
     GINA_TREE_ANIM_CELEBRATION_SPEC,
-    GINA_TREE_ANIM_FLOAT_BOIL_SPEC,
     GINA_TREE_ANIM_CARLA_BOIL_SPEC,
-    GINA_TREE_ANIM_FLOAT_BOIL_SPEC,
+    GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
+    GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
 };
 
 // Static sprite layer: just the backdrop. The stuck float and Carla are boils
@@ -124,7 +127,7 @@ static void init(void) {
   walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
-  float_boil = animations[GINA_TREE_ANIM_FLOAT_BOIL];
+  float_boil = animations[TREE_ANIM_FLOAT];
   carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL];
   ground_float_boil = animations[TREE_ANIM_GROUND_FLOAT];
   celebration = animations[GINA_TREE_ANIM_CELEBRATION];

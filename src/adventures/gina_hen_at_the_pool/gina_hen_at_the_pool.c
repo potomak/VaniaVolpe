@@ -43,7 +43,7 @@ Adventure gina_hen_at_the_pool = {
     // What Gina wears once she has collected it: shared, because it follows her
     // from scene to scene (see gina_worn.h).
     .images = gina_worn_images,
-    .images_length = GINA_HEN_IMAGES_COUNT,
+    .images_length = GINA_ITEMS_IMAGES_COUNT,
 };
 
 void gina_hen_at_the_pool_register(void) {

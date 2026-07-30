@@ -278,30 +278,30 @@
       "task": true
     },
     {
-      "group": "Art — Worn items",
+      "group": "Art — Items",
       "type": "image",
-      "dir": "common/hen",
-      "name": "goggles_worn",
-      "size": "120x120",
-      "description": "The swimming goggles as Gina wears them, drawn on her own 120x120 frame so the overlay registers with her sprite: goggles over her eye, transparent everywhere else. Placeholder via tools/gen_worn_placeholders.py.",
+      "dir": "common/items",
+      "name": "goggles",
+      "size": "60x30",
+      "description": "The swimming goggles, drawn head-on against transparency. One drawing for both places they appear: lying by the pool (as the boil below) and worn over Gina's eye. Placeholder via tools/gen_item_placeholders.py.",
       "task": true
     },
     {
-      "group": "Art — Worn items",
+      "group": "Art — Items",
       "type": "image",
-      "dir": "common/hen",
-      "name": "basket_carried",
-      "size": "120x120",
-      "description": "Carla's basket as Gina carries it, on her own 120x120 frame: the basket hanging from her beak, transparent everywhere else. She has it from Carla's offer until she hands it back full of grapes. Placeholder via tools/gen_worn_placeholders.py.",
+      "dir": "common/items",
+      "name": "float",
+      "size": "90x60",
+      "description": "The pool float / ring, seen slightly from above. One drawing for all three places it appears: by the pool, caught in the tree, and around Gina's middle once she has it. Placeholder via tools/gen_item_placeholders.py.",
       "task": true
     },
     {
-      "group": "Art — Worn items",
+      "group": "Art — Items",
       "type": "image",
-      "dir": "common/hen",
-      "name": "float_worn",
-      "size": "120x120",
-      "description": "The pool float as Gina wears it, on her own 120x120 frame: the ring around her middle, transparent everywhere else. Placeholder via tools/gen_worn_placeholders.py.",
+      "dir": "common/items",
+      "name": "basket",
+      "size": "50x50",
+      "description": "Carla's little basket, with a handle to carry it by. Gina holds it at beak height from Carla's offer until she hands it back full of grapes. Placeholder via tools/gen_item_placeholders.py.",
       "task": true
     },
     {
@@ -394,26 +394,6 @@
     },
     {
       "group": "Art — Poolside",
-      "type": "image",
-      "dir": "common/pool",
-      "name": "goggles",
-      "size": "60x30",
-      "description": "The swimming goggles.",
-      "runtime": false,
-      "task": true
-    },
-    {
-      "group": "Art — Poolside",
-      "type": "image",
-      "dir": "common/pool",
-      "name": "float",
-      "size": "90x60",
-      "description": "The pool float / ring.",
-      "runtime": false,
-      "task": true
-    },
-    {
-      "group": "Art — Poolside",
       "type": "animation",
       "dir": "common/pool",
       "name": "celebration",
@@ -439,16 +419,6 @@
       "name": "carla",
       "size": "70x70",
       "description": "Carla the crow, perched in the tree.",
-      "runtime": false,
-      "task": true
-    },
-    {
-      "group": "Art — Tree",
-      "type": "image",
-      "dir": "common/tree",
-      "name": "float",
-      "size": "90x60",
-      "description": "The float, caught in the branches.",
       "runtime": false,
       "task": true
     },
@@ -558,22 +528,22 @@
       "description": "Placeholder boil for the sunscreen bottle (replaced file-for-file by traced frames)."
     },
     {
-      "group": "Runtime only — Poolside",
+      "group": "Runtime only — Items",
       "type": "animation",
-      "dir": "pool",
+      "dir": "items",
       "name": "goggles_boil",
       "frames": 3,
       "style": "loop",
-      "description": "Placeholder boil for the goggles."
+      "description": "Placeholder boil for the goggles, derived from items/goggles.png."
     },
     {
-      "group": "Runtime only — Poolside",
+      "group": "Runtime only — Items",
       "type": "animation",
-      "dir": "pool",
+      "dir": "items",
       "name": "float_boil",
       "frames": 3,
       "style": "loop",
-      "description": "Placeholder boil for the pool float."
+      "description": "Placeholder boil for the pool float, derived from items/float.png. Both the poolside float and the one caught in the tree play this one sheet."
     },
     {
       "group": "Runtime only — Poolside",
@@ -595,15 +565,6 @@
       "dir": "hen",
       "name": "walking",
       "description": "Gina's footstep loop (the ActorSpec move sound)."
-    },
-    {
-      "group": "Runtime only — Tree",
-      "type": "animation",
-      "dir": "tree",
-      "name": "float_boil",
-      "frames": 3,
-      "style": "loop",
-      "description": "Placeholder boil for the float stuck in the branches."
     },
     {
       "group": "Runtime only — Tree",

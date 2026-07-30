@@ -12,7 +12,6 @@
 // The adventure's shared image bank (Adventure.images): these follow Gina from
 // scene to scene, so they cannot belong to any one scene's image table.
 extern ImageData gina_worn_images[];
-extern const int gina_worn_images_length;
 
 // Draw whatever she has picked up, on top of her sprite. Reads gina_state
 // directly, so there is nothing to keep in sync — a scene just calls this after

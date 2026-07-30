@@ -103,10 +103,11 @@ them.
   `render_animation` with no position change. Placeholders to develop the
   boiling hotspots against; real traced frames replace them file-for-file.
   Needs Pillow.
-- **`gen_worn_placeholders.py`** — emits placeholder "worn item" overlays (Gina's
-  goggles, her pool float, Carla's basket) on the actor's own frame size, so an overlay registers
-  with her sprite by construction and needs no per-item offset. The positions are
-  measured off her idle frame and documented in the script. Needs Pillow.
+- **`gen_item_placeholders.py`** — emits placeholder art for the objects Gina
+  picks up (her goggles, the pool float, Carla's basket). One drawing per item,
+  at object size: the scenes show it lying on the ground (via a boil sheet from
+  `gen_boil_sheet.py`) and `gina_worn.c` draws the same file on her once she has
+  it, so an item never has to be drawn twice. Needs Pillow.
 - **`gen_card_placeholders.py`** — emits an adventure's placeholder title or end
   card, `--kind intro|outro`. Both are a washed backdrop carrying the title,
   written once per locale because they bear words. `intro` adds a 3-frame Play

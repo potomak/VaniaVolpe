@@ -220,7 +220,7 @@ void render_action_layer(SDL_Renderer *renderer, const ScaleRamp *ramp,
                                       scale, anchor);
       } else {
         render_image_scaled_about(renderer, prop->image, prop->pos, scale,
-                                  anchor);
+                                  anchor, SDL_FLIP_NONE);
       }
     } else if (order[i] < props_length + actors_length) {
       actor_render(actors[order[i] - props_length], renderer);

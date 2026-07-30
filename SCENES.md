@@ -333,7 +333,9 @@ a time, never a big-bang rewrite:
      delegates to as well). The Gina adventure points `.images` at
      `gina_worn_images`; `gina_render_worn` reads `gina_state` and draws whatever
      she has, so a scene adds one call after drawing her and nothing has to be
-     kept in sync.
+     kept in sync. The bank holds the shared `common/items` art — the same
+     drawing a scene shows lying on the ground — so an item is authored once and
+     keeps its size whether it is at her feet or in her wings.
    - **Dialogue: generated `say_<line>()`.** ✅ **Shipped.** Each spoken line is
      a per-line dialogue chunk in a `<scene>/dialog` dir; the generator emits a
      `static inline say_<name>(void)` over `scene_say(index)` (game.c), which

@@ -339,10 +339,11 @@ void render_animation_scaled_about(SDL_Renderer *renderer,
 }
 
 void render_image_scaled_about(SDL_Renderer *renderer, const ImageData *image,
-                               SDL_Point point, float scale, SDL_Point anchor) {
+                               SDL_Point point, float scale, SDL_Point anchor,
+                               SDL_RendererFlip flip) {
   SDL_Rect render_quad =
       scaled_quad_about(point, image->width, image->height, scale, anchor);
-  SDL_RenderCopy(renderer, image->texture, NULL, &render_quad);
+  SDL_RenderCopyEx(renderer, image->texture, NULL, &render_quad, 0, NULL, flip);
 }
 
 void render_animation_scaled(SDL_Renderer *renderer, AnimationData *animation,

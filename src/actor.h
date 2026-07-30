@@ -195,11 +195,17 @@ void actor_update(Actor *actor, float delta_time);
 // scene's props — drawing her with this directly loses the shadow.
 void actor_render(Actor *actor, SDL_Renderer *renderer);
 
+// Where a carried item's top-left lands, before scaling. `offset` is authored
+// against the unflipped (west-facing) sheet, so this mirrors it about the
+// actor's centre once she turns east. Exposed for tests.
+SDL_Point actor_carried_at(const Actor *actor, SDL_Point offset, int width);
+
 // Draw something the actor is carrying. `offset` is authored against her
 // natural size, relative to current_position, and is scaled and anchored
 // exactly like her sprite — so a carried item stays on her body instead of
 // floating full-size beside a shrunken actor (SCALING.md). Identical to a
-// plain render_image at the offset when her scene has no depth ramp.
+// plain render_image at the offset when her scene has no depth ramp. The item
+// mirrors with her, so it stays on the side she is facing.
 void actor_render_carried(const Actor *actor, SDL_Renderer *renderer,
                           const ImageData *image, SDL_Point offset);
 

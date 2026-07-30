@@ -37,25 +37,29 @@ static const ImageData *water = &images[GINA_POOL_IMAGE_WATER];
 // The tappable objects boil (LIVELINESS.md Part 3): the engine plays each
 // while its hotspot is enabled (see the active_anim wired in init) and freezes
 // it otherwise, so what squiggles is what a tap would hit. Declared here so the
-// framework ticks and frees them; each is the same size as the old still PNG,
-// so the render positions below are unchanged.
+// framework ticks and frees them.
 static AnimationData *sunscreen_boil;
+// The goggles and the float are Gina's, not the poolside's: the same
+// common/items art she goes on to wear (gina_worn.c), and the float's sheet is
+// the one the tree plays too.
 static AnimationData *goggles_boil;
 static AnimationData *float_boil;
 // The progress-reward burst over the goggles: plays once with the chime when
 // she collects them, no input lock (this is a walking scene).
 static AnimationData *celebration;
-// Gina bobbing in the water after a dive. Her own sheet (common/hen) rather
-// than a pool object, so it sits past the pool dir's indices; the scene draws
-// it in place of her sprite while she floats.
+// Gina bobbing in the water after a dive; the scene draws it in place of her
+// sprite while she floats.
 static AnimationData *floating;
 // Declared as data: the framework makes and loads these; init only aliases
-// them. Order matches the generated indices, with the hen sheet appended.
-#define POOL_ANIM_FLOATING GINA_POOL_ANIMS_COUNT
-static AnimationData *animations[GINA_POOL_ANIMS_COUNT + 1];
+// them. The pool dir's own sheets come first, then the sheets borrowed from
+// other dirs, which is why those get names here rather than generated indices.
+#define POOL_ANIM_GOGGLES_BOIL (GINA_POOL_ANIMS_COUNT)
+#define POOL_ANIM_FLOAT_BOIL (GINA_POOL_ANIMS_COUNT + 1)
+#define POOL_ANIM_FLOATING (GINA_POOL_ANIMS_COUNT + 2)
+static AnimationData *animations[GINA_POOL_ANIMS_COUNT + 3];
 static const SceneAnimSpec anim_specs[] = {
-    GINA_POOL_ANIM_CELEBRATION_SPEC,  GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC,
-    GINA_POOL_ANIM_GOGGLES_BOIL_SPEC, GINA_POOL_ANIM_FLOAT_BOIL_SPEC,
+    GINA_POOL_ANIM_CELEBRATION_SPEC,   GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC,
+    GINA_ITEMS_ANIM_GOGGLES_BOIL_SPEC, GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
     GINA_HEN_ANIM_FLOATING_SPEC,
 };
 
@@ -188,8 +192,8 @@ static void init(void) {
   rebuild_walk_grid();
 
   sunscreen_boil = animations[GINA_POOL_ANIM_SUNSCREEN_BOIL];
-  goggles_boil = animations[GINA_POOL_ANIM_GOGGLES_BOIL];
-  float_boil = animations[GINA_POOL_ANIM_FLOAT_BOIL];
+  goggles_boil = animations[POOL_ANIM_GOGGLES_BOIL];
+  float_boil = animations[POOL_ANIM_FLOAT_BOIL];
   celebration = animations[GINA_POOL_ANIM_CELEBRATION];
   floating = animations[POOL_ANIM_FLOATING];
 

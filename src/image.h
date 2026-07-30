@@ -112,8 +112,11 @@ void render_animation_scaled_about(SDL_Renderer *renderer,
                                    AnimationData *animation, SDL_Point point,
                                    float scale, SDL_Point anchor);
 
+// `flip` mirrors the art in place, for drawing something registered against a
+// mirrored sprite (see actor_render_carried).
 void render_image_scaled_about(SDL_Renderer *renderer, const ImageData *image,
-                               SDL_Point point, float scale, SDL_Point anchor);
+                               SDL_Point point, float scale, SDL_Point anchor,
+                               SDL_RendererFlip flip);
 
 // Camera scroll offset, applied to every render_image / render_animation
 // draw. Engine-only (game_render sets it around a scrolling scene's render
