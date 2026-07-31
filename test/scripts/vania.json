@@ -1,0 +1,202 @@
+{
+ "adventure": "vania",
+ "title": "Vania Volpe - Lo Scivolo",
+ "comment": "Single source of truth for the Vania playthrough, shared by the native C test (via tools/gen_playtest.py -> a generated header) and the browser test (test/web/run_playtest.js reads this file directly). Coordinates are fractions of the 800x600 logical screen. Vania has real recorded voice and cannot be interrupted mid-line, so each wait_ms is sized as the walk to the hotspot plus the recorded line (up to 8.3s) plus margin; a short wait silently drops the next click. Expected lines are accent-free substrings of the it_IT transcripts, which unlike Gina's are written with real accents.",
+ "steps": [
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.317,
+   "wait_ms": 1500,
+   "note": "hub -> Vania (first button)"
+  },
+  {
+   "action": "screenshot",
+   "name": "00-intro"
+  },
+  {
+   "action": "click",
+   "x": 0.721,
+   "y": 0.573,
+   "wait_ms": 1500,
+   "note": "intro Gioca! -> the playground entrance"
+  },
+  {
+   "action": "screenshot",
+   "name": "01-entrance"
+  },
+  {
+   "action": "click",
+   "x": 0.287,
+   "y": 0.168,
+   "wait_ms": 11000,
+   "note": "the slide over the fence -> he wants in"
+  },
+  {
+   "action": "click",
+   "x": 0.724,
+   "y": 0.393,
+   "wait_ms": 10000,
+   "note": "the gate -> locked, he needs a key"
+  },
+  {
+   "action": "click",
+   "x": 0.724,
+   "y": 0.393,
+   "wait_ms": 9000,
+   "note": "the gate again -> the second hint points at the sandbox"
+  },
+  {
+   "action": "click",
+   "x": 0.195,
+   "y": 0.69,
+   "wait_ms": 6000,
+   "note": "the shovel -> he digs and uncovers the key"
+  },
+  {
+   "action": "screenshot",
+   "name": "02-key-uncovered"
+  },
+  {
+   "action": "click",
+   "x": 0.058,
+   "y": 0.731,
+   "wait_ms": 5000,
+   "note": "pick the key up"
+  },
+  {
+   "action": "screenshot",
+   "name": "03-carrying-the-key"
+  },
+  {
+   "action": "click",
+   "x": 0.724,
+   "y": 0.393,
+   "wait_ms": 6000,
+   "note": "the gate opens -> the playground"
+  },
+  {
+   "action": "screenshot",
+   "name": "04-playground"
+  },
+  {
+   "action": "click",
+   "x": 0.505,
+   "y": 0.499,
+   "wait_ms": 11000,
+   "note": "the slide -> a step is missing"
+  },
+  {
+   "action": "click",
+   "x": 0.505,
+   "y": 0.499,
+   "wait_ms": 10000,
+   "note": "the slide again -> ask the squirrel"
+  },
+  {
+   "action": "click",
+   "x": 0.158,
+   "y": 0.326,
+   "wait_ms": 14000,
+   "note": "the squirrel -> he wants acorns"
+  },
+  {
+   "action": "click",
+   "x": 0.158,
+   "y": 0.326,
+   "wait_ms": 12000,
+   "note": "the squirrel again -> try the other tree"
+  },
+  {
+   "action": "click",
+   "x": 0.914,
+   "y": 0.433,
+   "wait_ms": 6000,
+   "note": "shake the acorn tree -> they fall"
+  },
+  {
+   "action": "click",
+   "x": 0.899,
+   "y": 0.915,
+   "wait_ms": 6000,
+   "note": "pick the acorns up"
+  },
+  {
+   "action": "screenshot",
+   "name": "05-carrying-the-acorns"
+  },
+  {
+   "action": "click",
+   "x": 0.158,
+   "y": 0.326,
+   "wait_ms": 6000,
+   "note": "trade the acorns -> the squirrel drops the peg"
+  },
+  {
+   "action": "click",
+   "x": 0.161,
+   "y": 0.845,
+   "wait_ms": 6000,
+   "note": "pick the peg up"
+  },
+  {
+   "action": "screenshot",
+   "name": "06-carrying-the-peg"
+  },
+  {
+   "action": "click",
+   "x": 0.505,
+   "y": 0.499,
+   "wait_ms": 11000,
+   "note": "the peg fixes the missing step"
+  },
+  {
+   "action": "screenshot",
+   "name": "07-slide-fixed"
+  },
+  {
+   "action": "click",
+   "x": 0.505,
+   "y": 0.499,
+   "wait_ms": 11000,
+   "note": "slide down (1 of 3): the arc, then he walks back to the ladder"
+  },
+  {
+   "action": "click",
+   "x": 0.505,
+   "y": 0.499,
+   "wait_ms": 11000,
+   "note": "and again (2 of 3)"
+  },
+  {
+   "action": "click",
+   "x": 0.505,
+   "y": 0.499,
+   "wait_ms": 11000,
+   "note": "and again (3 of 3) -> the next tap anywhere ends it"
+  },
+  {
+   "action": "click",
+   "x": 0.5,
+   "y": 0.8,
+   "wait_ms": 2000,
+   "note": "a tap anywhere ends the adventure. It lands back at the hub rather than on the end card: this tap's DOWN switches to the outro and its UP is then delivered there, which navigates away (tracked in #182)"
+  },
+  {
+   "action": "screenshot",
+   "name": "08-back-at-the-hub"
+  }
+ ],
+ "expect": [
+  "Hub: starting adventure 'Vania Volpe - Lo Scivolo'",
+  "devo prima aprire il cancello",
+  "Mi serve una chiave per aprirlo",
+  "Proviamo a cercare la chiave nella buca della sabbia",
+  "manca uno scalino",
+  "Proviamo a chiedere al nostro amico scoiattolo",
+  "vorrebbe delle ghiande",
+  "Proviamo a cercarle sull'altro albero",
+  "posso giocare",
+  "Che divertente! Ancora"
+ ]
+}

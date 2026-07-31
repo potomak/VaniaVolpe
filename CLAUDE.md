@@ -43,8 +43,9 @@ objects), so editing a header recompiles everything that includes it — no
 `build/` is git-ignored; never commit generated web artifacts.
 
 ## Testing
-`make test` runs a **headless scripted playthrough** (`test/`) that asserts the
-adventure's dialogue in order — the gate for gameplay regressions. Before pushing:
+`make test` runs the **headless scripted playthroughs** (`test/`) — one per
+adventure, each asserting its dialogue in order — the gate for gameplay
+regressions. Before pushing:
 
 - Build the relevant target (at minimum `make web`, which CI also runs).
 - Run `make test` if you touched engine/gameplay code.
@@ -90,7 +91,7 @@ Backends* for how the harnesses work.
 - `include/` — bundled SDL_image / SDL_mixer / SDL_ttf forwarding headers
   (native build).
 - `test/` — headless test harness (`harness.{c,h}`), the script interpreter
-  (`script.{c,h}`), the play-tests (`play_gina.c`, …) and `main_test.c` entry
+  (`script.{c,h}`), the play-tests (`play_gina.c`, `play_vania.c`) and `main_test.c` entry
   point (`make test`); `scripts/` holds the shared JSON playthroughs and `web/`
   the Puppeteer browser test that consumes them.
 - Docs: `ARCHITECTURE.md` (deep design, incl. the terminal & headless-test

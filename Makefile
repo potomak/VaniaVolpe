@@ -71,6 +71,7 @@ TARGET_TEST = vaniavolpe_test
 # libcaca — it renders offscreen and reads pixels back instead of drawing to a
 # terminal. The .test.o suffix keeps its objects separate from the other builds.
 TEST_SRCS = test/main_test.c test/harness.c test/script.c test/play_gina.c \
+            test/play_vania.c \
             test/test_walk.c test/test_lipsync.c test/test_scene.c \
             test/test_camera.c test/test_tween.c \
             $(GAME_SRCS)
@@ -84,6 +85,7 @@ DEPS = $(OBJS:.o=.d) $(TERMINAL_OBJS:.o=.d) $(TEST_OBJS:.o=.d)
 # test (test/web); the native test consumes a generated header of each one.
 GEN_DIR = build/gen
 GINA_SCRIPT_H = $(GEN_DIR)/gina_script.h
+VANIA_SCRIPT_H = $(GEN_DIR)/vania_script.h
 
 # Asset declarations generated from each adventure's manifest (ASSETS.md):
 # scenes declare their tables from these macros instead of repeating filenames
@@ -128,8 +130,13 @@ $(GINA_SCRIPT_H): test/scripts/gina.json tools/gen_playtest.py
 	mkdir -p $(GEN_DIR)
 	python3 tools/gen_playtest.py --name gina --in $< --out $@
 
-# The Gina play-test #includes the generated header.
+$(VANIA_SCRIPT_H): test/scripts/vania.json tools/gen_playtest.py
+	mkdir -p $(GEN_DIR)
+	python3 tools/gen_playtest.py --name vania --in $< --out $@
+
+# Each play-test #includes its generated header.
 test/play_gina.test.o: $(GINA_SCRIPT_H)
+test/play_vania.test.o: $(VANIA_SCRIPT_H)
 
 # Generate the asset declarations from each adventure's manifest (ASSETS.md).
 $(GINA_ASSETS_H): $(GINA_DIR)/assets/index.json tools/gen_asset_decls.py

@@ -1,7 +1,7 @@
 name: Web test (headless browser)
 
 # Gating: builds the WebAssembly target, serves it, and runs the shared
-# playthrough script (test/scripts/gina.json) against it with Puppeteer,
+# playthrough scripts (test/scripts/*.json) against it with Puppeteer,
 # asserting the expected dialogue appears in the browser console. Screenshots
 # taken along the way are uploaded as an artifact.
 on:
@@ -36,18 +36,21 @@ jobs:
         working-directory: test/web
         run: npm install
 
-      - name: Run the browser playthrough
+      - name: Run the browser playthroughs
         run: |
           python3 -m http.server 8099 --directory build/web &
           sleep 2
           cd test/web
-          SHOTS="$GITHUB_WORKSPACE/screenshots" \
-            node run_playtest.js ../scripts/gina.json
+          for script in ../scripts/*.json; do
+            echo "--- $script"
+            SHOTS="$GITHUB_WORKSPACE/screenshots/$(basename "$script" .json)" \
+              node run_playtest.js "$script"
+          done
 
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gina-playthrough-screenshots
+          name: playthrough-screenshots
           path: screenshots/
           if-no-files-found: warn
