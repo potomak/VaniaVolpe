@@ -1,7 +1,7 @@
 {
  "adventure": "gina",
  "title": "Gina la Gallina in Piscina",
- "comment": "Single source of truth for the Gina playthrough, shared by the native C test (via tools/gen_playtest.py -> a generated header) and the browser test (test/web/run_playtest.js reads this file directly). Coordinates are fractions of the 800x600 logical screen; wait_ms is how long to run the loop after the action so walks and spoken lines finish. She now enters a scene at the edge she walked in from (gina_nav.h), so the first step in each scene has to cover a walk across the whole room.",
+ "comment": "Single source of truth for the Gina playthrough, shared by the native C test (via tools/gen_playtest.py -> a generated header) and the browser test (test/web/run_playtest.js reads this file directly). Coordinates are fractions of the 800x600 logical screen; wait_ms is how long to run the loop after the action so walks and spoken lines finish. Travel between scenes is by the destination tiles near the horizon, and she arrives at the tile leading back (gina_nav.h) — so the first step in each scene has to cover a walk from the far corner all the way down to whatever it taps.",
  "steps": [
   {
    "action": "click",
@@ -83,9 +83,9 @@
   },
   {
    "action": "click",
-   "x": 0.955,
-   "y": 0.66,
-   "wait_ms": 3000,
+   "x": 0.906,
+   "y": 0.175,
+   "wait_ms": 5000,
    "note": "go to the tree (right edge)"
   },
   {
@@ -96,21 +96,21 @@
    "action": "click",
    "x": 0.681,
    "y": 0.167,
-   "wait_ms": 5500,
+   "wait_ms": 7000,
    "note": "examine the stuck float"
   },
   {
    "action": "click",
    "x": 0.494,
    "y": 0.308,
-   "wait_ms": 4000,
+   "wait_ms": 6000,
    "note": "talk to Carla -> basket"
   },
   {
    "action": "click",
-   "x": 0.955,
-   "y": 0.66,
-   "wait_ms": 3000,
+   "x": 0.906,
+   "y": 0.175,
+   "wait_ms": 5000,
    "note": "go to the vine (right edge)"
   },
   {
@@ -121,7 +121,7 @@
    "action": "click",
    "x": 0.5,
    "y": 0.4,
-   "wait_ms": 5500,
+   "wait_ms": 7000,
    "note": "tap grapes -> minigame"
   },
   {
@@ -177,16 +177,16 @@
   },
   {
    "action": "click",
-   "x": 0.045,
-   "y": 0.66,
-   "wait_ms": 3000,
+   "x": 0.094,
+   "y": 0.175,
+   "wait_ms": 5000,
    "note": "back to the tree (left edge)"
   },
   {
    "action": "click",
    "x": 0.494,
    "y": 0.308,
-   "wait_ms": 5500,
+   "wait_ms": 7000,
    "note": "give Carla the grapes -> she flaps up, the float bounces to the grass"
   },
   {
@@ -197,7 +197,7 @@
    "action": "click",
    "x": 0.681,
    "y": 0.767,
-   "wait_ms": 4000,
+   "wait_ms": 6000,
    "note": "pick the float up off the grass -> she wears it"
   },
   {
@@ -206,9 +206,9 @@
   },
   {
    "action": "click",
-   "x": 0.045,
-   "y": 0.66,
-   "wait_ms": 3000,
+   "x": 0.094,
+   "y": 0.175,
+   "wait_ms": 7000,
    "note": "back to the pool: leaving the tree by its left edge, so she arrives at the pool's right one — the side the way back to the tree is on"
   },
   {
@@ -219,7 +219,7 @@
    "action": "click",
    "x": 0.5,
    "y": 0.217,
-   "wait_ms": 4000,
+   "wait_ms": 5000,
    "note": "dive! (walks to the edge, then the arc into the water)"
   },
   {

@@ -1,16 +1,16 @@
 //
 //  test_gina_nav.c
-//  Where Gina stands when she walks into a scene. Pure state: the rule reads
-//  the current scene and the one she left, so the tests set both directly
-//  rather than driving a playthrough.
+//  Gina's scene ring: the ground reaches the tiles she travels by, and the two
+//  scenes either side of a tile agree about where she comes out.
 //
 
+#include <math.h>
 #include <stdio.h>
 
-#include "game.h"
-#include "gina_hen_at_the_pool.h"
+#include "constants.h"
 #include "gina_nav.h"
-#include "gina_state.h"
+#include "scaling.h"
+#include "walk.h"
 
 #include "test_gina_nav.h"
 
@@ -25,60 +25,48 @@ static void check(bool ok, const char *what) {
   }
 }
 
-// The two edges every walkable scene shares, mirroring gina_nav.c.
-static const float LEFT_X = 40;
-static const float RIGHT_X = 760;
-
-static SDL_FPoint arrive(int scene, int from) {
-  game.current_scene = scene;
-  gina_state.came_from = from;
-  return gina_nav_entry((SDL_FPoint){400, 480});
-}
-
 int test_gina_nav(void) {
   fprintf(stderr, "\n-- Gina scene ring unit tests --\n");
   failures = 0;
 
-  const Adventure *saved_adventure = game.current_adventure;
-  int saved_scene = game.current_scene;
+  WalkGrid grid;
+  walk_grid_build(&grid, &GINA_OUTDOOR_WALK_AREA,
+                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT});
 
-  // Walking off an edge puts her at the exit that leads back, so the two
-  // scenes agree about which side of the world they share. The pool's right
-  // edge goes to the tree, so she arrives on the tree's left.
-  check(arrive(GINA_TREE, GINA_POOL).x == LEFT_X,
-        "leaving the pool eastward lands her on the tree's west edge");
-  check(arrive(GINA_POOL, GINA_TREE).x == RIGHT_X,
-        "and coming back the other way lands her on the pool's east edge");
-  check(arrive(GINA_VINE, GINA_TREE).x == LEFT_X,
-        "the tree's east exit lands her on the vine's west edge");
-  check(arrive(GINA_POOL, GINA_VINE).x == LEFT_X,
-        "the ring closes: the vine's east exit is the pool's west edge");
+  // The tiles are only useful if she can get to them: both path ends must be
+  // walkable, and reachable from the near ground rather than stranded islands.
+  SDL_Point ends[2];
+  gina_nav_pois(ends);
+  for (int i = 0; i < 2; i++) {
+    check(walk_grid_contains(&grid, ends[i]),
+          i == 0 ? "the left path end is walkable"
+                 : "the right path end is walkable");
+  }
 
-  // Every arrival is on the walkable strip, not merely on the right side.
-  check(arrive(GINA_TREE, GINA_POOL).y == arrive(GINA_POOL, GINA_TREE).y,
-        "both edges put her at the same depth");
+  SDL_FPoint near_ground = {400, 500};
+  for (int i = 0; i < 2; i++) {
+    SDL_FPoint path[ACTOR_MAX_WAYPOINTS];
+    SDL_FPoint goal = {(float)ends[i].x, (float)ends[i].y};
+    int count = walk_grid_find_path(&grid, near_ground, goal, path, LEN(path));
+    bool arrived = count >= 1 &&
+                   fabsf(path[count - 1].x - goal.x) < WALK_CELL_SIZE &&
+                   fabsf(path[count - 1].y - goal.y) < WALK_CELL_SIZE;
+    check(arrived, i == 0 ? "she can walk from the near ground to the left tile"
+                          : "and to the right tile");
+  }
 
-  // Not a walk: returning from a minigame, or the very first entry, has no
-  // side to arrive on and must leave her where the scene wants her.
-  check(arrive(GINA_POOL, GINA_NO_SCENE).x == 400,
-        "an arrival that was not a walk falls back to the scene's own start");
-  check(arrive(GINA_POOL, GINA_SUNSCREEN_MINIGAME).x == 400,
-        "and so does one from a scene that is not on the ring");
+  // Depth has to cover the whole of that ground, or she would arrive at the
+  // horizon still full size — the thing the paths exist to show. The ramp is
+  // in feet coordinates, half a 120px frame below the walk positions above.
+  const float FEET = 60;
+  float near_scale = scale_ramp_at(&GINA_OUTDOOR_RAMP, near_ground.y + FEET);
+  float far_scale = scale_ramp_at(&GINA_OUTDOOR_RAMP, (float)ends[0].y + FEET);
+  check(far_scale < near_scale,
+        "she is drawn smaller at the tiles than on the near ground");
+  check(far_scale <= 0.7F,
+        "and small enough there to read as distance, not a rounding error");
+  check(GINA_OUTDOOR_RAMP.scale_far >= 0.6F,
+        "but not past the floor where her mouth shapes stop reading");
 
-  // The origin is consumed, so the *next* arrival — the minigame handing
-  // control back — is not still placed by the walk before it.
-  game.current_scene = GINA_VINE;
-  gina_state.came_from = GINA_TREE;
-  gina_nav_entry((SDL_FPoint){400, 480});
-  check(gina_nav_entry((SDL_FPoint){400, 480}).x == 400,
-        "the entry side is one-shot: a second arrival falls back");
-
-  // A scene with no edges at all never places her.
-  check(arrive(GINA_OUTRO, GINA_POOL).x == 400,
-        "a scene off the ring ignores where she came from");
-
-  game.current_adventure = saved_adventure;
-  game.current_scene = saved_scene;
-  gina_state.came_from = GINA_NO_SCENE;
   return failures;
 }

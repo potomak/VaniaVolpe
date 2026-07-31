@@ -51,24 +51,22 @@ static AnimationData *celebration;
 // Gina bobbing in the water after a dive; the scene draws it in place of her
 // sprite while she floats.
 static AnimationData *floating;
-// The two exit arrows: one sheet, one instance per edge so each squiggles on
-// its own cursor (gina_nav_render mirrors the left one).
-static AnimationData *arrow_left;
-static AnimationData *arrow_right;
 // Declared as data: the framework makes and loads these; init only aliases
 // them. The pool dir's own sheets come first, then the sheets borrowed from
-// other dirs, which is why those get names here rather than generated indices.
+// other dirs — the items she picks up, her floating sheet, and the two
+// destination tiles on the horizon: the vine on the left, the tree on the
+// right (gina_nav.h).
 #define POOL_ANIM_GOGGLES_BOIL (GINA_POOL_ANIMS_COUNT)
 #define POOL_ANIM_FLOAT_BOIL (GINA_POOL_ANIMS_COUNT + 1)
 #define POOL_ANIM_FLOATING (GINA_POOL_ANIMS_COUNT + 2)
-#define POOL_ANIM_ARROW_LEFT (GINA_POOL_ANIMS_COUNT + 3)
-#define POOL_ANIM_ARROW_RIGHT (GINA_POOL_ANIMS_COUNT + 4)
+#define POOL_ANIM_TO_VINE (GINA_POOL_ANIMS_COUNT + 3)
+#define POOL_ANIM_TO_TREE (GINA_POOL_ANIMS_COUNT + 4)
 static AnimationData *animations[GINA_POOL_ANIMS_COUNT + 5];
 static const SceneAnimSpec anim_specs[] = {
     GINA_POOL_ANIM_CELEBRATION_SPEC,   GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC,
     GINA_ITEMS_ANIM_GOGGLES_BOIL_SPEC, GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
-    GINA_HEN_ANIM_FLOATING_SPEC,       GINA_NAV_ANIM_ARROW_BOIL_SPEC,
-    GINA_NAV_ANIM_ARROW_BOIL_SPEC,
+    GINA_HEN_ANIM_FLOATING_SPEC,       GINA_NAV_ANIM_TO_VINE_BOIL_SPEC,
+    GINA_NAV_ANIM_TO_TREE_BOIL_SPEC,
 };
 
 // Static sprite layer: backdrop and water. The three object boils are declared
@@ -142,19 +140,9 @@ static Hotspot hotspots[7];
 // the shade patch first, the whole poolside strip afterwards. (The shade rect
 // is tuned to the current background art; toggle the debug overlay to see
 // whichever area is active.)
-static const SDL_Rect POOLSIDE_RECTS[] = {{20, 430, 760, 150}};
 static const SDL_Rect SHADE_RECTS[] = {{60, 430, 200, 150}};
-static const WalkArea POOLSIDE_AREA = {POOLSIDE_RECTS, LEN(POOLSIDE_RECTS),
-                                       NULL, 0};
 static const WalkArea SHADE_AREA = {SHADE_RECTS, LEN(SHADE_RECTS), NULL, 0};
 static WalkGrid walk_grid;
-
-// Depth (SCALING.md): a gentle ramp across the walkable strip, in feet
-// coordinates (the walk rects above are centre positions; feet sit half a
-// walking frame lower). scale_far is the knob — raise it toward 1 for a
-// flatter backdrop, lower it for more perspective.
-static const ScaleRamp SCALE_RAMP = {
-    .y_far = 490, .y_near = 639, .scale_far = 0.85F, .scale_near = 1.0F};
 
 // Rebuild the grid from the state-appropriate area. Called on scene entry and
 // after any in-scene state change that affects movement (the replay reset in
@@ -164,7 +152,8 @@ static const ScaleRamp SCALE_RAMP = {
 // transient.
 static void rebuild_walk_grid(void) {
   walk_grid_build(&walk_grid,
-                  gina_state.has_sunscreen ? &POOLSIDE_AREA : &SHADE_AREA,
+                  gina_state.has_sunscreen ? &GINA_OUTDOOR_WALK_AREA
+                                           : &SHADE_AREA,
                   (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT});
 }
 
@@ -196,8 +185,6 @@ static void init(void) {
   float_boil = animations[POOL_ANIM_FLOAT_BOIL];
   celebration = animations[GINA_POOL_ANIM_CELEBRATION];
   floating = animations[POOL_ANIM_FLOATING];
-  arrow_left = animations[POOL_ANIM_ARROW_LEFT];
-  arrow_right = animations[POOL_ANIM_ARROW_RIGHT];
 
   int s = 0;
   sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
@@ -237,7 +224,8 @@ static void init(void) {
                             .poi = POOL_EDGE_POI,
                             .on_arrive = try_dive};
   // Gated like the rest of the poolside: no wandering off before the sunscreen.
-  gina_nav_hotspots(&hotspots[i], after_sunscreen);
+  gina_nav_hotspots(&hotspots[i], animations[POOL_ANIM_TO_VINE],
+                    animations[POOL_ANIM_TO_TREE], after_sunscreen);
 
   i = 0;
   pois[i++] = SUNSCREEN_POI;
@@ -443,9 +431,8 @@ static const SDL_Point CELEBRATION_AT = {240, 365};
 
 static void render(SDL_Renderer *renderer) {
   // The backdrop, water and object boils are static sprites (drawn by the
-  // framework). render() draws only the dynamic layer: the exit arrows, the
-  // float mid-flight, the actor, and the reward burst on top.
-  gina_nav_render(renderer, arrow_left, arrow_right, after_sunscreen);
+  // framework). render() draws only the dynamic layer: the float mid-flight,
+  // the actor, and the reward burst on top.
   if (gina_state.float_state == FLOAT_AT_POOL && float_flying) {
     // Mid-flight: the float follows its tween, shrinking as it recedes.
     SDL_FPoint p = tween_pos(&float_tween);
@@ -460,7 +447,7 @@ static void render(SDL_Renderer *renderer) {
                      (SDL_Point){(int)gina->current_position.x - 60,
                                  (int)gina->current_position.y - 60});
   } else {
-    render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
+    render_action_layer(renderer, &GINA_OUTDOOR_RAMP, NULL, 0, &gina, 1);
     gina_render_worn(renderer, gina);
   }
   // The reward burst over the goggles spot while the chime plays.
@@ -470,14 +457,11 @@ static void render(SDL_Renderer *renderer) {
 }
 
 static void on_scene_active(void) {
-  // Stand where she walked in from, so leaving the tree by its left edge puts
-  // her at this scene's right one (gina_nav.h); the shade start is the fallback
-  // for arrivals that were not a walk. Cross-scene progress is preserved (it is
-  // reset by the adventure's on_enter, not here), so navigating back from the
-  // tree or vine keeps the puzzle state.
-  SDL_FPoint at = gina_nav_entry(HEN_START);
-  gina->current_position = at;
-  gina->target_position = at;
+  // Her spot in the shade. Arriving from another scene overrides this straight
+  // after, standing her at the tile she came through (set_active_scene_at).
+  // Cross-scene progress is preserved (it is reset by the adventure's on_enter,
+  // not here), so navigating back from the tree or vine keeps the puzzle state.
+  actor_place(gina, HEN_START);
   // The dive sequence is scene-local: entering the poolside always starts
   // outside it, with no dives counted.
   dive_phase = DIVE_NONE;
@@ -511,7 +495,7 @@ Scene pool_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
-    .scale_ramp = &SCALE_RAMP,
+    .scale_ramp = &GINA_OUTDOOR_RAMP,
     .walk_grid = &walk_grid,
     .sprites = sprites,
     .sprites_length = LEN(sprites),

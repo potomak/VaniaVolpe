@@ -2,11 +2,15 @@
 //  gina_nav.h
 //  Walking between Gina's three outdoor scenes.
 //
-//  The pool, the tree and the vine form a ring joined at the screen edges, and
-//  all three had the same two problems: the exits were invisible (a bare 30px
-//  strip of background), and arriving always dropped her on the same spot
-//  regardless of which way she had come. Both are fixed once here rather than
-//  three times.
+//  Each scene shows, up near the horizon, a tile standing in for each place it
+//  connects to — the poolside sees a brown tree on its right and a green vine
+//  on its left. Walking to a tile takes her there, and she arrives at the tile
+//  that leads back, so the two scenes agree about which side of the world they
+//  share.
+//
+//  The ground reaches up to those tiles, and the depth ramp is steep enough
+//  that she is visibly smaller when she gets there. All three scenes share that
+//  geometry, so it lives here rather than in triplicate.
 //
 
 #ifndef gina_nav_h
@@ -16,36 +20,31 @@
 #include <stdbool.h>
 
 #include "image.h"
+#include "scaling.h"
 #include "scene.h"
+#include "walk.h"
 
-// No scene: she did not arrive over a scene edge (a fresh start, or back from
-// a minigame), so there is no entry side to place her on.
-#define GINA_NO_SCENE (-1)
+// The ground all three outdoor scenes stand on: the near strip, plus a path up
+// each side to the tiles on the horizon.
+extern const WalkArea GINA_OUTDOOR_WALK_AREA;
 
-// The two exit hotspots, appended to the scene's own table. Both walk her to
-// the edge first and switch scenes on arrival, recording where she left from
-// so the next scene can place her. `enabled` gates them (NULL for always) —
-// the poolside keeps her in the shade until the sunscreen is on. Writes 2
-// entries; returns 2.
-int gina_nav_hotspots(Hotspot *out, bool (*enabled)(void));
+// Depth over that ground (SCALING.md). Shared with the walk area because the
+// two are one decision: the ramp has to reach whatever the paths reach, or she
+// would arrive at the horizon still full size.
+extern const ScaleRamp GINA_OUTDOOR_RAMP;
+
+// The two destination tiles, appended to the scene's own hotspot table. Each
+// walks her to the path end below it and changes scene on arrival, standing
+// her at the far scene's opposite tile. `left_boil` / `right_boil` are the
+// destination sheets — a scene lists the two GINA_NAV_ANIM_TO_*_BOIL_SPECs its
+// row of the ring calls for, since a spec table is built at compile time.
+// `enabled` gates both (NULL for always) — the poolside keeps her in the shade
+// until the sunscreen is on. Writes 2 entries; returns 2.
+int gina_nav_hotspots(Hotspot *out, AnimationData *left_boil,
+                      AnimationData *right_boil, bool (*enabled)(void));
 
 // The matching walk targets, for the scene's POI table (debug overlay). Writes
 // 2 entries; returns 2.
 int gina_nav_pois(SDL_Point *out);
-
-// Draw both exit arrows. They are two instances of one sheet — one
-// AnimationData carries one frame cursor and these squiggle independently —
-// and the left one is drawn mirrored, so a single drawing marks both edges.
-// Pass the same predicate given to gina_nav_hotspots, so an arrow is never
-// advertising an exit that a tap would refuse.
-void gina_nav_render(SDL_Renderer *renderer, AnimationData *left,
-                     AnimationData *right, bool (*visible)(void));
-
-// Where to stand on entering the current scene: the exit that leads back the
-// way she came, so walking off the pool's right edge puts her at the tree's
-// left one. Returns `fallback` when she did not arrive over an edge. Consumes
-// the recorded origin, so a later re-entry that is not a walk (returning from
-// a minigame) falls back rather than reusing a stale side.
-SDL_FPoint gina_nav_entry(SDL_FPoint fallback);
 
 #endif /* gina_nav_h */

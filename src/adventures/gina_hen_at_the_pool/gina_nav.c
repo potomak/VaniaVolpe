@@ -1,7 +1,7 @@
 //
 //  gina_nav.c
-//  See gina_nav.h. The ring, the arrows that advertise it, and the rule for
-//  where she lands.
+//  See gina_nav.h. The ring, the ground that reaches it, and the tiles that
+//  advertise it.
 //
 
 #include "gina_nav.h"
@@ -9,11 +9,10 @@
 #include "constants.h" // LEN
 #include "game.h"
 #include "gina_hen_at_the_pool.h"
-#include "gina_state.h"
 
-// The exits, one row per walkable scene: walk off the left edge and you are in
-// `left`, off the right edge and you are in `right`. This is the whole map —
-// the ring runs pool -> tree -> vine -> pool going right.
+// The exits, one row per walkable scene: walk to the tile on the left and you
+// are in `left`, the one on the right and you are in `right`. This is the whole
+// map — the ring runs pool -> tree -> vine -> pool going right.
 typedef struct gina_exits {
   bool in_ring; // false for the rows this sparse table skips
   int left;
@@ -26,92 +25,84 @@ static const GinaExits EXITS[] = {
     [GINA_VINE] = {.in_ring = true, .left = GINA_TREE, .right = GINA_POOL},
 };
 
-// The intro, the minigames and the end card are not on the ring: no edges to
-// leave by, and nothing to place on arrival.
+// The intro, the minigames and the end card are not on the ring.
 static bool has_exits(int scene) {
   return scene >= 0 && scene < (int)LEN(EXITS) && EXITS[scene].in_ring;
 }
 
-// The tappable strips, and the arrows inside them. Both sit just *above* the
-// walkable band rather than on it: she arrives standing on the edge she came
-// in by, and at ground level her sprite would cover the very arrow that says
-// how to go back. Each strip is comfortably larger than its art — a toddler
-// aiming at the edge of a phone should not have to be precise.
-static const SDL_Rect LEFT_EXIT_HOTSPOT = {0, 336, 72, 120};
-static const SDL_Rect RIGHT_EXIT_HOTSPOT = {728, 336, 72, 120};
+// The ground: the near strip she starts on, and a path up each side leading to
+// the tiles. The paths overlap the strip vertically so the grid joins them into
+// one connected region — a gap would leave the tiles unreachable.
+static const SDL_Rect WALKABLE_RECTS[] = {
+    {20, 430, 760, 150}, // the near ground, right across the scene
+    {20, 250, 150, 190}, // the path up the left, toward that tile
+    {630, 250, 150, 190} // and up the right
+};
+const WalkArea GINA_OUTDOOR_WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS),
+                                         NULL, 0};
 
-// Where she walks before the scene changes, on the walkable strip all three
-// scenes share.
-static const SDL_Point LEFT_EDGE_POI = {40, 500};
-static const SDL_Point RIGHT_EDGE_POI = {760, 500};
+// Depth over that ground, in feet coordinates (the rects above are centre
+// positions; feet sit half a walking frame lower). y_far is the feet line of
+// the topmost walkable row, so she is at her smallest exactly where the paths
+// run out. scale_far sits on the 0.6 floor scaling.h documents rather than
+// below it — the walk up still reads as walking away, and her mouth shapes
+// stay legible if she ever speaks up there.
+const ScaleRamp GINA_OUTDOOR_RAMP = {
+    .y_far = 310, .y_near = 639, .scale_far = 0.6F, .scale_near = 1.0F};
 
-static const SDL_Point LEFT_ARROW_AT = {10, 356};
-static const SDL_Point RIGHT_ARROW_AT = {742, 356};
+// The tiles, near the horizon in the two upper corners, and the tappable areas
+// around them — deliberately larger than the art, since a small finger aiming
+// at a distant thing should not have to be precise.
+static const SDL_Point LEFT_TILE_AT = {30, 60};
+static const SDL_Point RIGHT_TILE_AT = {680, 60};
+static const SDL_Rect LEFT_TILE_HOTSPOT = {10, 40, 130, 130};
+static const SDL_Rect RIGHT_TILE_HOTSPOT = {660, 40, 130, 130};
 
-// Leaving: remember the scene being left, so the arriving one knows which edge
-// to put her on, then switch.
-static void leave_towards(int target) {
-  gina_state.came_from = game.current_scene;
-  set_active_scene(target);
+// Where she stands to use a tile: the top of the path below it. Also where she
+// arrives from the other side, which is why leaving by one tile drops her on
+// the opposite one — the two scenes meet at the same place in the world.
+static const SDL_Point LEFT_PATH_END = {75, 280};
+static const SDL_Point RIGHT_PATH_END = {725, 280};
+
+static SDL_FPoint as_fpoint(SDL_Point p) {
+  return (SDL_FPoint){(float)p.x, (float)p.y};
 }
 
+// Leaving by the left tile means arriving at the far scene's right one, and the
+// other way about: the tile you walk into is the tile you walk back out of.
 static void exit_left(void) {
   if (has_exits(game.current_scene)) {
-    leave_towards(EXITS[game.current_scene].left);
+    set_active_scene_at(EXITS[game.current_scene].left,
+                        as_fpoint(RIGHT_PATH_END));
   }
 }
 
 static void exit_right(void) {
   if (has_exits(game.current_scene)) {
-    leave_towards(EXITS[game.current_scene].right);
+    set_active_scene_at(EXITS[game.current_scene].right,
+                        as_fpoint(LEFT_PATH_END));
   }
 }
 
-int gina_nav_hotspots(Hotspot *out, bool (*enabled)(void)) {
-  out[0] = (Hotspot){.rect = LEFT_EXIT_HOTSPOT,
+int gina_nav_hotspots(Hotspot *out, AnimationData *left_boil,
+                      AnimationData *right_boil, bool (*enabled)(void)) {
+  out[0] = (Hotspot){.rect = LEFT_TILE_HOTSPOT,
                      .enabled = enabled,
-                     .poi = LEFT_EDGE_POI,
-                     .on_arrive = exit_left};
-  out[1] = (Hotspot){.rect = RIGHT_EXIT_HOTSPOT,
+                     .poi = LEFT_PATH_END,
+                     .on_arrive = exit_left,
+                     .active_anim = left_boil,
+                     .anim_at = LEFT_TILE_AT};
+  out[1] = (Hotspot){.rect = RIGHT_TILE_HOTSPOT,
                      .enabled = enabled,
-                     .poi = RIGHT_EDGE_POI,
-                     .on_arrive = exit_right};
+                     .poi = RIGHT_PATH_END,
+                     .on_arrive = exit_right,
+                     .active_anim = right_boil,
+                     .anim_at = RIGHT_TILE_AT};
   return 2;
 }
 
 int gina_nav_pois(SDL_Point *out) {
-  out[0] = LEFT_EDGE_POI;
-  out[1] = RIGHT_EDGE_POI;
+  out[0] = LEFT_PATH_END;
+  out[1] = RIGHT_PATH_END;
   return 2;
-}
-
-void gina_nav_render(SDL_Renderer *renderer, AnimationData *left,
-                     AnimationData *right, bool (*visible)(void)) {
-  if (visible != NULL && !visible()) {
-    return;
-  }
-  // The sheet points right, so the left-hand exit is the same art mirrored.
-  left->flip = SDL_FLIP_HORIZONTAL;
-  render_animation(renderer, left, LEFT_ARROW_AT);
-  render_animation(renderer, right, RIGHT_ARROW_AT);
-}
-
-SDL_FPoint gina_nav_entry(SDL_FPoint fallback) {
-  int from = gina_state.came_from;
-  // One-shot: only the arrival immediately after a walk gets placed.
-  gina_state.came_from = GINA_NO_SCENE;
-
-  int self = game.current_scene;
-  if (!has_exits(self) || from == GINA_NO_SCENE) {
-    return fallback;
-  }
-  // She came through the exit that leads back to `from`, so that is where she
-  // is standing now.
-  if (EXITS[self].left == from) {
-    return (SDL_FPoint){LEFT_EDGE_POI.x, LEFT_EDGE_POI.y};
-  }
-  if (EXITS[self].right == from) {
-    return (SDL_FPoint){RIGHT_EDGE_POI.x, RIGHT_EDGE_POI.y};
-  }
-  return fallback;
 }
