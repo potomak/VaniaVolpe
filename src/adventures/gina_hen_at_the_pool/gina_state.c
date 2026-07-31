@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 
+#include "gina_nav.h" // GINA_NO_SCENE
 #include "gina_state.h"
 
 GinaState gina_state;
@@ -17,4 +18,5 @@ void gina_state_reset(void) {
   gina_state.announce_sunscreen = false;
   gina_state.announce_grapes = false;
   gina_state.examine_float_count = 0;
+  gina_state.came_from = GINA_NO_SCENE;
 }

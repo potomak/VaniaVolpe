@@ -305,6 +305,16 @@
       "task": true
     },
     {
+      "group": "Art — Navigation",
+      "type": "image",
+      "dir": "common/nav",
+      "name": "arrow",
+      "size": "48x64",
+      "description": "The 'way out' arrow marking a scene's left/right exit, drawn pointing right. One drawing serves both edges: the left-hand exit draws it mirrored. Placeholder via tools/gen_nav_arrow_placeholder.py.",
+      "runtime": false,
+      "task": true
+    },
+    {
       "group": "Art — Intro",
       "type": "image",
       "dir": "intro",
@@ -544,6 +554,15 @@
       "frames": 3,
       "style": "loop",
       "description": "Placeholder boil for the pool float, derived from items/float.png. Both the poolside float and the one caught in the tree play this one sheet."
+    },
+    {
+      "group": "Runtime only — Navigation",
+      "type": "animation",
+      "dir": "nav",
+      "name": "arrow_boil",
+      "frames": 3,
+      "style": "loop",
+      "description": "Placeholder boil for the exit arrow, derived from nav/arrow.png. Both edges of all three outdoor scenes play this one sheet."
     },
     {
       "group": "Runtime only — Poolside",

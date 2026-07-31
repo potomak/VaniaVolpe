@@ -16,6 +16,7 @@
 #include "tween.h"
 
 #include "gina_hen_at_the_pool.h"
+#include "gina_nav.h"
 #include "gina_state.h"
 #include "gina_worn.h"
 #include "hen.h"
@@ -40,17 +41,22 @@ static AnimationData *ground_float_boil;
 // The progress-reward burst over the float: plays once with the chime when
 // Carla drops it back.
 static AnimationData *celebration;
+// The two exit arrows: one sheet, one instance per edge so each squiggles on
+// its own cursor (gina_nav_render mirrors the left one).
+static AnimationData *arrow_left;
+static AnimationData *arrow_right;
 // Declared as data: the framework makes and loads these; init only aliases
-// them. The tree dir's own sheets come first, then the borrowed float sheets,
-// which is why those get names here rather than generated indices.
+// them. The tree dir's own sheets come first, then the sheets borrowed from
+// other dirs, which is why those get names here rather than generated indices.
 #define TREE_ANIM_FLOAT (GINA_TREE_ANIMS_COUNT)
 #define TREE_ANIM_GROUND_FLOAT (GINA_TREE_ANIMS_COUNT + 1)
-static AnimationData *animations[GINA_TREE_ANIMS_COUNT + 2];
+#define TREE_ANIM_ARROW_LEFT (GINA_TREE_ANIMS_COUNT + 2)
+#define TREE_ANIM_ARROW_RIGHT (GINA_TREE_ANIMS_COUNT + 3)
+static AnimationData *animations[GINA_TREE_ANIMS_COUNT + 4];
 static const SceneAnimSpec anim_specs[] = {
-    GINA_TREE_ANIM_CELEBRATION_SPEC,
-    GINA_TREE_ANIM_CARLA_BOIL_SPEC,
-    GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
-    GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
+    GINA_TREE_ANIM_CELEBRATION_SPEC, GINA_TREE_ANIM_CARLA_BOIL_SPEC,
+    GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC, GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
+    GINA_NAV_ANIM_ARROW_BOIL_SPEC,   GINA_NAV_ANIM_ARROW_BOIL_SPEC,
 };
 
 // Static sprite layer: just the backdrop. The stuck float and Carla are boils
@@ -88,8 +94,6 @@ static bool carla_flying;
 static const SDL_Rect FLOAT_HOTSPOT = {500, 70, 90, 60};
 static const SDL_Rect GROUND_FLOAT_HOTSPOT = {500, 430, 90, 60};
 static const SDL_Rect CARLA_HOTSPOT = {360, 150, 70, 70};
-static const SDL_Rect POOL_NAV_HOTSPOT = {0, 200, 30, 250};
-static const SDL_Rect VINE_NAV_HOTSPOT = {770, 200, 30, 250};
 static Hotspot hotspots[5];
 
 // Walk geometry: the ground strip under the tree; no blocked areas.
@@ -107,11 +111,7 @@ static const ScaleRamp SCALE_RAMP = {
 
 static const SDL_Point FLOAT_LOOK_POI = {500, 470};
 static const SDL_Point CARLA_POI = {400, 470};
-// Where Gina walks before a scene change: tapping a navigation arrow sends her
-// to the edge first, and the scene switches when she arrives (not on the tap).
-static const SDL_Point LEFT_EDGE_POI = {40, 500};
-static const SDL_Point RIGHT_EDGE_POI = {760, 500};
-static SDL_Point pois[2];
+static SDL_Point pois[4];
 
 // Interactions and hotspot gating (bodies below the loaders).
 static bool float_is_stuck(void);
@@ -120,8 +120,6 @@ static bool carla_is_perched(void);
 static void examine_float(void);
 static void pick_up_float(void);
 static void talk_to_carla(void);
-static void go_to_pool(void);
-static void go_to_vine(void);
 
 static void init(void) {
   walk_grid_init(&walk_grid, &WALK_AREA,
@@ -130,6 +128,8 @@ static void init(void) {
   float_boil = animations[TREE_ANIM_FLOAT];
   carla_boil = animations[GINA_TREE_ANIM_CARLA_BOIL];
   ground_float_boil = animations[TREE_ANIM_GROUND_FLOAT];
+  arrow_left = animations[TREE_ANIM_ARROW_LEFT];
+  arrow_right = animations[TREE_ANIM_ARROW_RIGHT];
   celebration = animations[GINA_TREE_ANIM_CELEBRATION];
 
   sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
@@ -155,14 +155,12 @@ static void init(void) {
                             .active_anim = carla_boil,
                             .anim_at = CARLA_AT,
                             .anim_visible = carla_is_perched};
-  hotspots[i++] = (Hotspot){
-      .rect = POOL_NAV_HOTSPOT, .poi = LEFT_EDGE_POI, .on_arrive = go_to_pool};
-  hotspots[i++] = (Hotspot){
-      .rect = VINE_NAV_HOTSPOT, .poi = RIGHT_EDGE_POI, .on_arrive = go_to_vine};
+  gina_nav_hotspots(&hotspots[i], NULL);
 
   i = 0;
   pois[i++] = FLOAT_LOOK_POI;
   pois[i++] = CARLA_POI;
+  gina_nav_pois(&pois[i]);
 }
 
 // ── interactions
@@ -179,10 +177,6 @@ static bool float_is_on_ground(void) {
 // Carla is on her branch except while she is up in the air; the scene draws her
 // flight itself, so the framework's boil draw stands down for it.
 static bool carla_is_perched(void) { return !carla_flying; }
-
-static void go_to_pool(void) { set_active_scene(GINA_POOL); }
-
-static void go_to_vine(void) { set_active_scene(GINA_VINE); }
 
 static void examine_float(void) {
   switch (gina_state.examine_float_count) {
@@ -269,8 +263,9 @@ static void update(float delta_time) {
 
 static void render(SDL_Renderer *renderer) {
   // Backdrop, the stuck float and Carla are static sprites (drawn by the
-  // framework). render() draws the dynamic layer: the falling float, the
-  // actor and whatever she is carrying, and the reward burst.
+  // framework). render() draws the dynamic layer: the exit arrows, the falling
+  // float, the actor and whatever she is carrying, and the reward burst.
+  gina_nav_render(renderer, arrow_left, arrow_right, NULL);
   if (float_falling) {
     // The drop: the float bounces down from the branches.
     SDL_FPoint p = tween_pos(&float_tween);
@@ -291,8 +286,11 @@ static void render(SDL_Renderer *renderer) {
 }
 
 static void on_scene_active(void) {
-  gina->current_position = HEN_START;
-  gina->target_position = HEN_START;
+  // Stand where she walked in from, so leaving the pool by its right edge puts
+  // her at this scene's left one (gina_nav.h).
+  SDL_FPoint at = gina_nav_entry(HEN_START);
+  gina->current_position = at;
+  gina->target_position = at;
 }
 
 static void on_scene_inactive(void) {}

@@ -49,6 +49,7 @@ GAME_SRCS = \
 	$(GINA_DIR)/hen.c \
 	$(GINA_DIR)/gina_state.c \
 	$(GINA_DIR)/gina_worn.c \
+	$(GINA_DIR)/gina_nav.c \
 	$(GINA_DIR)/gina_hen_at_the_pool.c \
 	$(GINA_DIR)/intro.c \
 	$(GINA_DIR)/outro.c \
@@ -73,6 +74,7 @@ TARGET_TEST = vaniavolpe_test
 TEST_SRCS = test/main_test.c test/harness.c test/script.c test/play_gina.c \
             test/play_vania.c \
             test/test_walk.c test/test_lipsync.c test/test_scene.c \
+            test/test_gina_nav.c \
             test/test_camera.c test/test_tween.c \
             $(GAME_SRCS)
 TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))

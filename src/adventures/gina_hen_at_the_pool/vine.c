@@ -14,6 +14,7 @@
 #include "sound.h"
 
 #include "gina_hen_at_the_pool.h"
+#include "gina_nav.h"
 #include "gina_state.h"
 #include "gina_worn.h"
 #include "hen.h"
@@ -28,9 +29,17 @@ static const ImageData *background = &images[GINA_VINE_IMAGE_BACKGROUND];
 // The grapes boil (LIVELINESS.md) shows the grapes are tappable. Declared as
 // data: the framework makes, loads, ticks and frees it; init only aliases it.
 static AnimationData *grapes_boil;
-static AnimationData *animations[GINA_VINE_ANIMS_COUNT];
+// The two exit arrows: one sheet, one instance per edge so each squiggles on
+// its own cursor (gina_nav_render mirrors the left one).
+static AnimationData *arrow_left;
+static AnimationData *arrow_right;
+#define VINE_ANIM_ARROW_LEFT (GINA_VINE_ANIMS_COUNT)
+#define VINE_ANIM_ARROW_RIGHT (GINA_VINE_ANIMS_COUNT + 1)
+static AnimationData *animations[GINA_VINE_ANIMS_COUNT + 2];
 static const SceneAnimSpec anim_specs[] = {
     GINA_VINE_ANIM_GRAPES_BOIL_SPEC,
+    GINA_NAV_ANIM_ARROW_BOIL_SPEC,
+    GINA_NAV_ANIM_ARROW_BOIL_SPEC,
 };
 
 // Static sprite layer: just the backdrop. The grapes boil is declared on its
@@ -48,8 +57,6 @@ static const SDL_FPoint HEN_START = {400, 480};
 static const SDL_Point GRAPES_AT = {350, 180};
 
 static const SDL_Rect GRAPES_HOTSPOT = {350, 180, 100, 120};
-static const SDL_Rect TREE_NAV_HOTSPOT = {0, 200, 30, 250};
-static const SDL_Rect POOL_NAV_HOTSPOT = {770, 200, 30, 250};
 static Hotspot hotspots[3];
 
 // Walk geometry: the ground strip along the vineyard; no blocked areas.
@@ -66,16 +73,10 @@ static const ScaleRamp SCALE_RAMP = {
     .y_far = 490, .y_near = 639, .scale_far = 0.85F, .scale_near = 1.0F};
 
 static const SDL_Point GRAPES_POI = {400, 470};
-// Where Gina walks before a scene change: tapping a navigation arrow sends her
-// to the edge first, and the scene switches when she arrives (not on the tap).
-static const SDL_Point LEFT_EDGE_POI = {40, 500};
-static const SDL_Point RIGHT_EDGE_POI = {760, 500};
-static SDL_Point pois[1];
+static SDL_Point pois[3];
 
 // Interactions (bodies below the loaders).
 static void pick_grapes(void);
-static void go_to_tree(void);
-static void go_to_pool(void);
 
 static void init(void) {
   // Gina is made by the framework (actor_spec/actor_start below) before init.
@@ -83,6 +84,8 @@ static void init(void) {
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "vine");
 
   grapes_boil = animations[GINA_VINE_ANIM_GRAPES_BOIL];
+  arrow_left = animations[VINE_ANIM_ARROW_LEFT];
+  arrow_right = animations[VINE_ANIM_ARROW_RIGHT];
 
   sprites[0] = (SceneSprite){.image = background, .at = {0, 0}};
 
@@ -92,17 +95,11 @@ static void init(void) {
                             .on_arrive = pick_grapes,
                             .active_anim = grapes_boil,
                             .anim_at = GRAPES_AT};
-  hotspots[i++] = (Hotspot){
-      .rect = TREE_NAV_HOTSPOT, .poi = LEFT_EDGE_POI, .on_arrive = go_to_tree};
-  hotspots[i++] = (Hotspot){
-      .rect = POOL_NAV_HOTSPOT, .poi = RIGHT_EDGE_POI, .on_arrive = go_to_pool};
+  gina_nav_hotspots(&hotspots[i], NULL);
 
   pois[0] = GRAPES_POI;
+  gina_nav_pois(&pois[1]);
 }
-
-static void go_to_tree(void) { set_active_scene(GINA_TREE); }
-
-static void go_to_pool(void) { set_active_scene(GINA_POOL); }
 
 static void pick_grapes(void) {
   if (gina_state.has_grapes) {
@@ -117,8 +114,11 @@ static void pick_grapes(void) {
 }
 
 static void on_scene_active(void) {
-  gina->current_position = HEN_START;
-  gina->target_position = HEN_START;
+  // Stand where she walked in from, so leaving the tree by its right edge puts
+  // her at this scene's left one (gina_nav.h).
+  SDL_FPoint at = gina_nav_entry(HEN_START);
+  gina->current_position = at;
+  gina->target_position = at;
   // Fresh from the grapes minigame: explain what the reward means.
   if (gina_state.announce_grapes) {
     gina_state.announce_grapes = false;
@@ -131,6 +131,7 @@ static void on_scene_inactive(void) {}
 // Custom render only so her kit draws over her; everything else here is
 // sprites and hotspots the framework handles.
 static void render(SDL_Renderer *renderer) {
+  gina_nav_render(renderer, arrow_left, arrow_right, NULL);
   render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
   gina_render_worn(renderer, gina);
 }

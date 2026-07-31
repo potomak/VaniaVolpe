@@ -17,6 +17,7 @@
 #include "tween.h"
 
 #include "gina_hen_at_the_pool.h"
+#include "gina_nav.h"
 #include "gina_state.h"
 #include "gina_worn.h"
 #include "hen.h"
@@ -50,17 +51,24 @@ static AnimationData *celebration;
 // Gina bobbing in the water after a dive; the scene draws it in place of her
 // sprite while she floats.
 static AnimationData *floating;
+// The two exit arrows: one sheet, one instance per edge so each squiggles on
+// its own cursor (gina_nav_render mirrors the left one).
+static AnimationData *arrow_left;
+static AnimationData *arrow_right;
 // Declared as data: the framework makes and loads these; init only aliases
 // them. The pool dir's own sheets come first, then the sheets borrowed from
 // other dirs, which is why those get names here rather than generated indices.
 #define POOL_ANIM_GOGGLES_BOIL (GINA_POOL_ANIMS_COUNT)
 #define POOL_ANIM_FLOAT_BOIL (GINA_POOL_ANIMS_COUNT + 1)
 #define POOL_ANIM_FLOATING (GINA_POOL_ANIMS_COUNT + 2)
-static AnimationData *animations[GINA_POOL_ANIMS_COUNT + 3];
+#define POOL_ANIM_ARROW_LEFT (GINA_POOL_ANIMS_COUNT + 3)
+#define POOL_ANIM_ARROW_RIGHT (GINA_POOL_ANIMS_COUNT + 4)
+static AnimationData *animations[GINA_POOL_ANIMS_COUNT + 5];
 static const SceneAnimSpec anim_specs[] = {
     GINA_POOL_ANIM_CELEBRATION_SPEC,   GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC,
     GINA_ITEMS_ANIM_GOGGLES_BOIL_SPEC, GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
-    GINA_HEN_ANIM_FLOATING_SPEC,
+    GINA_HEN_ANIM_FLOATING_SPEC,       GINA_NAV_ANIM_ARROW_BOIL_SPEC,
+    GINA_NAV_ANIM_ARROW_BOIL_SPEC,
 };
 
 // Static sprite layer: backdrop and water. The three object boils are declared
@@ -127,8 +135,6 @@ static const SDL_Rect POOL_WATER_HOTSPOT = {170, 40, 460, 180};
 static const SDL_Rect SUNSCREEN_HOTSPOT = {120, 500, 40, 60};
 static const SDL_Rect GOGGLES_HOTSPOT = {330, 470, 60, 30};
 static const SDL_Rect FLOAT_HOTSPOT = {560, 470, 90, 60};
-static const SDL_Rect VINE_NAV_HOTSPOT = {0, 200, 30, 250};
-static const SDL_Rect TREE_NAV_HOTSPOT = {770, 200, 30, 250};
 static Hotspot hotspots[7];
 
 // Walk geometry. Before the sunscreen is applied Gina refuses to leave the
@@ -167,11 +173,7 @@ static const SDL_Point SUNSCREEN_POI = {150, 545};
 static const SDL_Point GOGGLES_POI = {360, 525};
 static const SDL_Point FLOAT_POI = {600, 545};
 static const SDL_Point POOL_EDGE_POI = {400, 460};
-// Where Gina walks before a scene change: tapping a navigation arrow sends her
-// to the edge first, and the scene switches when she arrives (not on the tap).
-static const SDL_Point LEFT_EDGE_POI = {40, 500};
-static const SDL_Point RIGHT_EDGE_POI = {760, 500};
-static SDL_Point pois[4];
+static SDL_Point pois[6];
 
 // Interactions and hotspot gating (bodies below the loaders). Before the
 // sunscreen only the lotion is tappable; everything else unlocks after it.
@@ -185,8 +187,6 @@ static void open_sunscreen_minigame(void);
 static void collect_goggles(void);
 static void float_blows_away(void);
 static void try_dive(void);
-static void go_to_vine(void);
-static void go_to_tree(void);
 
 static void init(void) {
   rebuild_walk_grid();
@@ -196,6 +196,8 @@ static void init(void) {
   float_boil = animations[POOL_ANIM_FLOAT_BOIL];
   celebration = animations[GINA_POOL_ANIM_CELEBRATION];
   floating = animations[POOL_ANIM_FLOATING];
+  arrow_left = animations[POOL_ANIM_ARROW_LEFT];
+  arrow_right = animations[POOL_ANIM_ARROW_RIGHT];
 
   int s = 0;
   sprites[s++] = (SceneSprite){.image = background, .at = {0, 0}};
@@ -234,20 +236,15 @@ static void init(void) {
                             .enabled = after_sunscreen,
                             .poi = POOL_EDGE_POI,
                             .on_arrive = try_dive};
-  hotspots[i++] = (Hotspot){.rect = VINE_NAV_HOTSPOT,
-                            .enabled = after_sunscreen,
-                            .poi = LEFT_EDGE_POI,
-                            .on_arrive = go_to_vine};
-  hotspots[i++] = (Hotspot){.rect = TREE_NAV_HOTSPOT,
-                            .enabled = after_sunscreen,
-                            .poi = RIGHT_EDGE_POI,
-                            .on_arrive = go_to_tree};
+  // Gated like the rest of the poolside: no wandering off before the sunscreen.
+  gina_nav_hotspots(&hotspots[i], after_sunscreen);
 
   i = 0;
   pois[i++] = SUNSCREEN_POI;
   pois[i++] = GOGGLES_POI;
   pois[i++] = FLOAT_POI;
   pois[i++] = POOL_EDGE_POI;
+  gina_nav_pois(&pois[i]);
 }
 
 // ── interactions
@@ -281,10 +278,6 @@ static void open_sunscreen_minigame(void) {
 
 // The "already applied" tap is the generated say_sunscreen_done() helper
 // directly (see the hotspot table in init) — no wrapper needed.
-
-static void go_to_vine(void) { set_active_scene(GINA_VINE); }
-
-static void go_to_tree(void) { set_active_scene(GINA_TREE); }
 
 static void collect_goggles(void) {
   gina_state.has_goggles = true;
@@ -450,8 +443,9 @@ static const SDL_Point CELEBRATION_AT = {240, 365};
 
 static void render(SDL_Renderer *renderer) {
   // The backdrop, water and object boils are static sprites (drawn by the
-  // framework). render() draws only the dynamic layer: the float mid-flight,
-  // the actor, and the reward burst on top.
+  // framework). render() draws only the dynamic layer: the exit arrows, the
+  // float mid-flight, the actor, and the reward burst on top.
+  gina_nav_render(renderer, arrow_left, arrow_right, after_sunscreen);
   if (gina_state.float_state == FLOAT_AT_POOL && float_flying) {
     // Mid-flight: the float follows its tween, shrinking as it recedes.
     SDL_FPoint p = tween_pos(&float_tween);
@@ -476,11 +470,14 @@ static void render(SDL_Renderer *renderer) {
 }
 
 static void on_scene_active(void) {
-  // Return Gina to her starting spot. Cross-scene progress is preserved (it is
+  // Stand where she walked in from, so leaving the tree by its left edge puts
+  // her at this scene's right one (gina_nav.h); the shade start is the fallback
+  // for arrivals that were not a walk. Cross-scene progress is preserved (it is
   // reset by the adventure's on_enter, not here), so navigating back from the
   // tree or vine keeps the puzzle state.
-  gina->current_position = HEN_START;
-  gina->target_position = HEN_START;
+  SDL_FPoint at = gina_nav_entry(HEN_START);
+  gina->current_position = at;
+  gina->target_position = at;
   // The dive sequence is scene-local: entering the poolside always starts
   // outside it, with no dives counted.
   dive_phase = DIVE_NONE;

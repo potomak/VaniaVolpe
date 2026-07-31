@@ -338,8 +338,14 @@ current inventory of hotspot objects:
 | tree | float in branches, Carla |
 | vine | grape bunch |
 
-Navigation-edge hotspots have no object image and stay invisible (they
-are affordances of the scene edges, not things). Water is left static for
+Navigation-edge hotspots used to have no object image and stayed invisible,
+on the theory that they were affordances of the scene edge rather than
+things. In play they simply could not be found, so each edge now draws an
+arrow that boils like any other tappable — `common/nav/arrow`, one drawing
+mirrored for the left-hand side, gated by the same predicate as the hotspot
+so it never advertises an exit a tap would refuse (`gina_nav.c`). Its boil
+runs at a lower amplitude than the objects': a hand-drawn shape survives a
+big wobble, a crisp geometric arrow just looks broken. Water is left static for
 now — jittering a large flat rect reads as noise, not a boil; the small
 pickup objects are the ones that squiggle. Until real boil art lands,
 `tools/gen_boil_sheet.py` generates the placeholder sheets that ship today:

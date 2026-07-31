@@ -108,6 +108,10 @@ them.
   at object size: the scenes show it lying on the ground (via a boil sheet from
   `gen_boil_sheet.py`) and `gina_worn.c` draws the same file on her once she has
   it, so an item never has to be drawn twice. Needs Pillow.
+- **`gen_nav_arrow_placeholder.py`** — emits the placeholder "way out" arrow
+  that marks a scene's left/right exit, drawn pointing right; the left-hand
+  exit draws the same file mirrored. Follow it with
+  `gen_boil_sheet.py --amp 0.4` to refresh the squiggle. Needs Pillow.
 - **`gen_card_placeholders.py`** — emits an adventure's placeholder title or end
   card, `--kind intro|outro`. Both are a washed backdrop carrying the title,
   written once per locale because they bear words. `intro` adds a 3-frame Play

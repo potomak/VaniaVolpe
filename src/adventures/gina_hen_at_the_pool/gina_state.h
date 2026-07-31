@@ -37,6 +37,11 @@ typedef struct gina_state {
 
   // Repeated-tap dialogue counter for the float stuck up the tree.
   int examine_float_count;
+
+  // The scene she just walked out of, or GINA_NO_SCENE. Set when she leaves
+  // over an edge and consumed by the arriving scene, which stands her at the
+  // exit leading back (gina_nav.h).
+  int came_from;
 } GinaState;
 
 extern GinaState gina_state;

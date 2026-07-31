@@ -178,6 +178,18 @@ void scene_say(int index);
 
 // ── minigames ─────────────────────────────────────────────
 
+// ── nav ─────────────────────────────────────────────
+#define GINA_NAV_ANIM_ARROW_BOIL 0
+#define GINA_NAV_ANIM_ARROW_BOIL_FRAMES 3
+#define GINA_NAV_ANIM_ARROW_BOIL_STYLE LOOP
+#define GINA_NAV_ANIM_ARROW_BOIL_MS_PER_FRAME 0
+#define GINA_NAV_ANIM_ARROW_BOIL_SPRITE_FILE "arrow_boil.png"
+#define GINA_NAV_ANIM_ARROW_BOIL_DATA_FILE "arrow_boil.anim"
+#define GINA_NAV_ANIM_ARROW_BOIL_SPRITE_ASSET ((Asset){.filename = "arrow_boil.png", .directory = "nav"})
+#define GINA_NAV_ANIM_ARROW_BOIL_DATA_ASSET ((Asset){.filename = "arrow_boil.anim", .directory = "nav"})
+#define GINA_NAV_ANIM_ARROW_BOIL_SPEC {3, LOOP, {"arrow_boil.png", "nav"}, {"arrow_boil.anim", "nav"}, 0, 0}
+#define GINA_NAV_ANIMS_COUNT 1
+
 // ── outro ─────────────────────────────────────────────
 #define GINA_OUTRO_IMAGE_OUTRO_BACKGROUND 0
 #define GINA_OUTRO_IMAGE_OUTRO_BACKGROUND_INIT {NULL, "outro_background.png", "outro", 0, 0}
