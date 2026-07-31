@@ -154,9 +154,12 @@ never shipped (the web preload and the asset catalog skip `_`-prefixed dirs).
   renderer + dummy audio, drives the scripted playthroughs and the unit
   tests (`test/`), asserting dialogue order and geometry invariants. The CI
   gate.
-- **Browser playthrough** — `test/web/run_playtest.js`: Puppeteer drives the
-  deployed-shape web build through the same JSON script, saving screenshots.
-  Run by `.github/workflows/web-test.yml`.
+- **Browser playthrough** — `test/web/run_playtest.js <script.json>`: Puppeteer
+  drives the deployed-shape web build through the same JSON scripts, saving
+  screenshots. `.github/workflows/web-test.yml` runs every
+  `test/scripts/*.json` and uploads the shots per adventure. Unlike the native
+  harness, which steps virtual time, this one waits in real time — so a script's
+  `wait_ms` budget is what the job costs.
 - **Terminal build** — `make terminal` → `./vaniavolpe_terminal`: the whole
   game as libcaca ASCII art; handy for quick play-testing over SSH.
 

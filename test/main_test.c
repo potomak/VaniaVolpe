@@ -11,6 +11,7 @@
 
 #include "harness.h"
 #include "play_gina.h"
+#include "play_vania.h"
 #include "test_camera.h"
 #include "test_lipsync.h"
 #include "test_scene.h"
@@ -34,7 +35,7 @@ int main(void) {
   }
 
   int failures = play_gina();
-  // Future play-tests (e.g. play_vania) are added here.
+  failures += play_vania();
 
   // Pure unit tests (no window/assets; run after the playthrough so its
   // captured log stays contiguous).
