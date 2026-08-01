@@ -37,6 +37,7 @@ typedef struct gina_state {
 
   // Repeated-tap dialogue counter for the float stuck up the tree.
   int examine_float_count;
+
 } GinaState;
 
 extern GinaState gina_state;

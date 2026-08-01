@@ -612,6 +612,14 @@ void actor_free(Actor *actor) {
   free(actor);
 }
 
+void actor_place(Actor *actor, SDL_FPoint at) {
+  cancel_walk(actor);
+  actor->current_position = at;
+  actor->target_position = at;
+  // Her ground moves with her: a drag grabs from wherever she now stands.
+  actor->ground_y = actor_feet_y(actor);
+}
+
 void actor_walk_path(Actor *actor, const SDL_FPoint *points, int points_length,
                      void (*on_end)(void)) {
   // No walking while talking, held by the pointer, or mid-air. A LANDING

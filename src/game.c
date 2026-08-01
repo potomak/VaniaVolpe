@@ -74,8 +74,8 @@ const Scene *scene_instance(int scene) {
   return &game.current_adventure->scenes[scene];
 }
 
-// Sets a new scene as the current scene
-void set_active_scene(int scene) {
+// Sets a new scene as the current scene, optionally placing its actor.
+static void activate_scene(int scene, const SDL_FPoint *actor_at) {
   const Scene *previous = scene_instance(game.current_scene);
   previous->on_scene_inactive();
   scene_stop_music(previous);
@@ -83,8 +83,20 @@ void set_active_scene(int scene) {
   game.current_scene = scene;
   const Scene *current = scene_instance(game.current_scene);
   current->on_scene_active();
+  // After on_scene_active, so the caller's placement wins over the scene's own
+  // idea of where the actor stands — the caller is the one who knows which way
+  // the player came in.
+  if (actor_at != NULL && current->actor != NULL && *current->actor != NULL) {
+    actor_place(*current->actor, *actor_at);
+  }
   scene_start_music(current);
   snap_scene_camera();
+}
+
+void set_active_scene(int scene) { activate_scene(scene, NULL); }
+
+void set_active_scene_at(int scene, SDL_FPoint actor_at) {
+  activate_scene(scene, &actor_at);
 }
 
 void return_to_hub(void) {

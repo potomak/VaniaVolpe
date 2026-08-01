@@ -21,6 +21,8 @@
 #include "gina_worn.h"
 #include "hen.h"
 #include "pool.h"
+#include "tree.h"
+#include "vine.h"
 
 // Asset declarations generated from the adventure manifest (ASSETS.md): the
 // filenames, table order and animation frame counts below come from
@@ -52,15 +54,20 @@ static AnimationData *celebration;
 static AnimationData *floating;
 // Declared as data: the framework makes and loads these; init only aliases
 // them. The pool dir's own sheets come first, then the sheets borrowed from
-// other dirs, which is why those get names here rather than generated indices.
+// other dirs — the items she picks up, her floating sheet, and the two
+// destination tiles on the horizon: the vine on the left, the tree on the
+// right.
 #define POOL_ANIM_GOGGLES_BOIL (GINA_POOL_ANIMS_COUNT)
 #define POOL_ANIM_FLOAT_BOIL (GINA_POOL_ANIMS_COUNT + 1)
 #define POOL_ANIM_FLOATING (GINA_POOL_ANIMS_COUNT + 2)
-static AnimationData *animations[GINA_POOL_ANIMS_COUNT + 3];
+#define POOL_ANIM_TO_VINE (GINA_POOL_ANIMS_COUNT + 3)
+#define POOL_ANIM_TO_TREE (GINA_POOL_ANIMS_COUNT + 4)
+static AnimationData *animations[GINA_POOL_ANIMS_COUNT + 5];
 static const SceneAnimSpec anim_specs[] = {
     GINA_POOL_ANIM_CELEBRATION_SPEC,   GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC,
     GINA_ITEMS_ANIM_GOGGLES_BOIL_SPEC, GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
-    GINA_HEN_ANIM_FLOATING_SPEC,
+    GINA_HEN_ANIM_FLOATING_SPEC,       GINA_NAV_ANIM_TO_VINE_BOIL_SPEC,
+    GINA_NAV_ANIM_TO_TREE_BOIL_SPEC,
 };
 
 // Static sprite layer: backdrop and water. The three object boils are declared
@@ -127,28 +134,39 @@ static const SDL_Rect POOL_WATER_HOTSPOT = {170, 40, 460, 180};
 static const SDL_Rect SUNSCREEN_HOTSPOT = {120, 500, 40, 60};
 static const SDL_Rect GOGGLES_HOTSPOT = {330, 470, 60, 30};
 static const SDL_Rect FLOAT_HOTSPOT = {560, 470, 90, 60};
-static const SDL_Rect VINE_NAV_HOTSPOT = {0, 200, 30, 250};
-static const SDL_Rect TREE_NAV_HOTSPOT = {770, 200, 30, 250};
+// The tiles, and the tappable areas around them — deliberately larger than the
+// art, since a small finger aiming at a distant thing should not have to be
+// precise.
+static const SDL_Point VINE_TILE_AT = {30, 60};
+static const SDL_Point TREE_TILE_AT = {680, 60};
+static const SDL_Rect VINE_TILE_HOTSPOT = {10, 40, 130, 130};
+static const SDL_Rect TREE_TILE_HOTSPOT = {660, 40, 130, 130};
 static Hotspot hotspots[7];
 
 // Walk geometry. Before the sunscreen is applied Gina refuses to leave the
 // umbrella's shadow, so the walkable area itself is a function of game state:
-// the shade patch first, the whole poolside strip afterwards. (The shade rect
-// is tuned to the current background art; toggle the debug overlay to see
-// whichever area is active.)
-static const SDL_Rect POOLSIDE_RECTS[] = {{20, 430, 760, 150}};
+// the shade patch first, and afterwards the poolside plus a path up either
+// side to the tile above it. The paths overlap the near strip so the grid
+// joins them into one region — a gap would leave a tile visible but
+// unreachable. (The shade rect is tuned to the current background art; toggle
+// the debug overlay to see whichever area is active.)
+static const SDL_Rect POOLSIDE_RECTS[] = {
+    {20, 430, 760, 150}, // the near ground, right across the scene
+    {20, 250, 150, 190}, // up the left, toward the vine
+    {630, 250, 150, 190} // up the right, toward the tree
+};
 static const SDL_Rect SHADE_RECTS[] = {{60, 430, 200, 150}};
 static const WalkArea POOLSIDE_AREA = {POOLSIDE_RECTS, LEN(POOLSIDE_RECTS),
                                        NULL, 0};
 static const WalkArea SHADE_AREA = {SHADE_RECTS, LEN(SHADE_RECTS), NULL, 0};
 static WalkGrid walk_grid;
 
-// Depth (SCALING.md): a gentle ramp across the walkable strip, in feet
-// coordinates (the walk rects above are centre positions; feet sit half a
-// walking frame lower). scale_far is the knob — raise it toward 1 for a
-// flatter backdrop, lower it for more perspective.
+// Depth (SCALING.md), in feet coordinates (the rects above are centre
+// positions; feet sit half a walking frame lower). y_far is the feet line of
+// the topmost walkable row, so she is smallest exactly where the paths run out.
+// scale_far sits on the 0.6 floor scaling.h documents rather than below it.
 static const ScaleRamp SCALE_RAMP = {
-    .y_far = 490, .y_near = 639, .scale_far = 0.85F, .scale_near = 1.0F};
+    .y_far = 310, .y_near = 639, .scale_far = 0.6F, .scale_near = 1.0F};
 
 // Rebuild the grid from the state-appropriate area. Called on scene entry and
 // after any in-scene state change that affects movement (the replay reset in
@@ -167,11 +185,17 @@ static const SDL_Point SUNSCREEN_POI = {150, 545};
 static const SDL_Point GOGGLES_POI = {360, 525};
 static const SDL_Point FLOAT_POI = {600, 545};
 static const SDL_Point POOL_EDGE_POI = {400, 460};
-// Where Gina walks before a scene change: tapping a navigation arrow sends her
-// to the edge first, and the scene switches when she arrives (not on the tap).
-static const SDL_Point LEFT_EDGE_POI = {40, 500};
-static const SDL_Point RIGHT_EDGE_POI = {760, 500};
-static SDL_Point pois[4];
+// The far end of each path — one point per door, because it is both where she
+// walks to use it and where she is standing when she comes through it. The
+// hotspot POIs below are taken from these rather than repeating the numbers.
+const SDL_FPoint GINA_POOL_ENTRY_FROM_VINE = {75, 280};
+const SDL_FPoint GINA_POOL_ENTRY_FROM_TREE = {725, 280};
+
+static SDL_Point door(SDL_FPoint at) {
+  return (SDL_Point){(int)at.x, (int)at.y};
+}
+
+static SDL_Point pois[6];
 
 // Interactions and hotspot gating (bodies below the loaders). Before the
 // sunscreen only the lotion is tappable; everything else unlocks after it.
@@ -182,11 +206,11 @@ static bool float_at_the_pool(void);
 static bool goggles_present(void);
 static bool float_resting_at_pool(void);
 static void open_sunscreen_minigame(void);
+static void go_to_vine(void);
+static void go_to_tree(void);
 static void collect_goggles(void);
 static void float_blows_away(void);
 static void try_dive(void);
-static void go_to_vine(void);
-static void go_to_tree(void);
 
 static void init(void) {
   rebuild_walk_grid();
@@ -234,20 +258,27 @@ static void init(void) {
                             .enabled = after_sunscreen,
                             .poi = POOL_EDGE_POI,
                             .on_arrive = try_dive};
-  hotspots[i++] = (Hotspot){.rect = VINE_NAV_HOTSPOT,
+  // Gated like the rest of the poolside: no wandering off before the sunscreen.
+  hotspots[i++] = (Hotspot){.rect = VINE_TILE_HOTSPOT,
                             .enabled = after_sunscreen,
-                            .poi = LEFT_EDGE_POI,
-                            .on_arrive = go_to_vine};
-  hotspots[i++] = (Hotspot){.rect = TREE_NAV_HOTSPOT,
-                            .enabled = after_sunscreen,
-                            .poi = RIGHT_EDGE_POI,
-                            .on_arrive = go_to_tree};
+                            .poi = door(GINA_POOL_ENTRY_FROM_VINE),
+                            .on_arrive = go_to_vine,
+                            .active_anim = animations[POOL_ANIM_TO_VINE],
+                            .anim_at = VINE_TILE_AT};
+  hotspots[i] = (Hotspot){.rect = TREE_TILE_HOTSPOT,
+                          .enabled = after_sunscreen,
+                          .poi = door(GINA_POOL_ENTRY_FROM_TREE),
+                          .on_arrive = go_to_tree,
+                          .active_anim = animations[POOL_ANIM_TO_TREE],
+                          .anim_at = TREE_TILE_AT};
 
   i = 0;
   pois[i++] = SUNSCREEN_POI;
   pois[i++] = GOGGLES_POI;
   pois[i++] = FLOAT_POI;
   pois[i++] = POOL_EDGE_POI;
+  pois[i++] = door(GINA_POOL_ENTRY_FROM_VINE);
+  pois[i] = door(GINA_POOL_ENTRY_FROM_TREE);
 }
 
 // ── interactions
@@ -275,16 +306,22 @@ static bool float_resting_at_pool(void) {
   return gina_state.float_state == FLOAT_AT_POOL && !float_flying;
 }
 
+// Leaving: the destination says where its own door is, so this scene never
+// assumes anything about the shape of the next one.
+static void go_to_vine(void) {
+  set_active_scene_at(GINA_VINE, GINA_VINE_ENTRY_FROM_POOL);
+}
+
+static void go_to_tree(void) {
+  set_active_scene_at(GINA_TREE, GINA_TREE_ENTRY_FROM_POOL);
+}
+
 static void open_sunscreen_minigame(void) {
   set_active_scene(GINA_SUNSCREEN_MINIGAME);
 }
 
 // The "already applied" tap is the generated say_sunscreen_done() helper
 // directly (see the hotspot table in init) — no wrapper needed.
-
-static void go_to_vine(void) { set_active_scene(GINA_VINE); }
-
-static void go_to_tree(void) { set_active_scene(GINA_TREE); }
 
 static void collect_goggles(void) {
   gina_state.has_goggles = true;
@@ -476,11 +513,12 @@ static void render(SDL_Renderer *renderer) {
 }
 
 static void on_scene_active(void) {
-  // Return Gina to her starting spot. Cross-scene progress is preserved (it is
-  // reset by the adventure's on_enter, not here), so navigating back from the
-  // tree or vine keeps the puzzle state.
-  gina->current_position = HEN_START;
-  gina->target_position = HEN_START;
+  // Her spot in the shade. Arriving from another scene overrides this straight
+  // after, with that scene passing one of the GINA_POOL_ENTRY_FROM_* points
+  // above (set_active_scene_at).
+  // Cross-scene progress is preserved (it is reset by the adventure's on_enter,
+  // not here), so navigating back from the tree or vine keeps the puzzle state.
+  actor_place(gina, HEN_START);
   // The dive sequence is scene-local: entering the poolside always starts
   // outside it, with no dives counted.
   dive_phase = DIVE_NONE;

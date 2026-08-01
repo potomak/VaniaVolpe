@@ -178,6 +178,36 @@ void scene_say(int index);
 
 // ── minigames ─────────────────────────────────────────────
 
+// ── nav ─────────────────────────────────────────────
+#define GINA_NAV_ANIM_TO_POOL_BOIL 0
+#define GINA_NAV_ANIM_TO_POOL_BOIL_FRAMES 3
+#define GINA_NAV_ANIM_TO_POOL_BOIL_STYLE LOOP
+#define GINA_NAV_ANIM_TO_POOL_BOIL_MS_PER_FRAME 0
+#define GINA_NAV_ANIM_TO_POOL_BOIL_SPRITE_FILE "to_pool_boil.png"
+#define GINA_NAV_ANIM_TO_POOL_BOIL_DATA_FILE "to_pool_boil.anim"
+#define GINA_NAV_ANIM_TO_POOL_BOIL_SPRITE_ASSET ((Asset){.filename = "to_pool_boil.png", .directory = "nav"})
+#define GINA_NAV_ANIM_TO_POOL_BOIL_DATA_ASSET ((Asset){.filename = "to_pool_boil.anim", .directory = "nav"})
+#define GINA_NAV_ANIM_TO_POOL_BOIL_SPEC {3, LOOP, {"to_pool_boil.png", "nav"}, {"to_pool_boil.anim", "nav"}, 0, 0}
+#define GINA_NAV_ANIM_TO_TREE_BOIL 1
+#define GINA_NAV_ANIM_TO_TREE_BOIL_FRAMES 3
+#define GINA_NAV_ANIM_TO_TREE_BOIL_STYLE LOOP
+#define GINA_NAV_ANIM_TO_TREE_BOIL_MS_PER_FRAME 0
+#define GINA_NAV_ANIM_TO_TREE_BOIL_SPRITE_FILE "to_tree_boil.png"
+#define GINA_NAV_ANIM_TO_TREE_BOIL_DATA_FILE "to_tree_boil.anim"
+#define GINA_NAV_ANIM_TO_TREE_BOIL_SPRITE_ASSET ((Asset){.filename = "to_tree_boil.png", .directory = "nav"})
+#define GINA_NAV_ANIM_TO_TREE_BOIL_DATA_ASSET ((Asset){.filename = "to_tree_boil.anim", .directory = "nav"})
+#define GINA_NAV_ANIM_TO_TREE_BOIL_SPEC {3, LOOP, {"to_tree_boil.png", "nav"}, {"to_tree_boil.anim", "nav"}, 0, 0}
+#define GINA_NAV_ANIM_TO_VINE_BOIL 2
+#define GINA_NAV_ANIM_TO_VINE_BOIL_FRAMES 3
+#define GINA_NAV_ANIM_TO_VINE_BOIL_STYLE LOOP
+#define GINA_NAV_ANIM_TO_VINE_BOIL_MS_PER_FRAME 0
+#define GINA_NAV_ANIM_TO_VINE_BOIL_SPRITE_FILE "to_vine_boil.png"
+#define GINA_NAV_ANIM_TO_VINE_BOIL_DATA_FILE "to_vine_boil.anim"
+#define GINA_NAV_ANIM_TO_VINE_BOIL_SPRITE_ASSET ((Asset){.filename = "to_vine_boil.png", .directory = "nav"})
+#define GINA_NAV_ANIM_TO_VINE_BOIL_DATA_ASSET ((Asset){.filename = "to_vine_boil.anim", .directory = "nav"})
+#define GINA_NAV_ANIM_TO_VINE_BOIL_SPEC {3, LOOP, {"to_vine_boil.png", "nav"}, {"to_vine_boil.anim", "nav"}, 0, 0}
+#define GINA_NAV_ANIMS_COUNT 3
+
 // ── outro ─────────────────────────────────────────────
 #define GINA_OUTRO_IMAGE_OUTRO_BACKGROUND 0
 #define GINA_OUTRO_IMAGE_OUTRO_BACKGROUND_INIT {NULL, "outro_background.png", "outro", 0, 0}

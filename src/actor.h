@@ -211,6 +211,12 @@ void actor_render_carried(const Actor *actor, SDL_Renderer *renderer,
 
 void actor_free(Actor *actor);
 
+// Put the actor down at `at`, cancelling any walk in progress. Scene changes
+// and scripted placement go through this rather than assigning
+// current_position, so a walk still running does not immediately drag her back
+// off the spot.
+void actor_place(Actor *actor, SDL_FPoint at);
+
 void actor_walk_to(Actor *actor, SDL_FPoint position, void (*on_end)(void));
 
 // Walk through up to ACTOR_MAX_WAYPOINTS points in order (extra points are

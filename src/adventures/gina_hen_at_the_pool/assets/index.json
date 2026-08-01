@@ -305,6 +305,36 @@
       "task": true
     },
     {
+      "group": "Art — Navigation",
+      "type": "image",
+      "dir": "common/nav",
+      "name": "to_pool",
+      "size": "90x90",
+      "description": "An abstract view of the poolside, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
+      "runtime": false,
+      "task": true
+    },
+    {
+      "group": "Art — Navigation",
+      "type": "image",
+      "dir": "common/nav",
+      "name": "to_tree",
+      "size": "90x90",
+      "description": "An abstract view of the tree, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
+      "runtime": false,
+      "task": true
+    },
+    {
+      "group": "Art — Navigation",
+      "type": "image",
+      "dir": "common/nav",
+      "name": "to_vine",
+      "size": "90x90",
+      "description": "An abstract view of the grape vine, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
+      "runtime": false,
+      "task": true
+    },
+    {
       "group": "Art — Intro",
       "type": "image",
       "dir": "intro",
@@ -544,6 +574,33 @@
       "frames": 3,
       "style": "loop",
       "description": "Placeholder boil for the pool float, derived from items/float.png. Both the poolside float and the one caught in the tree play this one sheet."
+    },
+    {
+      "group": "Runtime only — Navigation",
+      "type": "animation",
+      "dir": "nav",
+      "name": "to_pool_boil",
+      "frames": 3,
+      "style": "loop",
+      "description": "Placeholder boil for the the poolside tile, derived from nav/to_pool.png. The boil is what says the tile is tappable."
+    },
+    {
+      "group": "Runtime only — Navigation",
+      "type": "animation",
+      "dir": "nav",
+      "name": "to_tree_boil",
+      "frames": 3,
+      "style": "loop",
+      "description": "Placeholder boil for the the tree tile, derived from nav/to_tree.png. The boil is what says the tile is tappable."
+    },
+    {
+      "group": "Runtime only — Navigation",
+      "type": "animation",
+      "dir": "nav",
+      "name": "to_vine_boil",
+      "frames": 3,
+      "style": "loop",
+      "description": "Placeholder boil for the the grape vine tile, derived from nav/to_vine.png. The boil is what says the tile is tappable."
     },
     {
       "group": "Runtime only — Poolside",

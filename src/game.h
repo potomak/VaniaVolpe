@@ -42,6 +42,13 @@ const Scene *scene_instance(int scene);
 
 void set_active_scene(int scene);
 
+// The same, but stand the scene's actor at `actor_at` rather than wherever the
+// scene itself puts her. For a location reachable from more than one direction:
+// which door you came through is known to the caller, not to the scene, so the
+// scene keeps one default start and the transition overrides it. Applied after
+// on_scene_active, and ignored by a scene with no actor.
+void set_active_scene_at(int scene, SDL_FPoint actor_at);
+
 // Return to the hub (the adventure-selection menu) from within an adventure —
 // the same thing the engine's back-to-hub button does. A no-op when the hub
 // isn't registered or is already current. Scenes call this to route their own
