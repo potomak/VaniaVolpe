@@ -83,9 +83,9 @@ them.
   status) behind the *Assets to author* page. Run by `make web`; stdlib only.
 - **`consolidate_assets.py`** — the asset pipeline's back end: folds uploaded
   raw files from the `_inbox/<id>/` drop-boxes into the real asset files
-  (stitching animation frames into a sprite sheet, moving WAVs and PNGs into
-  place) and archives the sources under `_sources/<id>/`. Idempotent;
-  `--dry-run` reports only. Needs Pillow.
+  (stitching animation frames into a sprite sheet in alphanumeric filename
+  order, moving WAVs and PNGs into place) and archives the sources under
+  `_sources/<id>/`. Idempotent; `--dry-run` reports only. Needs Pillow.
 - **`gen_en_us_placeholders.sh`** — scaffolds a complete `en_US` locale from
   `it_IT` (silent WAVs, copied images) so the strict locale lookup never
   misses while real translations are pending.
@@ -146,8 +146,10 @@ has a stable **id** (`<type>-<dir>-<name>`) that names its directories.
 2. **Upload** — the artist clicks **Upload here** and drops the raw files
    straight into that task's `_inbox/<id>/` folder on GitHub. The folder name
    *is* the task identity, so the upload is unambiguous no matter what the files
-   are named (for animations, filenames only set frame order). The one
-   `_inbox/README.md` explains the convention.
+   are named — except for animations, where **frame order is alphanumeric order**:
+   the frames are stitched in the plain sorted order of their filenames, so they
+   must be zero-padded (`01.png`, `02.png`, … `10.png`), since unpadded `10.png`
+   sorts before `2.png`. The one `_inbox/README.md` explains the convention.
 3. **Consolidate** — `tools/consolidate_assets.py` scans the drop-boxes,
    stitches animation frames into `<name>.png` + `<name>.anim`, moves voice
    WAVs and still PNGs to their real paths, and archives the raw inputs under

@@ -9,8 +9,9 @@ every drop-box that has files:
 1. moves the raw inputs to `<assets_root>/_sources/<id>/` (the archive /
    re-stitch source / done-record);
 2. produces the real asset the game loads, from those sources:
-   - animation        — stitches the frames (ordered by filename) into
-     `<dir>/<name>.png` + a matching `<name>.anim`;
+   - animation        — stitches the frames into `<dir>/<name>.png` + a
+     matching `<name>.anim`, in alphanumeric filename order (the convention
+     artists upload against: zero-padded, `01.png`, `02.png`… — see TOOLS.md);
    - speech           — copies the WAV to `<locale>/<dir>/<name>.wav`;
    - sfx/music/sound  — copies the WAV to `<dir>/<name>.wav`;
    - image            — copies the PNG to `<dir>/<name>.png`;
@@ -87,6 +88,8 @@ def consolidate_task(root, manifest, task, dry_run):
         out_png, out_anim = (os.path.join(root, t) for t in targets)
         if not dry_run:
             os.makedirs(os.path.dirname(out_png), exist_ok=True)
+            # Plain sorted order, deliberately: frame order is alphanumeric
+            # filename order, which is what artists are told to upload against.
             stitch([os.path.join(src_abs, n) for n in sorted(moved)],
                    out_png, out_anim)
     else:

@@ -133,8 +133,9 @@ def upload_url(branch, rel_dir):
 def drop_desc(task):
     if task["type"] == "animation":
         size = f" ({task['size']})" if task.get("size") else ""
-        return (f"the {task['frames']} frame PNGs{size}, in order — filenames "
-                f"only decide frame order, so name them e.g. 01.png, 02.png…")
+        return (f"the {task['frames']} frame PNGs{size} — filenames set the "
+                f"frame order, alphanumerically, so zero-pad them: 01.png, "
+                f"02.png… (unpadded, 10.png would sort before 2.png)")
     if task["type"] == "speech":
         return f"the recorded line as a WAV (any filename; saved as {task['name']}.wav)"
     if FILE_TYPE[task["type"]] == "audio":
