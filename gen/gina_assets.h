@@ -221,16 +221,7 @@ void scene_say(int index);
 #define GINA_POOL_IMAGE_WATER_INIT {NULL, "water.png", "pool", 0, 0}
 #define GINA_POOL_IMAGES_COUNT 2
 #define GINA_POOL_IMAGES_INIT {GINA_POOL_IMAGE_BACKGROUND_INIT, GINA_POOL_IMAGE_WATER_INIT}
-#define GINA_POOL_ANIM_CELEBRATION 0
-#define GINA_POOL_ANIM_CELEBRATION_FRAMES 8
-#define GINA_POOL_ANIM_CELEBRATION_STYLE ONE_SHOT
-#define GINA_POOL_ANIM_CELEBRATION_MS_PER_FRAME 0
-#define GINA_POOL_ANIM_CELEBRATION_SPRITE_FILE "celebration.png"
-#define GINA_POOL_ANIM_CELEBRATION_DATA_FILE "celebration.anim"
-#define GINA_POOL_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "pool"})
-#define GINA_POOL_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "pool"})
-#define GINA_POOL_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "pool"}, {"celebration.anim", "pool"}, 0, 0}
-#define GINA_POOL_ANIM_SUNSCREEN_BOIL 1
+#define GINA_POOL_ANIM_SUNSCREEN_BOIL 0
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_FRAMES 3
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_STYLE LOOP
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_MS_PER_FRAME 0
@@ -239,6 +230,15 @@ void scene_say(int index);
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET ((Asset){.filename = "sunscreen_boil.png", .directory = "pool"})
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET ((Asset){.filename = "sunscreen_boil.anim", .directory = "pool"})
 #define GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC {3, LOOP, {"sunscreen_boil.png", "pool"}, {"sunscreen_boil.anim", "pool"}, 0, 0}
+#define GINA_POOL_ANIM_CELEBRATION 1
+#define GINA_POOL_ANIM_CELEBRATION_FRAMES 8
+#define GINA_POOL_ANIM_CELEBRATION_STYLE ONE_SHOT
+#define GINA_POOL_ANIM_CELEBRATION_MS_PER_FRAME 0
+#define GINA_POOL_ANIM_CELEBRATION_SPRITE_FILE "celebration.png"
+#define GINA_POOL_ANIM_CELEBRATION_DATA_FILE "celebration.anim"
+#define GINA_POOL_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "pool"})
+#define GINA_POOL_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "pool"})
+#define GINA_POOL_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "pool"}, {"celebration.anim", "pool"}, 0, 0}
 #define GINA_POOL_ANIMS_COUNT 2
 
 // ── pool/dialog ─────────────────────────────────────────────
@@ -322,16 +322,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_TREE_IMAGE_BACKGROUND_INIT {NULL, "background.png", "tree", 0, 0}
 #define GINA_TREE_IMAGES_COUNT 1
 #define GINA_TREE_IMAGES_INIT {GINA_TREE_IMAGE_BACKGROUND_INIT}
-#define GINA_TREE_ANIM_CELEBRATION 0
-#define GINA_TREE_ANIM_CELEBRATION_FRAMES 8
-#define GINA_TREE_ANIM_CELEBRATION_STYLE ONE_SHOT
-#define GINA_TREE_ANIM_CELEBRATION_MS_PER_FRAME 0
-#define GINA_TREE_ANIM_CELEBRATION_SPRITE_FILE "celebration.png"
-#define GINA_TREE_ANIM_CELEBRATION_DATA_FILE "celebration.anim"
-#define GINA_TREE_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "tree"})
-#define GINA_TREE_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "tree"})
-#define GINA_TREE_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "tree"}, {"celebration.anim", "tree"}, 0, 0}
-#define GINA_TREE_ANIM_CARLA_BOIL 1
+#define GINA_TREE_ANIM_CARLA_BOIL 0
 #define GINA_TREE_ANIM_CARLA_BOIL_FRAMES 3
 #define GINA_TREE_ANIM_CARLA_BOIL_STYLE LOOP
 #define GINA_TREE_ANIM_CARLA_BOIL_MS_PER_FRAME 0
@@ -340,6 +331,15 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_TREE_ANIM_CARLA_BOIL_SPRITE_ASSET ((Asset){.filename = "carla_boil.png", .directory = "tree"})
 #define GINA_TREE_ANIM_CARLA_BOIL_DATA_ASSET ((Asset){.filename = "carla_boil.anim", .directory = "tree"})
 #define GINA_TREE_ANIM_CARLA_BOIL_SPEC {3, LOOP, {"carla_boil.png", "tree"}, {"carla_boil.anim", "tree"}, 0, 0}
+#define GINA_TREE_ANIM_CELEBRATION 1
+#define GINA_TREE_ANIM_CELEBRATION_FRAMES 8
+#define GINA_TREE_ANIM_CELEBRATION_STYLE ONE_SHOT
+#define GINA_TREE_ANIM_CELEBRATION_MS_PER_FRAME 0
+#define GINA_TREE_ANIM_CELEBRATION_SPRITE_FILE "celebration.png"
+#define GINA_TREE_ANIM_CELEBRATION_DATA_FILE "celebration.anim"
+#define GINA_TREE_ANIM_CELEBRATION_SPRITE_ASSET ((Asset){.filename = "celebration.png", .directory = "tree"})
+#define GINA_TREE_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "tree"})
+#define GINA_TREE_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "tree"}, {"celebration.anim", "tree"}, 0, 0}
 #define GINA_TREE_ANIMS_COUNT 2
 
 // ── tree/dialog ─────────────────────────────────────────────

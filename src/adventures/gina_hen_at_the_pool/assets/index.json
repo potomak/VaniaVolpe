@@ -306,32 +306,35 @@
     },
     {
       "group": "Art — Navigation",
-      "type": "image",
+      "type": "animation",
       "dir": "common/nav",
-      "name": "to_pool",
+      "name": "to_pool_boil",
+      "frames": 3,
+      "style": "loop",
       "size": "90x90",
-      "description": "An abstract view of the poolside, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
-      "runtime": false,
+      "description": "An abstract view of the poolside, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere: draw it once, then trace it twice more — the three frames cycling are the boil that says it is tappable. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
       "task": true
     },
     {
       "group": "Art — Navigation",
-      "type": "image",
+      "type": "animation",
       "dir": "common/nav",
-      "name": "to_tree",
+      "name": "to_tree_boil",
+      "frames": 3,
+      "style": "loop",
       "size": "90x90",
-      "description": "An abstract view of the tree, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
-      "runtime": false,
+      "description": "An abstract view of the tree, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere: draw it once, then trace it twice more — the three frames cycling are the boil that says it is tappable. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
       "task": true
     },
     {
       "group": "Art — Navigation",
-      "type": "image",
+      "type": "animation",
       "dir": "common/nav",
-      "name": "to_vine",
+      "name": "to_vine_boil",
+      "frames": 3,
+      "style": "loop",
       "size": "90x90",
-      "description": "An abstract view of the grape vine, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
-      "runtime": false,
+      "description": "An abstract view of the grape vine, shown near the horizon in each scene that connects to it and tapped to walk there. One drawing per destination, so the same picture means the same place everywhere: draw it once, then trace it twice more — the three frames cycling are the boil that says it is tappable. Placeholder flat tile via tools/gen_nav_square_placeholders.py.",
       "task": true
     },
     {
@@ -414,12 +417,13 @@
     },
     {
       "group": "Art — Poolside",
-      "type": "image",
+      "type": "animation",
       "dir": "common/pool",
-      "name": "sunscreen",
+      "name": "sunscreen_boil",
+      "frames": 3,
+      "style": "loop",
       "size": "40x60",
-      "description": "The sunscreen bottle.",
-      "runtime": false,
+      "description": "The sunscreen bottle, drawn once and traced twice more — the three frames cycling are the boil that says it is tappable.",
       "task": true
     },
     {
@@ -444,12 +448,13 @@
     },
     {
       "group": "Art — Tree",
-      "type": "image",
+      "type": "animation",
       "dir": "common/tree",
-      "name": "carla",
+      "name": "carla_boil",
+      "frames": 3,
+      "style": "loop",
       "size": "70x70",
-      "description": "Carla the crow, perched in the tree.",
-      "runtime": false,
+      "description": "Carla the crow, perched in the tree, drawn once and traced twice more — the three frames cycling are the boil that says she is tappable.",
       "task": true
     },
     {
@@ -474,12 +479,13 @@
     },
     {
       "group": "Art — Vine",
-      "type": "image",
+      "type": "animation",
       "dir": "common/vine",
-      "name": "grapes",
+      "name": "grapes_boil",
+      "frames": 3,
+      "style": "loop",
       "size": "100x120",
-      "description": "The grape bunch on the vine.",
-      "runtime": false,
+      "description": "The grape bunch on the vine, drawn once and traced twice more — the three frames cycling are the boil that says it is tappable.",
       "task": true
     },
     {
@@ -549,15 +555,6 @@
       "task": true
     },
     {
-      "group": "Runtime only — Poolside",
-      "type": "animation",
-      "dir": "pool",
-      "name": "sunscreen_boil",
-      "frames": 3,
-      "style": "loop",
-      "description": "Placeholder boil for the sunscreen bottle (replaced file-for-file by traced frames)."
-    },
-    {
       "group": "Runtime only — Items",
       "type": "animation",
       "dir": "items",
@@ -574,33 +571,6 @@
       "frames": 3,
       "style": "loop",
       "description": "Placeholder boil for the pool float, derived from items/float.png. Both the poolside float and the one caught in the tree play this one sheet."
-    },
-    {
-      "group": "Runtime only — Navigation",
-      "type": "animation",
-      "dir": "nav",
-      "name": "to_pool_boil",
-      "frames": 3,
-      "style": "loop",
-      "description": "Placeholder boil for the the poolside tile, derived from nav/to_pool.png. The boil is what says the tile is tappable."
-    },
-    {
-      "group": "Runtime only — Navigation",
-      "type": "animation",
-      "dir": "nav",
-      "name": "to_tree_boil",
-      "frames": 3,
-      "style": "loop",
-      "description": "Placeholder boil for the the tree tile, derived from nav/to_tree.png. The boil is what says the tile is tappable."
-    },
-    {
-      "group": "Runtime only — Navigation",
-      "type": "animation",
-      "dir": "nav",
-      "name": "to_vine_boil",
-      "frames": 3,
-      "style": "loop",
-      "description": "Placeholder boil for the the grape vine tile, derived from nav/to_vine.png. The boil is what says the tile is tappable."
     },
     {
       "group": "Runtime only — Poolside",
@@ -625,28 +595,10 @@
     },
     {
       "group": "Runtime only — Tree",
-      "type": "animation",
-      "dir": "tree",
-      "name": "carla_boil",
-      "frames": 3,
-      "style": "loop",
-      "description": "Placeholder boil for Carla the crow."
-    },
-    {
-      "group": "Runtime only — Tree",
       "type": "sfx",
       "dir": "tree",
       "name": "caw",
       "description": "Carla's caw."
-    },
-    {
-      "group": "Runtime only — Vine",
-      "type": "animation",
-      "dir": "vine",
-      "name": "grapes_boil",
-      "frames": 3,
-      "style": "loop",
-      "description": "Placeholder boil for the grape bunch."
     },
     {
       "group": "Runtime only — Minigames",

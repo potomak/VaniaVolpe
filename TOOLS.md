@@ -109,19 +109,18 @@ them.
   `gen_boil_sheet.py`) and `gina_worn.c` draws the same file on her once she has
   it, so an item never has to be drawn twice. Needs Pillow.
 - **`gen_nav_square_placeholders.py`** — emits the placeholder tiles standing
-  in for the places a Gina scene connects to (`to_pool`, `to_tree`, `to_vine`),
-  shown near the horizon and tapped to walk there. Flat coloured squares until
-  the real art is drawn; one per destination, so a tile reads the same in every
-  scene. Follow it with `gen_boil_sheet.py` — the boil is what says a tile is
-  tappable. Needs Pillow.
+  in for the places a Gina scene connects to (`to_pool_boil`, `to_tree_boil`,
+  `to_vine_boil`), shown near the horizon and tapped to walk there. Flat
+  coloured squares until the real art is drawn; one per destination, so a tile
+  reads the same in every scene. Written straight out as boil sheets — the
+  wobble is what says a tile is tappable. Needs Pillow.
 - **`gen_confirm_placeholders.py`** — emits the leave-the-adventure
   confirmation's art: the panel (`assets/ui/confirm_panel.png`) and the two
-  buttons on it (`confirm_yes.png`, `confirm_no.png`). Each is a whole picture
-  — the buttons carry their background and glyph together — so drawn art can
-  change how they look without the engine knowing more than where they go.
-  Follow it with `gen_boil_sheet.py` on the two buttons: they are tappable, and
-  the boil is what says so. Engine-owned rather than per-adventure. Needs
-  Pillow.
+  buttons on it (`confirm_yes_boil`, `confirm_no_boil`). Each is a whole
+  picture — the buttons carry their background and glyph together — so drawn
+  art can change how they look without the engine knowing more than where they
+  go. The buttons are tappable, so they come out as boil sheets; the panel is
+  not, and stays a still. Engine-owned rather than per-adventure. Needs Pillow.
 - **`gen_card_placeholders.py`** — emits an adventure's placeholder title or end
   card, `--kind intro|outro`. Both are a washed backdrop carrying the title,
   written once per locale because they bear words. `intro` adds a 3-frame Play
