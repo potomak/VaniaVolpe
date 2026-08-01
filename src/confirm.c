@@ -12,15 +12,22 @@
 // larger than the hub button that opens the question — the point is that
 // answering is easy and mis-answering is hard, so they are pushed to opposite
 // sides with a wide gap between them.
+//
+// Macros rather than reads off PANEL: a const object is not a constant
+// expression in C, so initializing one static rect from another's fields
+// compiles only as a GNU extension. Clang (the Android NDK) rejects it.
 #define PANEL_W 420
 #define PANEL_H 220
-static const SDL_Rect PANEL = {(WINDOW_WIDTH - PANEL_W) / 2,
-                               (WINDOW_HEIGHT - PANEL_H) / 2, PANEL_W, PANEL_H};
+#define PANEL_X ((WINDOW_WIDTH - PANEL_W) / 2)
+#define PANEL_Y ((WINDOW_HEIGHT - PANEL_H) / 2)
 #define ANSWER 120
-static const SDL_Rect YES = {PANEL.x + 36, PANEL.y + (PANEL_H - ANSWER) / 2,
-                             ANSWER, ANSWER};
-static const SDL_Rect NO = {PANEL.x + PANEL_W - 36 - ANSWER,
-                            PANEL.y + (PANEL_H - ANSWER) / 2, ANSWER, ANSWER};
+#define ANSWER_INSET 36
+#define ANSWER_Y (PANEL_Y + (PANEL_H - ANSWER) / 2)
+
+static const SDL_Rect PANEL = {PANEL_X, PANEL_Y, PANEL_W, PANEL_H};
+static const SDL_Rect YES = {PANEL_X + ANSWER_INSET, ANSWER_Y, ANSWER, ANSWER};
+static const SDL_Rect NO = {PANEL_X + PANEL_W - ANSWER_INSET - ANSWER, ANSWER_Y,
+                            ANSWER, ANSWER};
 
 static bool is_open;
 static void (*confirmed)(void);
