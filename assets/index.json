@@ -1,0 +1,26 @@
+{
+  "adventure": "engine",
+  "title": "Engine (shared UI)",
+  "prefix": "ENGINE",
+  "assets_root": "assets",
+  "assets": [
+    {
+      "group": "UI — Leave confirmation",
+      "type": "image",
+      "dir": "ui",
+      "name": "confirm_yes",
+      "size": "120x120",
+      "description": "The 'yes, leave the adventure' button on the confirmation the back-to-hub button raises. A whole button — background and glyph in one image — and wordless, since the audience cannot read. Belongs to the engine, so every adventure shows the same one. Placeholder via tools/gen_confirm_placeholders.py.",
+      "task": true
+    },
+    {
+      "group": "UI — Leave confirmation",
+      "type": "image",
+      "dir": "ui",
+      "name": "confirm_no",
+      "size": "120x120",
+      "description": "The 'no, stay here' button on the same confirmation, and the one a stray tap should land on. Placeholder via tools/gen_confirm_placeholders.py.",
+      "task": true
+    }
+  ]
+}

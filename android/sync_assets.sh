@@ -26,6 +26,9 @@ for adv in src/adventures/*/assets; do
   copy_tree "$adv/it_IT"
   copy_tree "$adv/en_US"
 done
+# Engine-owned assets, shared by every adventure: the subtitle font and the
+# UI art (assets/index.json).
 copy_tree assets/fonts
+copy_tree assets/ui
 
 echo "APK assets synced to $DEST ($(find "$DEST" -type f | wc -l) files)."

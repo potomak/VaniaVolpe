@@ -114,6 +114,11 @@ them.
   the real art is drawn; one per destination, so a tile reads the same in every
   scene. Follow it with `gen_boil_sheet.py` — the boil is what says a tile is
   tappable. Needs Pillow.
+- **`gen_confirm_placeholders.py`** — emits the two buttons on the
+  leave-the-adventure confirmation (`assets/ui/confirm_yes.png`,
+  `confirm_no.png`). Each is a whole button, background and glyph in one image,
+  so drawn art can change how they look without the engine knowing more than
+  where they go. Engine-owned rather than per-adventure. Needs Pillow.
 - **`gen_card_placeholders.py`** — emits an adventure's placeholder title or end
   card, `--kind intro|outro`. Both are a washed backdrop carrying the title,
   written once per locale because they bear words. `intro` adds a 3-frame Play
@@ -125,7 +130,9 @@ them.
 
 How placeholder art and silent voice lines become real assets, and how a fresh
 session can pick up uploads with no other context. Each adventure declares the
-assets it still needs in `src/adventures/<adv>/assets/index.json` — the same
+assets it still needs in `src/adventures/<adv>/assets/index.json`, and the
+engine declares its own shared UI art the same way in the repo-level
+`assets/index.json` — the same
 manifest the game's generated asset declarations come from (see `ASSETS.md`;
 only entries marked `"task": true` are still to author and shown here). Every task
 has a stable **id** (`<type>-<dir>-<name>`) that names its directories.

@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "asset.h"
+#include "confirm.h"
 #include "constants.h"
 #include "depth_demo.h"
 #include "game.h"
@@ -181,6 +182,9 @@ int SDL_main(int argc, char *argv[]) {
   // loads the bundled font. A failure logs and disables subtitles, no more.
   subtitle_init(argc, argv, renderer);
 
+  // The leave-the-adventure question's buttons: engine art, loaded once.
+  confirm_load_media(renderer);
+
   // Build each adventure's scene table before initializing scenes.
   vania_fox_the_slide_register();
   gina_hen_at_the_pool_register();
@@ -233,6 +237,7 @@ int SDL_main(int argc, char *argv[]) {
 
   // Tear down in reverse-init order: audio, then image, then renderer/window
   // (destroy_window calls SDL_Quit last).
+  confirm_free_media();
   subtitle_deinit();
   destroy_sound();
   destroy_image();

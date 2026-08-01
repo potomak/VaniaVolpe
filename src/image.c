@@ -57,6 +57,30 @@ void free_animation(AnimationData *animation) {
 }
 
 // Load image from file and create texture in image
+bool load_image_from_path(SDL_Renderer *renderer, ImageData *image,
+                          const char *path) {
+  free_image_texture(image);
+  SDL_Surface *loaded_surface = IMG_Load(path);
+  if (loaded_surface == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to load image %s: %s",
+                 path, IMG_GetError());
+    return false;
+  }
+  image->texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
+  if (image->texture == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Unable to create texture from %s: %s", path, SDL_GetError());
+    SDL_FreeSurface(loaded_surface);
+    return false;
+  }
+  // Alpha is what gives these their shape (rounded corners, cut-out glyphs).
+  SDL_SetTextureBlendMode(image->texture, SDL_BLENDMODE_BLEND);
+  image->width = loaded_surface->w;
+  image->height = loaded_surface->h;
+  SDL_FreeSurface(loaded_surface);
+  return true;
+}
+
 bool load_image(SDL_Renderer *renderer, ImageData *image) {
   // Free texture if it exists
   free_image_texture(image);

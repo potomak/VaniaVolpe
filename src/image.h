@@ -63,6 +63,12 @@ void free_animation(AnimationData *animation);
 
 bool load_image(SDL_Renderer *renderer, ImageData *image);
 
+// Load an image from a repo-relative path, bypassing the adventure-scoped
+// resolver. For engine-owned art under assets/, which belongs to no adventure
+// and has no locale layers — the same reason subtitle.c opens its font by path.
+bool load_image_from_path(SDL_Renderer *renderer, ImageData *image,
+                          const char *path);
+
 // Load (or free) a whole table of images — a scene's, or an adventure's shared
 // bank. On the first failure the images that already loaded are freed, so the
 // caller can fail the media pass without leaking textures.
