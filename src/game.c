@@ -153,7 +153,7 @@ void game_process_input(SDL_Event *event) {
   // The back-to-hub button takes priority over scene input, except in the
   // hub. It lives in screen space, so it is tested before any camera
   // conversion.
-  if (event->type == SDL_MOUSEBUTTONDOWN && hub_adventure != NULL &&
+  if (event->type == SDL_MOUSEBUTTONUP && hub_adventure != NULL &&
       game.current_adventure != hub_adventure) {
     SDL_Point point = {event->button.x, event->button.y};
     if (SDL_PointInRect(&point, &HUB_BUTTON)) {

@@ -180,11 +180,11 @@
    "x": 0.5,
    "y": 0.8,
    "wait_ms": 2000,
-   "note": "a tap anywhere ends the adventure. It lands back at the hub rather than on the end card: this tap's DOWN switches to the outro and its UP is then delivered there, which navigates away (tracked in #182)"
+   "note": "a tap anywhere after the third slide ends the adventure on the end card. The script stops here rather than tapping on to the hub, so play_vania can assert the card is what is on screen"
   },
   {
    "action": "screenshot",
-   "name": "08-back-at-the-hub"
+   "name": "08-outro"
   }
  ],
  "expect": [

@@ -60,6 +60,11 @@ bool harness_capture_begin(void);
 // Check that each expected substring appears, in order, in the captured log.
 // Prints an OK/MISS line per expectation to stderr. Returns the number of
 // missing expectations (0 = all present).
+// Report one assertion in the harness's OK/MISS format, for a play-test
+// checking something the dialogue log cannot express — which scene the game
+// ended on, say. Returns 1 when it failed, so callers can add it to a total.
+int harness_check(bool ok, const char *what);
+
 int harness_check_lines_in_order(const char *const *expected, size_t count);
 
 #endif /* test_harness_h */

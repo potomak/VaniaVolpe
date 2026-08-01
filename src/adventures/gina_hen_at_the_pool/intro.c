@@ -100,7 +100,7 @@ static void process_input(SDL_Event *event) {
       stop_animation(exit_button);
     }
     break;
-  case SDL_MOUSEBUTTONDOWN:
+  case SDL_MOUSEBUTTONUP:
     // Hit-test the click's own coordinates: the cached motion position can be
     // stale (a repeated tap with no motion between).
     m_pos.x = event->button.x;
