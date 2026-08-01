@@ -78,6 +78,11 @@ void free_image_table(ImageData *images, int length);
 bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
                     Asset sprite_asset, Asset data_asset);
 
+// Load an animation from repo-relative paths, the load_image_from_path
+// counterpart: for engine-owned art under assets/, outside any adventure.
+bool load_animation_from_path(SDL_Renderer *renderer, AnimationData *animation,
+                              const char *sprite_path, const char *data_path);
+
 void play_animation(AnimationData *animation, void (*on_end)(void));
 
 void stop_animation(AnimationData *animation);

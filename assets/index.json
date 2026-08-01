@@ -8,10 +8,20 @@
       "group": "UI — Leave confirmation",
       "type": "image",
       "dir": "ui",
+      "name": "confirm_panel",
+      "size": "420x220",
+      "description": "The panel the leave-the-adventure question sits on, drawn behind the two answers. One picture, so drawn art can change the card's shape, colour and framing — the engine only knows where it goes. Not tappable, so it does not boil. Placeholder via tools/gen_confirm_placeholders.py.",
+      "task": true
+    },
+    {
+      "group": "UI — Leave confirmation",
+      "type": "image",
+      "dir": "ui",
       "name": "confirm_yes",
       "size": "120x120",
       "description": "The 'yes, leave the adventure' button on the confirmation the back-to-hub button raises. A whole button — background and glyph in one image — and wordless, since the audience cannot read. Belongs to the engine, so every adventure shows the same one. Placeholder via tools/gen_confirm_placeholders.py.",
-      "task": true
+      "task": true,
+      "runtime": false
     },
     {
       "group": "UI — Leave confirmation",
@@ -20,7 +30,26 @@
       "name": "confirm_no",
       "size": "120x120",
       "description": "The 'no, stay here' button on the same confirmation, and the one a stray tap should land on. Placeholder via tools/gen_confirm_placeholders.py.",
-      "task": true
+      "task": true,
+      "runtime": false
+    },
+    {
+      "group": "Runtime only — Leave confirmation",
+      "type": "animation",
+      "dir": "ui",
+      "name": "confirm_yes_boil",
+      "frames": 3,
+      "style": "loop",
+      "description": "Placeholder boil for the yes button, derived from ui/confirm_yes.png. The boil is what says the button is tappable."
+    },
+    {
+      "group": "Runtime only — Leave confirmation",
+      "type": "animation",
+      "dir": "ui",
+      "name": "confirm_no_boil",
+      "frames": 3,
+      "style": "loop",
+      "description": "Placeholder boil for the no button, derived from ui/confirm_no.png. The boil is what says the button is tappable."
     }
   ]
 }

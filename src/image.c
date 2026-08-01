@@ -254,6 +254,16 @@ bool load_animation(SDL_Renderer *renderer, AnimationData *animation,
   return true;
 }
 
+bool load_animation_from_path(SDL_Renderer *renderer, AnimationData *animation,
+                              const char *sprite_path, const char *data_path) {
+  if (!load_image_from_path(renderer, &animation->image, sprite_path)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Failed to load animation texture %s", sprite_path);
+    return false;
+  }
+  return load_animation_data(animation, data_path);
+}
+
 void play_animation(AnimationData *animation, void (*on_end)(void)) {
   if (animation->is_playing) {
     return;
