@@ -35,6 +35,10 @@ void confirm_close(void);
 
 bool confirm_is_open(void);
 
+// Advance the answers' boil. Called once per frame from game_update, like a
+// scene's animations — timing stays out of the render pass.
+void confirm_update(int now_ms);
+
 // Handle one event while open. Returns true when the overlay consumed it,
 // which is every mouse event: a modal that let taps through to the scene
 // underneath would not be modal. Answers on release, like every other tap

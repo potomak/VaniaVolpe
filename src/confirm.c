@@ -35,30 +35,68 @@ static void (*confirmed)(void);
 // Engine art, not any adventure's: loaded by path like the subtitle font, and
 // listed in the repo-level assets/index.json so it shows up as something to
 // draw (ASSETS.md).
-#define CONFIRM_YES_PATH "assets/ui/confirm_yes.png"
-#define CONFIRM_NO_PATH "assets/ui/confirm_no.png"
-static ImageData yes_image;
-static ImageData no_image;
+//
+// The two answers boil while the question is up — the same "you can tap this"
+// cue the scenes use (LIVELINESS.md Part 3). The panel behind them is not
+// tappable, so it stays still.
+#define CONFIRM_PANEL_PATH "assets/ui/confirm_panel.png"
+#define CONFIRM_YES_SHEET "assets/ui/confirm_yes_boil.png"
+#define CONFIRM_YES_ANIM "assets/ui/confirm_yes_boil.anim"
+#define CONFIRM_NO_SHEET "assets/ui/confirm_no_boil.png"
+#define CONFIRM_NO_ANIM "assets/ui/confirm_no_boil.anim"
+#define BOIL_FRAMES 3
+
+static ImageData panel_image;
+static AnimationData *yes_boil;
+static AnimationData *no_boil;
 
 bool confirm_load_media(SDL_Renderer *renderer) {
-  bool ok = load_image_from_path(renderer, &yes_image, CONFIRM_YES_PATH);
-  ok = load_image_from_path(renderer, &no_image, CONFIRM_NO_PATH) && ok;
+  bool ok = load_image_from_path(renderer, &panel_image, CONFIRM_PANEL_PATH);
+  yes_boil = make_animation_data(BOIL_FRAMES, LOOP);
+  no_boil = make_animation_data(BOIL_FRAMES, LOOP);
+  ok = load_animation_from_path(renderer, yes_boil, CONFIRM_YES_SHEET,
+                                CONFIRM_YES_ANIM) &&
+       ok;
+  ok = load_animation_from_path(renderer, no_boil, CONFIRM_NO_SHEET,
+                                CONFIRM_NO_ANIM) &&
+       ok;
   return ok;
 }
 
 void confirm_free_media(void) {
-  free_image_texture(&yes_image);
-  free_image_texture(&no_image);
+  free_image_texture(&panel_image);
+  free_animation(yes_boil);
+  free_animation(no_boil);
+  yes_boil = NULL;
+  no_boil = NULL;
 }
 
 void confirm_open(void (*on_confirm)(void)) {
   is_open = true;
   confirmed = on_confirm;
+  // Restart the boils with the question, so both answers wobble in step from
+  // the moment they appear.
+  if (yes_boil != NULL) {
+    play_animation(yes_boil, NULL);
+    play_animation(no_boil, NULL);
+  }
 }
 
 void confirm_close(void) {
   is_open = false;
   confirmed = NULL;
+  if (yes_boil != NULL) {
+    stop_animation(yes_boil);
+    stop_animation(no_boil);
+  }
+}
+
+void confirm_update(int now_ms) {
+  if (!is_open || yes_boil == NULL) {
+    return;
+  }
+  animation_update(yes_boil, now_ms);
+  animation_update(no_boil, now_ms);
 }
 
 bool confirm_is_open(void) { return is_open; }
@@ -96,6 +134,19 @@ bool confirm_process_input(const SDL_Event *event) {
   return true;
 }
 
+// One answer, its boil centred in its hit target. A frame's size is the
+// sheet's width by its clip height, so the art can be smaller than the target.
+static void render_answer(SDL_Renderer *renderer, AnimationData *animation,
+                          SDL_Rect target) {
+  if (animation == NULL || animation->sprite_clips == NULL) {
+    return;
+  }
+  const SDL_Rect *clip = &animation->sprite_clips[animation->current_frame];
+  render_animation(renderer, animation,
+                   (SDL_Point){target.x + (target.w - clip->w) / 2,
+                               target.y + (target.h - clip->h) / 2});
+}
+
 void confirm_render(SDL_Renderer *renderer) {
   if (!is_open) {
     return;
@@ -111,18 +162,10 @@ void confirm_render(SDL_Renderer *renderer) {
   SDL_RenderFillRect(renderer, &screen);
   SDL_SetRenderDrawBlendMode(renderer, blend);
 
-  SDL_SetRenderDrawColor(renderer, 0xF4, 0xF1, 0xE8, 0xFF);
-  SDL_RenderFillRect(renderer, &PANEL);
-  SDL_SetRenderDrawColor(renderer, 0x33, 0x33, 0x33, 0xFF);
-  SDL_RenderDrawRect(renderer, &PANEL);
-
-  // The buttons are whole images — background and glyph together — so drawn
-  // art can change how they look without the engine knowing anything but where
-  // they go. Their rects are the hit targets; the art is centred in them.
-  render_image(renderer, &yes_image,
-               (SDL_Point){YES.x + (ANSWER - yes_image.width) / 2,
-                           YES.y + (ANSWER - yes_image.height) / 2});
-  render_image(renderer, &no_image,
-               (SDL_Point){NO.x + (ANSWER - no_image.width) / 2,
-                           NO.y + (ANSWER - no_image.height) / 2});
+  // Panel, then the two answers on it. Each is a whole picture — the engine
+  // knows only where they go, so drawn art can change how they look. The rects
+  // are the hit targets; the art is centred in them.
+  render_image(renderer, &panel_image, (SDL_Point){PANEL.x, PANEL.y});
+  render_answer(renderer, yes_boil, YES);
+  render_answer(renderer, no_boil, NO);
 }

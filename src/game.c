@@ -231,6 +231,9 @@ void game_update(float delta_time) {
   if (camera != NULL) {
     camera_update(camera, delta_time);
   }
+
+  // The modal is engine UI, outside any scene, so it ticks its own animations.
+  confirm_update(clock_now_ms());
 }
 
 void game_render(SDL_Renderer *renderer) {

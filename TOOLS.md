@@ -114,11 +114,14 @@ them.
   the real art is drawn; one per destination, so a tile reads the same in every
   scene. Follow it with `gen_boil_sheet.py` — the boil is what says a tile is
   tappable. Needs Pillow.
-- **`gen_confirm_placeholders.py`** — emits the two buttons on the
-  leave-the-adventure confirmation (`assets/ui/confirm_yes.png`,
-  `confirm_no.png`). Each is a whole button, background and glyph in one image,
-  so drawn art can change how they look without the engine knowing more than
-  where they go. Engine-owned rather than per-adventure. Needs Pillow.
+- **`gen_confirm_placeholders.py`** — emits the leave-the-adventure
+  confirmation's art: the panel (`assets/ui/confirm_panel.png`) and the two
+  buttons on it (`confirm_yes.png`, `confirm_no.png`). Each is a whole picture
+  — the buttons carry their background and glyph together — so drawn art can
+  change how they look without the engine knowing more than where they go.
+  Follow it with `gen_boil_sheet.py` on the two buttons: they are tappable, and
+  the boil is what says so. Engine-owned rather than per-adventure. Needs
+  Pillow.
 - **`gen_card_placeholders.py`** — emits an adventure's placeholder title or end
   card, `--kind intro|outro`. Both are a washed backdrop carrying the title,
   written once per locale because they bear words. `intro` adds a 3-frame Play
