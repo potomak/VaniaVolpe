@@ -6,6 +6,7 @@
 //
 
 #include "game.h"
+#include "confirm.h"
 
 // Asset path resolution (adventure assets root)
 #include "asset.h"
@@ -56,6 +57,8 @@ void adventure_switch_to(const Adventure *adventure) {
   }
   // A line spoken in the old adventure must not linger over the new one.
   subtitle_clear();
+  // Any question was about the adventure being left.
+  confirm_close();
   game.current_adventure = adventure;
   game.current_scene = adventure->entry_scene;
   asset_set_root(adventure->assets_root);
@@ -139,6 +142,11 @@ bool game_load_media(SDL_Renderer *renderer) {
 
 // Process input for scenes
 void game_process_input(SDL_Event *event) {
+  // A question is up: it owns the pointer until it is answered.
+  if (confirm_process_input(event)) {
+    return;
+  }
+
   switch (event->type) {
   case SDL_KEYDOWN:
     switch (event->key.keysym.sym) {
@@ -157,7 +165,9 @@ void game_process_input(SDL_Event *event) {
       game.current_adventure != hub_adventure) {
     SDL_Point point = {event->button.x, event->button.y};
     if (SDL_PointInRect(&point, &HUB_BUTTON)) {
-      return_to_hub();
+      // Ask rather than leave: the button is easy to hit by accident and
+      // leaving discards the adventure's progress (confirm.h).
+      confirm_open(return_to_hub);
       return;
     }
   }
@@ -276,6 +286,9 @@ void game_render(SDL_Renderer *renderer) {
 
   // The dialogue text overlay is screen-space UI, over everything.
   subtitle_render(renderer);
+
+  // The modal is over even that: while it is up, nothing else is live.
+  confirm_render(renderer);
 }
 
 void game_deinit(void) {
