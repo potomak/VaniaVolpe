@@ -151,7 +151,7 @@ static void process_input(SDL_Event *event) {
     m_pos.x = event->motion.x;
     m_pos.y = event->motion.y;
     break;
-  case SDL_MOUSEBUTTONDOWN:
+  case SDL_MOUSEBUTTONUP:
     // Hit-test the click's own coordinates: the cached motion position
     // can be stale — e.g. a repeated tap with no motion in between while the
     // camera moved.

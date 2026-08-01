@@ -45,10 +45,15 @@ void scene_default_process_input(const Scene *scene, SDL_Event *event) {
   if (actor != NULL && actor_drag_event(actor, event)) {
     return;
   }
-  if (event->type != SDL_MOUSEBUTTONDOWN) {
+  // Taps act on release, not press, so a press that turns out to be a mistake
+  // can be slid away from and let go harmlessly — and so a scene reached by a
+  // tap is never handed the back half of the tap that opened it (see
+  // game_process_input). Gestures are the exception: the drag above arms on
+  // press, and the minigames' brush strokes run press-to-release.
+  if (event->type != SDL_MOUSEBUTTONUP) {
     return;
   }
-  // Hit-test the click's own coordinates: a cached motion position can be
+  // Hit-test the release's own coordinates: a cached motion position can be
   // stale — e.g. a repeated tap with no motion in between while the camera
   // moved. The hotspot table says what each region does; anything else walks
   // the actor toward the click (routed around blocked ground), or is ignored
