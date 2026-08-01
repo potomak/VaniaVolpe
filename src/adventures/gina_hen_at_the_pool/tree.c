@@ -16,11 +16,12 @@
 #include "tween.h"
 
 #include "gina_hen_at_the_pool.h"
-#include "gina_nav.h"
 #include "gina_state.h"
 #include "gina_worn.h"
 #include "hen.h"
+#include "pool.h"
 #include "tree.h"
+#include "vine.h"
 
 // Asset declarations generated from the adventure manifest (ASSETS.md).
 #include "gina_assets.h"
@@ -44,7 +45,7 @@ static AnimationData *celebration;
 // Declared as data: the framework makes and loads these; init only aliases
 // them. The tree dir's own sheets come first, then the sheets borrowed from
 // other dirs — the float's, and the two destination tiles on the horizon: the
-// poolside on the left, the vine on the right (gina_nav.h).
+// poolside on the left, the vine on the right.
 #define TREE_ANIM_FLOAT (GINA_TREE_ANIMS_COUNT)
 #define TREE_ANIM_GROUND_FLOAT (GINA_TREE_ANIMS_COUNT + 1)
 #define TREE_ANIM_TO_POOL (GINA_TREE_ANIMS_COUNT + 2)
@@ -93,10 +94,44 @@ static const SDL_Rect GROUND_FLOAT_HOTSPOT = {500, 430, 90, 60};
 static const SDL_Rect CARLA_HOTSPOT = {360, 150, 70, 70};
 static Hotspot hotspots[5];
 
+// Walk geometry: the ground under the tree, plus a path up either side to the
+// tile above it. The paths overlap the near strip so the grid joins them into
+// one region — a gap would leave a tile visible but unreachable.
+static const SDL_Rect WALKABLE_RECTS[] = {
+    {20, 430, 760, 150}, // the near ground, right across the scene
+    {20, 250, 150, 190}, // up the left, toward the poolside
+    {630, 250, 150, 190} // up the right, toward the vine
+};
+static const WalkArea WALK_AREA = {WALKABLE_RECTS, LEN(WALKABLE_RECTS), NULL,
+                                   0};
 static WalkGrid walk_grid;
+
+// Depth (SCALING.md), in feet coordinates (the rects above are centre
+// positions; feet sit half a walking frame lower). y_far is the feet line of
+// the topmost walkable row, so she is smallest exactly where the paths run out.
+// scale_far sits on the 0.6 floor scaling.h documents rather than below it.
+static const ScaleRamp SCALE_RAMP = {
+    .y_far = 310, .y_near = 639, .scale_far = 0.6F, .scale_near = 1.0F};
+
+// The tiles, and the tappable areas around them — deliberately larger than the
+// art, since a small finger aiming at a distant thing should not have to be
+// precise.
+static const SDL_Point POOL_TILE_AT = {30, 60};
+static const SDL_Point VINE_TILE_AT = {680, 60};
+static const SDL_Rect POOL_TILE_HOTSPOT = {10, 40, 130, 130};
+static const SDL_Rect VINE_TILE_HOTSPOT = {660, 40, 130, 130};
 
 static const SDL_Point FLOAT_LOOK_POI = {500, 470};
 static const SDL_Point CARLA_POI = {400, 470};
+// The far end of each path — one point per door, because it is both where she
+// walks to use it and where she is standing when she comes through it. The
+// hotspot POIs below are taken from these rather than repeating the numbers.
+const SDL_FPoint GINA_TREE_ENTRY_FROM_POOL = {75, 280};
+const SDL_FPoint GINA_TREE_ENTRY_FROM_VINE = {725, 280};
+
+static SDL_Point door(SDL_FPoint at) {
+  return (SDL_Point){(int)at.x, (int)at.y};
+}
 static SDL_Point pois[4];
 
 // Interactions and hotspot gating (bodies below the loaders).
@@ -106,9 +141,11 @@ static bool carla_is_perched(void);
 static void examine_float(void);
 static void pick_up_float(void);
 static void talk_to_carla(void);
+static void go_to_pool(void);
+static void go_to_vine(void);
 
 static void init(void) {
-  walk_grid_init(&walk_grid, &GINA_OUTDOOR_WALK_AREA,
+  walk_grid_init(&walk_grid, &WALK_AREA,
                  (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT}, "tree");
 
   float_boil = animations[TREE_ANIM_FLOAT];
@@ -139,13 +176,22 @@ static void init(void) {
                             .active_anim = carla_boil,
                             .anim_at = CARLA_AT,
                             .anim_visible = carla_is_perched};
-  gina_nav_hotspots(&hotspots[i], animations[TREE_ANIM_TO_POOL],
-                    animations[TREE_ANIM_TO_VINE], NULL);
+  hotspots[i++] = (Hotspot){.rect = POOL_TILE_HOTSPOT,
+                            .poi = door(GINA_TREE_ENTRY_FROM_POOL),
+                            .on_arrive = go_to_pool,
+                            .active_anim = animations[TREE_ANIM_TO_POOL],
+                            .anim_at = POOL_TILE_AT};
+  hotspots[i] = (Hotspot){.rect = VINE_TILE_HOTSPOT,
+                          .poi = door(GINA_TREE_ENTRY_FROM_VINE),
+                          .on_arrive = go_to_vine,
+                          .active_anim = animations[TREE_ANIM_TO_VINE],
+                          .anim_at = VINE_TILE_AT};
 
   i = 0;
   pois[i++] = FLOAT_LOOK_POI;
   pois[i++] = CARLA_POI;
-  gina_nav_pois(&pois[i]);
+  pois[i++] = door(GINA_TREE_ENTRY_FROM_POOL);
+  pois[i] = door(GINA_TREE_ENTRY_FROM_VINE);
 }
 
 // ── interactions
@@ -162,6 +208,16 @@ static bool float_is_on_ground(void) {
 // Carla is on her branch except while she is up in the air; the scene draws her
 // flight itself, so the framework's boil draw stands down for it.
 static bool carla_is_perched(void) { return !carla_flying; }
+
+// Leaving: the destination says where its own door is, so this scene never
+// assumes anything about the shape of the next one.
+static void go_to_pool(void) {
+  set_active_scene_at(GINA_POOL, GINA_POOL_ENTRY_FROM_TREE);
+}
+
+static void go_to_vine(void) {
+  set_active_scene_at(GINA_VINE, GINA_VINE_ENTRY_FROM_TREE);
+}
 
 static void examine_float(void) {
   switch (gina_state.examine_float_count) {
@@ -261,7 +317,7 @@ static void render(SDL_Renderer *renderer) {
     SDL_FPoint p = tween_pos(&carla_tween);
     render_animation(renderer, carla_boil, (SDL_Point){(int)p.x, (int)p.y});
   }
-  render_action_layer(renderer, &GINA_OUTDOOR_RAMP, NULL, 0, &gina, 1);
+  render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
   gina_render_worn(renderer, gina);
   // The reward burst over the returning float while the chime plays.
   if (celebration->is_playing) {
@@ -271,7 +327,8 @@ static void render(SDL_Renderer *renderer) {
 
 static void on_scene_active(void) {
   // Her default spot. Arriving from another scene overrides this straight
-  // after, standing her at the tile she came through (set_active_scene_at).
+  // after, with that scene passing one of the GINA_TREE_ENTRY_FROM_* points
+  // above (set_active_scene_at).
   actor_place(gina, HEN_START);
 }
 
@@ -290,7 +347,7 @@ Scene tree_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
-    .scale_ramp = &GINA_OUTDOOR_RAMP,
+    .scale_ramp = &SCALE_RAMP,
     .walk_grid = &walk_grid,
     .walk_mask_dir = "tree",
     .sprites = sprites,

@@ -17,11 +17,12 @@
 #include "tween.h"
 
 #include "gina_hen_at_the_pool.h"
-#include "gina_nav.h"
 #include "gina_state.h"
 #include "gina_worn.h"
 #include "hen.h"
 #include "pool.h"
+#include "tree.h"
+#include "vine.h"
 
 // Asset declarations generated from the adventure manifest (ASSETS.md): the
 // filenames, table order and animation frame counts below come from
@@ -55,7 +56,7 @@ static AnimationData *floating;
 // them. The pool dir's own sheets come first, then the sheets borrowed from
 // other dirs — the items she picks up, her floating sheet, and the two
 // destination tiles on the horizon: the vine on the left, the tree on the
-// right (gina_nav.h).
+// right.
 #define POOL_ANIM_GOGGLES_BOIL (GINA_POOL_ANIMS_COUNT)
 #define POOL_ANIM_FLOAT_BOIL (GINA_POOL_ANIMS_COUNT + 1)
 #define POOL_ANIM_FLOATING (GINA_POOL_ANIMS_COUNT + 2)
@@ -133,16 +134,39 @@ static const SDL_Rect POOL_WATER_HOTSPOT = {170, 40, 460, 180};
 static const SDL_Rect SUNSCREEN_HOTSPOT = {120, 500, 40, 60};
 static const SDL_Rect GOGGLES_HOTSPOT = {330, 470, 60, 30};
 static const SDL_Rect FLOAT_HOTSPOT = {560, 470, 90, 60};
+// The tiles, and the tappable areas around them — deliberately larger than the
+// art, since a small finger aiming at a distant thing should not have to be
+// precise.
+static const SDL_Point VINE_TILE_AT = {30, 60};
+static const SDL_Point TREE_TILE_AT = {680, 60};
+static const SDL_Rect VINE_TILE_HOTSPOT = {10, 40, 130, 130};
+static const SDL_Rect TREE_TILE_HOTSPOT = {660, 40, 130, 130};
 static Hotspot hotspots[7];
 
 // Walk geometry. Before the sunscreen is applied Gina refuses to leave the
 // umbrella's shadow, so the walkable area itself is a function of game state:
-// the shade patch first, the whole poolside strip afterwards. (The shade rect
-// is tuned to the current background art; toggle the debug overlay to see
-// whichever area is active.)
+// the shade patch first, and afterwards the poolside plus a path up either
+// side to the tile above it. The paths overlap the near strip so the grid
+// joins them into one region — a gap would leave a tile visible but
+// unreachable. (The shade rect is tuned to the current background art; toggle
+// the debug overlay to see whichever area is active.)
+static const SDL_Rect POOLSIDE_RECTS[] = {
+    {20, 430, 760, 150}, // the near ground, right across the scene
+    {20, 250, 150, 190}, // up the left, toward the vine
+    {630, 250, 150, 190} // up the right, toward the tree
+};
 static const SDL_Rect SHADE_RECTS[] = {{60, 430, 200, 150}};
+static const WalkArea POOLSIDE_AREA = {POOLSIDE_RECTS, LEN(POOLSIDE_RECTS),
+                                       NULL, 0};
 static const WalkArea SHADE_AREA = {SHADE_RECTS, LEN(SHADE_RECTS), NULL, 0};
 static WalkGrid walk_grid;
+
+// Depth (SCALING.md), in feet coordinates (the rects above are centre
+// positions; feet sit half a walking frame lower). y_far is the feet line of
+// the topmost walkable row, so she is smallest exactly where the paths run out.
+// scale_far sits on the 0.6 floor scaling.h documents rather than below it.
+static const ScaleRamp SCALE_RAMP = {
+    .y_far = 310, .y_near = 639, .scale_far = 0.6F, .scale_near = 1.0F};
 
 // Rebuild the grid from the state-appropriate area. Called on scene entry and
 // after any in-scene state change that affects movement (the replay reset in
@@ -152,8 +176,7 @@ static WalkGrid walk_grid;
 // transient.
 static void rebuild_walk_grid(void) {
   walk_grid_build(&walk_grid,
-                  gina_state.has_sunscreen ? &GINA_OUTDOOR_WALK_AREA
-                                           : &SHADE_AREA,
+                  gina_state.has_sunscreen ? &POOLSIDE_AREA : &SHADE_AREA,
                   (SDL_Point){WINDOW_WIDTH, WINDOW_HEIGHT});
 }
 
@@ -162,6 +185,16 @@ static const SDL_Point SUNSCREEN_POI = {150, 545};
 static const SDL_Point GOGGLES_POI = {360, 525};
 static const SDL_Point FLOAT_POI = {600, 545};
 static const SDL_Point POOL_EDGE_POI = {400, 460};
+// The far end of each path — one point per door, because it is both where she
+// walks to use it and where she is standing when she comes through it. The
+// hotspot POIs below are taken from these rather than repeating the numbers.
+const SDL_FPoint GINA_POOL_ENTRY_FROM_VINE = {75, 280};
+const SDL_FPoint GINA_POOL_ENTRY_FROM_TREE = {725, 280};
+
+static SDL_Point door(SDL_FPoint at) {
+  return (SDL_Point){(int)at.x, (int)at.y};
+}
+
 static SDL_Point pois[6];
 
 // Interactions and hotspot gating (bodies below the loaders). Before the
@@ -173,6 +206,8 @@ static bool float_at_the_pool(void);
 static bool goggles_present(void);
 static bool float_resting_at_pool(void);
 static void open_sunscreen_minigame(void);
+static void go_to_vine(void);
+static void go_to_tree(void);
 static void collect_goggles(void);
 static void float_blows_away(void);
 static void try_dive(void);
@@ -224,15 +259,26 @@ static void init(void) {
                             .poi = POOL_EDGE_POI,
                             .on_arrive = try_dive};
   // Gated like the rest of the poolside: no wandering off before the sunscreen.
-  gina_nav_hotspots(&hotspots[i], animations[POOL_ANIM_TO_VINE],
-                    animations[POOL_ANIM_TO_TREE], after_sunscreen);
+  hotspots[i++] = (Hotspot){.rect = VINE_TILE_HOTSPOT,
+                            .enabled = after_sunscreen,
+                            .poi = door(GINA_POOL_ENTRY_FROM_VINE),
+                            .on_arrive = go_to_vine,
+                            .active_anim = animations[POOL_ANIM_TO_VINE],
+                            .anim_at = VINE_TILE_AT};
+  hotspots[i] = (Hotspot){.rect = TREE_TILE_HOTSPOT,
+                          .enabled = after_sunscreen,
+                          .poi = door(GINA_POOL_ENTRY_FROM_TREE),
+                          .on_arrive = go_to_tree,
+                          .active_anim = animations[POOL_ANIM_TO_TREE],
+                          .anim_at = TREE_TILE_AT};
 
   i = 0;
   pois[i++] = SUNSCREEN_POI;
   pois[i++] = GOGGLES_POI;
   pois[i++] = FLOAT_POI;
   pois[i++] = POOL_EDGE_POI;
-  gina_nav_pois(&pois[i]);
+  pois[i++] = door(GINA_POOL_ENTRY_FROM_VINE);
+  pois[i] = door(GINA_POOL_ENTRY_FROM_TREE);
 }
 
 // ── interactions
@@ -258,6 +304,16 @@ static bool float_at_the_pool(void) {
 static bool goggles_present(void) { return !gina_state.has_goggles; }
 static bool float_resting_at_pool(void) {
   return gina_state.float_state == FLOAT_AT_POOL && !float_flying;
+}
+
+// Leaving: the destination says where its own door is, so this scene never
+// assumes anything about the shape of the next one.
+static void go_to_vine(void) {
+  set_active_scene_at(GINA_VINE, GINA_VINE_ENTRY_FROM_POOL);
+}
+
+static void go_to_tree(void) {
+  set_active_scene_at(GINA_TREE, GINA_TREE_ENTRY_FROM_POOL);
 }
 
 static void open_sunscreen_minigame(void) {
@@ -447,7 +503,7 @@ static void render(SDL_Renderer *renderer) {
                      (SDL_Point){(int)gina->current_position.x - 60,
                                  (int)gina->current_position.y - 60});
   } else {
-    render_action_layer(renderer, &GINA_OUTDOOR_RAMP, NULL, 0, &gina, 1);
+    render_action_layer(renderer, &SCALE_RAMP, NULL, 0, &gina, 1);
     gina_render_worn(renderer, gina);
   }
   // The reward burst over the goggles spot while the chime plays.
@@ -458,7 +514,8 @@ static void render(SDL_Renderer *renderer) {
 
 static void on_scene_active(void) {
   // Her spot in the shade. Arriving from another scene overrides this straight
-  // after, standing her at the tile she came through (set_active_scene_at).
+  // after, with that scene passing one of the GINA_POOL_ENTRY_FROM_* points
+  // above (set_active_scene_at).
   // Cross-scene progress is preserved (it is reset by the adventure's on_enter,
   // not here), so navigating back from the tree or vine keeps the puzzle state.
   actor_place(gina, HEN_START);
@@ -495,7 +552,7 @@ Scene pool_scene = {
     .hotspots_length = LEN(hotspots),
     .pois = pois,
     .pois_length = LEN(pois),
-    .scale_ramp = &GINA_OUTDOOR_RAMP,
+    .scale_ramp = &SCALE_RAMP,
     .walk_grid = &walk_grid,
     .sprites = sprites,
     .sprites_length = LEN(sprites),

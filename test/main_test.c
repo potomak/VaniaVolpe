@@ -13,7 +13,6 @@
 #include "play_gina.h"
 #include "play_vania.h"
 #include "test_camera.h"
-#include "test_gina_nav.h"
 #include "test_lipsync.h"
 #include "test_scene.h"
 #include "test_tween.h"
@@ -43,7 +42,6 @@ int main(void) {
   failures += test_walk();
   failures += test_lipsync();
   failures += test_scene();
-  failures += test_gina_nav();
   failures += test_camera();
   failures += test_tween();
 
