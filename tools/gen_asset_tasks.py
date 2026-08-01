@@ -228,8 +228,14 @@ def main():
     args = parser.parse_args()
 
     root = repo_root()
+    # Every adventure's manifest, plus the engine's own shared UI art — it
+    # belongs to no adventure but still has to be drawn by someone.
     paths = args.manifests or sorted(glob.glob(
         os.path.join(root, "src/adventures/*/assets/index.json")))
+    if not args.manifests:
+        engine = os.path.join(root, "assets/index.json")
+        if os.path.exists(engine):
+            paths.append(engine)
     if not paths:
         parser.error("no index.json manifests found")
     manifests = load_manifests(root, paths)

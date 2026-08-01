@@ -6,6 +6,7 @@
 #include "confirm.h"
 
 #include "constants.h"
+#include "image.h"
 
 // The panel, centred, and the two answers inside it. Both targets are far
 // larger than the hub button that opens the question — the point is that
@@ -23,6 +24,25 @@ static const SDL_Rect NO = {PANEL.x + PANEL_W - 36 - ANSWER,
 
 static bool is_open;
 static void (*confirmed)(void);
+
+// Engine art, not any adventure's: loaded by path like the subtitle font, and
+// listed in the repo-level assets/index.json so it shows up as something to
+// draw (ASSETS.md).
+#define CONFIRM_YES_PATH "assets/ui/confirm_yes.png"
+#define CONFIRM_NO_PATH "assets/ui/confirm_no.png"
+static ImageData yes_image;
+static ImageData no_image;
+
+bool confirm_load_media(SDL_Renderer *renderer) {
+  bool ok = load_image_from_path(renderer, &yes_image, CONFIRM_YES_PATH);
+  ok = load_image_from_path(renderer, &no_image, CONFIRM_NO_PATH) && ok;
+  return ok;
+}
+
+void confirm_free_media(void) {
+  free_image_texture(&yes_image);
+  free_image_texture(&no_image);
+}
 
 void confirm_open(void (*on_confirm)(void)) {
   is_open = true;
@@ -69,39 +89,6 @@ bool confirm_process_input(const SDL_Event *event) {
   return true;
 }
 
-// A thick line, as a rect, so the tick and cross are drawn from the same
-// primitive the rest of this file uses.
-static void bar(SDL_Renderer *renderer, int x, int y, int w, int h) {
-  SDL_Rect r = {x, y, w, h};
-  SDL_RenderFillRect(renderer, &r);
-}
-
-// A tick, built from two bars: a short one down-right, a long one up-right.
-// Drawn as a staircase of small squares so it reads at a glance without
-// needing rotation.
-static void tick(SDL_Renderer *renderer, SDL_Rect box) {
-  const int step = box.w / 12;
-  for (int i = 0; i < 4; i++) {
-    bar(renderer, box.x + box.w / 6 + i * step,
-        box.y + box.h / 2 + i * step - step, step * 2, step * 2);
-  }
-  for (int i = 0; i < 6; i++) {
-    bar(renderer, box.x + box.w / 6 + (3 + i) * step,
-        box.y + box.h / 2 + (3 - i) * step - step, step * 2, step * 2);
-  }
-}
-
-// A cross, two diagonals of the same squares.
-static void cross(SDL_Renderer *renderer, SDL_Rect box) {
-  const int step = box.w / 12;
-  for (int i = 0; i < 7; i++) {
-    bar(renderer, box.x + box.w / 4 + i * step, box.y + box.h / 4 + i * step,
-        step * 2, step * 2);
-    bar(renderer, box.x + box.w / 4 + i * step,
-        box.y + box.h * 3 / 4 - i * step, step * 2, step * 2);
-  }
-}
-
 void confirm_render(SDL_Renderer *renderer) {
   if (!is_open) {
     return;
@@ -122,13 +109,13 @@ void confirm_render(SDL_Renderer *renderer) {
   SDL_SetRenderDrawColor(renderer, 0x33, 0x33, 0x33, 0xFF);
   SDL_RenderDrawRect(renderer, &PANEL);
 
-  SDL_SetRenderDrawColor(renderer, 0x3F, 0xA9, 0x55, 0xFF);
-  SDL_RenderFillRect(renderer, &YES);
-  SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-  tick(renderer, YES);
-
-  SDL_SetRenderDrawColor(renderer, 0xD1, 0x4B, 0x3F, 0xFF);
-  SDL_RenderFillRect(renderer, &NO);
-  SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-  cross(renderer, NO);
+  // The buttons are whole images — background and glyph together — so drawn
+  // art can change how they look without the engine knowing anything but where
+  // they go. Their rects are the hit targets; the art is centred in them.
+  render_image(renderer, &yes_image,
+               (SDL_Point){YES.x + (ANSWER - yes_image.width) / 2,
+                           YES.y + (ANSWER - yes_image.height) / 2});
+  render_image(renderer, &no_image,
+               (SDL_Point){NO.x + (ANSWER - no_image.width) / 2,
+                           NO.y + (ANSWER - no_image.height) / 2});
 }

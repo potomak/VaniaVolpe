@@ -14,7 +14,7 @@ at what size, with which frame counts). Two lists, one truth: a frame count
 changed in a `.anim` file could silently disagree with the scene that plays
 it, and the estimator counted from a file the game never read.
 
-## One manifest per adventure
+## One manifest per adventure, plus the engine's own
 
 `src/adventures/<adv>/assets/index.json` is the adventure's **asset
 manifest** — the single source of truth read by:
@@ -25,6 +25,14 @@ manifest** — the single source of truth read by:
 - `src/emscripten/cost_estimate.html` — asset-count defaults;
 - `tools/gen_asset_decls.py` — **generates the C declarations the game
   compiles against** (this document's subject).
+
+The engine has one too. `assets/index.json` (repo root, beside the bundled
+font) lists the art that belongs to no adventure — today the two buttons on
+the leave-the-adventure confirmation. It reads the same and appears on the
+same *Assets to author* page with its own drop-boxes; the only difference is
+that the game loads these by path (`load_image_from_path`) rather than
+through the adventure-scoped resolver, since there is no adventure root or
+locale layer to resolve against.
 
 ### Schema
 

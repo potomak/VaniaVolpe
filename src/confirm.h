@@ -7,10 +7,10 @@
 //  also a corner a toddler's palm finds by accident — and leaving throws away
 //  whatever they had solved. So the button opens this instead of leaving.
 //
-//  Deliberately wordless: the audience cannot read. A green tick and a red
-//  cross, both large, well apart, and drawn from primitives — no assets, no
-//  per-adventure art, since this belongs to the engine rather than to any one
-//  adventure. Real icons can replace the shapes later.
+//  Deliberately wordless: the audience cannot read. A tick and a cross, both
+//  large and well apart. The art is engine-owned (assets/ui), shared by every
+//  adventure and listed in the repo-level manifest like any other asset still
+//  to be drawn.
 //
 
 #ifndef confirm_h
@@ -18,6 +18,11 @@
 
 #include <SDL2/SDL.h>
 #include <stdbool.h>
+
+// Load and free the button art. Called once around the game's lifetime, beside
+// the subtitle font's — this is engine UI, so it outlives any one adventure.
+bool confirm_load_media(SDL_Renderer *renderer);
+void confirm_free_media(void);
 
 // Ask, and call `on_confirm` if the answer is yes. Opening while already open
 // replaces the pending question, which cannot happen today (only the hub

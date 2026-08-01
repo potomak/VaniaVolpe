@@ -200,7 +200,8 @@ EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
              --preload-file $(GINA_DIR)/assets/it_IT \
              --preload-file $(GINA_DIR)/assets/en_US \
              --preload-file $(DEMO_DIR)/assets/common \
-             --preload-file assets/fonts
+             --preload-file assets/fonts \
+             --preload-file assets/ui
 EM_SHELL   = src/emscripten/shell.html
 # -sGROWABLE_ARRAYBUFFERS=0: Emscripten >= 6 defaults this to auto-detect, and
 # when the browser has WebAssembly.Memory.toResizableBuffer the heap becomes a
