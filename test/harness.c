@@ -262,6 +262,11 @@ bool harness_capture_begin(void) {
   return true;
 }
 
+int harness_check(bool ok, const char *what) {
+  fprintf(stderr, "%s  %s\n", ok ? "OK  " : "MISS", what);
+  return ok ? 0 : 1;
+}
+
 int harness_check_lines_in_order(const char *const *expected, size_t count) {
   int missing = 0;
   size_t offset = 0; // enforce order: each match must come after the previous

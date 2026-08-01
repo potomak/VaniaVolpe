@@ -48,6 +48,15 @@ static void snap_scene_camera(void) {
   }
 }
 
+// True only while an input event is being dispatched, so a scene change can
+// tell whether it was caused by a tap.
+static bool dispatching_input;
+// Set when a scene changes mid-tap: the press went to the outgoing scene, so
+// the release belongs to it too. Without this the incoming scene is handed a
+// button-up whose press it never saw — which is how the fox's end card used to
+// dismiss itself with the very tap that opened it.
+static bool swallow_rest_of_tap;
+
 void adventure_switch_to(const Adventure *adventure) {
   if (game.current_adventure != NULL) {
     const Scene *previous = scene_instance(game.current_scene);
@@ -64,6 +73,7 @@ void adventure_switch_to(const Adventure *adventure) {
   }
   const Scene *current = scene_instance(game.current_scene);
   current->on_scene_active();
+  swallow_rest_of_tap = dispatching_input;
   scene_start_music(current);
   snap_scene_camera();
 }
@@ -89,6 +99,7 @@ static void activate_scene(int scene, const SDL_FPoint *actor_at) {
   if (actor_at != NULL && current->actor != NULL && *current->actor != NULL) {
     actor_place(*current->actor, *actor_at);
   }
+  swallow_rest_of_tap = dispatching_input;
   scene_start_music(current);
   snap_scene_camera();
 }
@@ -138,7 +149,25 @@ bool game_load_media(SDL_Renderer *renderer) {
 }
 
 // Process input for scenes
-void game_process_input(SDL_Event *event) {
+static void dispatch_input(SDL_Event *event) {
+  // Finish swallowing the tap that changed scene (see swallow_rest_of_tap).
+  if (swallow_rest_of_tap) {
+    switch (event->type) {
+    case SDL_MOUSEBUTTONUP:
+      swallow_rest_of_tap = false;
+      return;
+    case SDL_MOUSEMOTION:
+      return;
+    case SDL_MOUSEBUTTONDOWN:
+      // The release never arrived — the pointer left the window, say. A fresh
+      // press is a new gesture and belongs to whoever is on screen now.
+      swallow_rest_of_tap = false;
+      break;
+    default:
+      break;
+    }
+  }
+
   switch (event->type) {
   case SDL_KEYDOWN:
     switch (event->key.keysym.sym) {
@@ -195,6 +224,12 @@ void game_process_input(SDL_Event *event) {
   } else {
     scene_default_process_input(scene, event);
   }
+}
+
+void game_process_input(SDL_Event *event) {
+  dispatching_input = true;
+  dispatch_input(event);
+  dispatching_input = false;
 }
 
 void game_update(float delta_time) {

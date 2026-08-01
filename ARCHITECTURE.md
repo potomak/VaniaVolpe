@@ -96,6 +96,8 @@ Key functions: `game_init`, `game_load_media`, `set_active_scene`, `game_update`
 
 `set_active_scene` calls `on_scene_inactive` on the outgoing scene and `on_scene_active` on the incoming one, allowing each scene to reset its state and start/stop background music. `set_active_scene_at` additionally stands the incoming scene's actor at a given point, applied *after* `on_scene_active` so it overrides the scene's own default — a location reachable from several directions keeps one default start, and the transition says which way the player came in. Gina's three outdoor scenes use it: each exports a `GINA_<SCENE>_ENTRY_FROM_<ORIGIN>` point for each of its doors, and its neighbours pass that when they send her over — so where a door is stays a property of the scene that owns the art.
 
+A scene change made *during* input dispatch swallows the rest of that tap: the press went to the outgoing scene, so its release belongs there too, and the incoming scene is never handed a button-up whose press it never saw. Without it, a scene entered on `MOUSEBUTTONDOWN` that navigates on `MOUSEBUTTONUP` dismisses itself with the very tap that opened it — which is what kept Vania's end card off screen. The guard lives in `game_process_input` rather than in any one scene, since it applies to every pair of scenes that split a tap between them.
+
 ---
 
 ### `scene.h` – Scene Interface
