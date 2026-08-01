@@ -50,6 +50,14 @@ command-line tools are documented in
 </div>
 
 <div class="card">
+  <h2><a href="anim_packer.html">Animation packer</a></h2>
+  <p>Drop a set of frame PNGs, reorder them, watch them play, and export the
+  vertically packed sprite sheet plus its <code>.anim</code> frame table —
+  the two files the engine loads for every animation.</p>
+  <p class="where">Commit both under the adventure's <code>assets/common/&lt;dir&gt;/</code>; read by <code>load_animation</code>.</p>
+</div>
+
+<div class="card">
   <h2>In-game debug layer</h2>
   <p>Press <b>D</b> in any build: hotspot/POI/walk-grid overlay, the rect
   picker (drag prints an <code>SDL_Rect</code>), and the walk-mask paint mode

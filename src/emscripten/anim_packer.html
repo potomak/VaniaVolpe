@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vania Volpe — animation packer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 1.5rem; max-width: 900px; }
+  h1 { font-size: 1.3rem; }
+  nav a { margin-right: 1rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .8rem 0; }
+  input[type=number], input[type=text], button { font: inherit; padding: .25rem .6rem; }
+  input[type=number] { width: 5rem; }
+  .hint { color: #888; font-size: .85rem; }
+  #drop {
+    border: 2px dashed #8886; border-radius: 8px; padding: 1.6rem; text-align: center;
+    color: #888; cursor: pointer;
+  }
+  #drop.over { border-color: #4a9; color: inherit; }
+  #strip { display: flex; flex-wrap: wrap; gap: .5rem; margin: .8rem 0; padding: 0; list-style: none; }
+  #strip li {
+    position: relative; border: 1px solid #8886; border-radius: 4px; padding: .25rem;
+    cursor: grab; background: #8881; text-align: center;
+  }
+  #strip li.dragging { opacity: .4; }
+  #strip canvas { display: block; max-width: 96px; max-height: 96px; }
+  #strip .name { font-size: .7rem; color: #888; max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #strip .drop-frame { position: absolute; top: 2px; right: 2px; border: none; background: #0007; color: #fff; border-radius: 3px; cursor: pointer; padding: 0 .3rem; }
+  /* Checkerboard, so transparency is visible behind the preview. */
+  #preview {
+    border: 1px solid #8886;
+    background-color: #fff;
+    background-image:
+      linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%),
+      linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+  }
+  textarea { width: 100%; min-height: 7rem; font: 13px/1.4 ui-monospace, monospace; }
+  .msg { border-radius: 6px; padding: .5rem .7rem; margin: .5rem 0; }
+  .msg.error { background: #d14b3f22; border: 1px solid #d14b3f88; }
+  .msg.warn { background: #e0a63022; border: 1px solid #e0a63088; }
+  .msg ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+</style>
+</head>
+<body>
+<nav><a href="tools.html">← dev tools</a><a href="catalog.html">asset catalog</a><a href="walk_editor.html">walk-mask editor</a><a href="index.html">game</a></nav>
+<h1>Animation packer</h1>
+<p class="hint">
+  Turns a set of frame PNGs into the two files the engine loads: a vertically
+  packed sprite sheet and its <code>.anim</code> frame table (see
+  <a href="https://github.com/potomak/VaniaVolpe/blob/main/TOOLS.md">TOOLS.md</a>).
+  Commit both under the adventure's <code>assets/common/&lt;dir&gt;/</code> — sprite
+  sheets are art, not text, so they do not belong in a locale layer.
+  Everything happens in the browser; nothing is uploaded.
+  <br>
+  A <b>talking</b> sheet driven by lip-sync cues needs exactly 7 frames, in the
+  order X A B C D E F (see SPEECH.md); the packer cannot check that for you.
+</p>
+
+<div id="drop">
+  Drop frame PNGs here, or <b>click to choose files</b>.
+  <input type="file" id="files" accept="image/png" multiple hidden>
+</div>
+
+<div id="messages"></div>
+
+<ul id="strip"></ul>
+
+<div class="bar">
+  <button id="play">Pause</button>
+  <label>FPS <input type="number" id="fps" value="12" min="1" max="60" step="1"></label>
+  <span id="counter" class="hint">no frames</span>
+  <span class="hint">— preview only; the engine plays at 12 FPS.</span>
+</div>
+<canvas id="preview" width="1" height="1"></canvas>
+
+<div class="bar">
+  <label>Name <input type="text" id="name" value="animation" size="18"></label>
+  <button id="export" disabled>Export .png + .anim</button>
+</div>
+<textarea id="anim-out" readonly placeholder="The .anim text appears here once frames are loaded."></textarea>
+
+<script>
+// Frames in export order: {name, image, canvas, w, h, opaque}.
+let frames = [];
+let playing = true;
+let current = 0;
+let lastStep = 0;
+
+const $ = (id) => document.getElementById(id);
+const strip = $('strip');
+const preview = $('preview');
+const ctx = preview.getContext('2d', { willReadFrequently: true });
+
+// "frame_2.png" before "frame_10.png": compare digit runs as numbers.
+function naturalCompare(a, b) {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
+function readImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(file.name)); };
+    img.src = url;
+  });
+}
+
+// Draw once into a canvas we own: the export composites from these, and the
+// alpha check needs the pixels anyway.
+function toFrame(name, img) {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const c = canvas.getContext('2d', { willReadFrequently: true });
+  c.drawImage(img, 0, 0);
+  let opaque = true;
+  const data = c.getImageData(0, 0, canvas.width, canvas.height).data;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 255) { opaque = false; break; }
+  }
+  return { name, canvas, w: canvas.width, h: canvas.height, opaque };
+}
+
+// The shared leading text of every filename, so a set called walk_01.png,
+// walk_02.png… names itself.
+function sharedBasename(names) {
+  if (names.length === 0) return '';
+  const bare = names.map((n) => n.replace(/\.[^.]+$/, ''));
+  let prefix = bare[0];
+  for (const n of bare) {
+    let i = 0;
+    while (i < prefix.length && i < n.length && prefix[i] === n[i]) i++;
+    prefix = prefix.slice(0, i);
+  }
+  return prefix.replace(/[\s._-]+$/, '');
+}
+
+function message(kind, html) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + kind;
+  div.innerHTML = html;
+  $('messages').appendChild(div);
+}
+
+// Everything that could be wrong with the current set. Mixed sizes is the only
+// one that blocks an export — the rest are things worth knowing.
+function validate() {
+  $('messages').innerHTML = '';
+  if (frames.length === 0) return false;
+
+  const { w, h } = frames[0];
+  const odd = frames.filter((f) => f.w !== w || f.h !== h);
+  if (odd.length > 0) {
+    const rows = frames
+      .map((f) => `<li><code>${f.name}</code> — ${f.w}×${f.h}</li>`)
+      .join('');
+    message('error',
+      `<b>Frames are not all the same size.</b> The engine's sheets are uniform
+       vertical strips, so every frame has to match. Sizes found:<ul>${rows}</ul>`);
+    return false;
+  }
+
+  const flat = frames.filter((f) => f.opaque);
+  if (flat.length > 0) {
+    const names = flat.map((f) => `<code>${f.name}</code>`).join(', ');
+    message('warn',
+      `<b>No transparency</b> in ${flat.length} frame(s): ${names}. Sprites
+       composite through the PNG alpha channel — a fully opaque frame will draw
+       as a rectangle over the background.`);
+  }
+
+  const sheetHeight = h * frames.length;
+  if (sheetHeight > 4096) {
+    message('warn',
+      `<b>Sheet is ${sheetHeight}px tall</b>, past the 4096px a GL texture is
+       safely guaranteed. Consider splitting the animation.`);
+  }
+  return true;
+}
+
+function animText() {
+  if (frames.length === 0) return '';
+  const { w, h } = frames[0];
+  return frames.map((_, i) => `0,${i * h},${w},${h}`).join('\n') + '\n';
+}
+
+function renderStrip() {
+  strip.innerHTML = '';
+  frames.forEach((frame, index) => {
+    const li = document.createElement('li');
+    li.draggable = true;
+    li.dataset.index = String(index);
+    const thumb = document.createElement('canvas');
+    thumb.width = frame.w;
+    thumb.height = frame.h;
+    thumb.getContext('2d').drawImage(frame.canvas, 0, 0);
+    li.appendChild(thumb);
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = `${index + 1}. ${frame.name}`;
+    li.appendChild(name);
+    const remove = document.createElement('button');
+    remove.className = 'drop-frame';
+    remove.textContent = '✕';
+    remove.title = 'Remove this frame';
+    remove.addEventListener('click', () => {
+      frames.splice(index, 1);
+      refresh();
+    });
+    li.appendChild(remove);
+    strip.appendChild(li);
+  });
+}
+
+function refresh() {
+  const ok = validate();
+  renderStrip();
+  $('anim-out').value = ok ? animText() : '';
+  $('export').disabled = !ok;
+  if (frames.length > 0) {
+    preview.width = frames[0].w;
+    preview.height = frames[0].h;
+  }
+  if (current >= frames.length) current = 0;
+  updateCounter();
+  drawFrame();
+}
+
+function updateCounter() {
+  $('counter').textContent = frames.length === 0
+    ? 'no frames'
+    : `frame ${current + 1}/${frames.length}`;
+}
+
+function drawFrame() {
+  ctx.clearRect(0, 0, preview.width, preview.height);
+  if (frames.length > 0 && frames[current]) {
+    ctx.drawImage(frames[current].canvas, 0, 0);
+  }
+}
+
+function step(now) {
+  const fps = Math.max(1, Number($('fps').value) || 12);
+  if (playing && frames.length > 0 && now - lastStep >= 1000 / fps) {
+    lastStep = now;
+    current = (current + 1) % frames.length;
+    updateCounter();
+    drawFrame();
+  }
+  requestAnimationFrame(step);
+}
+
+async function addFiles(fileList) {
+  const files = Array.from(fileList).sort((a, b) => naturalCompare(a.name, b.name));
+  for (const file of files) {
+    try {
+      frames.push(toFrame(file.name, await readImage(file)));
+    } catch (e) {
+      message('error', `Could not read <code>${file.name}</code> as an image.`);
+    }
+  }
+  const shared = sharedBasename(frames.map((f) => f.name));
+  if (shared) $('name').value = shared;
+  refresh();
+}
+
+function download(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // Revoked on a later turn: Safari needs the URL alive across the click.
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+// The sheet the .anim describes: frame N at (0, N*h), nothing scaled or
+// resampled, so a round-trip through the packer is pixel-identical.
+function packSheet() {
+  const { w, h } = frames[0];
+  const sheet = document.createElement('canvas');
+  sheet.width = w;
+  sheet.height = h * frames.length;
+  const c = sheet.getContext('2d');
+  frames.forEach((frame, i) => c.drawImage(frame.canvas, 0, i * h));
+  return sheet;
+}
+
+$('export').addEventListener('click', () => {
+  if (!validate()) return;
+  const name = ($('name').value || 'animation').replace(/[^\w.-]+/g, '_');
+  packSheet().toBlob((blob) => download(blob, `${name}.png`), 'image/png');
+  download(new Blob([animText()], { type: 'text/plain' }), `${name}.anim`);
+});
+
+$('play').addEventListener('click', () => {
+  playing = !playing;
+  $('play').textContent = playing ? 'Pause' : 'Play';
+});
+
+$('files').addEventListener('change', (e) => addFiles(e.target.files));
+$('drop').addEventListener('click', () => $('files').click());
+['dragenter', 'dragover'].forEach((type) =>
+  $('drop').addEventListener(type, (e) => {
+    e.preventDefault();
+    $('drop').classList.add('over');
+  }));
+['dragleave', 'drop'].forEach((type) =>
+  $('drop').addEventListener(type, (e) => {
+    e.preventDefault();
+    $('drop').classList.remove('over');
+  }));
+$('drop').addEventListener('drop', (e) => {
+  if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+});
+
+// Reorder by dragging a thumbnail onto another.
+let dragFrom = null;
+strip.addEventListener('dragstart', (e) => {
+  const li = e.target.closest('li');
+  if (!li) return;
+  dragFrom = Number(li.dataset.index);
+  li.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+});
+strip.addEventListener('dragend', (e) => {
+  const li = e.target.closest('li');
+  if (li) li.classList.remove('dragging');
+});
+strip.addEventListener('dragover', (e) => e.preventDefault());
+strip.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const li = e.target.closest('li');
+  if (!li || dragFrom === null) return;
+  const to = Number(li.dataset.index);
+  const [moved] = frames.splice(dragFrom, 1);
+  frames.splice(to, 0, moved);
+  dragFrom = null;
+  refresh();
+});
+
+// Exposed for the headless round-trip check (test/web/run_anim_packer.js).
+window.animPacker = {
+  addFiles,
+  animText: () => animText(),
+  sheetDataURL: () => (frames.length === 0 ? '' : packSheet().toDataURL('image/png')),
+  frameCount: () => frames.length,
+  frameNames: () => frames.map((f) => f.name),
+  reset: () => { frames = []; refresh(); },
+};
+
+refresh();
+requestAnimationFrame(step);
+</script>
+</body>
+</html>

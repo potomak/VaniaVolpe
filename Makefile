@@ -230,7 +230,9 @@ $(WEB_TARGET): $(SRCS) $(WEB_HEADERS) $(EM_SHELL) $(WEB_ASSETS) $(ASSETS_HEADERS
                src/emscripten/catalog.html tools/gen_asset_catalog.py \
                src/emscripten/asset_tasks.html tools/gen_asset_tasks.py \
                src/emscripten/cost_estimate.html \
-               $(wildcard src/adventures/*/assets/index.json)
+               src/emscripten/tools.html src/emscripten/walk_editor.html \
+               src/emscripten/anim_packer.html \
+               $(wildcard src/adventures/*/assets/index.json) assets/index.json
 	mkdir -p $(WEB_DIR)
 	$(EMCC) $(EM_CFLAGS) $(SRCS) $(EM_LDFLAGS) -o $(WEB_TARGET)
 	# Stamp the per-build id: replace the shell's __CACHE_BUST__ placeholder (used
@@ -251,6 +253,7 @@ $(WEB_TARGET): $(SRCS) $(WEB_HEADERS) $(EM_SHELL) $(WEB_ASSETS) $(ASSETS_HEADERS
 	# Dev-tools index + browser walk-mask editor + art cost estimate (see TOOLS.md).
 	cp src/emscripten/tools.html $(WEB_DIR)/tools.html
 	cp src/emscripten/walk_editor.html $(WEB_DIR)/walk_editor.html
+	cp src/emscripten/anim_packer.html $(WEB_DIR)/anim_packer.html
 	cp src/emscripten/cost_estimate.html $(WEB_DIR)/cost_estimate.html
 
 # ── android target (native SDL2 APK; see TOOLS.md → Android build) ────────────

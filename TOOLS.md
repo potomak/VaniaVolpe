@@ -43,6 +43,14 @@ the game; the entry point is
   from the catalog, paint the 80×60 grid over it (left: walkable, right:
   blocked), load an existing committed mask or a local `.walk` file, and
   export a `walkable.walk` to commit. Useful when no native build is at hand.
+- **Animation packer** — [`anim_packer.html`](https://potomak.github.io/VaniaVolpe/anim_packer.html):
+  drop a set of frame PNGs (or pick them), reorder by dragging, preview the
+  loop at 12 FPS, and export the two files the engine loads: the vertically
+  packed sprite sheet and its `.anim` frame table (`x,y,w,h` per frame). Both
+  get committed under the adventure's `assets/common/<dir>/` — sheets are art,
+  so they never go in a locale layer. Refuses to export frames of differing
+  sizes, and warns about a frame with no transparency or a sheet past 4096px.
+  Entirely client-side; nothing is uploaded.
 - **Assets to author** — [`asset_tasks.html`](https://potomak.github.io/VaniaVolpe/asset_tasks.html):
   the per-adventure checklist of real art & voice still to make, with a
   one-click GitHub **upload** link per task (see the asset pipeline below).
