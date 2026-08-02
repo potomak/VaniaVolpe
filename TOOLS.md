@@ -58,8 +58,10 @@ the game; the entry point is
   assets (backgrounds, props, animation frames) from a professional
   illustrator — hourly rate, hours per asset, revision rounds and overhead are
   all editable, and the total updates as you change them. Self-contained
-  (opens as a plain file too); asset-count defaults match `assets/index.json`.
-  Excludes voice/audio. A planning aid, not a quote.
+  (opens as a plain file too); the asset counts are generated into it from
+  Gina's manifest by `tools/gen_cost_estimate.py`, so they cannot drift from
+  what is actually left to author. Excludes voice/audio, and covers Gina only —
+  not Vania, and not the shared engine UI. A planning aid, not a quote.
 
 ## Generator scripts (`tools/`)
 
@@ -83,6 +85,12 @@ them.
   tables from the same file the pipeline and estimator read; validates frame
   counts against the committed `.anim` files. Run automatically by `make`. See
   `ASSETS.md`.
+- **`gen_cost_estimate.py`** — fills the *Art cost estimate* page's three asset
+  counts from Gina's `assets/index.json`: backgrounds (screen-sized images),
+  props (every other image) and animation frames, counting only entries still
+  to author. Rewrites the committed HTML in place so the page stays one
+  self-contained file — run `make gen` after editing a manifest; `--check`
+  reports staleness without writing, and CI fails on drift. Stdlib only.
 - **`gen_asset_tasks.py`** — the asset pipeline's front end (see below): emits
   the `asset_tasks.json` (from each adventure's `assets/index.json`, with live
   status) behind the *Assets to author* page. Run by `make web`; stdlib only.

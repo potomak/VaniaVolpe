@@ -22,7 +22,8 @@ manifest** — the single source of truth read by:
 - `tools/gen_asset_tasks.py` — the *Assets to author* page + `_inbox/`
   drop-boxes (authoring entries only);
 - `tools/consolidate_assets.py` — folds uploads into real asset files;
-- `src/emscripten/cost_estimate.html` — asset-count defaults;
+- `src/emscripten/cost_estimate.html` — asset counts, generated into the page
+  by `tools/gen_cost_estimate.py` (`make gen`);
 - `tools/gen_asset_decls.py` — **generates the C declarations the game
   compiles against** (this document's subject).
 

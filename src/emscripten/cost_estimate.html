@@ -118,23 +118,24 @@
       </div>
 
       <legend style="margin-top:.6rem">Asset counts</legend>
+      <!-- generated:counts -->
       <div class="row">
-        <label>Backgrounds</label>
+        <label>Backgrounds
+          <span class="sub">full-screen scene backdrops</span></label>
         <input type="number" id="bg" value="7" min="0" step="1">
       </div>
       <div class="row">
         <label>Props / objects
-          <span class="sub">the carried items, plus the cartridge icon (once per
-          locale, since it carries the name) — every tappable object is drawn as
-          a boil, so it counts under frames</span></label>
-        <input type="number" id="obj" value="5" min="0" step="1">
+          <span class="sub">every other still image: carried items, scene
+          objects, the cartridge icon</span></label>
+        <input type="number" id="obj" value="7" min="0" step="1">
       </div>
       <div class="row">
         <label>Animation frames
-          <span class="sub">Gina 30 (idle 2 + walking 4 + talking 3 + drag/fall/land 8 + fidgets 10 + floating 3)
-          + 2 intro buttons × 3 + 4 celebrations × 8 + 6 boiling objects × 3 = 86</span></label>
+          <span class="sub">Gina animations 30 + Art — Navigation 9 + Art — Intro 6 + Art — Poolside 11 + Art — Tree 11 + Art — Vine 3 + Art — Minigames 16 = 86</span></label>
         <input type="number" id="frames" value="86" min="0" step="1">
       </div>
+      <!-- /generated:counts -->
     </fieldset>
   </div>
 
@@ -164,9 +165,14 @@
       design exists — which is why that one-time design cost is separate.</li>
       <li><b>Revisions</b> are modelled as extra passes costing a fraction of an
       asset's base time; two rounds at 25% ≈ +50% on production.</li>
-      <li>Counts default to Gina's current placeholder inventory
-      (<code>assets/index.json</code>): 7 backgrounds, 9 props, 16 animations /
-      68 frames. Edit them to price a different scope.</li>
+      <!-- generated:basis -->
+      <li>Counts come from Gina's manifest
+      (<code>src/adventures/gina_hen_at_the_pool/assets/index.json</code>),
+      via <code>tools/gen_cost_estimate.py</code>:
+      7 backgrounds, 7 props,
+      22 animations / 86 frames — every entry still to
+      author. Edit the fields to price a different scope.</li>
+      <!-- /generated:basis -->
       <li>Excludes audio (sfx, music, speech, sound), in-engine integration
       (stitching sheets is automated — see the asset pipeline), and any
       licensing/rush premiums.</li>
