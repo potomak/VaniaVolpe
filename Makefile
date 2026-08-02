@@ -158,8 +158,9 @@ $(VANIA_ASSETS_H): $(VFTS_DIR)/assets/index.json tools/gen_asset_decls.py
 	mkdir -p $(ASSET_GEN_DIR)
 	python3 tools/gen_asset_decls.py --manifest $< --out $@
 
-# Regenerate the committed asset headers (gen/). Run after editing a manifest;
-# CI runs this and fails if the working tree changes (drift guard).
+# Regenerate everything derived from the manifests: the committed asset headers
+# (gen/) and the cost estimate's asset counts. Run after editing a manifest; CI
+# runs this and fails if the working tree changes (drift guard).
 .PHONY: gen
 gen:
 	mkdir -p $(ASSET_GEN_DIR)
@@ -167,6 +168,7 @@ gen:
 	  --out $(GINA_ASSETS_H)
 	python3 tools/gen_asset_decls.py --manifest $(VFTS_DIR)/assets/index.json \
 	  --out $(VANIA_ASSETS_H)
+	python3 tools/gen_cost_estimate.py
 
 # Sources migrated to the manifest #include the generated header (all three
 # object flavours build the same source).
