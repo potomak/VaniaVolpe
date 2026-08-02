@@ -42,6 +42,15 @@ typedef struct adventure {
   // scene-local.
   ImageData *images;
   int images_length;
+
+  // How this adventure shows up on the selection screen (see hub.c): the
+  // picture in the middle of its cartridge, and the colour of the cartridge
+  // body. The icon is text-bearing (it carries the adventure's name), so it is
+  // localized — resolved against this adventure's own root, not the hub's. The
+  // colour multiplies one shared cartridge drawing, which is why the art is
+  // drawn light: a dark body would swallow the tint.
+  Asset hub_icon;
+  SDL_Color cartridge_color;
 } Adventure;
 
 // Lifecycle for a whole adventure: each delegates to every one of its scenes,

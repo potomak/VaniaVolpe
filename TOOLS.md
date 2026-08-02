@@ -121,6 +121,13 @@ them.
   art can change how they look without the engine knowing more than where they
   go. The buttons are tappable, so they come out as boil sheets; the panel is
   not, and stays a still. Engine-owned rather than per-adventure. Needs Pillow.
+- **`gen_hub_placeholders.py`** — emits the adventure-selection screen's
+  placeholder art: the background, the cartridge shell (a boil, with a
+  transparent hole the adventure's icon shows through), the gear / question-mark
+  / quit buttons, and each adventure's cartridge icon — the last written once
+  per locale, since a shipped icon carries the adventure's name. `--chrome` and
+  `--icons` do one half each. The sizes in it are the contract with `hub.c`.
+  Needs Pillow.
 - **`gen_card_placeholders.py`** — emits an adventure's placeholder title or end
   card, `--kind intro|outro`. Both are a washed backdrop carrying the title,
   written once per locale because they bear words. `intro` adds a 3-frame Play

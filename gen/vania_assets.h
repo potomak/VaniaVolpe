@@ -50,6 +50,12 @@ void scene_say(int index);
 #define VANIA_FOX_ANIM_WAVING_SPEC {3, LOOP, {"waving.png", "fox"}, {"waving.anim", "fox"}, 0, 0}
 #define VANIA_FOX_ANIMS_COUNT 4
 
+// ── hub ─────────────────────────────────────────────
+#define VANIA_HUB_IMAGE_ICON 0
+#define VANIA_HUB_IMAGE_ICON_INIT {NULL, "icon.png", "hub", 0, 0}
+#define VANIA_HUB_IMAGES_COUNT 1
+#define VANIA_HUB_IMAGES_INIT {VANIA_HUB_IMAGE_ICON_INIT}
+
 // ── intro ─────────────────────────────────────────────
 #define VANIA_INTRO_IMAGE_INTRO_BACKGROUND 0
 #define VANIA_INTRO_IMAGE_INTRO_BACKGROUND_INIT {NULL, "intro_background.png", "intro", 0, 0}

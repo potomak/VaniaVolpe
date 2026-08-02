@@ -122,6 +122,12 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_FLOATING_SPEC {3, LOOP, {"floating.png", "hen"}, {"floating.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIMS_COUNT 10
 
+// ── hub ─────────────────────────────────────────────
+#define GINA_HUB_IMAGE_ICON 0
+#define GINA_HUB_IMAGE_ICON_INIT {NULL, "icon.png", "hub", 0, 0}
+#define GINA_HUB_IMAGES_COUNT 1
+#define GINA_HUB_IMAGES_INIT {GINA_HUB_IMAGE_ICON_INIT}
+
 // ── intro ─────────────────────────────────────────────
 #define GINA_INTRO_IMAGE_INTRO_BACKGROUND 0
 #define GINA_INTRO_IMAGE_INTRO_BACKGROUND_INIT {NULL, "intro_background.png", "intro", 0, 0}

@@ -5,10 +5,10 @@
  "steps": [
   {
    "action": "click",
-   "x": 0.5,
-   "y": 0.317,
+   "x": 0.18125,
+   "y": 0.35,
    "wait_ms": 1500,
-   "note": "hub -> Vania (first button)"
+   "note": "hub -> Vania (first cartridge)"
   },
   {
    "action": "screenshot",

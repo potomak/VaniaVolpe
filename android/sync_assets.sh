@@ -30,5 +30,6 @@ done
 # UI art (assets/index.json).
 copy_tree assets/fonts
 copy_tree assets/ui
+copy_tree assets/hub
 
 echo "APK assets synced to $DEST ($(find "$DEST" -type f | wc -l) files)."

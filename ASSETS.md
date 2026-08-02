@@ -27,8 +27,11 @@ manifest** — the single source of truth read by:
   compiles against** (this document's subject).
 
 The engine has one too. `assets/index.json` (repo root, beside the bundled
-font) lists the art that belongs to no adventure — today the two buttons on
-the leave-the-adventure confirmation. It reads the same and appears on the
+font) lists the art that belongs to no adventure — the leave-the-adventure
+confirmation, and the selection screen's own background, cartridge shell and
+corner buttons. (Each adventure's *cartridge icon* is not here: it carries
+that adventure's name, so it belongs to the adventure and is listed in its
+manifest, localized.) It reads the same and appears on the
 same *Assets to author* page with its own drop-boxes; the only difference is
 that the game loads these by path (`load_image_from_path`) rather than
 through the adventure-scoped resolver, since there is no adventure root or

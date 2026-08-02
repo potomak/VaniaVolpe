@@ -296,6 +296,16 @@
       "name": "outro_background",
       "localized": true,
       "description": "The end card (text-bearing, per locale)."
+    },
+    {
+      "group": "Art — Selection screen",
+      "type": "image",
+      "dir": "hub",
+      "name": "icon",
+      "size": "180x120",
+      "localized": true,
+      "description": "The picture in the middle of Vania's cartridge on the selection screen, carrying the adventure's name — so it is drawn once per locale. A pre-reader picks the adventure by this, so it should read as the slide and the fox at a glance. Placeholder plate via tools/gen_hub_placeholders.py.",
+      "task": true
     }
   ]
 }

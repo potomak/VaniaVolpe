@@ -6,9 +6,9 @@
   {
    "action": "click",
    "x": 0.5,
-   "y": 0.497,
+   "y": 0.35,
    "wait_ms": 1500,
-   "note": "hub -> Gina (second button)"
+   "note": "hub -> Gina (second cartridge)"
   },
   {
    "action": "screenshot",
