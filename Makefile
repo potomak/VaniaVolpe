@@ -274,10 +274,14 @@ $(WEB_TARGET): $(SRCS) $(WEB_HEADERS) $(EM_SHELL) $(WEB_ASSETS) $(ASSETS_HEADERS
 # Needs the Android SDK + NDK and gradle on PATH (CI provides them; locally,
 # point ANDROID_HOME at an SDK install). Produces a debug-signed, directly
 # installable APK under android/app/build/outputs/apk/debug/.
+# EMULATOR=1 additionally builds the x86_64 ABI, which is the only way CI can
+# run the APK (its runners are x86_64). That build is for the emulator check,
+# not for distribution.
 android: $(ASSETS_HEADERS)
 	android/fetch_deps.sh
 	android/sync_assets.sh
-	gradle -p android assembleDebug $(if $(PROD),-PprodBuild,)
+	gradle -p android assembleDebug $(if $(PROD),-PprodBuild,) \
+	  $(if $(EMULATOR),-PemulatorAbi,)
 
 # ── formatting (clang-format, LLVM style; see .clang-format) ──────────────────
 

@@ -33,7 +33,9 @@ All source is in `src/`. Build via `make`:
 - `make android` — native Android APK (SDL2's Android backend; project under
   `android/`). Needs the Android SDK + NDK and `gradle`; CI
   (`.github/workflows/android.yml`) builds a debug-signed, installable APK
-  artifact on every push to `main`. See `TOOLS.md` → *Android build*.
+  artifact on every push to `main`, and a second job launches it on an emulator
+  to check it actually starts. `EMULATOR=1` adds the x86_64 ABI that job needs.
+  See `TOOLS.md` → *Android build*.
 - `make clean` — removes objects, dependency files, binaries, and `build/`.
 
 `PROD=1` on any of these (`make PROD=1`, `make web PROD=1`, `make android

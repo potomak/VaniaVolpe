@@ -223,6 +223,15 @@ git-ignored. Locally it needs the Android SDK + NDK and `gradle`; in CI,
 download `tinyadventures-debug-apk` from the run page and install it directly on
 a phone.
 
+A second job **launches** it: `make android EMULATOR=1` adds the x86_64 ABI (the
+runners are x86_64; the shipped APK stays arm64-only), boots an emulator and
+runs `android/emulator_check.sh`, which installs the APK, starts the activity
+and checks the process is still alive. That is a stronger assertion than it
+sounds — the app exits its loop if SDL, the window, the renderer or *any* asset
+fails to load, so surviving means it really came up. Building an APK proved
+nothing about running one, which is how a manifest naming a nonexistent activity
+class went unnoticed.
+
 ## Adding a tool
 
 Keep this file the index: one entry per tool, a sentence on what it's for,
