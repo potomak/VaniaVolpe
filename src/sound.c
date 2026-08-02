@@ -1,6 +1,6 @@
 //
 //  sound.c
-//  sdlexample
+//  Tiny Adventures
 //
 //  Created by Giovanni Cappellotto on 1/22/25.
 //

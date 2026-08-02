@@ -1,0 +1,649 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		841C6A662D35B4B300C6F2DE /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A652D35B4B300C6F2DE /* SDL2_image.framework */; };
+		841C6A672D35B4B300C6F2DE /* SDL2_image.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A652D35B4B300C6F2DE /* SDL2_image.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		841C6A752D36A7AB00C6F2DE /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */; };
+		A1B2C3D4E5F60000000TTF02 /* SDL2_ttf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60000000TTF01 /* SDL2_ttf.framework */; };
+		841C6A762D36A7AB00C6F2DE /* SDL2_mixer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A1B2C3D4E5F60000000TTF03 /* SDL2_ttf.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60000000TTF01 /* SDL2_ttf.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		843CFC9B2D3202B10099E674 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; };
+		843CFC9C2D3202B10099E674 /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 843CFC9A2D3202B10099E674 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		042F95671BDC52D4507EE2BB /* src/adventures/depth_demo/assets in Resources */ = {isa = PBXBuildFile; fileRef = 4E937B8C4D56B5633F37B3AF /* src/adventures/depth_demo/assets */; };
+		0C4E2FC91754954CAEE8A96C /* locale.c in Sources */ = {isa = PBXBuildFile; fileRef = 6555535C448DD88BE1EE1095 /* locale.c */; };
+		11A3CDA71A2A40D630991F63 /* tween.c in Sources */ = {isa = PBXBuildFile; fileRef = 65D84B89AB0E68AE7398E933 /* tween.c */; };
+		11A40814320C1053E50E125B /* gina_hen_at_the_pool.c in Sources */ = {isa = PBXBuildFile; fileRef = 6FE815F0A7BC67F25DD0F6E8 /* gina_hen_at_the_pool.c */; };
+		1228440DDBCFF603473E79E6 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 164C0316A3825EF4C698B340 /* assets */; };
+		149EC60BA06605007E11CD34 /* gina_state.c in Sources */ = {isa = PBXBuildFile; fileRef = EEE608554A28488697C50510 /* gina_state.c */; };
+		211B6FBA4DD0725359994022 /* pool.c in Sources */ = {isa = PBXBuildFile; fileRef = CAEA7E80CB75EBF21AB41504 /* pool.c */; };
+		211C44E9896111ECA16B27D1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 54D7BD6F6F0B1208BF0B68CE /* Assets.xcassets */; };
+		2B30B5A4681A7AD7E92D244B /* clock.c in Sources */ = {isa = PBXBuildFile; fileRef = 765FA634CBFF23CBACCF1615 /* clock.c */; };
+		2EDD1419845BC89EB1DA6B9F /* grapes_minigame.c in Sources */ = {isa = PBXBuildFile; fileRef = C24CB455F8C9FB777B395B83 /* grapes_minigame.c */; };
+		30280D827CD543FA813B3EA0 /* asset.c in Sources */ = {isa = PBXBuildFile; fileRef = 8B4A64826379995B57278620 /* asset.c */; };
+		39FA3629BA928CA72CCBE0DE /* hub.c in Sources */ = {isa = PBXBuildFile; fileRef = CEBA61A781727132423867C3 /* hub.c */; };
+		3E9A057AA7BA71F44C7F47EE /* tree.c in Sources */ = {isa = PBXBuildFile; fileRef = 78EA101F7DAC36D589797C0F /* tree.c */; };
+		431422BB2C07B33179BECB68 /* intro.c in Sources */ = {isa = PBXBuildFile; fileRef = F4F1393F17012578AA439E4A /* intro.c */; };
+		501A2A3EF44EC13C4947F350 /* sunscreen_minigame.c in Sources */ = {isa = PBXBuildFile; fileRef = 23C29F07024D9FA211BE3B7C /* sunscreen_minigame.c */; };
+		553EE5BF53F5BB16602C4E2A /* sound.c in Sources */ = {isa = PBXBuildFile; fileRef = D8F2A3D32592673931D7C26C /* sound.c */; };
+		5EEE95789F1BF51E327E1C99 /* scene.c in Sources */ = {isa = PBXBuildFile; fileRef = 34F33AE8CEEB2E87FB4AE598 /* scene.c */; };
+		5F7CA8A18237E41398EEC792 /* intro.c in Sources */ = {isa = PBXBuildFile; fileRef = BBB244BB69692B82B5C6D504 /* intro.c */; };
+		63664C70EEB8A0C67BE13457 /* fox.c in Sources */ = {isa = PBXBuildFile; fileRef = 861C0F7CD4A9B137C7F22B94 /* fox.c */; };
+		65A1FE9C5A759DC2D45F4A22 /* adventure.c in Sources */ = {isa = PBXBuildFile; fileRef = 8924D255AB4AFF994B68686A /* adventure.c */; };
+		6B7DCDEA89B66F3A960D8C9B /* image.c in Sources */ = {isa = PBXBuildFile; fileRef = CED56BC301AA8D9C5771AB4B /* image.c */; };
+		70081449316C39041B9614DD /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 852D2F7D33E7F05220306D25 /* main.c */; };
+		79C9D4F140BEA8F7F44CB1D1 /* outro.c in Sources */ = {isa = PBXBuildFile; fileRef = 80AB329E4D132D1CE589747E /* outro.c */; };
+		84250C8403CAEAE7E3683BA4 /* actor.c in Sources */ = {isa = PBXBuildFile; fileRef = 24C584DA7D6FFE1B24D47D5E /* actor.c */; };
+		90E979412D140A651846BA3B /* src/adventures/vania_fox_the_slide/assets in Resources */ = {isa = PBXBuildFile; fileRef = DC57D493B4420EE6972ED10D /* src/adventures/vania_fox_the_slide/assets */; };
+		96707F3178BB681201BD40DC /* gina_worn.c in Sources */ = {isa = PBXBuildFile; fileRef = 54D2FD60F5A8E9F8B694F44B /* gina_worn.c */; };
+		98032A81AA14315F7E91DD24 /* field.c in Sources */ = {isa = PBXBuildFile; fileRef = 418988703A268BC87078BEF6 /* field.c */; };
+		9BB0ABBEBE9B88A44B677AB3 /* scaling.c in Sources */ = {isa = PBXBuildFile; fileRef = BA62916DC08C8D42EC8F5FE8 /* scaling.c */; };
+		9C60C48EB192A4445927C3F3 /* playground.c in Sources */ = {isa = PBXBuildFile; fileRef = 37C1657A6D441556DCD7BB87 /* playground.c */; };
+		A86163B289459913CDBCFB66 /* hen.c in Sources */ = {isa = PBXBuildFile; fileRef = 9614BFE0A9B75B5677954A65 /* hen.c */; };
+		B2B6EB3C1815431279E05D01 /* debug.c in Sources */ = {isa = PBXBuildFile; fileRef = 9204530BEDC1C66B27B90453 /* debug.c */; };
+		BAF5CC3716B9A39DFE04C212 /* depth_demo.c in Sources */ = {isa = PBXBuildFile; fileRef = 0609FD54D2F8186660C8D080 /* depth_demo.c */; };
+		C65B30D8814E84C723F46533 /* vania_fox_the_slide.c in Sources */ = {isa = PBXBuildFile; fileRef = B815159EFF9BF3BEB4081FAD /* vania_fox_the_slide.c */; };
+		C735A7D9BB51E6B1CCA9DE97 /* walk.c in Sources */ = {isa = PBXBuildFile; fileRef = E917EB15ABE7B8C86CEEBCF4 /* walk.c */; };
+		C7B53082297D2D1B69725B0F /* outro.c in Sources */ = {isa = PBXBuildFile; fileRef = BCAB516C940937BB530D4C4D /* outro.c */; };
+		C9E1D0AAEED25EF8AAB276D3 /* vine.c in Sources */ = {isa = PBXBuildFile; fileRef = 08898ABF0ADCA9319127B6C9 /* vine.c */; };
+		D488BD33456EF2D4B2274492 /* lipsync.c in Sources */ = {isa = PBXBuildFile; fileRef = E26832E01ACA05B45D5BFF13 /* lipsync.c */; };
+		E4DE27134979C7208EF7F1F1 /* src/adventures/gina_hen_at_the_pool/assets in Resources */ = {isa = PBXBuildFile; fileRef = 6B02AF1A9CF4C3CD74CB2F31 /* src/adventures/gina_hen_at_the_pool/assets */; };
+		E5493D8B1EDBD0CEF92EE970 /* subtitle.c in Sources */ = {isa = PBXBuildFile; fileRef = A2AB35C1DCCCC94E167EF63E /* subtitle.c */; };
+		E7CEFD3A4B07C86E1F3BB7D2 /* confirm.c in Sources */ = {isa = PBXBuildFile; fileRef = A22E7835EB05E3E9BF8D63AB /* confirm.c */; };
+		F0E96D2F04698AF5360CC7A7 /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = AE9C1CCC2F9BC9216CCBCA82 /* camera.c */; };
+		F34677CD69CDCC7BB1C6B940 /* playground_entrance.c in Sources */ = {isa = PBXBuildFile; fileRef = 2A855FA998293A25AA712469 /* playground_entrance.c */; };
+		F5991180AF97EA5F4AD0360E /* game.c in Sources */ = {isa = PBXBuildFile; fileRef = 2E343E1871278AA4B030B91C /* game.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		843CFC9D2D3202B10099E674 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				841C6A762D36A7AB00C6F2DE /* SDL2_mixer.framework in Embed Frameworks */,
+				A1B2C3D4E5F60000000TTF03 /* SDL2_ttf.framework in Embed Frameworks */,
+				843CFC9C2D3202B10099E674 /* SDL2.framework in Embed Frameworks */,
+				841C6A672D35B4B300C6F2DE /* SDL2_image.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		841C6A652D35B4B300C6F2DE /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_image.framework; sourceTree = "<group>"; };
+		841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_mixer.framework; sourceTree = "<group>"; };
+		A1B2C3D4E5F60000000TTF01 /* SDL2_ttf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_ttf.framework; sourceTree = "<group>"; };
+		843CFC802D3200860099E674 /* tinyadventures.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tinyadventures.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		843CFC9A2D3202B10099E674 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
+		04A9C1213DFF536B7FFEFBB3 /* camera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
+		060404146CD3C4039FDF31F6 /* image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = image.h; sourceTree = "<group>"; };
+		0609FD54D2F8186660C8D080 /* depth_demo.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = depth_demo.c; sourceTree = "<group>"; };
+		06E5BC2947C5983B75A0B08C /* actor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = actor.h; sourceTree = "<group>"; };
+		08898ABF0ADCA9319127B6C9 /* vine.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = vine.c; sourceTree = "<group>"; };
+		09B40FBADC7EBBEC03648471 /* intro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = intro.h; sourceTree = "<group>"; };
+		0AB9744920F97219BDBA62CF /* vania_fox_the_slide.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vania_fox_the_slide.h; sourceTree = "<group>"; };
+		13E07DD64EEC7E0F189C103B /* tree.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tree.h; sourceTree = "<group>"; };
+		164C0316A3825EF4C698B340 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "assets"; path = assets; sourceTree = SOURCE_ROOT; };
+		181484455CA87EC76FDDC281 /* subtitle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = subtitle.h; sourceTree = "<group>"; };
+		1C9A3C3261D0D18C66A9AC71 /* sound.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sound.h; sourceTree = "<group>"; };
+		1F4CDAA9020CAD056BB95159 /* tinyadventures.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = tinyadventures.entitlements; sourceTree = "<group>"; };
+		203DFE2ED3180476D88794CD /* terminal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = terminal.h; sourceTree = "<group>"; };
+		206911AFF106F0036AECDA46 /* vine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vine.h; sourceTree = "<group>"; };
+		23C29F07024D9FA211BE3B7C /* sunscreen_minigame.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sunscreen_minigame.c; sourceTree = "<group>"; };
+		24C584DA7D6FFE1B24D47D5E /* actor.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = actor.c; sourceTree = "<group>"; };
+		26C7E222481F737F7F847000 /* locale.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = locale.h; sourceTree = "<group>"; };
+		2A855FA998293A25AA712469 /* playground_entrance.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = playground_entrance.c; sourceTree = "<group>"; };
+		2E343E1871278AA4B030B91C /* game.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = game.c; sourceTree = "<group>"; };
+		34F33AE8CEEB2E87FB4AE598 /* scene.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = scene.c; sourceTree = "<group>"; };
+		37C1657A6D441556DCD7BB87 /* playground.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = playground.c; sourceTree = "<group>"; };
+		396143A4D63AE961C7758385 /* pool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pool.h; sourceTree = "<group>"; };
+		3C47FFC5EBE8FAF84DE0D33E /* playground.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = playground.h; sourceTree = "<group>"; };
+		407887A28552BFA125FA7CAF /* outro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = outro.h; sourceTree = "<group>"; };
+		418988703A268BC87078BEF6 /* field.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = field.c; sourceTree = "<group>"; };
+		4CA7054F2FB499ABDEAB7C0A /* scaling.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scaling.h; sourceTree = "<group>"; };
+		4D25A1C5A830702D72BC1502 /* sunscreen_minigame.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sunscreen_minigame.h; sourceTree = "<group>"; };
+		4E937B8C4D56B5633F37B3AF /* src/adventures/depth_demo/assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "src/adventures/depth_demo/assets"; path = src/adventures/depth_demo/assets; sourceTree = SOURCE_ROOT; };
+		54D2FD60F5A8E9F8B694F44B /* gina_worn.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gina_worn.c; sourceTree = "<group>"; };
+		54D7BD6F6F0B1208BF0B68CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		560CD241D50876B5A9497162 /* tween.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tween.h; sourceTree = "<group>"; };
+		590ACCFAB8A74F855A93FFA4 /* hen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hen.h; sourceTree = "<group>"; };
+		5B14EC97B1123DEE1844FDCE /* gina_hen_at_the_pool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gina_hen_at_the_pool.h; sourceTree = "<group>"; };
+		6555535C448DD88BE1EE1095 /* locale.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = locale.c; sourceTree = "<group>"; };
+		65D84B89AB0E68AE7398E933 /* tween.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = tween.c; sourceTree = "<group>"; };
+		6A7149BDC6E350007F0BB639 /* lipsync.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lipsync.h; sourceTree = "<group>"; };
+		6B02AF1A9CF4C3CD74CB2F31 /* src/adventures/gina_hen_at_the_pool/assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "src/adventures/gina_hen_at_the_pool/assets"; path = src/adventures/gina_hen_at_the_pool/assets; sourceTree = SOURCE_ROOT; };
+		6EF56AE2C4BE6AF8F0EA0E2C /* asset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asset.h; sourceTree = "<group>"; };
+		6FE815F0A7BC67F25DD0F6E8 /* gina_hen_at_the_pool.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gina_hen_at_the_pool.c; sourceTree = "<group>"; };
+		703E61E1D4650AB54AD2363F /* depth_demo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = depth_demo.h; sourceTree = "<group>"; };
+		718FC37EB63DB58A6E39D4BB /* game.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = game.h; sourceTree = "<group>"; };
+		756D265AC0C28C348219EBE5 /* constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = constants.h; sourceTree = "<group>"; };
+		765FA634CBFF23CBACCF1615 /* clock.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = clock.c; sourceTree = "<group>"; };
+		78EA101F7DAC36D589797C0F /* tree.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = tree.c; sourceTree = "<group>"; };
+		7C4B0D304189A6889E97EEBB /* fox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fox.h; sourceTree = "<group>"; };
+		8053FE3F8414B1A5D3A30539 /* outro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = outro.h; sourceTree = "<group>"; };
+		80AB329E4D132D1CE589747E /* outro.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = outro.c; sourceTree = "<group>"; };
+		852D2F7D33E7F05220306D25 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		861C0F7CD4A9B137C7F22B94 /* fox.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fox.c; sourceTree = "<group>"; };
+		8924D255AB4AFF994B68686A /* adventure.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = adventure.c; sourceTree = "<group>"; };
+		8A977A0C282818380443953E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8B4A64826379995B57278620 /* asset.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = asset.c; sourceTree = "<group>"; };
+		9096DB8B9A27FD3723AABEE7 /* scene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scene.h; sourceTree = "<group>"; };
+		91356F37FCA75D085EDC3B29 /* grapes_minigame.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = grapes_minigame.h; sourceTree = "<group>"; };
+		9204530BEDC1C66B27B90453 /* debug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = debug.c; sourceTree = "<group>"; };
+		9614BFE0A9B75B5677954A65 /* hen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hen.c; sourceTree = "<group>"; };
+		A22E7835EB05E3E9BF8D63AB /* confirm.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = confirm.c; sourceTree = "<group>"; };
+		A2AB35C1DCCCC94E167EF63E /* subtitle.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = subtitle.c; sourceTree = "<group>"; };
+		A4032308F2DAEE26E17438E3 /* walk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = walk.h; sourceTree = "<group>"; };
+		A8369FD055F5B508CA3099B1 /* field.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = field.h; sourceTree = "<group>"; };
+		AD532C3DEA6A7A8F64BB368A /* confirm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = confirm.h; sourceTree = "<group>"; };
+		AD8F5A8FCB8B497B27A358B9 /* gina_state.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gina_state.h; sourceTree = "<group>"; };
+		AE9C1CCC2F9BC9216CCBCA82 /* camera.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
+		B1BCBB067DAFBA7CD8A991DB /* gina_worn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gina_worn.h; sourceTree = "<group>"; };
+		B815159EFF9BF3BEB4081FAD /* vania_fox_the_slide.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = vania_fox_the_slide.c; sourceTree = "<group>"; };
+		BA62916DC08C8D42EC8F5FE8 /* scaling.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = scaling.c; sourceTree = "<group>"; };
+		BBB244BB69692B82B5C6D504 /* intro.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = intro.c; sourceTree = "<group>"; };
+		BCAB516C940937BB530D4C4D /* outro.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = outro.c; sourceTree = "<group>"; };
+		C24CB455F8C9FB777B395B83 /* grapes_minigame.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = grapes_minigame.c; sourceTree = "<group>"; };
+		CAEA7E80CB75EBF21AB41504 /* pool.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pool.c; sourceTree = "<group>"; };
+		CDAD69C2E56B9C575E5DFD44 /* intro.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = intro.h; sourceTree = "<group>"; };
+		CEBA61A781727132423867C3 /* hub.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hub.c; sourceTree = "<group>"; };
+		CED56BC301AA8D9C5771AB4B /* image.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = image.c; sourceTree = "<group>"; };
+		D8F2A3D32592673931D7C26C /* sound.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = sound.c; sourceTree = "<group>"; };
+		DA4F3CB5332324CD1CFDCC1C /* playground_entrance.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = playground_entrance.h; sourceTree = "<group>"; };
+		DC57D493B4420EE6972ED10D /* src/adventures/vania_fox_the_slide/assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "src/adventures/vania_fox_the_slide/assets"; path = src/adventures/vania_fox_the_slide/assets; sourceTree = SOURCE_ROOT; };
+		DF5A972A2906080925306271 /* hub.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hub.h; sourceTree = "<group>"; };
+		E26832E01ACA05B45D5BFF13 /* lipsync.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = lipsync.c; sourceTree = "<group>"; };
+		E917EB15ABE7B8C86CEEBCF4 /* walk.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = walk.c; sourceTree = "<group>"; };
+		EAE25359ADCEABC85EA60C75 /* adventure.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = adventure.h; sourceTree = "<group>"; };
+		EEE608554A28488697C50510 /* gina_state.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gina_state.c; sourceTree = "<group>"; };
+		F262AB4AE6E5A1FC582D77D8 /* debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = debug.h; sourceTree = "<group>"; };
+		F4F1393F17012578AA439E4A /* intro.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = intro.c; sourceTree = "<group>"; };
+		FAC42DFF9099C9074056168B /* clock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clock.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		843CFC7D2D3200860099E674 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				841C6A752D36A7AB00C6F2DE /* SDL2_mixer.framework in Frameworks */,
+				A1B2C3D4E5F60000000TTF02 /* SDL2_ttf.framework in Frameworks */,
+				843CFC9B2D3202B10099E674 /* SDL2.framework in Frameworks */,
+				841C6A662D35B4B300C6F2DE /* SDL2_image.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		843CFC772D3200860099E674 = {
+			isa = PBXGroup;
+			children = (
+				C4345CC0543191008E156901 /* src */,
+				08B3CF4F8B21AF5E56326AE1 /* Assets */,
+				843CFC812D3200860099E674 /* Products */,
+				843CFC992D3202B10099E674 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		843CFC812D3200860099E674 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				843CFC802D3200860099E674 /* tinyadventures.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		843CFC992D3202B10099E674 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				841C6A742D36A7AB00C6F2DE /* SDL2_mixer.framework */,
+				A1B2C3D4E5F60000000TTF01 /* SDL2_ttf.framework */,
+				841C6A652D35B4B300C6F2DE /* SDL2_image.framework */,
+				843CFC9A2D3202B10099E674 /* SDL2.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A0FA52477CAEFDF545E376CF /* depth_demo */ = {
+			isa = PBXGroup;
+			children = (
+				0609FD54D2F8186660C8D080 /* depth_demo.c */,
+				703E61E1D4650AB54AD2363F /* depth_demo.h */,
+				418988703A268BC87078BEF6 /* field.c */,
+				A8369FD055F5B508CA3099B1 /* field.h */,
+			);
+			path = adventures/depth_demo;
+			sourceTree = "<group>";
+		};
+		056A43F91400B91B9DB23327 /* gina_hen_at_the_pool */ = {
+			isa = PBXGroup;
+			children = (
+				6FE815F0A7BC67F25DD0F6E8 /* gina_hen_at_the_pool.c */,
+				5B14EC97B1123DEE1844FDCE /* gina_hen_at_the_pool.h */,
+				EEE608554A28488697C50510 /* gina_state.c */,
+				AD8F5A8FCB8B497B27A358B9 /* gina_state.h */,
+				54D2FD60F5A8E9F8B694F44B /* gina_worn.c */,
+				B1BCBB067DAFBA7CD8A991DB /* gina_worn.h */,
+				C24CB455F8C9FB777B395B83 /* grapes_minigame.c */,
+				91356F37FCA75D085EDC3B29 /* grapes_minigame.h */,
+				9614BFE0A9B75B5677954A65 /* hen.c */,
+				590ACCFAB8A74F855A93FFA4 /* hen.h */,
+				BBB244BB69692B82B5C6D504 /* intro.c */,
+				CDAD69C2E56B9C575E5DFD44 /* intro.h */,
+				80AB329E4D132D1CE589747E /* outro.c */,
+				8053FE3F8414B1A5D3A30539 /* outro.h */,
+				CAEA7E80CB75EBF21AB41504 /* pool.c */,
+				396143A4D63AE961C7758385 /* pool.h */,
+				23C29F07024D9FA211BE3B7C /* sunscreen_minigame.c */,
+				4D25A1C5A830702D72BC1502 /* sunscreen_minigame.h */,
+				78EA101F7DAC36D589797C0F /* tree.c */,
+				13E07DD64EEC7E0F189C103B /* tree.h */,
+				08898ABF0ADCA9319127B6C9 /* vine.c */,
+				206911AFF106F0036AECDA46 /* vine.h */,
+			);
+			path = adventures/gina_hen_at_the_pool;
+			sourceTree = "<group>";
+		};
+		14DA349321C62CFDFEAF0C0D /* vania_fox_the_slide */ = {
+			isa = PBXGroup;
+			children = (
+				861C0F7CD4A9B137C7F22B94 /* fox.c */,
+				7C4B0D304189A6889E97EEBB /* fox.h */,
+				F4F1393F17012578AA439E4A /* intro.c */,
+				09B40FBADC7EBBEC03648471 /* intro.h */,
+				BCAB516C940937BB530D4C4D /* outro.c */,
+				407887A28552BFA125FA7CAF /* outro.h */,
+				37C1657A6D441556DCD7BB87 /* playground.c */,
+				3C47FFC5EBE8FAF84DE0D33E /* playground.h */,
+				2A855FA998293A25AA712469 /* playground_entrance.c */,
+				DA4F3CB5332324CD1CFDCC1C /* playground_entrance.h */,
+				B815159EFF9BF3BEB4081FAD /* vania_fox_the_slide.c */,
+				0AB9744920F97219BDBA62CF /* vania_fox_the_slide.h */,
+			);
+			path = adventures/vania_fox_the_slide;
+			sourceTree = "<group>";
+		};
+		C4345CC0543191008E156901 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				04A9C1213DFF536B7FFEFBB3 /* camera.h */,
+				056A43F91400B91B9DB23327 /* gina_hen_at_the_pool */,
+				060404146CD3C4039FDF31F6 /* image.h */,
+				06E5BC2947C5983B75A0B08C /* actor.h */,
+				14DA349321C62CFDFEAF0C0D /* vania_fox_the_slide */,
+				181484455CA87EC76FDDC281 /* subtitle.h */,
+				1C9A3C3261D0D18C66A9AC71 /* sound.h */,
+				1F4CDAA9020CAD056BB95159 /* tinyadventures.entitlements */,
+				203DFE2ED3180476D88794CD /* terminal.h */,
+				24C584DA7D6FFE1B24D47D5E /* actor.c */,
+				26C7E222481F737F7F847000 /* locale.h */,
+				2E343E1871278AA4B030B91C /* game.c */,
+				34F33AE8CEEB2E87FB4AE598 /* scene.c */,
+				4CA7054F2FB499ABDEAB7C0A /* scaling.h */,
+				54D7BD6F6F0B1208BF0B68CE /* Assets.xcassets */,
+				560CD241D50876B5A9497162 /* tween.h */,
+				6555535C448DD88BE1EE1095 /* locale.c */,
+				65D84B89AB0E68AE7398E933 /* tween.c */,
+				6A7149BDC6E350007F0BB639 /* lipsync.h */,
+				6EF56AE2C4BE6AF8F0EA0E2C /* asset.h */,
+				718FC37EB63DB58A6E39D4BB /* game.h */,
+				756D265AC0C28C348219EBE5 /* constants.h */,
+				765FA634CBFF23CBACCF1615 /* clock.c */,
+				852D2F7D33E7F05220306D25 /* main.c */,
+				8924D255AB4AFF994B68686A /* adventure.c */,
+				8A977A0C282818380443953E /* Info.plist */,
+				8B4A64826379995B57278620 /* asset.c */,
+				9096DB8B9A27FD3723AABEE7 /* scene.h */,
+				9204530BEDC1C66B27B90453 /* debug.c */,
+				A0FA52477CAEFDF545E376CF /* depth_demo */,
+				A22E7835EB05E3E9BF8D63AB /* confirm.c */,
+				A2AB35C1DCCCC94E167EF63E /* subtitle.c */,
+				A4032308F2DAEE26E17438E3 /* walk.h */,
+				AD532C3DEA6A7A8F64BB368A /* confirm.h */,
+				AE9C1CCC2F9BC9216CCBCA82 /* camera.c */,
+				BA62916DC08C8D42EC8F5FE8 /* scaling.c */,
+				CEBA61A781727132423867C3 /* hub.c */,
+				CED56BC301AA8D9C5771AB4B /* image.c */,
+				D8F2A3D32592673931D7C26C /* sound.c */,
+				DF5A972A2906080925306271 /* hub.h */,
+				E26832E01ACA05B45D5BFF13 /* lipsync.c */,
+				E917EB15ABE7B8C86CEEBCF4 /* walk.c */,
+				EAE25359ADCEABC85EA60C75 /* adventure.h */,
+				F262AB4AE6E5A1FC582D77D8 /* debug.h */,
+				FAC42DFF9099C9074056168B /* clock.h */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		08B3CF4F8B21AF5E56326AE1 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				DC57D493B4420EE6972ED10D /* src/adventures/vania_fox_the_slide/assets */,
+				6B02AF1A9CF4C3CD74CB2F31 /* src/adventures/gina_hen_at_the_pool/assets */,
+				4E937B8C4D56B5633F37B3AF /* src/adventures/depth_demo/assets */,
+				164C0316A3825EF4C698B340 /* assets */,
+			);
+			name = Assets;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		843CFC7F2D3200860099E674 /* tinyadventures */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 843CFC912D3200900099E674 /* Build configuration list for PBXNativeTarget "tinyadventures" */;
+			buildPhases = (
+				843CFC7C2D3200860099E674 /* Sources */,
+				843CFC7D2D3200860099E674 /* Frameworks */,
+				843CFC7E2D3200860099E674 /* Resources */,
+				843CFC9D2D3202B10099E674 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tinyadventures;
+			productName = tinyadventures;
+			productReference = 843CFC802D3200860099E674 /* tinyadventures.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		843CFC782D3200860099E674 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1240;
+				TargetAttributes = {
+					843CFC7F2D3200860099E674 = {
+						CreatedOnToolsVersion = 12.4;
+					};
+				};
+			};
+			buildConfigurationList = 843CFC7B2D3200860099E674 /* Build configuration list for PBXProject "tinyadventures" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 843CFC772D3200860099E674;
+			productRefGroup = 843CFC812D3200860099E674 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				843CFC7F2D3200860099E674 /* tinyadventures */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		843CFC7E2D3200860099E674 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90E979412D140A651846BA3B /* src/adventures/vania_fox_the_slide/assets in Resources */,
+				E4DE27134979C7208EF7F1F1 /* src/adventures/gina_hen_at_the_pool/assets in Resources */,
+				042F95671BDC52D4507EE2BB /* src/adventures/depth_demo/assets in Resources */,
+				1228440DDBCFF603473E79E6 /* assets in Resources */,
+				211C44E9896111ECA16B27D1 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		843CFC7C2D3200860099E674 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				70081449316C39041B9614DD /* main.c in Sources */,
+				F5991180AF97EA5F4AD0360E /* game.c in Sources */,
+				2B30B5A4681A7AD7E92D244B /* clock.c in Sources */,
+				9BB0ABBEBE9B88A44B677AB3 /* scaling.c in Sources */,
+				65A1FE9C5A759DC2D45F4A22 /* adventure.c in Sources */,
+				39FA3629BA928CA72CCBE0DE /* hub.c in Sources */,
+				5EEE95789F1BF51E327E1C99 /* scene.c in Sources */,
+				C735A7D9BB51E6B1CCA9DE97 /* walk.c in Sources */,
+				F0E96D2F04698AF5360CC7A7 /* camera.c in Sources */,
+				E7CEFD3A4B07C86E1F3BB7D2 /* confirm.c in Sources */,
+				11A3CDA71A2A40D630991F63 /* tween.c in Sources */,
+				84250C8403CAEAE7E3683BA4 /* actor.c in Sources */,
+				6B7DCDEA89B66F3A960D8C9B /* image.c in Sources */,
+				553EE5BF53F5BB16602C4E2A /* sound.c in Sources */,
+				D488BD33456EF2D4B2274492 /* lipsync.c in Sources */,
+				E5493D8B1EDBD0CEF92EE970 /* subtitle.c in Sources */,
+				30280D827CD543FA813B3EA0 /* asset.c in Sources */,
+				0C4E2FC91754954CAEE8A96C /* locale.c in Sources */,
+				B2B6EB3C1815431279E05D01 /* debug.c in Sources */,
+				63664C70EEB8A0C67BE13457 /* fox.c in Sources */,
+				C65B30D8814E84C723F46533 /* vania_fox_the_slide.c in Sources */,
+				431422BB2C07B33179BECB68 /* intro.c in Sources */,
+				F34677CD69CDCC7BB1C6B940 /* playground_entrance.c in Sources */,
+				9C60C48EB192A4445927C3F3 /* playground.c in Sources */,
+				C7B53082297D2D1B69725B0F /* outro.c in Sources */,
+				A86163B289459913CDBCFB66 /* hen.c in Sources */,
+				149EC60BA06605007E11CD34 /* gina_state.c in Sources */,
+				96707F3178BB681201BD40DC /* gina_worn.c in Sources */,
+				11A40814320C1053E50E125B /* gina_hen_at_the_pool.c in Sources */,
+				5F7CA8A18237E41398EEC792 /* intro.c in Sources */,
+				79C9D4F140BEA8F7F44CB1D1 /* outro.c in Sources */,
+				211B6FBA4DD0725359994022 /* pool.c in Sources */,
+				3E9A057AA7BA71F44C7F47EE /* tree.c in Sources */,
+				C9E1D0AAEED25EF8AAB276D3 /* vine.c in Sources */,
+				501A2A3EF44EC13C4947F350 /* sunscreen_minigame.c in Sources */,
+				2EDD1419845BC89EB1DA6B9F /* grapes_minigame.c in Sources */,
+				BAF5CC3716B9A39DFE04C212 /* depth_demo.c in Sources */,
+				98032A81AA14315F7E91DD24 /* field.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		843CFC8F2D3200900099E674 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		843CFC902D3200900099E674 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		843CFC922D3200900099E674 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = src/tinyadventures.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/include",
+					"$(SRCROOT)/src",
+					"$(SRCROOT)/src/adventures/vania_fox_the_slide",
+					"$(SRCROOT)/src/adventures/gina_hen_at_the_pool",
+					"$(SRCROOT)/src/adventures/depth_demo",
+					"$(SRCROOT)/gen",
+				);
+				INFOPLIST_FILE = src/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.curlybrackets.tinyadventures;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		843CFC932D3200900099E674 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = src/tinyadventures.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/include",
+					"$(SRCROOT)/src",
+					"$(SRCROOT)/src/adventures/vania_fox_the_slide",
+					"$(SRCROOT)/src/adventures/gina_hen_at_the_pool",
+					"$(SRCROOT)/src/adventures/depth_demo",
+					"$(SRCROOT)/gen",
+				);
+				INFOPLIST_FILE = src/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.curlybrackets.tinyadventures;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		843CFC7B2D3200860099E674 /* Build configuration list for PBXProject "tinyadventures" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				843CFC8F2D3200900099E674 /* Debug */,
+				843CFC902D3200900099E674 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		843CFC912D3200900099E674 /* Build configuration list for PBXNativeTarget "tinyadventures" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				843CFC922D3200900099E674 /* Debug */,
+				843CFC932D3200900099E674 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 843CFC782D3200860099E674 /* Project object */;
+}

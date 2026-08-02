@@ -1,6 +1,6 @@
 //
 //  asset.h
-//  sdlexample
+//  Tiny Adventures
 //
 //  Created by Giovanni Cappellotto on 1/26/25.
 //

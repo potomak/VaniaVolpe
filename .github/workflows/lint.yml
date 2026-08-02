@@ -27,6 +27,15 @@ jobs:
           sudo apt-get install -y bear \
             libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libcaca-dev
 
+      # Nothing here compiles the Xcode target — there is no macOS runner — so
+      # this checks the next best thing: that the project is internally
+      # consistent and lists the same sources the Makefile does. Advisory, like
+      # the linters below: a contributor without Xcode cannot easily fix the
+      # project file, so this reports rather than blocks.
+      - name: Check the Xcode project against the tree
+        continue-on-error: true
+        run: python3 tools/check_xcode_project.py
+
       - name: Generate compile_commands.json
         run: bear -- make all terminal test
 

@@ -85,6 +85,12 @@ them.
   tables from the same file the pipeline and estimator read; validates frame
   counts against the committed `.anim` files. Run automatically by `make`. See
   `ASSETS.md`.
+- **`check_xcode_project.py`** — the Xcode project has no CI that compiles it
+  (there is no macOS runner), and it drifted three refactors behind before
+  anyone noticed. This checks what can be checked without Xcode: every file
+  reference resolves to something on disk, every group child and `fileRef`
+  points at a real object, object ids are unique, and the target's source list
+  matches the Makefile's. Run by the lint workflow. Stdlib only.
 - **`gen_cost_estimate.py`** — fills the *Art cost estimate* page's three asset
   counts from Gina's `assets/index.json`: backgrounds (screen-sized images),
   props (every other image) and animation frames, counting only entries still
