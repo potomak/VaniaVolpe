@@ -10,8 +10,9 @@ is said out loud and shown in pictures.
 - **Language:** C99
 - **Core libraries:** SDL2, SDL2_image (PNG), SDL2_mixer (WAV), SDL2_ttf (subtitles)
 - **Build system:** the `Makefile` — desktop, terminal (libcaca), headless test,
-  and WebAssembly. The Xcode project for iOS/tvOS is not in step with the current
-  layout (#31).
+  and WebAssembly. `tinyadventures.xcodeproj` builds a **macOS** app from the
+  same sources; nothing compiles it in CI, so `tools/check_xcode_project.py`
+  checks it lists what the Makefile does.
 - **Ships as:** a desktop window, an ASCII terminal, a web build on GitHub Pages,
   and an Android APK.
 
@@ -483,8 +484,10 @@ Live constraints, not a backlog — queued work lives in GitHub issues (label
   whole run and the web build ships one `index.data` (#49).
 - **The selection screen holds six adventures.** A seventh needs it to scroll
   (#191).
-- **iOS bundles assets flat**, so the locale layering `asset_resolve` does
-  everywhere else does not apply there yet; the Xcode project is also out of
-  step with the current source layout (#31).
+- **The Xcode target is unverified.** It lists the right sources and its
+  references resolve (checked by `tools/check_xcode_project.py`), but no CI
+  compiles it — there is no macOS runner — so whether it *builds* is only known
+  after someone opens it. It is macOS-only; the iOS/tvOS branch in `asset.c`
+  assumes a flat bundle and predates the locale layers.
 - **The subtitle overlay is the only text in the game.** There is no font
   fallback: a locale needing glyphs the bundled font lacks would render blanks.

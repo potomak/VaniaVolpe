@@ -1,6 +1,6 @@
 //
 //  outro.c
-//  sdlexample
+//  Tiny Adventures
 //
 //  Created by Giovanni Cappellotto on 1/23/25.
 //
