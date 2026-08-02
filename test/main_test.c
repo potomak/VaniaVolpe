@@ -14,6 +14,7 @@
 #include "play_vania.h"
 #include "test_camera.h"
 #include "test_confirm.h"
+#include "test_input.h"
 #include "test_lipsync.h"
 #include "test_scene.h"
 #include "test_tween.h"
@@ -35,7 +36,10 @@ int main(void) {
     return 1;
   }
 
-  int failures = play_gina();
+  // Input first: it drives the selection screen the play-tests start from,
+  // and hands it back the way it found it.
+  int failures = test_input();
+  failures += play_gina();
   failures += play_vania();
 
   // Pure unit tests (no window/assets; run after the playthrough so its

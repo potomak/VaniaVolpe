@@ -26,6 +26,11 @@ LOCAL_SRC_FILES := \
   $(wildcard $(REPO)/src/adventures/*/*.c)
 
 LOCAL_CFLAGS := -std=c99 -Wall
+# Distribution build: gradle -PprodBuild passes PROD=1 through to the NDK, which
+# compiles out both ways into the debug layer (see the Makefile).
+ifeq ($(PROD),1)
+LOCAL_CFLAGS += -DPROD
+endif
 
 LOCAL_SHARED_LIBRARIES := SDL2 SDL2_image SDL2_mixer SDL2_ttf
 

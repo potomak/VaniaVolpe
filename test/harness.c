@@ -209,6 +209,57 @@ void harness_mouse_up(double fx, double fy) {
   mouse_button(SDL_MOUSEBUTTONUP, fx, fy);
 }
 
+// Touch, as SDL reports it: coordinates normalized to the window (not the
+// logical viewport), and a finger id so multi-touch can be told apart. The
+// engine converts these itself (game.c normalize_touch) — pushing real finger
+// events is the only way to exercise that path without a device.
+static void finger(Uint32 type, SDL_FingerID id, double fx, double fy) {
+  SDL_Event e;
+  SDL_zero(e);
+  e.type = type;
+  e.tfinger.touchId = 1;
+  e.tfinger.fingerId = id;
+  e.tfinger.x = (float)fx;
+  e.tfinger.y = (float)fy;
+  SDL_PushEvent(&e);
+}
+
+void harness_finger_down(SDL_FingerID id, double fx, double fy) {
+  finger(SDL_FINGERDOWN, id, fx, fy);
+}
+
+void harness_finger_up(SDL_FingerID id, double fx, double fy) {
+  finger(SDL_FINGERUP, id, fx, fy);
+}
+
+void harness_tap(double fx, double fy) {
+  harness_finger_down(1, fx, fy);
+  harness_finger_up(1, fx, fy);
+}
+
+// A mouse event SDL synthesized from a touch, which the engine must drop:
+// otherwise every tap on a touch device arrives twice.
+void harness_synthesized_click(double fx, double fy) {
+  SDL_Event e;
+  SDL_zero(e);
+  e.type = SDL_MOUSEBUTTONUP;
+  e.button.button = SDL_BUTTON_LEFT;
+  e.button.which = SDL_TOUCH_MOUSEID;
+  e.button.x = to_px_x(fx);
+  e.button.y = to_px_y(fy);
+  SDL_PushEvent(&e);
+}
+
+// A key press, with `repeat` set the way SDL sets it while a key is held.
+void harness_key_down(SDL_Keycode key, bool repeat) {
+  SDL_Event e;
+  SDL_zero(e);
+  e.type = SDL_KEYDOWN;
+  e.key.keysym.sym = key;
+  e.key.repeat = repeat ? 1 : 0;
+  SDL_PushEvent(&e);
+}
+
 void harness_click(double fx, double fy) {
   harness_mouse_move(fx, fy);
   harness_mouse_down(fx, fy);
@@ -260,6 +311,15 @@ bool harness_capture_begin(void) {
   SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
   SDL_LogSetOutputFunction(capture_log, NULL);
   return true;
+}
+
+void harness_log_reset(void) {
+  log_len = 0;
+  log_buf[0] = '\0';
+}
+
+bool harness_log_contains(const char *needle) {
+  return strstr(log_buf, needle) != NULL;
 }
 
 int harness_check(bool ok, const char *what) {

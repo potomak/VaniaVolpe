@@ -11,7 +11,10 @@ android {
         versionName '0.1'
         externalNativeBuild {
             ndkBuild {
-                arguments 'APP_PLATFORM=android-21'
+                // -PprodBuild compiles out the ways into the debug layer
+                // (see the Makefile's PROD flag).
+                arguments 'APP_PLATFORM=android-21',
+                    'PROD=' + (project.hasProperty('prodBuild') ? '1' : '0')
                 // arm64 only: every consumer phone since ~2017. Add
                 // 'armeabi-v7a', 'x86_64' here if older devices or emulators
                 // are needed (roughly doubles the native build per ABI).

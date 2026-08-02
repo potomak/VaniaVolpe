@@ -84,7 +84,7 @@
   {
    "action": "click",
    "x": 0.906,
-   "y": 0.175,
+   "y": 0.242,
    "wait_ms": 5000,
    "note": "go to the tree (right edge)"
   },
@@ -109,7 +109,7 @@
   {
    "action": "click",
    "x": 0.906,
-   "y": 0.175,
+   "y": 0.242,
    "wait_ms": 5000,
    "note": "go to the vine (right edge)"
   },
@@ -178,7 +178,7 @@
   {
    "action": "click",
    "x": 0.094,
-   "y": 0.175,
+   "y": 0.242,
    "wait_ms": 5000,
    "note": "back to the tree (left edge)"
   },
@@ -207,7 +207,7 @@
   {
    "action": "click",
    "x": 0.094,
-   "y": 0.175,
+   "y": 0.242,
    "wait_ms": 7000,
    "note": "back to the pool: leaving the tree by its left edge, so she arrives at the pool's right one — the side the way back to the tree is on"
   },
