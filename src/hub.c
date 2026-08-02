@@ -257,7 +257,7 @@ static Scene scenes[1];
 
 Adventure hub = {
     .id = "hub",
-    .title = "Vania Volpe Adventures",
+    .title = "Tiny Adventures",
     // The screen's own art is engine-owned and loaded by path; the icons
     // resolve against the adventure that owns each.
     .assets_root = NULL,

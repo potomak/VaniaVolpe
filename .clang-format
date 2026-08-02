@@ -1,4 +1,4 @@
-# C99 style for VaniaVolpe. The codebase already follows LLVM style (two-space
+# C99 style for Tiny Adventures. The codebase already follows LLVM style (two-space
 # indent, 80-column, right-aligned pointers, attached braces); the keys below are
 # made explicit so the intent is self-documenting. Run `make format` to apply.
 BasedOnStyle: LLVM

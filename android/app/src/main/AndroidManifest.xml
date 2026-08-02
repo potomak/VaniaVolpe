@@ -19,7 +19,7 @@
 
         <!-- The game renders 800x600 through SDL_RenderSetLogicalSize, so it
              letterboxes into whatever landscape resolution the device has. -->
-        <activity android:name=".VaniaActivity"
+        <activity android:name="org.libsdl.app.SDLActivity"
             android:label="@string/app_name"
             android:alwaysRetainTaskState="true"
             android:launchMode="singleInstance"

@@ -1,13 +1,16 @@
-# Vania Volpe
+# Tiny Adventures
 
 A small collection of **Italian point-and-click adventure games for toddlers**,
 written in **C99 + SDL2**. One engine, two adventures, three ways to play.
+
+(The repository is still named `VaniaVolpe`, after the first adventure, so old
+links keep working.)
 
 ▶️ **Play in your browser:** https://potomak.github.io/VaniaVolpe/
 
 ## The adventures
 
-Both are launched from a simple in-app hub:
+Both are launched from the selection screen, where each is a cartridge:
 
 - **Vania Volpe – Lo Scivolo** — Vania the fox fixes a slide at the playground:
   find the key, trade acorns with the squirrel, then slide! The spoken script is
@@ -28,8 +31,8 @@ Needs the SDL2 / SDL2_image / SDL2_mixer / SDL2_ttf dev libraries (resolved via
 
 | Command | Output | Notes |
 | --- | --- | --- |
-| `make` | `./vaniavolpe` | desktop SDL window |
-| `make terminal` | `./vaniavolpe_terminal` | libcaca renderer, no display server needed (also needs `caca`) |
+| `make` | `./tinyadventures` | desktop SDL window |
+| `make terminal` | `./tinyadventures_terminal` | libcaca renderer, no display server needed (also needs `caca`) |
 | `make web` | `build/web/index.{html,js,wasm,data}` | WebAssembly; run after `source /path/to/emsdk/emsdk_env.sh` |
 
 `make web` is what CI builds and deploys to GitHub Pages on every push to `main`.

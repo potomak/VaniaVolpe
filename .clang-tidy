@@ -1,4 +1,4 @@
-# Static-analysis checks for VaniaVolpe (C99). Advisory only: the CI lint workflow
+# Static-analysis checks for Tiny Adventures (C99). Advisory only: the CI lint workflow
 # reports findings as PR annotations but never fails the build (WarningsAsErrors is
 # empty), so this can be tuned without blocking anyone.
 #

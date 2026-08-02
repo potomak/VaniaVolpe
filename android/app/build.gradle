@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace 'it.curlybrackets.vaniavolpe'
+    namespace 'it.curlybrackets.tinyadventures'
     compileSdkVersion 34
     defaultConfig {
-        applicationId 'it.curlybrackets.vaniavolpe'
+        applicationId 'it.curlybrackets.tinyadventures'
         minSdkVersion 21
         targetSdkVersion 34
         versionCode 1
@@ -15,10 +15,17 @@ android {
                 // (see the Makefile's PROD flag).
                 arguments 'APP_PLATFORM=android-21',
                     'PROD=' + (project.hasProperty('prodBuild') ? '1' : '0')
-                // arm64 only: every consumer phone since ~2017. Add
-                // 'armeabi-v7a', 'x86_64' here if older devices or emulators
-                // are needed (roughly doubles the native build per ABI).
-                abiFilters 'arm64-v8a'
+                // arm64 only: every consumer phone since ~2017. Each extra
+                // ABI is another full native build, so the shipped APK carries
+                // just the one. -PemulatorAbi adds x86_64 for CI, whose runners
+                // are x86_64 and cannot run an arm64 image at a usable speed;
+                // that build is launched in an emulator and thrown away, never
+                // distributed. Add 'armeabi-v7a' here if older devices matter.
+                if (project.hasProperty('emulatorAbi')) {
+                    abiFilters 'arm64-v8a', 'x86_64'
+                } else {
+                    abiFilters 'arm64-v8a'
+                }
             }
         }
     }

@@ -193,7 +193,7 @@ never shipped (the web preload and the asset catalog skip `_`-prefixed dirs).
 
 ## Test harnesses
 
-- **Headless playthrough** — `make test` → `./vaniavolpe_test`: offscreen
+- **Headless playthrough** — `make test` → `./tinyadventures_test`: offscreen
   renderer + dummy audio, drives the scripted playthroughs and the unit
   tests (`test/`), asserting dialogue order and geometry invariants. The CI
   gate.
@@ -203,15 +203,15 @@ never shipped (the web preload and the asset catalog skip `_`-prefixed dirs).
   `test/scripts/*.json` and uploads the shots per adventure. Unlike the native
   harness, which steps virtual time, this one waits in real time — so a script's
   `wait_ms` budget is what the job costs.
-- **Terminal build** — `make terminal` → `./vaniavolpe_terminal`: the whole
+- **Terminal build** — `make terminal` → `./tinyadventures_terminal`: the whole
   game as libcaca ASCII art; handy for quick play-testing over SSH.
 
 ## Android build
 
 `make android` builds the game as a native Android app — the same C sources
 compiled by the NDK into a shared library that SDL's stock `SDLActivity`
-loads (project under `android/`, an instance of SDL2's android-project
-template). Two helper scripts do the setup: `android/fetch_deps.sh` downloads
+loads — the manifest names it directly, since the app has no Java of its own
+(project under `android/`, an instance of SDL2's android-project template). Two helper scripts do the setup: `android/fetch_deps.sh` downloads
 the pinned SDL2 / SDL2_image / SDL2_mixer / SDL2_ttf release sources (each
 ships its own `Android.mk`) and copies SDL's Java glue; `android/sync_assets.sh`
 mirrors the shipped asset trees into the APK preserving their repo-relative
@@ -220,8 +220,17 @@ assets, so `asset_resolve()` works unchanged). Both destinations are
 git-ignored. Locally it needs the Android SDK + NDK and `gradle`; in CI,
 `.github/workflows/android.yml` builds a debug-signed APK on every push to
 `main` (and on PRs touching the game) and uploads it as a workflow artifact —
-download `vaniavolpe-debug-apk` from the run page and install it directly on
+download `tinyadventures-debug-apk` from the run page and install it directly on
 a phone.
+
+A second job **launches** it: `make android EMULATOR=1` adds the x86_64 ABI (the
+runners are x86_64; the shipped APK stays arm64-only), boots an emulator and
+runs `android/emulator_check.sh`, which installs the APK, starts the activity
+and checks the process is still alive. That is a stronger assertion than it
+sounds — the app exits its loop if SDL, the window, the renderer or *any* asset
+fails to load, so surviving means it really came up. Building an APK proved
+nothing about running one, which is how a manifest naming a nonexistent activity
+class went unnoticed.
 
 ## Adding a tool
 

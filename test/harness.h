@@ -1,4 +1,4 @@
-// Reusable headless-test harness for Vania Volpe.
+// Reusable headless-test harness for Tiny Adventures.
 //
 // It runs the game with no display server or audio hardware (offscreen SDL
 // video driver + software renderer + dummy audio — the same trick the terminal

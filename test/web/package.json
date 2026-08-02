@@ -1,8 +1,8 @@
 {
-  "name": "vaniavolpe-web-test",
+  "name": "tinyadventures-web-test",
   "version": "1.0.0",
   "private": true,
-  "description": "Headless-browser playthrough test for the VaniaVolpe web build.",
+  "description": "Headless-browser playthrough test for the Tiny Adventures web build.",
   "scripts": {
     "test": "node run_playtest.js ../scripts/gina.json"
   },
