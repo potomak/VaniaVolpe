@@ -16,6 +16,15 @@ TARGET  = vaniavolpe
 # -MP adds a phony target per header so deleting one doesn't wedge the build.
 DEPFLAGS = -MMD -MP
 
+# Distribution build: `make PROD=1` (and `make web PROD=1`, `make android
+# PROD=1`) compiles out both ways into the debug layer — the D key and the
+# corner-hold gesture — so a build handed to a player has no way in. Everything
+# else, including the debug rendering itself, is unchanged; nothing can reach
+# it. Off by default: development and CI want the overlay.
+ifdef PROD
+CFLAGS += -DPROD
+endif
+
 CACA_CFLAGS = $(shell pkg-config --cflags caca)
 CACA_LIBS   = $(shell pkg-config --libs   caca)
 TARGET_TERMINAL = vaniavolpe_terminal
@@ -192,6 +201,9 @@ EM_PORTS   = -sUSE_SDL=2 -sUSE_SDL_IMAGE=2 -sSDL2_IMAGE_FORMATS='["png"]' \
              -sUSE_SDL_MIXER=2 -sUSE_SDL_TTF=2
 EM_CFLAGS  = -std=c99 -Wall $(EM_PORTS) -I./src/emscripten/compat \
              -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR) -Ibuild/gen -Igen
+ifdef PROD
+EM_CFLAGS += -DPROD
+endif
 # Preload each adventure's shared (common) layer plus every locale. Per-locale
 # web bundles (download only the chosen language) are a future optimisation.
 EM_PRELOAD = --preload-file $(VFTS_DIR)/assets/common \
@@ -263,7 +275,7 @@ $(WEB_TARGET): $(SRCS) $(WEB_HEADERS) $(EM_SHELL) $(WEB_ASSETS) $(ASSETS_HEADERS
 android: $(ASSETS_HEADERS)
 	android/fetch_deps.sh
 	android/sync_assets.sh
-	gradle -p android assembleDebug
+	gradle -p android assembleDebug $(if $(PROD),-PprodBuild,)
 
 # ── formatting (clang-format, LLVM style; see .clang-format) ──────────────────
 

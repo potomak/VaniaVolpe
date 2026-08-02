@@ -36,6 +36,12 @@ All source is in `src/`. Build via `make`:
   artifact on every push to `main`. See `TOOLS.md` → *Android build*.
 - `make clean` — removes objects, dependency files, binaries, and `build/`.
 
+`PROD=1` on any of these (`make PROD=1`, `make web PROD=1`, `make android
+PROD=1`) builds for distribution: it compiles out both ways into the debug
+layer — the **D** key and the corner-hold gesture — so a build handed to a
+player cannot reach it. Nothing else changes. Development and CI build without
+it, and `make test PROD=1` asserts the overlay stays unreachable.
+
 Incremental builds track header dependencies (`-MMD -MP`, `.d` files beside the
 objects), so editing a header recompiles everything that includes it — no
 `make clean` needed after a struct or enum change.

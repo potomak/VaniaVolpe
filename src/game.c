@@ -51,6 +51,67 @@ static ImageData hub_button_image;
 // events can be mapped into logical coordinates (see game_process_input).
 static SDL_Renderer *game_renderer = NULL;
 
+#ifndef PROD
+// Reaching the debug layer on a device with no keyboard: press and hold the
+// top-left corner — where the debug marker itself appears — for two seconds.
+// One finger, so it costs nothing to the "first finger owns the interaction"
+// rule and works with a mouse too. Compiled out of a PROD build along with the
+// D key, so a distributed build has no way in at all.
+#define DEBUG_HOLD_MS 2000
+#define DEBUG_HOLD_CORNER 64
+static const SDL_Rect DEBUG_CORNER = {0, 0, DEBUG_HOLD_CORNER,
+                                      DEBUG_HOLD_CORNER};
+// 0 = not holding. Set on a press inside the corner, cleared by release or by
+// leaving it, so a hold that wanders is not a hold.
+static int debug_hold_started;
+static bool debug_hold_fired;
+
+// Watch a press-hold-release for the corner gesture. Returns true when the
+// event should be swallowed: only the release that completes a hold, so an
+// ordinary tap in that corner still reaches the scene.
+static bool debug_hold_input(const SDL_Event *event) {
+  SDL_Point point;
+  switch (event->type) {
+  case SDL_MOUSEBUTTONDOWN:
+    point = (SDL_Point){event->button.x, event->button.y};
+    if (SDL_PointInRect(&point, &DEBUG_CORNER)) {
+      debug_hold_started = clock_now_ms();
+      debug_hold_fired = false;
+    }
+    return false;
+  case SDL_MOUSEMOTION:
+    point = (SDL_Point){event->motion.x, event->motion.y};
+    if (!SDL_PointInRect(&point, &DEBUG_CORNER)) {
+      debug_hold_started = 0;
+    }
+    return false;
+  case SDL_MOUSEBUTTONUP: {
+    bool completed = debug_hold_fired;
+    debug_hold_started = 0;
+    debug_hold_fired = false;
+    // The tap that toggled the overlay must not also walk the actor there.
+    return completed;
+  }
+  default:
+    return false;
+  }
+}
+
+// Fire the gesture once the hold is long enough. Driven from game_update
+// rather than the event loop: holding still produces no events.
+static void debug_hold_update(void) {
+  if (debug_hold_started == 0 || debug_hold_fired) {
+    return;
+  }
+  if (clock_now_ms() - debug_hold_started >= DEBUG_HOLD_MS) {
+    debug_hold_fired = true;
+    game.is_debugging = !game.is_debugging;
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Debug overlay %s (corner hold)",
+                game.is_debugging ? "on" : "off");
+  }
+}
+#endif /* PROD */
+
 void register_adventures(const Adventure *hub, const Adventure **registered,
                          int count) {
   adventures = registered;
@@ -246,6 +307,14 @@ void game_process_input(SDL_Event *event) {
     return;
   }
 
+#ifndef PROD
+  // Two ways into the debug layer, neither of which ships in a PROD build: the
+  // D key, and a long press in the top-left corner for devices with no
+  // keyboard.
+  if (debug_hold_input(event)) {
+    return;
+  }
+
   switch (event->type) {
   case SDL_KEYDOWN:
     // Auto-repeat would toggle once per repeat, strobing the overlay for as
@@ -261,6 +330,7 @@ void game_process_input(SDL_Event *event) {
     }
     break;
   }
+#endif /* PROD */
 
   // The back-to-hub button takes priority over scene input, except in the
   // hub. It lives in screen space, so it is tested before any camera
@@ -338,6 +408,10 @@ void game_update(float delta_time) {
 
   // The modal is engine UI, outside any scene, so it ticks its own animations.
   confirm_update(clock_now_ms());
+
+#ifndef PROD
+  debug_hold_update();
+#endif
 }
 
 void game_render(SDL_Renderer *renderer) {

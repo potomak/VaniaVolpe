@@ -8,8 +8,13 @@ page](https://potomak.github.io/VaniaVolpe/tools.html)).
 
 ## In-game (debug layer)
 
-Toggle the debug layer with **D** in any build (desktop, terminal, web). A
-red square in the top-left corner means it is active.
+Toggle the debug layer with **D**, or — on a device with no keyboard — by
+pressing and **holding the top-left corner for two seconds**, the same corner
+the marker appears in. A red square there means it is active. An ordinary tap
+in that corner still reaches the scene; only a completed hold is swallowed.
+
+Both ways are compiled out by `PROD=1` (see `CLAUDE.md` → *Build & run*), so a
+build handed to a player has no way in.
 
 - **Hotspot & geometry overlay** — always on while debugging: cyan outlines
   for hotspots, magenta dots for POIs, translucent red shading over

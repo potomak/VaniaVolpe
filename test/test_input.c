@@ -104,6 +104,48 @@ int test_input(void) {
   leave_by_touch();
   harness_log_reset();
 
+  bool before = game.is_debugging;
+#ifdef PROD
+  // A distributed build has no way into the debug layer: neither the gesture
+  // nor the key is compiled in, so neither can reach it.
+  harness_mouse_down(0.02, 0.02);
+  harness_pump_for(3000);
+  harness_mouse_up(0.02, 0.02);
+  harness_key_down(SDLK_d, false);
+  harness_pump_for(50);
+  failures += harness_check(game.is_debugging == before,
+                            "PROD build: nothing opens the debug overlay");
+#else
+  // The way in on a device with no keyboard: press and hold the top-left
+  // corner. A press alone, held briefly, must not be enough.
+  harness_mouse_down(0.02, 0.02);
+  harness_pump_for(500);
+  failures += harness_check(game.is_debugging == before,
+                            "a short press in the corner does not toggle");
+  harness_pump_for(2000);
+  failures += harness_check(game.is_debugging != before,
+                            "holding the corner toggles the debug overlay");
+  harness_mouse_up(0.02, 0.02);
+  harness_pump_for(50);
+
+  // Off again, so the rest of the run is unaffected.
+  harness_mouse_down(0.02, 0.02);
+  harness_pump_for(2500);
+  harness_mouse_up(0.02, 0.02);
+  harness_pump_for(50);
+  failures += harness_check(game.is_debugging == before,
+                            "holding it again toggles back");
+
+  // Wandering out of the corner is not a hold, however long the finger is down.
+  harness_mouse_down(0.02, 0.02);
+  harness_pump_for(300);
+  harness_mouse_move(0.5, 0.5);
+  harness_pump_for(2500);
+  harness_mouse_up(0.5, 0.5);
+  harness_pump_for(50);
+  failures += harness_check(game.is_debugging == before,
+                            "a press that leaves the corner is not a hold");
+
   // Holding D must toggle the debug overlay once, not once per auto-repeat.
   bool was_debugging = game.is_debugging;
   harness_key_down(SDLK_d, false);
@@ -118,6 +160,7 @@ int test_input(void) {
   // Leave it as it was found.
   harness_key_down(SDLK_d, false);
   harness_pump_for(50);
+#endif /* PROD */
 
   return failures;
 }
