@@ -81,10 +81,10 @@ static const ScaleRamp SCALE_RAMP = {
 // The tiles, and the tappable areas around them — deliberately larger than the
 // art, since a small finger aiming at a distant thing should not have to be
 // precise.
-static const SDL_Point TREE_TILE_AT = {30, 60};
-static const SDL_Point POOL_TILE_AT = {680, 60};
-static const SDL_Rect TREE_TILE_HOTSPOT = {10, 40, 130, 130};
-static const SDL_Rect POOL_TILE_HOTSPOT = {660, 40, 130, 130};
+static const SDL_Point TREE_TILE_AT = {30, 100};
+static const SDL_Point POOL_TILE_AT = {680, 100};
+static const SDL_Rect TREE_TILE_HOTSPOT = {10, 80, 130, 130};
+static const SDL_Rect POOL_TILE_HOTSPOT = {660, 80, 130, 130};
 
 static const SDL_Point GRAPES_POI = {400, 470};
 // The far end of each path — one point per door, because it is both where she

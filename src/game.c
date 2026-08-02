@@ -15,6 +15,8 @@
 #include "constants.h"
 // Features for debugging the game
 #include "debug.h"
+// Engine-owned UI art (the back-to-hub button)
+#include "image.h"
 // Dialogue text overlay (SPEECH.md Part 3)
 #include "subtitle.h"
 
@@ -29,8 +31,25 @@ static const Adventure **adventures = NULL;
 static int adventures_count = 0;
 static const Adventure *hub_adventure = NULL;
 
-// Engine-level "back to hub" button, drawn over any non-hub adventure.
-static const SDL_Rect HUB_BUTTON = {WINDOW_WIDTH - 48, 8, 40, 40};
+// Engine-level "back to hub" button, drawn over any non-hub adventure. 64 px
+// square: Apple's minimum tap target is 44 pt, and this is aimed at a
+// two-year-old's finger, not an adult's.
+#define HUB_BUTTON_SIZE 64
+#define HUB_BUTTON_MARGIN 12
+static const SDL_Rect HUB_BUTTON = {
+    WINDOW_WIDTH - HUB_BUTTON_SIZE - HUB_BUTTON_MARGIN, HUB_BUTTON_MARGIN,
+    HUB_BUTTON_SIZE, HUB_BUTTON_SIZE};
+
+// Engine art, loaded by path like the confirmation's (see ASSETS.md). Alone
+// among the tappable things it does *not* boil: it sits over a scene whose own
+// hotspots are boiling to say "tap me", and a wobble in the corner would pull
+// the eye away from them. Leaving is not what we want to advertise.
+#define HUB_BUTTON_PATH "assets/ui/hub_button.png"
+static ImageData hub_button_image;
+
+// The renderer the game draws through, kept from the media pass so touch
+// events can be mapped into logical coordinates (see game_process_input).
+static SDL_Renderer *game_renderer = NULL;
 
 void register_adventures(const Adventure *hub, const Adventure **registered,
                          int count) {
@@ -132,6 +151,10 @@ void game_init(void) {
 }
 
 bool game_load_media(SDL_Renderer *renderer) {
+  game_renderer = renderer;
+  if (!load_image_from_path(renderer, &hub_button_image, HUB_BUTTON_PATH)) {
+    return false;
+  }
   for (int a = 0; a < adventures_count; a++) {
     if (!adventure_load_media(adventures[a], renderer)) {
       return false;
@@ -140,8 +163,84 @@ bool game_load_media(SDL_Renderer *renderer) {
   return true;
 }
 
+// The finger the game is currently following. SDL reports every touch, and a
+// toddler puts down more than one; the first one down owns the interaction
+// until it lifts, so a second palm can't drag what the first is holding.
+static SDL_FingerID active_finger;
+static bool has_active_finger;
+
+// Rewrite a touch event as the mouse event the rest of the engine speaks, and
+// drop the mouse events SDL synthesizes from the same touch — otherwise one tap
+// arrives twice. Returns false when the event should be ignored entirely.
+//
+// Finger coordinates are normalized to the *window*, so they go through
+// SDL_RenderWindowToLogical: with a logical size set, the window may be
+// letterboxed, and scaling by WINDOW_WIDTH directly would land the tap in the
+// wrong place on any aspect ratio but 4:3.
+static bool normalize_touch(SDL_Event *event) {
+  switch (event->type) {
+  case SDL_MOUSEMOTION:
+    return event->motion.which != SDL_TOUCH_MOUSEID;
+  case SDL_MOUSEBUTTONDOWN:
+  case SDL_MOUSEBUTTONUP:
+    return event->button.which != SDL_TOUCH_MOUSEID;
+  case SDL_FINGERDOWN:
+  case SDL_FINGERUP:
+  case SDL_FINGERMOTION:
+    break;
+  default:
+    return true;
+  }
+
+  if (event->type == SDL_FINGERDOWN) {
+    if (has_active_finger) {
+      return false;
+    }
+    active_finger = event->tfinger.fingerId;
+    has_active_finger = true;
+  } else if (!has_active_finger || event->tfinger.fingerId != active_finger) {
+    return false;
+  }
+
+  float x = 0;
+  float y = 0;
+  if (game_renderer != NULL) {
+    int w = WINDOW_WIDTH;
+    int h = WINDOW_HEIGHT;
+    SDL_GetRendererOutputSize(game_renderer, &w, &h);
+    SDL_RenderWindowToLogical(game_renderer, (int)(event->tfinger.x * w),
+                              (int)(event->tfinger.y * h), &x, &y);
+  }
+
+  Uint32 type = event->type;
+  if (type == SDL_FINGERUP) {
+    has_active_finger = false;
+  }
+
+  SDL_zerop(event);
+  if (type == SDL_FINGERMOTION) {
+    event->type = SDL_MOUSEMOTION;
+    event->motion.x = (int)x;
+    event->motion.y = (int)y;
+    event->motion.state = SDL_BUTTON_LMASK;
+  } else {
+    event->type =
+        type == SDL_FINGERDOWN ? SDL_MOUSEBUTTONDOWN : SDL_MOUSEBUTTONUP;
+    event->button.button = SDL_BUTTON_LEFT;
+    event->button.clicks = 1;
+    event->button.x = (int)x;
+    event->button.y = (int)y;
+  }
+  return true;
+}
+
 // Process input for scenes
 void game_process_input(SDL_Event *event) {
+  // Touch first: everything below this line deals in mouse events.
+  if (!normalize_touch(event)) {
+    return;
+  }
+
   // A question is up: it owns the pointer until it is answered.
   if (confirm_process_input(event)) {
     return;
@@ -149,6 +248,11 @@ void game_process_input(SDL_Event *event) {
 
   switch (event->type) {
   case SDL_KEYDOWN:
+    // Auto-repeat would toggle once per repeat, strobing the overlay for as
+    // long as the key is held.
+    if (event->key.repeat) {
+      break;
+    }
     switch (event->key.keysym.sym) {
     // Toggle debugging features
     case SDLK_d:
@@ -281,10 +385,8 @@ void game_render(SDL_Renderer *renderer) {
 
   // Draw the back-to-hub button over any non-hub adventure (screen space).
   if (hub_adventure != NULL && game.current_adventure != hub_adventure) {
-    SDL_SetRenderDrawColor(renderer, 0x33, 0x33, 0x33, 0xFF);
-    SDL_RenderFillRect(renderer, &HUB_BUTTON);
-    SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-    SDL_RenderDrawRect(renderer, &HUB_BUTTON);
+    render_image(renderer, &hub_button_image,
+                 (SDL_Point){HUB_BUTTON.x, HUB_BUTTON.y});
   }
 
   // The dialogue text overlay is screen-space UI, over everything.
@@ -295,6 +397,7 @@ void game_render(SDL_Renderer *renderer) {
 }
 
 void game_deinit(void) {
+  free_image_texture(&hub_button_image);
   for (int a = 0; a < adventures_count; a++) {
     adventure_deinit(adventures[a]);
   }

@@ -61,6 +61,15 @@
       "group": "UI — Leave confirmation",
       "type": "image",
       "dir": "ui",
+      "name": "hub_button",
+      "size": "64x64",
+      "description": "The corner button that leaves an adventure, drawn over every scene. 64px square, above Apple's 44pt minimum, because a two-year-old aims it. The one tappable thing in the game that does NOT boil: it sits over a scene whose own hotspots are boiling to say 'tap me', and a wobble in the corner would pull the eye off them — leaving is not what we want to advertise. Quiet chrome, so it should read as an overlay rather than as part of the scene. Placeholder via tools/gen_confirm_placeholders.py.",
+      "task": true
+    },
+    {
+      "group": "UI — Leave confirmation",
+      "type": "image",
+      "dir": "ui",
       "name": "confirm_panel",
       "size": "420x220",
       "description": "The panel the leave-the-adventure question sits on, drawn behind the two answers. One picture, so drawn art can change the card's shape, colour and framing — the engine only knows where it goes. Not tappable, so it does not boil. Placeholder via tools/gen_confirm_placeholders.py.",

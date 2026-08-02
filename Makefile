@@ -75,6 +75,7 @@ TEST_SRCS = test/main_test.c test/harness.c test/script.c test/play_gina.c \
             test/play_vania.c \
             test/test_walk.c test/test_lipsync.c test/test_scene.c \
             test/test_camera.c test/test_tween.c test/test_confirm.c \
+            test/test_input.c \
             $(GAME_SRCS)
 TEST_OBJS = $(patsubst %.c,%.test.o,$(TEST_SRCS))
 
