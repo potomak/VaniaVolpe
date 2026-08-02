@@ -53,7 +53,7 @@ bool harness_init(void) {
   }
 
   window =
-      SDL_CreateWindow("Vania Volpe (test)", SDL_WINDOWPOS_CENTERED,
+      SDL_CreateWindow("Tiny Adventures (test)", SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
   if (!window) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow failed: %s",

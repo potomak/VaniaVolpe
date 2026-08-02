@@ -47,7 +47,7 @@ bool terminal_init(SDL_Renderer *renderer) {
     return false;
   }
 
-  caca_set_display_title(dp, "Vania Volpe - Lo Scivolo");
+  caca_set_display_title(dp, "Tiny Adventures");
   caca_set_mouse(dp, 1);
   caca_set_cursor(dp, 0);
 

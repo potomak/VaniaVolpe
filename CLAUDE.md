@@ -3,8 +3,8 @@
 Guidance for AI agents (and humans) working in this repo.
 
 ## What this is
-**Vania Volpe – Lo Scivolo**: a small Italian point-and-click adventure game in
-**C99 + SDL2** (SDL2, SDL2_image for PNG, SDL2_mixer for WAV, SDL2_ttf for the
+**Tiny Adventures**: a small collection of Italian point-and-click adventure
+games for toddlers, on one engine, in **C99 + SDL2** (SDL2, SDL2_image for PNG, SDL2_mixer for WAV, SDL2_ttf for the
 subtitle text). The same code
 builds three ways: a desktop SDL window, a terminal (libcaca) renderer, and a
 **WebAssembly** build (Emscripten) deployed to GitHub Pages.
@@ -14,11 +14,11 @@ Live web build: https://potomak.github.io/VaniaVolpe/
 ## Build & run
 All source is in `src/`. Build via `make`:
 
-- `make` — desktop SDL window → `./vaniavolpe`. Needs the SDL2 / SDL2_image /
+- `make` — desktop SDL window → `./tinyadventures`. Needs the SDL2 / SDL2_image /
   SDL2_mixer / SDL2_ttf dev libraries (resolved via `pkg-config`).
-- `make terminal` — libcaca renderer → `./vaniavolpe_terminal` (no display
+- `make terminal` — libcaca renderer → `./tinyadventures_terminal` (no display
   server needed). Also needs `caca`.
-- `make test` — headless scripted playthrough → `./vaniavolpe_test` (offscreen
+- `make test` — headless scripted playthrough → `./tinyadventures_test` (offscreen
   renderer + dummy audio, no display server). Asserts the adventure's dialogue
   and exits non-zero on a regression. See ARCHITECTURE.md → *Terminal & Headless
   Backends*.

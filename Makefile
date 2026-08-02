@@ -7,7 +7,7 @@ CFLAGS  = -std=c99 -Wall $(shell pkg-config --cflags sdl2 SDL2_image SDL2_mixer 
           -I./include -I./src -I$(VFTS_DIR) -I$(GINA_DIR) -I$(DEMO_DIR) \
           -Ibuild/gen -Igen
 LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image SDL2_mixer SDL2_ttf) -lm
-TARGET  = vaniavolpe
+TARGET  = tinyadventures
 
 # Header dependency tracking. Without it, editing a header leaves every object
 # that includes it untouched, and the link happily joins translation units that
@@ -27,7 +27,7 @@ endif
 
 CACA_CFLAGS = $(shell pkg-config --cflags caca)
 CACA_LIBS   = $(shell pkg-config --libs   caca)
-TARGET_TERMINAL = vaniavolpe_terminal
+TARGET_TERMINAL = tinyadventures_terminal
 
 # Shared engine / common sources live under src/; adventure-specific sources
 # (scenes, the fox actor, the adventure module) live under $(VFTS_DIR).
@@ -76,7 +76,7 @@ OBJS = $(SRCS:.c=.o)
 TERMINAL_SRCS = src/main_terminal.c src/terminal.c $(GAME_SRCS)
 TERMINAL_OBJS = $(patsubst %.c,%.terminal.o,$(TERMINAL_SRCS))
 
-TARGET_TEST = vaniavolpe_test
+TARGET_TEST = tinyadventures_test
 # Headless smoke test: the game plus a scripted-playthrough harness (test/). No
 # libcaca — it renders offscreen and reads pixels back instead of drawing to a
 # terminal. The .test.o suffix keeps its objects separate from the other builds.

@@ -41,7 +41,7 @@ bool init_window(void) {
                 "Linear texture filtering not enabled");
   }
 
-  window = SDL_CreateWindow("Vania Volpe - Lo Scivolo", SDL_WINDOWPOS_CENTERED,
+  window = SDL_CreateWindow("Tiny Adventures", SDL_WINDOWPOS_CENTERED,
                             SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT,
                             SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
   if (!window) {

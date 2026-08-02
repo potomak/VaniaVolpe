@@ -1,8 +1,8 @@
-# VaniaVolpe – Architecture Document
+# Tiny Adventures – Architecture Document
 
 ## Overview
 
-**VaniaVolpe** is the engine behind a small collection of Italian point-and-click
+**Tiny Adventures** is the engine behind a small collection of Italian point-and-click
 adventures for a pre-reader. Each adventure is a short chain of scenes with one
 puzzle apiece, solved by tapping things; the audience cannot read, so everything
 is said out loud and shown in pictures.
@@ -455,11 +455,11 @@ Both the terminal renderer and the automated test reuse one trick: before `SDL_I
 
 - **Output:** each frame, `SDL_RenderReadPixels` copies the 800×600 frame into an RGBA buffer that `caca_dither_bitmap` dithers onto the libcaca canvas. `caca_set_display_time` caps the terminal refresh at ~10 fps while game logic runs at full speed.
 - **Input:** libcaca mouse/keyboard events are translated into `SDL_MOUSEBUTTONDOWN` / `SDL_MOUSEMOTION` / `SDL_KEYDOWN` events and pushed onto SDL's queue, with character-cell coordinates scaled back into 800×600 game space — so `game_process_input` is unchanged.
-- **Running:** `./vaniavolpe_terminal`; `ESC` / `q` (or Ctrl+C / Ctrl+D) quits, `d` toggles the debug overlay. Inside tmux, add `set -g mouse on` to `~/.tmux.conf`, or tmux eats the mouse events before the game sees them.
+- **Running:** `./tinyadventures_terminal`; `ESC` / `q` (or Ctrl+C / Ctrl+D) quits, `d` toggles the debug overlay. Inside tmux, add `set -g mouse on` to `~/.tmux.conf`, or tmux eats the mouse events before the game sees them.
 
 ### Headless test target (`make test`)
 
-`test/` builds `vaniavolpe_test`: the same offscreen game, no libcaca. It runs a **scripted** playthrough through a reusable harness (`test/harness.{c,h}`) and asserts the adventure ran correctly:
+`test/` builds `tinyadventures_test`: the same offscreen game, no libcaca. It runs a **scripted** playthrough through a reusable harness (`test/harness.{c,h}`) and asserts the adventure ran correctly:
 
 - **Assertions on behaviour, not pixels.** Dialogue and messages go through `SDL_Log`; the harness installs an `SDL_LogSetOutputFunction` sink, captures that stream, and checks the expected lines appear in order. A `SDL_RenderReadPixels` "frame isn't a single flat colour" check guards against a blank-screen / missing-texture regression. The binary exits non-zero on any miss.
 - **Shared script.** The playthrough — click coordinates, waits, the sunscreen "brush" gesture, and the expected dialogue — lives in `test/scripts/<name>.json`, the single source of truth. `tools/gen_playtest.py` turns it into a generated C header (`build/gen/<name>_script.h`) that the matching `test/play_<name>.c` drives via `script_run` (`test/script.{c,h}`). Both shipped adventures have one; the browser runner takes any of them as its argument, and CI runs every `test/scripts/*.json`.
