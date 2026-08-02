@@ -68,7 +68,7 @@ Each entry in `assets`:
 | `text` | speech: the line to record |
 | `localized` | the file lives under a locale dir, not `common/` |
 | `task` | `true` = **still to author**: gets a drop-box, appears on the page and in the estimate (the game meanwhile shows a placeholder). Default `false`: a finished/runtime-managed asset |
-| `runtime` | `false` = **authoring-only**: an artist makes it, but the game shows a derived asset instead (e.g. the pool stills, which render as boils) |
+| `runtime` | `false` = **authoring-only**: an artist makes it, but the game loads something derived from it rather than the file itself, so it stays out of the generated tables. No entry uses this today |
 | `description` | one sentence of context, shown to the artist |
 
 By default an entry is a finished runtime asset. `task: true` marks the ones

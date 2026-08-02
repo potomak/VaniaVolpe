@@ -15,41 +15,25 @@
     },
     {
       "group": "UI — Leave confirmation",
-      "type": "image",
-      "dir": "ui",
-      "name": "confirm_yes",
-      "size": "120x120",
-      "description": "The 'yes, leave the adventure' button on the confirmation the back-to-hub button raises. A whole button — background and glyph in one image — and wordless, since the audience cannot read. Belongs to the engine, so every adventure shows the same one. Placeholder via tools/gen_confirm_placeholders.py.",
-      "task": true,
-      "runtime": false
-    },
-    {
-      "group": "UI — Leave confirmation",
-      "type": "image",
-      "dir": "ui",
-      "name": "confirm_no",
-      "size": "120x120",
-      "description": "The 'no, stay here' button on the same confirmation, and the one a stray tap should land on. Placeholder via tools/gen_confirm_placeholders.py.",
-      "task": true,
-      "runtime": false
-    },
-    {
-      "group": "Runtime only — Leave confirmation",
       "type": "animation",
       "dir": "ui",
       "name": "confirm_yes_boil",
       "frames": 3,
       "style": "loop",
-      "description": "Placeholder boil for the yes button, derived from ui/confirm_yes.png. The boil is what says the button is tappable."
+      "size": "120x120",
+      "description": "The 'yes, leave the adventure' button on the confirmation the back-to-hub button raises. A whole button — background and glyph in one image — and wordless, since the audience cannot read. Drawn once and traced twice more: the three frames cycling are the boil that says it is tappable. Belongs to the engine, so every adventure shows the same one. Placeholder via tools/gen_confirm_placeholders.py.",
+      "task": true
     },
     {
-      "group": "Runtime only — Leave confirmation",
+      "group": "UI — Leave confirmation",
       "type": "animation",
       "dir": "ui",
       "name": "confirm_no_boil",
       "frames": 3,
       "style": "loop",
-      "description": "Placeholder boil for the no button, derived from ui/confirm_no.png. The boil is what says the button is tappable."
+      "size": "120x120",
+      "description": "The 'no, stay here' button on the same confirmation, and the one a stray tap should land on. Drawn once and traced twice more, like the yes button. Placeholder via tools/gen_confirm_placeholders.py.",
+      "task": true
     }
   ]
 }

@@ -8,11 +8,11 @@ own picture, each button is background and glyph in one image — so the drawn
 art can change shape, colour and framing without the engine knowing more than
 where each goes.
 
-The two buttons are tappable, so they ship with a boil (LIVELINESS.md Part 3),
-which is what says so. The panel behind them is not, and stays still:
+The two buttons are tappable, so each *is* a boil (LIVELINESS.md Part 3) —
+written straight out as a 3-frame sheet, since the wobble is what says so. The
+panel behind them is not tappable, and stays a still:
 
   tools/gen_confirm_placeholders.py --out assets/ui
-  tools/gen_boil_sheet.py assets/ui/confirm_yes.png assets/ui/confirm_no.png
 
 These belong to the engine rather than to any adventure, so they live in the
 repo-level assets/ tree beside the subtitle font, and are listed in
@@ -23,6 +23,8 @@ Requires Pillow.
 
 import argparse
 import os
+
+from gen_boil_sheet import write_boil_sheet
 
 from PIL import Image, ImageDraw
 
@@ -83,12 +85,11 @@ def main():
                         help="the engine UI asset dir (assets/ui)")
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
-    for name, make, size in (("confirm_panel", panel, PANEL_SIZE),
-                             ("confirm_yes", yes, SIZE),
-                             ("confirm_no", no, SIZE)):
-        path = os.path.join(args.out, name + ".png")
-        make().save(path)
-        print(f"  {path} ({size[0]}x{size[1]})")
+    path = os.path.join(args.out, "confirm_panel.png")
+    panel().save(path)
+    print(f"  {path} ({PANEL_SIZE[0]}x{PANEL_SIZE[1]})")
+    for name, make in (("confirm_yes", yes), ("confirm_no", no)):
+        write_boil_sheet(make(), os.path.join(args.out, name + "_boil"))
 
 
 if __name__ == "__main__":

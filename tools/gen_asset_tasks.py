@@ -203,6 +203,7 @@ def load_manifests(root, paths):
 # git tracks it and the Upload here link resolves) for exactly the outstanding
 # tasks — and none for the done ones.
 def scaffold_inbox(root, manifest):
+    wanted = set()
     for task in authoring_tasks(manifest):
         rel = inbox_rel(manifest, task)
         d = os.path.join(root, rel)
@@ -212,8 +213,27 @@ def scaffold_inbox(root, manifest):
             if os.path.isdir(d) and not uploaded_files(root, rel):
                 shutil.rmtree(d)
             continue
+        wanted.add(task_id(task))
         os.makedirs(d, exist_ok=True)
         open(os.path.join(d, ".gitkeep"), "a").close()
+
+    # Drop-boxes for tasks the manifest no longer has — a renamed or retired
+    # entry. Their Upload here links still resolve, so anything dropped in one
+    # would sit there with nothing to consolidate it. Keep any that already
+    # holds an upload: that is someone's work, and losing it silently is worse
+    # than a stale folder.
+    inbox = os.path.join(root, manifest["assets_root"], "_inbox")
+    if not os.path.isdir(inbox):
+        return
+    for name in sorted(os.listdir(inbox)):
+        d = os.path.join(inbox, name)
+        if name in wanted or name in SCAFFOLD_FILES or not os.path.isdir(d):
+            continue
+        if uploaded_files(root, os.path.relpath(d, root)):
+            print(f"  kept {name}: no such task, but it holds an upload")
+            continue
+        shutil.rmtree(d)
+        print(f"  pruned {name}: no such task")
 
 
 def main():

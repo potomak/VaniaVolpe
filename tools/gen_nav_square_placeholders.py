@@ -7,18 +7,20 @@ in the world, tapped to walk there. One tile per **destination**, so its colour
 means the same thing in every scene it appears in: blue is the pool, brown the
 tree, green the vine.
 
-These are flat squares only until the real art is drawn. They ship with a boil
-(see LIVELINESS.md Part 3), which is what says "tappable" — so the real
-paintings replace them file-for-file and keep the same sheet shape:
+These are flat squares only until the real art is drawn. A tile *is* its boil
+(see LIVELINESS.md Part 3) — the wobble is what says "tappable" — so each is
+written straight out as a 3-frame sheet, which the real traced frames then
+replace file-for-file:
 
   tools/gen_nav_square_placeholders.py --out <assets>/common/nav
-  tools/gen_boil_sheet.py <assets>/common/nav/to_*.png
 
 Requires Pillow.
 """
 
 import argparse
 import os
+
+from gen_boil_sheet import write_boil_sheet
 
 from PIL import Image, ImageDraw
 
@@ -48,9 +50,8 @@ def main():
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
     for name, (fill, edge) in DESTINATIONS.items():
-        path = os.path.join(args.out, name + ".png")
-        tile(*SIZE, fill, edge).save(path)
-        print(f"  {path} ({SIZE[0]}x{SIZE[1]})")
+        write_boil_sheet(tile(*SIZE, fill, edge),
+                         os.path.join(args.out, name + "_boil"))
 
 
 if __name__ == "__main__":

@@ -19,10 +19,12 @@ as a `needs-art` issue (see #95).
 
 Usage:
   tools/gen_boil_sheet.py [--frames 3] [--amp 1.0] [--wavelength 14] \
-      src/adventures/gina_hen_at_the_pool/assets/common/pool/sunscreen.png ...
+      src/adventures/gina_hen_at_the_pool/assets/common/items/goggles.png ...
 
 Each argument is a still object PNG; <name>_boil.png / <name>_boil.anim land
-next to it. The scene plays the sheet at BOIL_MS_PER_FRAME (constants.h).
+next to it. The scene plays the sheet at BOIL_MS_PER_FRAME (constants.h). A
+generator that draws its own placeholder should import `write_boil_sheet`
+instead and go straight to the sheet, leaving no still behind.
 
 Requires Pillow (pip install Pillow).
 """
@@ -51,8 +53,10 @@ def boil_frame(src, phase, amp, wavelength):
     return out
 
 
-def boil_sheet(png_path, frames, amp, wavelength):
-    src = Image.open(png_path).convert("RGBA")
+# Write <base>.png + <base>.anim from one still image. Importable, so a
+# generator that draws its own placeholder can go straight to the sheet
+# instead of leaving a still behind for this tool to pick up.
+def write_boil_sheet(src, base, frames=3, amp=1.0, wavelength=14.0):
     w, h = src.size
 
     # Phases spread evenly around the circle so the cycle returns smoothly.
@@ -67,12 +71,17 @@ def boil_sheet(png_path, frames, amp, wavelength):
         sheet.paste(frame, (0, i * h))
         rects.append((0, i * h, w, h))
 
-    base = os.path.splitext(png_path)[0] + "_boil"
     sheet.save(base + ".png")
     with open(base + ".anim", "w") as f:
         for rect in rects:
             f.write(",".join(str(n) for n in rect) + "\n")
     print(f"{base}.png ({w}x{h * frames}) + {base}.anim ({frames} frames)")
+
+
+def boil_sheet(png_path, frames, amp, wavelength):
+    write_boil_sheet(Image.open(png_path).convert("RGBA"),
+                     os.path.splitext(png_path)[0] + "_boil",
+                     frames, amp, wavelength)
 
 
 def main():
