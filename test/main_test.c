@@ -14,9 +14,9 @@
 #include "play_vania.h"
 #include "test_camera.h"
 #include "test_confirm.h"
+#include "test_input.h"
 #include "test_lipsync.h"
 #include "test_scene.h"
-#include "test_input.h"
 #include "test_tween.h"
 #include "test_walk.h"
 
