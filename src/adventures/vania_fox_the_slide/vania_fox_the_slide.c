@@ -33,6 +33,9 @@ Adventure vania_fox_the_slide = {
     .entry_scene = INTRO,
     .sfx = sfx,
     .sfx_length = VANIA_SFX_COUNT,
+    // Selection screen: the fox's orange, on a cartridge carrying the slide.
+    .hub_icon = {"icon.png", "hub"},
+    .cartridge_color = {0xE2, 0x8A, 0x3C, 0xFF},
 };
 
 void vania_fox_the_slide_register(void) {

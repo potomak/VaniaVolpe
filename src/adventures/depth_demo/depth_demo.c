@@ -18,6 +18,10 @@ Adventure depth_demo = {
     .scenes = scenes,
     .scenes_length = DEPTH_DEMO_SCENES_LENGTH,
     .entry_scene = FIELD,
+    // A developer entry, so its cartridge stays a grey placeholder — no drawn
+    // icon is ever commissioned for it.
+    .hub_icon = {"icon.png", "hub"},
+    .cartridge_color = {0x9A, 0x9A, 0xA4, 0xFF},
 };
 
 void depth_demo_register(void) { scenes[FIELD] = field_scene; }

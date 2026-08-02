@@ -5,6 +5,59 @@
   "assets_root": "assets",
   "assets": [
     {
+      "group": "UI — Selection screen",
+      "type": "image",
+      "dir": "hub",
+      "name": "background",
+      "size": "800x600",
+      "description": "The backdrop the cartridges sit on. Wordless, so one drawing serves every locale. The eventual look is an '80s kid's room (see #104); today it is whatever fills the screen behind a grid of cartridges. Placeholder wash via tools/gen_hub_placeholders.py.",
+      "task": true
+    },
+    {
+      "group": "UI — Selection screen",
+      "type": "animation",
+      "dir": "hub",
+      "name": "cartridge_boil",
+      "frames": 3,
+      "style": "loop",
+      "size": "220x200",
+      "description": "The cartridge shell, one drawing shared by every adventure: a hole 180x120 at (20,22) shows that adventure's icon through it, so the hole must be fully transparent. Drawn light and neutral — the per-adventure colour is applied by multiplying the texture, and a dark body swallows the tint. Drawn once and traced twice more; the three frames cycling are the boil that says it is tappable.",
+      "task": true
+    },
+    {
+      "group": "UI — Selection screen",
+      "type": "animation",
+      "dir": "hub",
+      "name": "gear_boil",
+      "frames": 3,
+      "style": "loop",
+      "size": "56x56",
+      "description": "The settings button in the corner of the selection screen — a whole button, glyph and background in one image, wordless like everything the audience sees. Drawn once and traced twice more for the boil.",
+      "task": true
+    },
+    {
+      "group": "UI — Selection screen",
+      "type": "animation",
+      "dir": "hub",
+      "name": "help_boil",
+      "frames": 3,
+      "style": "loop",
+      "size": "56x56",
+      "description": "The about/help button beside the gear, for a grown-up wanting to know what the app is. Same treatment as the gear.",
+      "task": true
+    },
+    {
+      "group": "UI — Selection screen",
+      "type": "animation",
+      "dir": "hub",
+      "name": "exit_boil",
+      "frames": 3,
+      "style": "loop",
+      "size": "56x56",
+      "description": "The quit button, third in the corner row. The selection screen is the one place the game is left from, so this is the only exit.",
+      "task": true
+    },
+    {
       "group": "UI — Leave confirmation",
       "type": "image",
       "dir": "ui",

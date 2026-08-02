@@ -44,6 +44,9 @@ Adventure gina_hen_at_the_pool = {
     // from scene to scene (see gina_worn.h).
     .images = gina_worn_images,
     .images_length = GINA_ITEMS_IMAGES_COUNT,
+    // Selection screen: pool blue, on a cartridge carrying the hen.
+    .hub_icon = {"icon.png", "hub"},
+    .cartridge_color = {0x4E, 0xA8, 0xD8, 0xFF},
 };
 
 void gina_hen_at_the_pool_register(void) {
