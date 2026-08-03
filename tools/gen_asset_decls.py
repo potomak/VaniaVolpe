@@ -190,6 +190,14 @@ def emit_group(out, prefix, rel_dir, entries):
                        f'{e.get("ms_per_frame", 0)}, '
                        f'{e.get("max_loop_count", 0)}}}')
         out.append(f"#define {tag}_ANIMS_COUNT {len(anims)}")
+        # The dir's specs in index order, comma-separated rather than braced:
+        # a scene's anim_specs[] starts with its own dir and then appends the
+        # sheets it borrows from others, so this has to splice into a list.
+        # Listing them by hand is what a scene must never do — the _ANIM_
+        # indices come from the manifest's order, so a reordered manifest would
+        # silently alias every animation to the wrong sheet.
+        rows = ", ".join(f"{tag}_ANIM_{sym(e['name'])}_SPEC" for e in anims)
+        out.append(f"#define {tag}_ANIM_SPECS {rows}")
     out.append("")
 
 

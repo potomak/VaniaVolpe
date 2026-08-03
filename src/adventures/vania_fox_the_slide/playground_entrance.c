@@ -36,9 +36,7 @@ static AnimationData *gate;
 static AnimationData *shovel;
 static AnimationData *animations[VANIA_PLAYGROUND_ENTRANCE_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
-    VANIA_PLAYGROUND_ENTRANCE_ANIM_EXCAVATOR_SPEC,
-    VANIA_PLAYGROUND_ENTRANCE_ANIM_GATE_SPEC,
-    VANIA_PLAYGROUND_ENTRANCE_ANIM_SHOVEL_SPEC,
+    VANIA_PLAYGROUND_ENTRANCE_ANIM_SPECS,
 };
 
 // Static sprite layer: backdrop, the three machines, and the key once it's on
