@@ -21,6 +21,7 @@ void scene_say(int index);
 #define GINA_GRAPES_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "grapes"})
 #define GINA_GRAPES_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "grapes"}, {"celebration.anim", "grapes"}, 0, 0}
 #define GINA_GRAPES_ANIMS_COUNT 1
+#define GINA_GRAPES_ANIM_SPECS GINA_GRAPES_ANIM_CELEBRATION_SPEC
 
 // ── hen ─────────────────────────────────────────────
 #define GINA_HEN_CHUNK_WALKING 0
@@ -121,6 +122,7 @@ void scene_say(int index);
 #define GINA_HEN_ANIM_FLOATING_DATA_ASSET ((Asset){.filename = "floating.anim", .directory = "hen"})
 #define GINA_HEN_ANIM_FLOATING_SPEC {3, LOOP, {"floating.png", "hen"}, {"floating.anim", "hen"}, 0, 0}
 #define GINA_HEN_ANIMS_COUNT 10
+#define GINA_HEN_ANIM_SPECS GINA_HEN_ANIM_IDLE_SPEC, GINA_HEN_ANIM_WALKING_SPEC, GINA_HEN_ANIM_TALKING_SPEC, GINA_HEN_ANIM_DRAGGED_SPEC, GINA_HEN_ANIM_FALLING_SPEC, GINA_HEN_ANIM_LANDING_SPEC, GINA_HEN_ANIM_PECK_SPEC, GINA_HEN_ANIM_HEADSHAKE_SPEC, GINA_HEN_ANIM_BLINK_SPEC, GINA_HEN_ANIM_FLOATING_SPEC
 
 // ── hub ─────────────────────────────────────────────
 #define GINA_HUB_IMAGE_ICON 0
@@ -152,6 +154,7 @@ void scene_say(int index);
 #define GINA_INTRO_ANIM_EXIT_BUTTON_DATA_ASSET ((Asset){.filename = "exit_button.anim", .directory = "intro"})
 #define GINA_INTRO_ANIM_EXIT_BUTTON_SPEC {3, LOOP, {"exit_button.png", "intro"}, {"exit_button.anim", "intro"}, 0, 0}
 #define GINA_INTRO_ANIMS_COUNT 2
+#define GINA_INTRO_ANIM_SPECS GINA_INTRO_ANIM_PLAY_BUTTON_SPEC, GINA_INTRO_ANIM_EXIT_BUTTON_SPEC
 
 // ── items ─────────────────────────────────────────────
 #define GINA_ITEMS_IMAGE_GOGGLES 0
@@ -181,6 +184,7 @@ void scene_say(int index);
 #define GINA_ITEMS_ANIM_FLOAT_BOIL_DATA_ASSET ((Asset){.filename = "float_boil.anim", .directory = "items"})
 #define GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC {3, LOOP, {"float_boil.png", "items"}, {"float_boil.anim", "items"}, 0, 0}
 #define GINA_ITEMS_ANIMS_COUNT 2
+#define GINA_ITEMS_ANIM_SPECS GINA_ITEMS_ANIM_GOGGLES_BOIL_SPEC, GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC
 
 // ── minigames ─────────────────────────────────────────────
 
@@ -213,6 +217,7 @@ void scene_say(int index);
 #define GINA_NAV_ANIM_TO_VINE_BOIL_DATA_ASSET ((Asset){.filename = "to_vine_boil.anim", .directory = "nav"})
 #define GINA_NAV_ANIM_TO_VINE_BOIL_SPEC {3, LOOP, {"to_vine_boil.png", "nav"}, {"to_vine_boil.anim", "nav"}, 0, 0}
 #define GINA_NAV_ANIMS_COUNT 3
+#define GINA_NAV_ANIM_SPECS GINA_NAV_ANIM_TO_POOL_BOIL_SPEC, GINA_NAV_ANIM_TO_TREE_BOIL_SPEC, GINA_NAV_ANIM_TO_VINE_BOIL_SPEC
 
 // ── outro ─────────────────────────────────────────────
 #define GINA_OUTRO_IMAGE_OUTRO_BACKGROUND 0
@@ -246,6 +251,7 @@ void scene_say(int index);
 #define GINA_POOL_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "pool"})
 #define GINA_POOL_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "pool"}, {"celebration.anim", "pool"}, 0, 0}
 #define GINA_POOL_ANIMS_COUNT 2
+#define GINA_POOL_ANIM_SPECS GINA_POOL_ANIM_SUNSCREEN_BOIL_SPEC, GINA_POOL_ANIM_CELEBRATION_SPEC
 
 // ── pool/dialog ─────────────────────────────────────────────
 #define GINA_POOL_DIALOG_CHUNK_SHADE_REMINDER 0
@@ -322,6 +328,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_SUNSCREEN_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "sunscreen"})
 #define GINA_SUNSCREEN_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "sunscreen"}, {"celebration.anim", "sunscreen"}, 0, 0}
 #define GINA_SUNSCREEN_ANIMS_COUNT 1
+#define GINA_SUNSCREEN_ANIM_SPECS GINA_SUNSCREEN_ANIM_CELEBRATION_SPEC
 
 // ── tree ─────────────────────────────────────────────
 #define GINA_TREE_IMAGE_BACKGROUND 0
@@ -347,6 +354,7 @@ static inline void say_sunscreen_ready(void) { scene_say(GINA_POOL_DIALOG_CHUNK_
 #define GINA_TREE_ANIM_CELEBRATION_DATA_ASSET ((Asset){.filename = "celebration.anim", .directory = "tree"})
 #define GINA_TREE_ANIM_CELEBRATION_SPEC {8, ONE_SHOT, {"celebration.png", "tree"}, {"celebration.anim", "tree"}, 0, 0}
 #define GINA_TREE_ANIMS_COUNT 2
+#define GINA_TREE_ANIM_SPECS GINA_TREE_ANIM_CARLA_BOIL_SPEC, GINA_TREE_ANIM_CELEBRATION_SPEC
 
 // ── tree/dialog ─────────────────────────────────────────────
 #define GINA_TREE_DIALOG_CHUNK_CANT_REACH 0
@@ -409,6 +417,7 @@ static inline void say_carla_thanks(void) { scene_say(GINA_TREE_DIALOG_CHUNK_CAR
 #define GINA_VINE_ANIM_GRAPES_BOIL_DATA_ASSET ((Asset){.filename = "grapes_boil.anim", .directory = "vine"})
 #define GINA_VINE_ANIM_GRAPES_BOIL_SPEC {3, LOOP, {"grapes_boil.png", "vine"}, {"grapes_boil.anim", "vine"}, 0, 0}
 #define GINA_VINE_ANIMS_COUNT 1
+#define GINA_VINE_ANIM_SPECS GINA_VINE_ANIM_GRAPES_BOIL_SPEC
 
 // ── vine/dialog ─────────────────────────────────────────────
 #define GINA_VINE_DIALOG_CHUNK_ALREADY_GRAPES 0

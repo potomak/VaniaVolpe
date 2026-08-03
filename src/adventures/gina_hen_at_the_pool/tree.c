@@ -52,9 +52,11 @@ static AnimationData *celebration;
 #define TREE_ANIM_TO_VINE (GINA_TREE_ANIMS_COUNT + 3)
 static AnimationData *animations[GINA_TREE_ANIMS_COUNT + 4];
 static const SceneAnimSpec anim_specs[] = {
-    GINA_TREE_ANIM_CELEBRATION_SPEC, GINA_TREE_ANIM_CARLA_BOIL_SPEC,
-    GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC, GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
-    GINA_NAV_ANIM_TO_POOL_BOIL_SPEC, GINA_NAV_ANIM_TO_VINE_BOIL_SPEC,
+    GINA_TREE_ANIM_SPECS,
+    GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
+    GINA_ITEMS_ANIM_FLOAT_BOIL_SPEC,
+    GINA_NAV_ANIM_TO_POOL_BOIL_SPEC,
+    GINA_NAV_ANIM_TO_VINE_BOIL_SPEC,
 };
 
 // Static sprite layer: just the backdrop. The stuck float and Carla are boils

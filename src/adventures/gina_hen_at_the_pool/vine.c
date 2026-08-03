@@ -37,7 +37,7 @@ static AnimationData *grapes_boil;
 #define VINE_ANIM_TO_POOL (GINA_VINE_ANIMS_COUNT + 1)
 static AnimationData *animations[GINA_VINE_ANIMS_COUNT + 2];
 static const SceneAnimSpec anim_specs[] = {
-    GINA_VINE_ANIM_GRAPES_BOIL_SPEC,
+    GINA_VINE_ANIM_SPECS,
     GINA_NAV_ANIM_TO_TREE_BOIL_SPEC,
     GINA_NAV_ANIM_TO_POOL_BOIL_SPEC,
 };

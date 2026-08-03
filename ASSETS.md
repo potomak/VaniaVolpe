@@ -137,7 +137,16 @@ GINA_POOL_ANIM_SUNSCREEN_BOIL_MS_PER_FRAME
 GINA_POOL_ANIM_SUNSCREEN_BOIL_SPRITE_ASSET  // ((Asset){...}) compound literal
 GINA_POOL_ANIM_SUNSCREEN_BOIL_DATA_ASSET
 GINA_POOL_ANIMS_COUNT
+GINA_POOL_ANIM_SPECS                  // every _SPEC above, in index order
 ```
+
+`_ANIM_SPECS` is comma-separated rather than brace-enclosed, because a scene's
+`anim_specs[]` starts with its own directory and then appends the sheets it
+borrows from others. Use it — never list a directory's `_SPEC`s by hand. The
+`_ANIM_` indices come from the manifest's order, so a hand-written list that
+falls out of step aliases every animation in it to the wrong sheet, silently:
+the sheets all load, so nothing fails, and each object simply draws as the
+wrong one.
 
 Beyond the whole-table macros, each entry also gets standalone forms for the
 places a table macro can't reach:

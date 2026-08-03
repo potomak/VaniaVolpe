@@ -31,7 +31,7 @@ static const ImageData *gina_closeup = &images[GINA_SUNSCREEN_IMAGE_GINA];
 static AnimationData *celebration;
 static AnimationData *animations[GINA_SUNSCREEN_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
-    GINA_SUNSCREEN_ANIM_CELEBRATION_SPEC,
+    GINA_SUNSCREEN_ANIM_SPECS,
 };
 
 // The static sprite layer: the backdrop and Gina's

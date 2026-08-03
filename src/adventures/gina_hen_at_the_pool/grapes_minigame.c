@@ -30,7 +30,7 @@ static const ImageData *grape = &images[GINA_GRAPES_IMAGE_GRAPE];
 static AnimationData *celebration;
 static AnimationData *animations[GINA_GRAPES_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
-    GINA_GRAPES_ANIM_CELEBRATION_SPEC,
+    GINA_GRAPES_ANIM_SPECS,
 };
 
 // The static sprite layer: just the backdrop. render()

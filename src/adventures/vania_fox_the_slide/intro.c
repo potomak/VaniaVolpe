@@ -29,8 +29,7 @@ static AnimationData *play_button;
 static AnimationData *exit_button;
 static AnimationData *animations[VANIA_INTRO_ANIMS_COUNT];
 static const SceneAnimSpec anim_specs[] = {
-    VANIA_INTRO_ANIM_PLAY_BUTTON_SPEC,
-    VANIA_INTRO_ANIM_EXIT_BUTTON_SPEC,
+    VANIA_INTRO_ANIM_SPECS,
 };
 
 // Static sprite layer: backdrop and the two buttons (they animate on hover but
