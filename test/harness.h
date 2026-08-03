@@ -46,17 +46,16 @@ void harness_mouse_up(double fx, double fy);
 // A click: move (so scenes that track the cursor see it), then press + release.
 void harness_click(double fx, double fy);
 
-// Touch input, in window-normalized coordinates like SDL's own finger events.
-// harness_tap is one finger down-and-up; the id lets a test hold two at once.
+// Touch. harness_tap sends the mouse events SDL synthesizes from a finger,
+// which is what the engine acts on. The finger helpers push the raw events SDL
+// reports alongside them, which the engine ignores — they are here so a test
+// can prove that.
 void harness_finger_down(SDL_FingerID id, double fx, double fy);
 void harness_finger_up(SDL_FingerID id, double fx, double fy);
 void harness_tap(double fx, double fy);
 
 // A key press; `repeat` marks it as an auto-repeat, as SDL does while held.
 void harness_key_down(SDL_Keycode key, bool repeat);
-
-// A mouse event carrying SDL_TOUCH_MOUSEID, as SDL synthesizes from a touch.
-void harness_synthesized_click(double fx, double fy);
 
 // ── assertions ───────────────────────────────────────────────────────────────
 

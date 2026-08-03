@@ -203,6 +203,12 @@ never shipped (the web preload and the asset catalog skip `_`-prefixed dirs).
   `test/scripts/*.json` and uploads the shots per adventure. Unlike the native
   harness, which steps virtual time, this one waits in real time — so a script's
   `wait_ms` budget is what the job costs.
+- **Browser touch test** — `test/web/run_touch.js`: taps the selection screen
+  with real touch events at phone-shaped, high-DPR, letterboxed viewports and
+  checks each tap opens the cartridge under it. The only test that can see
+  *where* a tap lands: the native harness runs at exactly the logical size with
+  a pixel ratio of 1, where a wrong coordinate mapping still looks right. Also
+  run by `.github/workflows/web-test.yml`.
 - **Terminal build** — `make terminal` → `./tinyadventures_terminal`: the whole
   game as libcaca ASCII art; handy for quick play-testing over SSH.
 

@@ -19,6 +19,7 @@ __pycache__/
 
 ## Browser-test deps and output
 test/web/node_modules/
+test/web/package-lock.json
 screenshots/
 
 ## SDL2 libraries

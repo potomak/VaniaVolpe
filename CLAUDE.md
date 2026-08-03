@@ -63,9 +63,13 @@ The click choreography, waits and expected dialogue live in
 `test/scripts/<name>.json` — one source of truth shared by the native test (via
 a generated header) and the browser test. `test/web/run_playtest.js` reads the
 same JSON and drives the web build with Puppeteer, saving screenshots.
+`test/web/run_touch.js` tests **where a tap lands** on phone-shaped viewports —
+the native harness cannot, since it runs at exactly the logical size with a
+pixel ratio of 1, where any coordinate mapping looks right.
 
 CI on every push/PR: `.github/workflows/test.yml` runs the native headless
-playthrough and `web-test.yml` runs the browser playthrough (both gating);
+playthrough and `web-test.yml` runs the browser playthrough and touch test
+(both gating);
 `lint.yml` runs clang-format/clang-tidy (advisory).
 `.github/workflows/deploy-pages.yml` compiles the web target on pushes to `main`
 and deploys it to GitHub Pages. See ARCHITECTURE.md → *Terminal & Headless

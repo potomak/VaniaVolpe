@@ -1,9 +1,10 @@
 name: Web test (headless browser)
 
-# Gating: builds the WebAssembly target, serves it, and runs the shared
-# playthrough scripts (test/scripts/*.json) against it with Puppeteer,
-# asserting the expected dialogue appears in the browser console. Screenshots
-# taken along the way are uploaded as an artifact.
+# Gating: builds the WebAssembly target, serves it, and drives it with
+# Puppeteer — the shared playthrough scripts (test/scripts/*.json), asserting
+# the expected dialogue appears in the browser console, and the touch test,
+# which taps phone-shaped viewports and checks each tap lands where the finger
+# is. Screenshots taken along the way are uploaded as an artifact.
 on:
   pull_request:
   push:
@@ -46,6 +47,8 @@ jobs:
             SHOTS="$GITHUB_WORKSPACE/screenshots/$(basename "$script" .json)" \
               node run_playtest.js "$script"
           done
+          echo "--- touch"
+          SHOTS="$GITHUB_WORKSPACE/screenshots/touch" node run_touch.js
 
       - name: Upload screenshots
         if: always()

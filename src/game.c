@@ -47,10 +47,6 @@ static const SDL_Rect HUB_BUTTON = {
 #define HUB_BUTTON_PATH "assets/ui/hub_button.png"
 static ImageData hub_button_image;
 
-// The renderer the game draws through, kept from the media pass so touch
-// events can be mapped into logical coordinates (see game_process_input).
-static SDL_Renderer *game_renderer = NULL;
-
 #ifndef PROD
 // Reaching the debug layer on a device with no keyboard: press and hold the
 // top-left corner — where the debug marker itself appears — for two seconds.
@@ -212,7 +208,6 @@ void game_init(void) {
 }
 
 bool game_load_media(SDL_Renderer *renderer) {
-  game_renderer = renderer;
   if (!load_image_from_path(renderer, &hub_button_image, HUB_BUTTON_PATH)) {
     return false;
   }
@@ -224,75 +219,29 @@ bool game_load_media(SDL_Renderer *renderer) {
   return true;
 }
 
-// The finger the game is currently following. SDL reports every touch, and a
-// toddler puts down more than one; the first one down owns the interaction
-// until it lifts, so a second palm can't drag what the first is holding.
-static SDL_FingerID active_finger;
-static bool has_active_finger;
-
-// Rewrite a touch event as the mouse event the rest of the engine speaks, and
-// drop the mouse events SDL synthesizes from the same touch — otherwise one tap
-// arrives twice. Returns false when the event should be ignored entirely.
+// Touch arrives twice: SDL reports the finger events *and* synthesizes mouse
+// events from the same touch. The engine listens to the synthesized ones and
+// ignores the finger events, so everything downstream deals in mouse events.
 //
-// Finger coordinates are normalized to the *window*, so they go through
-// SDL_RenderWindowToLogical: with a logical size set, the window may be
-// letterboxed, and scaling by WINDOW_WIDTH directly would land the tap in the
-// wrong place on any aspect ratio but 4:3.
-static bool normalize_touch(SDL_Event *event) {
+// It is tempting to do the opposite — read the finger events directly and
+// convert them "properly". That was tried and shipped a regression: finger
+// coordinates are normalized to the window, and turning them into logical
+// coordinates by hand means reproducing the device-pixel-ratio scaling and the
+// letterbox offset that SDL already applies to the mouse events. Getting that
+// subtly wrong is invisible at exactly 800x600 with a ratio of 1 — which is
+// every test environment — and puts every tap in the wrong place on a phone.
+// SDL has already done this correctly; take its answer.
+//
+// Returns false when the event should be ignored entirely.
+static bool normalize_touch(const SDL_Event *event) {
   switch (event->type) {
-  case SDL_MOUSEMOTION:
-    return event->motion.which != SDL_TOUCH_MOUSEID;
-  case SDL_MOUSEBUTTONDOWN:
-  case SDL_MOUSEBUTTONUP:
-    return event->button.which != SDL_TOUCH_MOUSEID;
   case SDL_FINGERDOWN:
   case SDL_FINGERUP:
   case SDL_FINGERMOTION:
-    break;
+    return false;
   default:
     return true;
   }
-
-  if (event->type == SDL_FINGERDOWN) {
-    if (has_active_finger) {
-      return false;
-    }
-    active_finger = event->tfinger.fingerId;
-    has_active_finger = true;
-  } else if (!has_active_finger || event->tfinger.fingerId != active_finger) {
-    return false;
-  }
-
-  float x = 0;
-  float y = 0;
-  if (game_renderer != NULL) {
-    int w = WINDOW_WIDTH;
-    int h = WINDOW_HEIGHT;
-    SDL_GetRendererOutputSize(game_renderer, &w, &h);
-    SDL_RenderWindowToLogical(game_renderer, (int)(event->tfinger.x * w),
-                              (int)(event->tfinger.y * h), &x, &y);
-  }
-
-  Uint32 type = event->type;
-  if (type == SDL_FINGERUP) {
-    has_active_finger = false;
-  }
-
-  SDL_zerop(event);
-  if (type == SDL_FINGERMOTION) {
-    event->type = SDL_MOUSEMOTION;
-    event->motion.x = (int)x;
-    event->motion.y = (int)y;
-    event->motion.state = SDL_BUTTON_LMASK;
-  } else {
-    event->type =
-        type == SDL_FINGERDOWN ? SDL_MOUSEBUTTONDOWN : SDL_MOUSEBUTTONUP;
-    event->button.button = SDL_BUTTON_LEFT;
-    event->button.clicks = 1;
-    event->button.x = (int)x;
-    event->button.y = (int)y;
-  }
-  return true;
 }
 
 // Process input for scenes
