@@ -209,10 +209,12 @@ void harness_mouse_up(double fx, double fy) {
   mouse_button(SDL_MOUSEBUTTONUP, fx, fy);
 }
 
-// Touch, as SDL reports it: coordinates normalized to the window (not the
-// logical viewport), and a finger id so multi-touch can be told apart. The
-// engine converts these itself (game.c normalize_touch) — pushing real finger
-// events is the only way to exercise that path without a device.
+// Touch, as SDL reports it. A real touch produces *two* things: the finger
+// event below, and a mouse event carrying SDL_TOUCH_MOUSEID that SDL
+// synthesizes from it with the device-pixel-ratio scaling and letterbox offset
+// already applied. The engine acts on the synthesized one (game.c
+// normalize_touch), so harness_tap sends that; the finger helpers exist to
+// check the raw events are ignored.
 static void finger(Uint32 type, SDL_FingerID id, double fx, double fy) {
   SDL_Event e;
   SDL_zero(e);
@@ -232,17 +234,11 @@ void harness_finger_up(SDL_FingerID id, double fx, double fy) {
   finger(SDL_FINGERUP, id, fx, fy);
 }
 
-void harness_tap(double fx, double fy) {
-  harness_finger_down(1, fx, fy);
-  harness_finger_up(1, fx, fy);
-}
-
-// A mouse event SDL synthesized from a touch, which the engine must drop:
-// otherwise every tap on a touch device arrives twice.
-void harness_synthesized_click(double fx, double fy) {
+// One tap: the press and release SDL synthesizes from a finger.
+static void touch_button(Uint32 type, double fx, double fy) {
   SDL_Event e;
   SDL_zero(e);
-  e.type = SDL_MOUSEBUTTONUP;
+  e.type = type;
   e.button.button = SDL_BUTTON_LEFT;
   e.button.which = SDL_TOUCH_MOUSEID;
   e.button.x = to_px_x(fx);
@@ -250,7 +246,19 @@ void harness_synthesized_click(double fx, double fy) {
   SDL_PushEvent(&e);
 }
 
-// A key press, with `repeat` set the way SDL sets it while a key is held.
+void harness_tap(double fx, double fy) {
+  touch_button(SDL_MOUSEBUTTONDOWN, fx, fy);
+  touch_button(SDL_MOUSEBUTTONUP, fx, fy);
+}
+
+void harness_click(double fx, double fy) {
+  harness_mouse_move(fx, fy);
+  harness_mouse_down(fx, fy);
+  harness_mouse_up(fx, fy);
+}
+
+// A key press. `repeat` marks the event as one of the auto-repeats the OS
+// sends while a key is held, which the game must not treat as a fresh press.
 void harness_key_down(SDL_Keycode key, bool repeat) {
   SDL_Event e;
   SDL_zero(e);
@@ -258,12 +266,6 @@ void harness_key_down(SDL_Keycode key, bool repeat) {
   e.key.keysym.sym = key;
   e.key.repeat = repeat ? 1 : 0;
   SDL_PushEvent(&e);
-}
-
-void harness_click(double fx, double fy) {
-  harness_mouse_move(fx, fy);
-  harness_mouse_down(fx, fy);
-  harness_mouse_up(fx, fy);
 }
 
 // ── assertions ───────────────────────────────────────────────────────────────

@@ -2,11 +2,15 @@
 //  test_input.c
 //  Engine-level input (src/game.c): touch, and the keys the game reads.
 //
-//  Touch (normalize_touch). The audience taps with fingers, and
-//  on a device SDL delivers both a finger event and a mouse event synthesized
-//  from it — so this covers the three things that path has to get right: a tap
-//  acts once, the synthesized duplicate is dropped, and a second finger does
-//  not interfere with the one already down.
+//  Touch (normalize_touch). SDL delivers both a finger event and a mouse event
+//  synthesized from the same touch; the engine acts on the synthesized mouse
+//  event and ignores the finger event, so a tap acts exactly once.
+//
+//  These tests cannot tell you a tap lands in the *right place* — the harness
+//  window is exactly the logical size at a pixel ratio of 1, so every mapping,
+//  right or wrong, agrees here. That blind spot is why an earlier version of
+//  this file passed while every tap on a phone missed; the geometry is covered
+//  in the browser instead (test/web/run_touch.js).
 //
 //  Driven through the selection screen because that is where the game starts
 //  and a tap there logs which adventure it opened, so a tap that lands is
@@ -52,10 +56,8 @@ int test_input(void) {
   fprintf(stderr, "\n-- input --\n");
   int failures = 0;
 
-  // A tap opens the cartridge under it, the same as a click would. This is
-  // also the coordinate conversion under test: finger positions are normalized
-  // to the window, and landing on the right cartridge means they were mapped
-  // through the logical viewport.
+  // A tap acts: harness_tap sends the mouse event SDL synthesizes from a touch,
+  // which is the one the engine listens to.
   harness_log_reset();
   harness_tap(VANIA_X, CARTRIDGE_Y);
   harness_pump_for(600);
@@ -63,8 +65,7 @@ int test_input(void) {
                             "a tap opens the cartridge under it");
 
   // Leaving is by touch too: a 64px corner button, then the tick. Proven by
-  // what follows — a cartridge can only be opened from the selection screen,
-  // so opening one means both taps landed.
+  // what follows — a cartridge can only be opened from the selection screen.
   leave_by_touch();
   harness_log_reset();
   harness_tap(GINA_X, CARTRIDGE_Y);
@@ -72,33 +73,24 @@ int test_input(void) {
   failures += harness_check(harness_log_contains(OPENED_GINA),
                             "the corner button and the tick both take a tap");
 
-  // The mouse event SDL synthesizes from a real tap must be ignored, or every
-  // tap on a device counts twice.
+  // The finger events are ignored: acting on them as well would dispatch every
+  // tap twice, and converting their window-normalized coordinates by hand is
+  // what put taps in the wrong place on phones.
   leave_by_touch();
   harness_log_reset();
-  harness_synthesized_click(VANIA_X, CARTRIDGE_Y);
+  harness_finger_down(1, VANIA_X, CARTRIDGE_Y);
+  harness_finger_up(1, VANIA_X, CARTRIDGE_Y);
   harness_pump_for(400);
   failures += harness_check(!harness_log_contains(OPENED_VANIA),
-                            "a mouse event synthesized from touch is ignored");
+                            "a raw finger event does not act on its own");
 
-  // Two fingers at once: the first one down owns the interaction. The second's
-  // release must not act at its own position...
+  // …and a tap still works right afterwards, so the finger events were ignored
+  // rather than the whole gesture dropped.
   harness_log_reset();
-  harness_finger_down(1, VANIA_X, CARTRIDGE_Y);
-  harness_finger_down(2, GINA_X, CARTRIDGE_Y);
-  harness_finger_up(2, GINA_X, CARTRIDGE_Y);
-  harness_pump_for(400);
-  failures +=
-      harness_check(!harness_log_contains(OPENED_GINA),
-                    "a second finger's release does not act while the first "
-                    "is down");
-
-  // ...and the first one's still must, once it lifts. Together these say the
-  // stray finger was ignored rather than the whole gesture dropped.
-  harness_finger_up(1, VANIA_X, CARTRIDGE_Y);
+  harness_tap(VANIA_X, CARTRIDGE_Y);
   harness_pump_for(600);
   failures += harness_check(harness_log_contains(OPENED_VANIA),
-                            "the first finger's release still acts");
+                            "a tap still works after a stray finger event");
 
   // Hand the play-tests the selection screen they expect to start from.
   leave_by_touch();

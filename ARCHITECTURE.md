@@ -145,7 +145,7 @@ Key functions: `register_adventures`, `adventure_switch_to`, `game_init`,
 
 `set_active_scene` calls `on_scene_inactive` on the outgoing scene and `on_scene_active` on the incoming one, allowing each scene to reset its state and start/stop background music. `set_active_scene_at` additionally stands the incoming scene's actor at a given point, applied *after* `on_scene_active` so it overrides the scene's own default — a location reachable from several directions keeps one default start, and the transition says which way the player came in. Gina's three outdoor scenes use it: each exports a `GINA_<SCENE>_ENTRY_FROM_<ORIGIN>` point for each of its doors, and its neighbours pass that when they send her over — so where a door is stays a property of the scene that owns the art.
 
-**Touch is converted to mouse events at the door.** SDL delivers a finger event *and* a mouse event synthesized from the same touch; `normalize_touch` (in `game_process_input`) drops the synthesized one and rewrites the finger event as the mouse event the rest of the engine speaks, so nothing downstream knows a touchscreen exists. Finger coordinates are normalized to the *window*, so they go through `SDL_RenderWindowToLogical` — scaling by `WINDOW_WIDTH` directly would land the tap in the wrong place whenever the window is letterboxed. The first finger down owns the interaction until it lifts: a toddler puts down more than one, and a second palm must not drag what the first is holding.
+**Touch arrives as mouse events, and the finger events are dropped.** SDL delivers a finger event *and* a mouse event synthesized from the same touch; `normalize_touch` (in `game_process_input`) ignores the finger event and lets the synthesized mouse event through, so nothing downstream knows a touchscreen exists. It is tempting to do the opposite — read the finger events and convert them "properly" — but finger coordinates are normalized to the *window*, and turning them into logical coordinates by hand means reproducing the device-pixel-ratio scaling and the letterbox offset SDL has already applied to the mouse events. That was tried, and getting it subtly wrong is invisible at exactly 800×600 with a pixel ratio of 1 — which is every test environment — while putting every tap in the wrong place on a phone.
 
 **Taps act on release, gestures on press.** Every tap dispatch — the hub's menu, the back-to-hub button, both title screens, every hotspot, walk-to-click — runs on `SDL_MOUSEBUTTONUP`. Only gestures use the press: the actor drag arms on `MOUSEBUTTONDOWN`, and the minigames' brush strokes run press-to-release.
 
@@ -391,8 +391,8 @@ scaling, the camera and parallax planes.
 ```
 SDL_PollEvent()
   │
-  ├─ normalize_touch      finger events → mouse events; drop the ones SDL
-  │                       synthesized from the same touch; first finger wins
+  ├─ normalize_touch      drop the finger events; touch is already here as the
+  │                       mouse events SDL synthesized from it
   ├─ confirm_process_input   a modal question owns the pointer while it is up
   ├─ engine keys          D (debug), ESC (quit) — D compiled out by PROD=1
   ├─ the corner hold      press-and-hold top-left → debug (also PROD-gated)
@@ -469,7 +469,9 @@ Both the terminal renderer and the automated test reuse one trick: before `SDL_I
 
 ### Browser test (`test/web`)
 
-`test/web/run_playtest.js` reads the **same** `test/scripts/<name>.json` and drives the deployed-shape web build with Puppeteer, so the native and browser playthroughs stay in lockstep. It saves a screenshot at each `screenshot` step and asserts the expected dialogue in the browser console (Emscripten routes `SDL_Log` there). `.github/workflows/web-test.yml` builds the web target, serves it, runs the script, and uploads the screenshots as an artifact.
+`test/web/run_playtest.js` reads the **same** `test/scripts/<name>.json` and drives the deployed-shape web build with Puppeteer, so the native and browser playthroughs stay in lockstep. It saves a screenshot at each `screenshot` step and asserts the expected dialogue in the browser console (Emscripten routes `SDL_Log` there).
+
+`test/web/run_touch.js` covers the thing neither of those can: **where a tap lands**. It taps real touch events at phone-shaped, high-DPR, letterboxed viewports and checks the selection screen opens the cartridge under the finger — and, deliberately, that a tap on an empty grid slot opens nothing, so a mapping that hits everything cannot pass. The native harness is blind to this by construction: its window is exactly the logical size at a pixel ratio of 1, where every mapping agrees. `.github/workflows/web-test.yml` builds the web target once, serves it, runs both, and uploads the screenshots as an artifact.
 
 ---
 
